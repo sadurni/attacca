@@ -1,0 +1,33 @@
+<p><i>«Berraurkitu zure musika-bilduma: entzun modu berrietan, soinurik onenarekin.»</i></p>
+
+<p><b>Zure musika, norbaitek aurretik abesti bakoitza entzun izan balu bezala jotzen.</b> Abesti bakoitza hurrengora daramaten zerrendak, soinu-kate osoa, O'rama abestia paisaia mugikor gisa ikusteko, eta zuk moldatzen dituzun gaiak. Librea, kode irekikoa eta pribatua.</p>
+
+<p>Attacca-k telefonoko musika erreproduzitzen du —karpetak eta zerrendak— eta berak entzuten du: pista bakoitzaren hasiera eta amaiera, bere soinua eta aldartea telefonoan aztertzen dira, pista baten amaierak hurrengoaren hasierara eramateko. Ez da ezer inora bidaltzen: aplikazioak ez du interneterako sarbiderik.</p>
+
+<p><b>Isurtzen diren zerrendak</b></p>
+<ul>
+<li>Kateatu edozein zerrenda, pista bakoitzak hurrengora eraman dezan; baita album osoak ere, batengandik besteren hasierara.</li>
+<li>Edozein pistatik abiatutako zerrenda: soinuz antzekoenak, harekin hasita kateatuta, iragazkiekin (urteak, tempoa, energia, aldartea, ahotsa, iraupena, azkenaldian entzun ez duzuna).</li>
+<li>Zerrenda azkarrak eta ausazkoak, energia-kurbak, zure soinu-familien lagin bat, pista batetik bestera doan zubi bat, album osoak bat balira bezala, denbora jakin baterako zerrenda.</li>
+<li>Aldarteak eta soinu-familiak zure bilduman bertan aurkituta, telefonoan exekutatzen den soinua ezagutzeko sare batek.</li>
+<li>Sartzeko zerrenda bat (baimendu edo blokeatu) egiten dituen zerrenda guztientzat; baldintzen araberako zerrenda adimendunak; amaitzen ez diren zerrendak.</li>
+</ul>
+
+<p><b>Erreprodukzioa eta soinua</b></p>
+<ul>
+<li>Etenik gabeko erreprodukzioa, pista bakoitza nola amaitzen den jarraitu dezakeen crossfade, isiltasunen mozketa, ReplayGain (eta neurtutako sonoritatea hura ez duten fitxategientzat).</li>
+<li>Bere soinu-tratamendua: ekualizadorea (grafikoa edo parametrikoa, aurikularren zuzenketak), baxu dinamikoak eta birtualak, estereo-zabalera, crossfeed, konpresorea eta benetako gailur-mugatzailea; irteerako gailu bakoitzeko profil bat.</li>
+<li>Gailuak: irteera bakoitzak bere zerrenda jarraitu dezake, bere bolumena ezarri eta konektatzean jotzen hasi.</li>
+</ul>
+
+<p><b>Zure erara</b></p>
+<ul>
+<li>Gaiak, beren koloreekin, letra-tipoekin, atzeko planoekin, ikonoekin eta zuk antolatzen duzun Orain erreproduzitzen diseinuarekin; galeria bat hasteko.</li>
+<li>Musika artisten, albumen, generoen, hamarkaden, aldarteen eta familien arabera; karpetak; letrak, laster-markak, itzaltze-tenporizadorea, abiadura, A-B errepikapena; entzuteko estatistikak.</li>
+<li>Android Auto, widgeta, guztiaren babeskopia, 23 hizkuntza.</li>
+<li>Attacca O'rama: jotzen ari den abestia paisaia mugikor gisa, bere uhin-formatik, aldartetik eta erritmotik sortua. Aurkitzeko sorpresa txiki batzuekin.</li>
+</ul>
+
+<p>Attacca Desktop-ek (Windows, Linux, macOS) berdin aztertzen du eta bilduma partekatzen du, eta Rockbox duten erreproduzigailuentzako zerrendak egiten ditu, baita nabigatzailean ere.</p>
+
+<p>Zergatik baimenak: fitxategi guztietarako sarbidea, zure karpetak eta zerrendak dauden lekuan erreproduzitzeko; beste aplikazioen gainean bistaratzea, bateria-optimizaziorik gabe eta inguruko gailuak, Bluetooth gailu bat konektatzen denean erreproduzigailua itxita dagoela jotzen hasteko soilik.</p>

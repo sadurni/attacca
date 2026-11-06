@@ -1,0 +1,33 @@
+<p><i>”Upptäck din musiksamling på nytt: lyssna på nya sätt, med det bästa ljudet.”</i></p>
+
+<p><b>Din egen musik, spelad som om någon först hade lyssnat på varje låt.</b> Listor där varje låt leder in i nästa, en komplett ljudkedja, O'rama för att se låten som ett landskap i rörelse, och teman som du formar själv. Fri, öppen källkod och privat.</p>
+
+<p>Attacca spelar musiken i din telefon — mappar och spellistor — och lyssnar själv på den: varje spårs slut, ljud och stämning analyseras i telefonen, så att ett spårs slut kan leda in i nästa spårs början. Inget skickas någonstans: appen har ingen internetåtkomst.</p>
+
+<p><b>Listor som flyter</b></p>
+<ul>
+<li>Kedja valfri lista så att varje spår leder in i nästa; hela album kan kedjas från slut till början.</li>
+<li>En lista från vilket spår som helst: de spår som ligger närmast i ljud, kedjade från det, med filter (år, tempo, energi, stämning, röst, längd, sådant du inte lyssnat på nyligen).</li>
+<li>Snabba och slumpmässiga listor, energikurvor, ett smakprov av dina ljudfamiljer, en brygga från ett spår till ett annat, hela album som ett enda, en lista för en bestämd tid.</li>
+<li>Stämningar och ljudfamiljer som hittas i din egen samling av ett ljudigenkänningsnätverk som körs i telefonen.</li>
+<li>En inkluderingslista (tillåt eller blockera) för varje lista den gör; smarta listor byggda på villkor; ändlösa listor.</li>
+</ul>
+
+<p><b>Uppspelning och ljud</b></p>
+<ul>
+<li>Sömlös (gapless) uppspelning, övertoning som kan följa hur varje spår slutar, tystnadsbeskärning, ReplayGain (och uppmätt ljudstyrka för filer som saknar det).</li>
+<li>Egen ljudbehandling: equalizer (grafisk eller parametrisk, hörlurskorrigeringar), dynamisk och virtuell bas, stereobredd, crossfeed, kompressor och true-peak-limiter; en profil per utgångsenhet.</li>
+<li>Enheter: varje utgång kan fortsätta sin egen lista, ställa in sin volym och börja spela när den ansluts.</li>
+</ul>
+
+<p><b>På ditt sätt</b></p>
+<ul>
+<li>Teman med egna färger, typsnitt, bakgrunder och ikoner samt en Spelas nu-layout som du ordnar själv; ett galleri att utgå från.</li>
+<li>Musik per artist, album, genre, årtionde, stämning och familj; mappar; låttexter, bokmärken, insomningstimer, hastighet, A-B-repetition; lyssningsstatistik.</li>
+<li>Android Auto, en widget för startskärmen, säkerhetskopia av allt, 23 språk.</li>
+<li>Attacca O'rama: låten som spelas som ett landskap i rörelse, ritat ur dess vågform, stämning och takt. Med några små överraskningar att upptäcka.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analyserar på samma sätt och delar biblioteket, och gör listor för Rockbox-spelare och i webbläsaren.</p>
+
+<p>Varför behörigheterna: åtkomst till alla filer, för att spela dina mappar och spellistor där de ligger; visning över andra appar, ingen batterioptimering och enheter i närheten, enbart för att börja spela när en Bluetooth-enhet ansluts medan spelaren är stängd.</p>

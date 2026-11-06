@@ -1,0 +1,308 @@
+{
+  "format": 1,
+  "name": "Attacca of the Mushroom People",
+  "dark": false,
+  "background": "#FFF1F7EA",
+  "surface": "#FFE1EED4",
+  "text": "#FF1F3A1C",
+  "textSecondary": "#B31F3A1C",
+  "accent": "#FF3E9B2F",
+  "coverAccent": false,
+  "excluded": "#FFE07B00",
+  "danger": "#FFC62828",
+  "corners": 1.6,
+  "textScale": 1.0,
+  "font": "SYSTEM",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": true,
+      "image": {
+        "file": "background-hill.jpg",
+        "dim": 50,
+        "tint": false,
+        "dimLight": 72
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "TEMPLATE",
+          "template": "{album}[ · {year}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "horizontal": true,
+      "image": {
+        "file": "background-grass.jpg",
+        "dim": 55,
+        "tint": false,
+        "dimLight": 60
+      },
+      "children": [
+        {
+          "type": "LIST",
+          "width": 75,
+          "framed": false,
+          "lines": [
+            {
+              "kind": "LIST_NAME"
+            },
+            {
+              "kind": "LIST_DETAILS"
+            },
+            {
+              "kind": "NEXT"
+            }
+          ]
+        },
+        {
+          "type": "BUTTONS",
+          "width": 25,
+          "buttons": [
+            "FAVORITE"
+          ],
+          "icons": {
+            "FAVORITE": {
+              "file": "icon-clover.png",
+              "dim": 0,
+              "tint": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "BOOKMARK",
+        "SLEEP",
+        "QUICK_LIST",
+        "LYRICS",
+        "SOUND"
+      ],
+      "icons": {
+        "BOOKMARK": {
+          "file": "icon-flower.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-sun.png",
+          "dim": 0,
+          "tint": true
+        },
+        "LYRICS": {
+          "file": "icon-butterfly.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 42,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "horizontal": true,
+              "image": {
+                "file": "background-grass.jpg",
+                "dim": 55,
+                "tint": false,
+                "dimLight": 60
+              },
+              "children": [
+                {
+                  "type": "LIST",
+                  "width": 75,
+                  "framed": false,
+                  "lines": [
+                    {
+                      "kind": "LIST_NAME"
+                    },
+                    {
+                      "kind": "LIST_DETAILS"
+                    },
+                    {
+                      "kind": "NEXT"
+                    }
+                  ]
+                },
+                {
+                  "type": "BUTTONS",
+                  "width": 25,
+                  "buttons": [
+                    "FAVORITE"
+                  ],
+                  "icons": {
+                    "FAVORITE": {
+                      "file": "icon-clover.png",
+                      "dim": 0,
+                      "tint": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 58,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": true,
+              "image": {
+                "file": "background-hill.jpg",
+                "dim": 50,
+                "tint": false,
+                "dimLight": 72
+              },
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "TEMPLATE",
+                  "template": "{album}[ · {year}]",
+                  "size": "SMALL"
+                }
+              ]
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "REPEAT"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "NAVIGATOR",
+                "BOOKMARK",
+                "SLEEP",
+                "QUICK_LIST",
+                "LYRICS",
+                "SOUND"
+              ],
+              "icons": {
+                "BOOKMARK": {
+                  "file": "icon-flower.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SLEEP": {
+                  "file": "icon-sun.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "LYRICS": {
+                  "file": "icon-butterfly.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-meadow.jpg",
+      "dim": 25,
+      "tint": false,
+      "dimLight": 55
+    },
+    "OTHERS": {
+      "file": "background-meadow.jpg",
+      "dim": 60,
+      "tint": false,
+      "dimLight": 85
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-clover.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-flower.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-clover.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-flower.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": true,
+    "background": "#FF0F1A0E",
+    "surface": "#FF1B2B19",
+    "text": "#FFE7F3DF",
+    "textSecondary": "#B3E7F3DF",
+    "accent": "#FF8BD46E",
+    "excluded": "#FFFFB74D",
+    "danger": "#FFFF6B6B"
+  }
+}

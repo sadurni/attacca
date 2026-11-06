@@ -1,0 +1,174 @@
+{
+  "format": 1,
+  "name": "Attacca at Dawn",
+  "dark": true,
+  "background": "#FF08121E",
+  "surface": "#FF13263A",
+  "text": "#FFE6F4F1",
+  "textSecondary": "#A6E6F4F1",
+  "accent": "#FF3DDBB4",
+  "coverAccent": false,
+  "excluded": "#FFFFB74D",
+  "danger": "#FFFF6B81",
+  "corners": 0.5,
+  "textScale": 1.0,
+  "font": "SYSTEM",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "image": {
+        "file": "background-glass.jpg",
+        "dim": 30,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "TEXT",
+          "template": "{format}[ · {samplerate}][ · {bits}][ · {loudness}][ · {bpm}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "TITLE",
+      "framed": false,
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "TEMPLATE",
+          "template": "{album}[ · {year}][ · {position}/{count}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SEEK_BACK",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "SEEK_FORWARD"
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "QUEUE",
+        "FAVORITE",
+        "QUICK_LIST",
+        "SOUND",
+        "NAVIGATOR",
+        "REPEAT"
+      ]
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 40,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "image": {
+                "file": "background-glass.jpg",
+                "dim": 30,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "TEXT",
+                  "template": "{format}[ · {samplerate}][ · {bits}][ · {bpm}]",
+                  "size": "SMALL"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 60,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": false,
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "ALBUM"
+                }
+              ]
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SEEK_BACK",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "SEEK_FORWARD"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "QUEUE",
+                "FAVORITE",
+                "QUICK_LIST",
+                "SOUND",
+                "NAVIGATOR",
+                "REPEAT"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-aurora.jpg",
+      "dim": 10,
+      "tint": false
+    },
+    "OTHERS": {
+      "file": "background-aurora.jpg",
+      "dim": 55,
+      "tint": false
+    }
+  }
+}

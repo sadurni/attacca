@@ -1,0 +1,256 @@
+{
+  "format": 1,
+  "name": "Attacca of the Ents",
+  "dark": false,
+  "background": "#FFF7EBDD",
+  "surface": "#FFEEDCC4",
+  "text": "#FF3A2216",
+  "textSecondary": "#B33A2216",
+  "accent": "#FFC4561E",
+  "coverAccent": false,
+  "excluded": "#FFD9480F",
+  "danger": "#FFB3261E",
+  "corners": 1.2,
+  "textScale": 1.0,
+  "font": "SERIF",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": false,
+      "image": {
+        "file": "background-bark.jpg",
+        "dim": 40,
+        "tint": false,
+        "dimLight": 70
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "ALBUM"
+        }
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "horizontal": true,
+      "image": {
+        "file": "background-amber.jpg",
+        "dim": 50,
+        "tint": false,
+        "dimLight": 78
+      },
+      "children": [
+        {
+          "type": "TEXT",
+          "template": "[{year}][ · {genre}]",
+          "size": "SMALL"
+        },
+        {
+          "type": "TEXT",
+          "template": "{format}[ · {bitrate}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SEEK_BACK",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "SEEK_FORWARD"
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "QUEUE",
+        "FAVORITE",
+        "QUICK_LIST",
+        "SLEEP",
+        "NAVIGATOR",
+        "REPEAT"
+      ],
+      "icons": {
+        "QUEUE": {
+          "file": "icon-leaf.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-mushroom.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 42,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "horizontal": true,
+              "image": {
+                "file": "background-amber.jpg",
+                "dim": 50,
+                "tint": false,
+                "dimLight": 78
+              },
+              "children": [
+                {
+                  "type": "TEXT",
+                  "template": "[{year}][ · {genre}]",
+                  "size": "SMALL"
+                },
+                {
+                  "type": "TEXT",
+                  "template": "{format}[ · {bitrate}]",
+                  "size": "SMALL"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 58,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": false,
+              "image": {
+                "file": "background-bark.jpg",
+                "dim": 40,
+                "tint": false,
+                "dimLight": 70
+              },
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "ALBUM"
+                }
+              ]
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SEEK_BACK",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "SEEK_FORWARD"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "QUEUE",
+                "FAVORITE",
+                "QUICK_LIST",
+                "SLEEP",
+                "NAVIGATOR",
+                "REPEAT"
+              ],
+              "icons": {
+                "QUEUE": {
+                  "file": "icon-leaf.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SLEEP": {
+                  "file": "icon-mushroom.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-leaves.jpg",
+      "dim": 20,
+      "tint": false,
+      "dimLight": 80
+    },
+    "OTHERS": {
+      "file": "background-leaves.jpg",
+      "dim": 55,
+      "tint": false,
+      "dimLight": 88
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-leaf.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-oak.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-leaf.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-acorn.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": true,
+    "background": "#FF1E120C",
+    "surface": "#FF2E1D14",
+    "text": "#FFF6E3CF",
+    "textSecondary": "#B3F6E3CF",
+    "accent": "#FFF08A3C",
+    "excluded": "#FFFFB74D",
+    "danger": "#FFFF6B5B"
+  }
+}

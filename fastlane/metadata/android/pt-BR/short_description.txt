@@ -1,0 +1,1 @@
+Player que encadeia suas faixas pelo som, com processamento de som próprio

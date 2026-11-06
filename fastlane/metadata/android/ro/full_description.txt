@@ -1,0 +1,33 @@
+<p><i>„Redescoperă-ți colecția de muzică: ascult-o în moduri noi, cu cel mai bun sunet.”</i></p>
+
+<p><b>Propria ta muzică, redată ca și cum cineva ar fi ascultat dinainte fiecare piesă.</b> Liste în care fiecare piesă duce în următoarea, un lanț de sunet complet, O'rama ca să vezi piesa ca un peisaj în mișcare și teme pe care le modelezi singur. Liberă, cu sursă deschisă și privată.</p>
+
+<p>Attacca redă muzica de pe telefonul tău — dosare și liste de redare — și o ascultă singur: finalurile piesei, sunetul și starea ei de spirit sunt analizate pe telefon, astfel încât sfârșitul unei piese să poată duce în începutul următoarei. Nimic nu este trimis nicăieri: aplicația nu are acces la internet.</p>
+
+<p><b>Liste care curg</b></p>
+<ul>
+<li>Înlănțuie orice listă astfel încât fiecare piesă să ducă în următoarea; albume întregi pot fi înlănțuite de la sfârșit la început.</li>
+<li>O listă pornind de la orice piesă: cele mai apropiate piese ca sunet, înlănțuite de la ea, cu filtre (ani, tempo, energie, stare de spirit, voce, durată, ce nu ai mai ascultat de curând).</li>
+<li>Liste rapide și aleatorii, curbe de energie, un eșantion al familiilor tale de sunet, o punte de la o piesă la alta, albume întregi ca una singură, o listă pentru un timp stabilit.</li>
+<li>Stări de spirit și familii de sunet găsite în propria ta colecție de o rețea de recunoaștere a sunetului care rulează pe telefon.</li>
+<li>O listă de includere (permite sau blochează) pentru fiecare listă pe care o creează; liste inteligente create din condiții; liste fără sfârșit.</li>
+</ul>
+
+<p><b>Redare și sunet</b></p>
+<ul>
+<li>Redare fără pauze (gapless), crossfade care poate urma felul în care se termină fiecare piesă, tăierea tăcerii, ReplayGain (și volum măsurat pentru fișierele care nu îl au).</li>
+<li>Procesare proprie a sunetului: egalizator (grafic sau parametric, corecții pentru căști), bas dinamic și virtual, lățime stereo, crossfeed, compresor și limitator true-peak; un profil pentru fiecare dispozitiv de ieșire.</li>
+<li>Dispozitive: fiecare ieșire își poate continua propria listă, își poate seta volumul și poate începe redarea când se conectează.</li>
+</ul>
+
+<p><b>Cum vrei tu</b></p>
+<ul>
+<li>Teme cu culori, fonturi, fundaluri și pictograme proprii și o aranjare a ecranului În redare pe care o organizezi tu; o galerie de la care să pornești.</li>
+<li>Muzică după artiști, albume, genuri, decenii, stări de spirit și familii; dosare; versuri, marcaje, temporizator de oprire, viteză, repetare A-B; statistici de ascultare.</li>
+<li>Android Auto, widget pe ecranul principal, copie de rezervă a tuturor datelor, 23 de limbi.</li>
+<li>Attacca O'rama: piesa care se aude ca un peisaj în mișcare, desenat din forma ei de undă, starea și ritmul ei. Cu câteva mici surprize de descoperit.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analizează în același fel și partajează biblioteca, și creează liste pentru playere Rockbox și în browser.</p>
+
+<p>De ce permisiunile: acces la toate fișierele, pentru a reda dosarele și listele tale de redare acolo unde se află; afișare peste alte aplicații, fără optimizarea bateriei și dispozitive din apropiere, doar pentru a începe redarea când se conectează un dispozitiv Bluetooth, cu playerul închis.</p>

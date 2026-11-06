@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Starting a device's list when it connects with the player closed. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Lets the app open its screen when a device set to start playing connects. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Holding the standard effects of its own audio session, kept off (SessionEffectGuard). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Equalizer and sound-effect apps that may change the sound (SystemEffects). -->
+    <queries>
+        <package android:name="org.lineageos.audiofx" />
+        <package android:name="com.pittvandewitt.wavelet" />
+        <package android:name="me.timschneeberger.rootlessjamesdsp" />
+        <package android:name="james.dsp" />
+        <package android:name="com.maxmpz.equalizer" />
+        <package android:name="com.devdnua.equalizer.free" />
+        <package android:name="com.devdnua.equalizer" />
+        <package android:name="com.smartandroidapps.equalizer" />
+        <package android:name="com.jazibkhan.equalizer" />
+        <package android:name="com.dolby.daxappui" />
+        <package android:name="com.dolby.dax2appUI" />
+        <package android:name="com.motorola.dolby.dolbyui" />
+        <package android:name="com.sec.android.app.soundalive" />
+        <package android:name="com.sonyericsson.soundenhancement" />
+        <package android:name="com.miui.misound" />
+        <package android:name="com.oneplus.sound.tuner" />
+    </queries>
+
+    <application
+        android:name=".AttaccaApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:requestLegacyExternalStorage="true"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Attacca"
+        tools:targetApi="36">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="application/x-mpegurl" />
+                <data android:mimeType="audio/x-mpegurl" />
+                <data android:mimeType="audio/mpegurl" />
+                <data android:mimeType="audio/x-scpls" />
+                <data android:mimeType="application/x-cue" />
+                <data android:mimeType="application/xspf+xml" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/x-ogg" />
+                <data android:mimeType="application/flac" />
+                <data android:mimeType="application/x-flac" />
+                <data android:mimeType="application/mpegurl" />
+                <data android:mimeType="application/x-scpls" />
+                <data android:mimeType="audio/scpls" />
+                <data android:mimeType="text/x-mpegurl" />
+                <!-- Type matching is case-sensitive and servers often send these spellings. -->
+                <data android:mimeType="application/x-mpegURL" />
+                <data android:mimeType="application/vnd.apple.mpegURL" />
+                <data android:mimeType="audio/x-mpegURL" />
+            </intent-filter>
+            <!--
+                Web pages "open with" through the Web Share API, which reaches Android as a share
+                (SEND or, in some browsers, SEND_MULTIPLE) of the file, not as a VIEW.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="application/x-mpegurl" />
+                <data android:mimeType="application/mpegurl" />
+                <data android:mimeType="text/x-mpegurl" />
+                <data android:mimeType="application/x-scpls" />
+                <data android:mimeType="application/x-cue" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/x-ogg" />
+                <data android:mimeType="application/flac" />
+                <data android:mimeType="application/x-flac" />
+            </intent-filter>
+            <!--
+                Many file managers hand playlists (and some audio files) over as
+                application/octet-stream or text/plain: match those by file extension.
+                pathSuffix is used from Android 12; older versions use the pathPattern copies
+                (repeated because their ".*" stops at the first dot of the path).
+            -->
+            <intent-filter tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathSuffix=".m3u" />
+                <data android:pathPattern=".*\\.m3u" />
+                <data android:pathPattern=".*\\..*\\.m3u" />
+                <data android:pathPattern=".*\\..*\\..*\\.m3u" />
+                <data android:pathSuffix=".M3U" />
+                <data android:pathPattern=".*\\.M3U" />
+                <data android:pathPattern=".*\\..*\\.M3U" />
+                <data android:pathPattern=".*\\..*\\..*\\.M3U" />
+                <data android:pathSuffix=".m3u8" />
+                <data android:pathPattern=".*\\.m3u8" />
+                <data android:pathPattern=".*\\..*\\.m3u8" />
+                <data android:pathPattern=".*\\..*\\..*\\.m3u8" />
+                <data android:pathSuffix=".M3U8" />
+                <data android:pathPattern=".*\\.M3U8" />
+                <data android:pathPattern=".*\\..*\\.M3U8" />
+                <data android:pathPattern=".*\\..*\\..*\\.M3U8" />
+                <data android:pathSuffix=".pls" />
+                <data android:pathPattern=".*\\.pls" />
+                <data android:pathPattern=".*\\..*\\.pls" />
+                <data android:pathPattern=".*\\..*\\..*\\.pls" />
+                <data android:pathSuffix=".PLS" />
+                <data android:pathPattern=".*\\.PLS" />
+                <data android:pathPattern=".*\\..*\\.PLS" />
+                <data android:pathPattern=".*\\..*\\..*\\.PLS" />
+                <data android:pathSuffix=".xspf" />
+                <data android:pathPattern=".*\\.xspf" />
+                <data android:pathPattern=".*\\..*\\.xspf" />
+                <data android:pathPattern=".*\\..*\\..*\\.xspf" />
+                <data android:pathSuffix=".cue" />
+                <data android:pathPattern=".*\\.cue" />
+                <data android:pathPattern=".*\\..*\\.cue" />
+                <data android:pathPattern=".*\\..*\\..*\\.cue" />
+                <data android:pathSuffix=".CUE" />
+                <data android:pathPattern=".*\\.CUE" />
+                <data android:pathPattern=".*\\..*\\.CUE" />
+                <data android:pathPattern=".*\\..*\\..*\\.CUE" />
+                <data android:pathSuffix=".flac" />
+                <data android:pathPattern=".*\\.flac" />
+                <data android:pathPattern=".*\\..*\\.flac" />
+                <data android:pathPattern=".*\\..*\\..*\\.flac" />
+                <data android:pathSuffix=".FLAC" />
+                <data android:pathPattern=".*\\.FLAC" />
+                <data android:pathPattern=".*\\..*\\.FLAC" />
+                <data android:pathPattern=".*\\..*\\..*\\.FLAC" />
+                <data android:pathSuffix=".ogg" />
+                <data android:pathPattern=".*\\.ogg" />
+                <data android:pathPattern=".*\\..*\\.ogg" />
+                <data android:pathPattern=".*\\..*\\..*\\.ogg" />
+                <data android:pathSuffix=".OGG" />
+                <data android:pathPattern=".*\\.OGG" />
+                <data android:pathPattern=".*\\..*\\.OGG" />
+                <data android:pathPattern=".*\\..*\\..*\\.OGG" />
+                <data android:pathSuffix=".oga" />
+                <data android:pathPattern=".*\\.oga" />
+                <data android:pathPattern=".*\\..*\\.oga" />
+                <data android:pathPattern=".*\\..*\\..*\\.oga" />
+                <data android:pathSuffix=".OGA" />
+                <data android:pathPattern=".*\\.OGA" />
+                <data android:pathPattern=".*\\..*\\.OGA" />
+                <data android:pathPattern=".*\\..*\\..*\\.OGA" />
+                <data android:pathSuffix=".opus" />
+                <data android:pathPattern=".*\\.opus" />
+                <data android:pathPattern=".*\\..*\\.opus" />
+                <data android:pathPattern=".*\\..*\\..*\\.opus" />
+                <data android:pathSuffix=".OPUS" />
+                <data android:pathPattern=".*\\.OPUS" />
+                <data android:pathPattern=".*\\..*\\.OPUS" />
+                <data android:pathPattern=".*\\..*\\..*\\.OPUS" />
+                <data android:pathSuffix=".m4a" />
+                <data android:pathPattern=".*\\.m4a" />
+                <data android:pathPattern=".*\\..*\\.m4a" />
+                <data android:pathPattern=".*\\..*\\..*\\.m4a" />
+                <data android:pathSuffix=".M4A" />
+                <data android:pathPattern=".*\\.M4A" />
+                <data android:pathPattern=".*\\..*\\.M4A" />
+                <data android:pathPattern=".*\\..*\\..*\\.M4A" />
+                <data android:pathSuffix=".m4b" />
+                <data android:pathPattern=".*\\.m4b" />
+                <data android:pathPattern=".*\\..*\\.m4b" />
+                <data android:pathPattern=".*\\..*\\..*\\.m4b" />
+                <data android:pathSuffix=".M4B" />
+                <data android:pathPattern=".*\\.M4B" />
+                <data android:pathPattern=".*\\..*\\.M4B" />
+                <data android:pathPattern=".*\\..*\\..*\\.M4B" />
+                <data android:pathSuffix=".aac" />
+                <data android:pathPattern=".*\\.aac" />
+                <data android:pathPattern=".*\\..*\\.aac" />
+                <data android:pathPattern=".*\\..*\\..*\\.aac" />
+                <data android:pathSuffix=".AAC" />
+                <data android:pathPattern=".*\\.AAC" />
+                <data android:pathPattern=".*\\..*\\.AAC" />
+                <data android:pathPattern=".*\\..*\\..*\\.AAC" />
+                <data android:pathSuffix=".mka" />
+                <data android:pathPattern=".*\\.mka" />
+                <data android:pathPattern=".*\\..*\\.mka" />
+                <data android:pathPattern=".*\\..*\\..*\\.mka" />
+                <data android:pathSuffix=".MKA" />
+                <data android:pathPattern=".*\\.MKA" />
+                <data android:pathPattern=".*\\..*\\.MKA" />
+                <data android:pathPattern=".*\\..*\\..*\\.MKA" />
+                <data android:pathSuffix=".wav" />
+                <data android:pathPattern=".*\\.wav" />
+                <data android:pathPattern=".*\\..*\\.wav" />
+                <data android:pathPattern=".*\\..*\\..*\\.wav" />
+                <data android:pathSuffix=".WAV" />
+                <data android:pathPattern=".*\\.WAV" />
+                <data android:pathPattern=".*\\..*\\.WAV" />
+                <data android:pathPattern=".*\\..*\\..*\\.WAV" />
+            </intent-filter>
+            <!-- Lets the system and other apps recognize Attacca as a music player. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_MUSIC" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MUSIC_PLAYER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".playback.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
+        <!-- Keeps the app in the foreground while the music folder is scanned or analysed. -->
+        <service
+            android:name=".WorkService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync|specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Analysing the user's music collection on the device for playlist generation (hours of decoding, started by the user)" />
+        </service>
+
+        <!-- "Now playing" widget for the home screen. -->
+        <receiver
+            android:name=".playback.NowPlayingWidget"
+            android:exported="false"
+            android:label="@string/nav_player">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_now_playing_info" />
+        </receiver>
+
+        <!-- Android Auto: Attacca's lists and music folder in the car (PlaybackService's library). -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <!-- "Play" from headphones / car with the app closed starts playback resumption. -->
+        <receiver
+            android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- A Bluetooth device set to start playing connected while the player is closed. -->
+        <receiver
+            android:name=".playback.DeviceConnectReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Persists the per-app language on Android < 13. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+        <!-- Tracks shared with other apps. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/shared_files" />
+        </provider>
+    </application>
+</manifest>

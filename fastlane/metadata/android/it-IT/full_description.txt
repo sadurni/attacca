@@ -1,0 +1,33 @@
+<p><i>«Riscopri la tua collezione di musica: ascoltala in modi nuovi, con il miglior suono.»</i></p>
+
+<p><b>La tua musica, suonata come se qualcuno avesse ascoltato prima ogni brano.</b> Liste in cui ogni canzone porta alla successiva, una catena audio completa, O'rama per guardare la canzone come un paesaggio in movimento e temi che plasmi tu. Libera, open source e rispettosa della privacy.</p>
+
+<p>Attacca riproduce la musica del telefono — cartelle e liste — e la ascolta da sé: l'inizio e la fine di ogni brano, il suo suono e la sua atmosfera vengono analizzati sul telefono, così la fine di un brano porta all'inizio del successivo. Non viene inviato nulla da nessuna parte: l'app non ha accesso a internet.</p>
+
+<p><b>Liste che scorrono</b></p>
+<ul>
+<li>Concatena qualsiasi lista perché ogni brano porti al successivo; anche album interi, dalla fine dell'uno all'inizio dell'altro.</li>
+<li>Una lista da qualsiasi brano: i più simili nel suono, concatenati a partire da esso, con filtri (anni, tempo, energia, atmosfera, voce, durata, ciò che non ascolti da un po').</li>
+<li>Liste rapide e casuali, curve di energia, un assaggio delle tue famiglie sonore, un ponte da un brano a un altro, album interi come uno solo, una lista per una durata stabilita.</li>
+<li>Atmosfere e famiglie sonore trovate nella tua stessa raccolta da una rete di riconoscimento del suono che funziona sul telefono.</li>
+<li>Una lista di inclusione (consenti o blocca) per ogni lista creata; liste intelligenti basate su condizioni; liste senza fine.</li>
+</ul>
+
+<p><b>Riproduzione e suono</b></p>
+<ul>
+<li>Riproduzione senza pause (gapless), dissolvenza incrociata che può seguire come finisce ogni brano, taglio dei silenzi, ReplayGain (e volume misurato per i file che ne sono privi).</li>
+<li>Elaborazione del suono propria: equalizzatore (grafico o parametrico, correzioni per cuffie), bassi dinamici e virtuali, ampiezza stereo, crossfeed, compressore e limitatore di true peak; un profilo per ogni dispositivo di uscita.</li>
+<li>Dispositivi: ogni uscita può proseguire la propria lista, impostare il proprio volume e iniziare a suonare quando si connette.</li>
+</ul>
+
+<p><b>A modo tuo</b></p>
+<ul>
+<li>Temi con colori, caratteri, sfondi e icone propri e un layout di In riproduzione che disponi tu; una galleria da cui partire.</li>
+<li>Musica per artisti, album, generi, decenni, atmosfere e famiglie; cartelle; testi, segnalibri, timer di spegnimento, velocità, ripetizione A-B; statistiche di ascolto.</li>
+<li>Android Auto, widget, backup di tutto, 23 lingue.</li>
+<li>Attacca O'rama: il brano in riproduzione come un paesaggio in movimento, disegnato dalla sua forma d'onda, dal suo umore e dal suo ritmo. Con qualche piccola sorpresa da scoprire.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analizza allo stesso modo, condivide la libreria e crea liste per i lettori con Rockbox e nel browser.</p>
+
+<p>Perché i permessi: accesso a tutti i file, per riprodurre le tue cartelle e liste dove si trovano; visualizzazione sopra altre app, nessuna ottimizzazione della batteria e dispositivi nelle vicinanze, solo per iniziare a suonare quando si connette un dispositivo Bluetooth con il lettore chiuso.</p>

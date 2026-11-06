@@ -1,0 +1,284 @@
+{
+  "format": 1,
+  "name": "Attacca of the Killer Bees",
+  "dark": false,
+  "background": "#FFFFF8D8",
+  "surface": "#FFF8EBAA",
+  "text": "#FF3A300A",
+  "textSecondary": "#B33A300A",
+  "accent": "#FFC99A06",
+  "coverAccent": false,
+  "excluded": "#FFD84315",
+  "danger": "#FFC62828",
+  "corners": 1.25,
+  "textScale": 1.0,
+  "font": "SYSTEM",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": true,
+      "image": {
+        "file": "background-ears-dusk.jpg",
+        "dim": 70,
+        "tint": false,
+        "dimLight": 70,
+        "fileLight": "background-ears-day.jpg"
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "TEMPLATE",
+          "template": "{album}[ · {year}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "TEXT",
+      "template": "[{mood}][ · {family}][ · {bpm}]",
+      "size": "SMALL",
+      "boxed": false
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS_ALBUM",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "NEXT_ALBUM",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "LIST",
+      "framed": true,
+      "lines": [
+        {
+          "kind": "LIST_NAME"
+        },
+        {
+          "kind": "LIST_DETAILS"
+        },
+        {
+          "kind": "NEXT"
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "BOOKMARK",
+        "SLEEP",
+        "QUICK_LIST",
+        "FAVORITE",
+        "LYRICS",
+        "SOUND"
+      ],
+      "icons": {
+        "BOOKMARK": {
+          "file": "icon-poppy.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-sun.png",
+          "dim": 0,
+          "tint": true
+        },
+        "FAVORITE": {
+          "file": "icon-wheat.png",
+          "dim": 0,
+          "tint": true
+        },
+        "LYRICS": {
+          "file": "icon-windmill.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 42,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "LIST",
+              "framed": true,
+              "lines": [
+                {
+                  "kind": "LIST_NAME"
+                },
+                {
+                  "kind": "LIST_DETAILS"
+                },
+                {
+                  "kind": "NEXT"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 58,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": true,
+              "image": {
+                "file": "background-ears-dusk.jpg",
+                "dim": 70,
+                "tint": false,
+                "dimLight": 70,
+                "fileLight": "background-ears-day.jpg"
+              },
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "TEMPLATE",
+                  "template": "{album}[ · {year}]",
+                  "size": "SMALL"
+                }
+              ]
+            },
+            {
+              "type": "TEXT",
+              "template": "[{mood}][ · {family}][ · {bpm}]",
+              "size": "SMALL",
+              "boxed": false
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "PREVIOUS_ALBUM",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "NEXT_ALBUM",
+                "REPEAT"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "NAVIGATOR",
+                "BOOKMARK",
+                "SLEEP",
+                "QUICK_LIST",
+                "FAVORITE",
+                "LYRICS",
+                "SOUND"
+              ],
+              "icons": {
+                "BOOKMARK": {
+                  "file": "icon-poppy.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SLEEP": {
+                  "file": "icon-sun.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "FAVORITE": {
+                  "file": "icon-wheat.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "LYRICS": {
+                  "file": "icon-windmill.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-field-dusk.jpg",
+      "dim": 55,
+      "tint": false,
+      "dimLight": 40,
+      "fileLight": "background-field-day.jpg"
+    },
+    "OTHERS": {
+      "file": "background-field-dusk.jpg",
+      "dim": 74,
+      "tint": false,
+      "dimLight": 80,
+      "fileLight": "background-field-day.jpg"
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-wheat.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-bale.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-wheat.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-poppy.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": true,
+    "background": "#FF1C1A08",
+    "surface": "#FF302B10",
+    "text": "#FFFBF1C8",
+    "textSecondary": "#B3FBF1C8",
+    "accent": "#FFF6CF3A",
+    "excluded": "#FFFF8A65",
+    "danger": "#FFFF6B6B"
+  }
+}

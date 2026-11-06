@@ -1,0 +1,231 @@
+{
+  "format": 1,
+  "name": "Attacca Ships on Fire",
+  "dark": true,
+  "background": "#FF1C1408",
+  "surface": "#FF2E2210",
+  "text": "#FFFDF996",
+  "textSecondary": "#B3FDF996",
+  "accent": "#FFE6B422",
+  "coverAccent": false,
+  "excluded": "#FFFF9999",
+  "danger": "#FFFF6E6E",
+  "corners": 0.5,
+  "textScale": 1.0,
+  "font": "SYSTEM",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "TEXT",
+      "template": "{position}/{count}[ · {list}]",
+      "size": "SMALL"
+    },
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": false,
+      "lines": [
+        {
+          "kind": "TITLE",
+          "size": "HUGE"
+        },
+        {
+          "kind": "ARTIST",
+          "size": "LARGE"
+        },
+        {
+          "kind": "ALBUM",
+          "size": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": false,
+      "children": [
+        {
+          "type": "PROGRESS"
+        },
+        {
+          "type": "TEXT",
+          "template": "[{year}][ · {genre}]",
+          "size": "SMALL"
+        },
+        {
+          "type": "TEXT",
+          "template": "{codec}[ @ {bitrate}][ @ {samplerate}][ · ▶ {plays}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS",
+        "SEEK_BACK",
+        "PLAY_PAUSE",
+        "SEEK_FORWARD",
+        "NEXT",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "LISTS",
+        "QUEUE",
+        "FAVORITE",
+        "SLEEP",
+        "QUICK_LIST",
+        "SOUND"
+      ],
+      "icons": {
+        "LISTS": {
+          "file": "icon-cd.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SOUND": {
+          "file": "icon-sunburst.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 40,
+          "children": [
+            {
+              "type": "COVER"
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 60,
+          "children": [
+            {
+              "type": "TEXT",
+              "template": "{position}/{count}[ · {list}]",
+              "size": "SMALL"
+            },
+            {
+              "type": "TITLE",
+              "framed": false,
+              "lines": [
+                {
+                  "kind": "TITLE",
+                  "size": "HUGE"
+                },
+                {
+                  "kind": "ARTIST",
+                  "size": "LARGE"
+                },
+                {
+                  "kind": "ALBUM",
+                  "size": "MEDIUM"
+                }
+              ]
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "TEXT",
+              "template": "{codec}[ @ {bitrate}][ @ {samplerate}]",
+              "size": "SMALL"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "PREVIOUS",
+                "SEEK_BACK",
+                "PLAY_PAUSE",
+                "SEEK_FORWARD",
+                "NEXT",
+                "REPEAT"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "NAVIGATOR",
+                "LISTS",
+                "QUEUE",
+                "FAVORITE",
+                "SLEEP",
+                "QUICK_LIST",
+                "SOUND"
+              ],
+              "icons": {
+                "LISTS": {
+                  "file": "icon-cd.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SOUND": {
+                  "file": "icon-sunburst.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-rays-night.jpg",
+      "dim": 15,
+      "tint": false,
+      "dimLight": 30,
+      "fileLight": "background-rays-day.jpg"
+    },
+    "OTHERS": {
+      "file": "background-rays-night.jpg",
+      "dim": 65,
+      "tint": false,
+      "dimLight": 75,
+      "fileLight": "background-rays-day.jpg"
+    }
+  },
+  "icons": {
+    "NO_COVER": {
+      "file": "icon-cd.png",
+      "dim": 0,
+      "tint": true
+    },
+    "PLAYLIST": {
+      "file": "icon-cd.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": false,
+    "background": "#FFF6EBC8",
+    "surface": "#FFEAD9A6",
+    "text": "#FF3A2A05",
+    "textSecondary": "#B33A2A05",
+    "accent": "#FF9A7200",
+    "excluded": "#FFC2185B",
+    "danger": "#FFC62828"
+  }
+}

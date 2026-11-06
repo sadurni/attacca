@@ -1,0 +1,176 @@
+{
+  "format": 1,
+  "name": "Attacca of the 50 Foot Woman",
+  "dark": true,
+  "background": "#FF140E1A",
+  "surface": "#FF241B30",
+  "text": "#FFF3E9DC",
+  "textSecondary": "#B3F3E9DC",
+  "accent": "#FFF2A541",
+  "coverAccent": false,
+  "excluded": "#FFFF9800",
+  "danger": "#FFE05555",
+  "corners": 1.4,
+  "textScale": 1.0,
+  "font": "SERIF",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": false,
+      "image": {
+        "file": "background-strip.jpg",
+        "dim": 35,
+        "tint": false
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "TEMPLATE",
+          "template": "{album}[ · {year}]",
+          "size": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "type": "TEXT",
+      "template": "{format}[ · {bitrate}][ · {samplerate}]",
+      "size": "SMALL",
+      "boxed": false
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS_ALBUM",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "NEXT_ALBUM",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "horizontal": true,
+      "image": {
+        "file": "background-wood.jpg",
+        "dim": 55,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "LIST",
+          "width": 72,
+          "framed": false,
+          "lines": [
+            {
+              "kind": "LIST_NAME"
+            },
+            {
+              "kind": "LIST_DETAILS"
+            },
+            {
+              "kind": "NEXT"
+            }
+          ]
+        },
+        {
+          "type": "BUTTONS",
+          "width": 28,
+          "buttons": [
+            "FAVORITE"
+          ],
+          "icons": {
+            "FAVORITE": {
+              "file": "icon-heart.png",
+              "dim": 0,
+              "tint": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "BOOKMARK",
+        "SLEEP",
+        "QUICK_LIST",
+        "LISTS",
+        "SOUND"
+      ],
+      "icons": {
+        "NAVIGATOR": {
+          "file": "icon-compass.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-moon.png",
+          "dim": 0,
+          "tint": true
+        },
+        "LISTS": {
+          "file": "icon-record.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-vinyl.jpg",
+      "dim": 15,
+      "tint": false,
+      "dimLight": 82
+    },
+    "OTHERS": {
+      "file": "background-vinyl.jpg",
+      "dim": 55,
+      "tint": false,
+      "dimLight": 88
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-record.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-record.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-record.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": false,
+    "background": "#FFF4EBDD",
+    "surface": "#FFE8DCC8",
+    "text": "#FF2B1D2E",
+    "textSecondary": "#B32B1D2E",
+    "accent": "#FFB5651D",
+    "excluded": "#FFE07B00",
+    "danger": "#FFC0392B"
+  }
+}

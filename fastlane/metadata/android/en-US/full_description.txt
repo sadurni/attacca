@@ -1,0 +1,33 @@
+<p><i>“Rediscover your music collection: hear it in new ways, with the best sound.”</i></p>
+
+<p><b>Your own music, played as if someone had listened to every track first.</b> Lists where each song flows into the next, a complete sound chain, O'rama to watch the song as a moving landscape, and themes you shape yourself. Free, open source and private.</p>
+
+<p>Attacca plays the music on your phone — folders and playlists — and listens to it itself: each track's ends, its sound and its mood are analysed on the phone, so the end of one track can lead into the start of the next. Nothing is sent anywhere: the app has no internet access.</p>
+
+<p><b>Lists that flow</b></p>
+<ul>
+<li>Chain any list so each track leads into the next; whole albums can be chained end into start.</li>
+<li>A list from any track: the closest tracks in sound, chained from it, with filters (years, tempo, energy, mood, voice, length, what you have not heard lately).</li>
+<li>Quick and random lists, energy curves, a sampler of your sound families, a bridge from one track to another, whole albums like one, a list for a set time.</li>
+<li>Moods and sound families found in your own collection by a sound recognition network that runs on the phone.</li>
+<li>An inclusion list (allow or block) for every list it makes; smart lists made from conditions; endless lists.</li>
+</ul>
+
+<p><b>Playback and sound</b></p>
+<ul>
+<li>Gapless playback, crossfade that can follow how each track ends, silence trimming, ReplayGain (and loudness measured for files without it).</li>
+<li>Its own sound processing: equalizer (graphic or parametric, headphone corrections), dynamic and virtual bass, stereo width, crossfeed, compressor and a true-peak limiter; a profile per output device.</li>
+<li>Devices: each output can continue its own list, set its volume and start playing when it connects.</li>
+</ul>
+
+<p><b>Your way</b></p>
+<ul>
+<li>Themes with their own colors, fonts, backgrounds, icons and a Now playing layout you arrange; a gallery to start from.</li>
+<li>Music by artists, albums, genres, decades, moods and families; folders; lyrics, bookmarks, sleep timer, speed, A-B repeat; listening statistics.</li>
+<li>Android Auto, a home-screen widget, backup of everything, 23 languages.</li>
+<li>Attacca O'rama: the playing song as a moving landscape, drawn from its waveform, mood and beat. With a few little surprises to find.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analyses the same way and shares the library, and makes lists for Rockbox players and in the browser.</p>
+
+<p>Why the permissions: access to all files, to play your folders and playlists where they are; display over other apps, no battery optimization and nearby devices, only to start playing when a Bluetooth device connects with the player closed.</p>

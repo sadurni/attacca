@@ -1,0 +1,33 @@
+<p><i>«Redescubre a túa colección de música: escóitaa de xeitos novos, co mellor son.»</i></p>
+
+<p><b>A túa propia música, soando coma se alguén escoitase antes cada tema.</b> Listas nas que cada canción leva á seguinte, unha cadea de son completa, O'rama para ver a canción como unha paisaxe en movemento e temas que deseñas ti. Libre, de código aberto e privada.</p>
+
+<p>Attacca reproduce a música do móbil —cartafoles e listas— e escóitaa el mesmo: o principio e o final de cada tema, como soa e o seu estado de ánimo analízanse no móbil, para que o final dun tema leve ao principio do seguinte. Non se envía nada a ningures: a app non ten acceso a internet.</p>
+
+<p><b>Listas que flúen</b></p>
+<ul>
+<li>Encadea calquera lista para que cada tema leve ao seguinte; tamén álbums enteiros, do final dun ao principio do outro.</li>
+<li>Unha lista desde calquera tema: os máis parecidos en son, encadeados desde el, con filtros (anos, tempo, enerxía, estado de ánimo, voz, duración, o que non escoitaches ultimamente).</li>
+<li>Listas rápidas e ao chou, curvas de enerxía, unha mostra das túas familias de son, un camiño dun tema a outro, álbums enteiros coma un só, unha lista para un tempo.</li>
+<li>Estados de ánimo e familias de son atopados na túa propia colección por unha rede de recoñecemento de son que funciona no móbil.</li>
+<li>Unha lista de inclusión (permitir ou bloquear) para todas as listas que fai; listas intelixentes por condicións; listas que non se acaban.</li>
+</ul>
+
+<p><b>Reprodución e son</b></p>
+<ul>
+<li>Reprodución sen pausas, crossfade que pode seguir como remata cada tema, recorte de silencios, ReplayGain (e sonoridade medida para os arquivos que non o teñen).</li>
+<li>O seu propio tratamento de son: ecualizador (gráfico ou paramétrico, correccións de auriculares), graves dinámicos e virtuais, amplitude estéreo, crossfeed, compresor e limitador de pico real; un perfil por cada dispositivo de saída.</li>
+<li>Dispositivos: cada saída pode continuar a súa propia lista, fixar o seu volume e comezar a soar ao conectarse.</li>
+</ul>
+
+<p><b>Á túa maneira</b></p>
+<ul>
+<li>Temas coas súas propias cores, fontes, fondos, iconas e unha pantalla de Reproducindo que ti distribúes; unha galería para comezar.</li>
+<li>Música por artistas, álbums, xéneros, décadas, estados de ánimo e familias; cartafoles; letras, marcadores, temporizador de apagado, velocidade, repetición A-B; estatísticas de escoita.</li>
+<li>Android Auto, widget, copia de seguranza de todo, 23 idiomas.</li>
+<li>Attacca O'rama: a canción que soa como unha paisaxe en movemento, feita da súa forma de onda, o seu estado de ánimo e o seu ritmo. Con algunhas pequenas sorpresas por descubrir.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analiza igual e comparte a biblioteca, e fai listas para reprodutores con Rockbox e no navegador.</p>
+
+<p>Por que os permisos: acceso a todos os arquivos, para reproducir os teus cartafoles e listas onde están; amosar sobre outras apps, sen optimización de batería e dispositivos próximos, só para comezar a soar cando se conecta un dispositivo Bluetooth co reprodutor pechado.</p>

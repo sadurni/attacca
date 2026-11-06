@@ -1,0 +1,1 @@
+Reprodutor de música que encadea os temas polo seu son, con cadea de son propia

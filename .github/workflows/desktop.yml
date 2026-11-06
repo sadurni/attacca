@@ -1,0 +1,76 @@
+# Attacca Desktop: tested on every push and pull request; on a version tag (v1.2.3) each system
+# builds its own packages (Windows .msi and portable zip, Linux .deb and tar.gz, macOS .dmg), plus
+# the zip for any system with Java 17, the web page and the Rockbox plugin's README, all attached
+# to the GitHub release. The Rockbox plugin builds (.rock) are made by hand (rockbox/build.sh needs
+# the Rockbox toolchain) and attached separately.
+name: Desktop
+
+on:
+  push:
+    paths: ["desktop/**", "core/**", "web/**", "rockbox/**", ".github/workflows/desktop.yml"]
+    tags: ["v*"]
+  pull_request:
+    paths: ["desktop/**", "core/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew test
+
+  package:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Packages
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          case "${{ runner.os }}" in
+            Windows)
+              ./gradlew packageMsi createDistributable distZip
+              cp build/compose/binaries/main/msi/*.msi dist/
+              (cd build/compose/binaries/main/app && 7z a "$GITHUB_WORKSPACE/desktop/dist/AttaccaDesktop-$VERSION-windows-portable.zip" AttaccaDesktop)
+              cp build/distributions/*.zip dist/
+              cp ../web/attaccaplg.html dist/attacca-web.html
+              ;;
+            Linux)
+              ./gradlew packageDeb createDistributable
+              cp build/compose/binaries/main/deb/*.deb dist/
+              tar -czf "dist/AttaccaDesktop-$VERSION-linux-x64.tar.gz" -C build/compose/binaries/main/app AttaccaDesktop
+              ;;
+            macOS)
+              ./gradlew packageDmg
+              cp build/compose/binaries/main/dmg/*.dmg dist/
+              ;;
+          esac
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/dist/*

@@ -1,0 +1,33 @@
+<p><i>„Odkryj na nowo swoją kolekcję muzyki: słuchaj jej na nowe sposoby, z najlepszym dźwiękiem.”</i></p>
+
+<p><b>Twoja własna muzyka, grana tak, jakby ktoś wcześniej przesłuchał każdy utwór.</b> Listy, w których każdy utwór przechodzi w następny, kompletny tor dźwięku, O'rama, by oglądać utwór jako ruchomy krajobraz, i motywy, które kształtujesz sam. Wolna, otwarta i prywatna.</p>
+
+<p>Attacca odtwarza muzykę z Twojego telefonu — foldery i playlisty — i sam ją analizuje: końcówki utworów, ich brzmienie i nastrój są analizowane na telefonie, dzięki czemu koniec jednego utworu może płynnie prowadzić do początku następnego. Nic nie jest nigdzie wysyłane: aplikacja nie ma dostępu do internetu.</p>
+
+<p><b>Listy, które płyną</b></p>
+<ul>
+<li>Połącz dowolną listę tak, by każdy utwór prowadził do następnego; całe albumy można łączyć od końca do początku.</li>
+<li>Lista od dowolnego utworu: najbliższe brzmieniowo utwory, połączone od niego, z filtrami (lata, tempo, energia, nastrój, wokal, długość, to, czego dawno nie słuchałeś).</li>
+<li>Szybkie i losowe listy, krzywe energii, próbnik Twoich rodzin brzmieniowych, most od jednego utworu do drugiego, całe albumy jak jeden utwór, lista na zadany czas.</li>
+<li>Nastroje i rodziny brzmieniowe odnajdywane w Twojej własnej kolekcji przez sieć rozpoznawania dźwięku działającą na telefonie.</li>
+<li>Lista dołączania (zezwalaj lub blokuj) dla każdej tworzonej listy; inteligentne listy tworzone z warunków; listy bez końca.</li>
+</ul>
+
+<p><b>Odtwarzanie i dźwięk</b></p>
+<ul>
+<li>Odtwarzanie bez przerw (gapless), przenikanie, które może zależeć od tego, jak kończy się każdy utwór, przycinanie ciszy, ReplayGain (oraz głośność mierzona dla plików, które jej nie mają).</li>
+<li>Własne przetwarzanie dźwięku: korektor (graficzny lub parametryczny, korekty dla słuchawek), bas dynamiczny i wirtualny, szerokość stereo, crossfeed, kompresor i limiter true-peak; profil dla każdego urządzenia wyjściowego.</li>
+<li>Urządzenia: każde wyjście może kontynuować własną listę, ustawić swoją głośność i zacząć odtwarzanie po podłączeniu.</li>
+</ul>
+
+<p><b>Po Twojemu</b></p>
+<ul>
+<li>Motywy z własnymi kolorami, czcionkami, tłami, ikonami i układem ekranu Teraz odtwarzane, który sam ustawiasz; galeria na start.</li>
+<li>Muzyka według wykonawców, albumów, gatunków, dekad, nastrojów i rodzin; foldery; teksty, zakładki, wyłącznik czasowy, prędkość, powtarzanie A-B; statystyki słuchania.</li>
+<li>Android Auto, widżet na ekranie głównym, kopia zapasowa wszystkiego, 23 języki.</li>
+<li>Attacca O'rama: odtwarzany utwór jako ruchomy krajobraz, narysowany z jego przebiegu fali, nastroju i rytmu. Z kilkoma małymi niespodziankami do odkrycia.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analizuje tak samo i współdzieli bibliotekę, a także tworzy listy dla odtwarzaczy Rockbox i w przeglądarce.</p>
+
+<p>Po co uprawnienia: dostęp do wszystkich plików, aby odtwarzać foldery i playlisty tam, gdzie są; wyświetlanie nad innymi aplikacjami, brak optymalizacji baterii i urządzenia w pobliżu — tylko po to, by zacząć odtwarzanie po połączeniu urządzenia Bluetooth, gdy odtwarzacz jest zamknięty.</p>

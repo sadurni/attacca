@@ -1,0 +1,328 @@
+{
+  "format": 1,
+  "name": "Mars Attacca!",
+  "dark": true,
+  "background": "#FF1A0B08",
+  "surface": "#FF2C1510",
+  "text": "#FFF6E2D6",
+  "textSecondary": "#A6F6E2D6",
+  "accent": "#FFFF7043",
+  "coverAccent": false,
+  "excluded": "#FFFFB74D",
+  "danger": "#FFFF5252",
+  "corners": 0.6,
+  "textScale": 1.0,
+  "font": "MONOSPACE",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": true,
+      "cover": {
+        "fit": "CROP",
+        "dim": 55,
+        "blur": 25
+      },
+      "lines": [
+        {
+          "kind": "TITLE",
+          "size": "LARGE"
+        },
+        {
+          "kind": "ARTIST",
+          "size": "MEDIUM"
+        },
+        {
+          "kind": "ALBUM",
+          "size": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "type": "TEXT",
+      "template": "{codec}[ · {bitrate}][ · {samplerate}][ · {mood}]",
+      "size": "SMALL",
+      "boxed": true
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS",
+        "SEEK_BACK",
+        "PLAY_PAUSE",
+        "SEEK_FORWARD",
+        "NEXT",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "horizontal": true,
+      "image": {
+        "file": "background-dunes-night.jpg",
+        "dim": 50,
+        "tint": false,
+        "dimLight": 62,
+        "fileLight": "background-dunes-day.jpg"
+      },
+      "children": [
+        {
+          "type": "LIST",
+          "width": 78,
+          "framed": false,
+          "lines": [
+            {
+              "kind": "LIST_NAME"
+            },
+            {
+              "kind": "LIST_DETAILS"
+            },
+            {
+              "kind": "NEXT"
+            }
+          ]
+        },
+        {
+          "type": "BUTTONS",
+          "width": 22,
+          "buttons": [
+            "QUEUE"
+          ],
+          "icons": {
+            "QUEUE": {
+              "file": "icon-rover.png",
+              "dim": 0,
+              "tint": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "BOOKMARK",
+        "FAVORITE",
+        "SLEEP",
+        "QUICK_LIST",
+        "SOUND"
+      ],
+      "icons": {
+        "BOOKMARK": {
+          "file": "icon-rocket.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-mars.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SOUND": {
+          "file": "icon-dish.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 42,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "horizontal": true,
+              "image": {
+                "file": "background-dunes-night.jpg",
+                "dim": 50,
+                "tint": false,
+                "dimLight": 62,
+                "fileLight": "background-dunes-day.jpg"
+              },
+              "children": [
+                {
+                  "type": "LIST",
+                  "width": 78,
+                  "framed": false,
+                  "lines": [
+                    {
+                      "kind": "LIST_NAME"
+                    },
+                    {
+                      "kind": "LIST_DETAILS"
+                    },
+                    {
+                      "kind": "NEXT"
+                    }
+                  ]
+                },
+                {
+                  "type": "BUTTONS",
+                  "width": 22,
+                  "buttons": [
+                    "QUEUE"
+                  ],
+                  "icons": {
+                    "QUEUE": {
+                      "file": "icon-rover.png",
+                      "dim": 0,
+                      "tint": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 58,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": true,
+              "cover": {
+                "fit": "CROP",
+                "dim": 55,
+                "blur": 25
+              },
+              "lines": [
+                {
+                  "kind": "TITLE",
+                  "size": "LARGE"
+                },
+                {
+                  "kind": "ARTIST",
+                  "size": "MEDIUM"
+                },
+                {
+                  "kind": "ALBUM",
+                  "size": "MEDIUM"
+                }
+              ]
+            },
+            {
+              "type": "TEXT",
+              "template": "{codec}[ · {bitrate}][ · {samplerate}][ · {mood}]",
+              "size": "SMALL",
+              "boxed": true
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "PREVIOUS",
+                "SEEK_BACK",
+                "PLAY_PAUSE",
+                "SEEK_FORWARD",
+                "NEXT",
+                "REPEAT"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "NAVIGATOR",
+                "BOOKMARK",
+                "FAVORITE",
+                "SLEEP",
+                "QUICK_LIST",
+                "SOUND"
+              ],
+              "icons": {
+                "BOOKMARK": {
+                  "file": "icon-rocket.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SLEEP": {
+                  "file": "icon-mars.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SOUND": {
+                  "file": "icon-dish.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-mars-night.jpg",
+      "dim": 20,
+      "tint": false,
+      "dimLight": 40,
+      "fileLight": "background-mars-day.jpg"
+    },
+    "OTHERS": {
+      "file": "background-mars-night.jpg",
+      "dim": 60,
+      "tint": false,
+      "dimLight": 80,
+      "fileLight": "background-mars-day.jpg"
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-rover.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-mars.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-rocket.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-rocket.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": false,
+    "background": "#FFF7E6D8",
+    "surface": "#FFEED2BE",
+    "text": "#FF3B160C",
+    "textSecondary": "#B33B160C",
+    "accent": "#FFC1440E",
+    "excluded": "#FFE07B00",
+    "danger": "#FFC62828"
+  }
+}

@@ -1,0 +1,292 @@
+{
+  "format": 1,
+  "name": "Gattacca",
+  "dark": true,
+  "background": "#FF070A1C",
+  "surface": "#FF141A3A",
+  "text": "#FFE8ECFF",
+  "textSecondary": "#A6E8ECFF",
+  "accent": "#FFFFD27A",
+  "coverAccent": false,
+  "excluded": "#FFFFB74D",
+  "danger": "#FFFF6B81",
+  "corners": 1.0,
+  "textScale": 1.0,
+  "font": "SYSTEM",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": true,
+      "image": {
+        "file": "background-nebula.jpg",
+        "dim": 25,
+        "tint": false
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "TEMPLATE",
+          "template": "{album}[ · {year}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "TEXT",
+      "template": "{format}[ · {samplerate}][ · {bpm}][ · {duration}]",
+      "size": "SMALL",
+      "boxed": false
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "REPEAT"
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "horizontal": true,
+      "image": {
+        "file": "background-band.jpg",
+        "dim": 35,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "LIST",
+          "width": 75,
+          "framed": false,
+          "lines": [
+            {
+              "kind": "LIST_NAME"
+            },
+            {
+              "kind": "LIST_DETAILS"
+            },
+            {
+              "kind": "NEXT"
+            }
+          ]
+        },
+        {
+          "type": "BUTTONS",
+          "width": 25,
+          "buttons": [
+            "FAVORITE"
+          ],
+          "icons": {
+            "FAVORITE": {
+              "file": "icon-star.png",
+              "dim": 0,
+              "tint": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "NAVIGATOR",
+        "LISTS",
+        "SLEEP",
+        "QUICK_LIST",
+        "SOUND"
+      ],
+      "icons": {
+        "LISTS": {
+          "file": "icon-planet.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SLEEP": {
+          "file": "icon-moon.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 42,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "horizontal": true,
+              "image": {
+                "file": "background-band.jpg",
+                "dim": 35,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "LIST",
+                  "width": 75,
+                  "framed": false,
+                  "lines": [
+                    {
+                      "kind": "LIST_NAME"
+                    },
+                    {
+                      "kind": "LIST_DETAILS"
+                    },
+                    {
+                      "kind": "NEXT"
+                    }
+                  ]
+                },
+                {
+                  "type": "BUTTONS",
+                  "width": 25,
+                  "buttons": [
+                    "FAVORITE"
+                  ],
+                  "icons": {
+                    "FAVORITE": {
+                      "file": "icon-star.png",
+                      "dim": 0,
+                      "tint": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 58,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": true,
+              "image": {
+                "file": "background-nebula.jpg",
+                "dim": 25,
+                "tint": false
+              },
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "TEMPLATE",
+                  "template": "{album}[ · {year}]",
+                  "size": "SMALL"
+                }
+              ]
+            },
+            {
+              "type": "TEXT",
+              "template": "{format}[ · {samplerate}][ · {bpm}][ · {duration}]",
+              "size": "SMALL",
+              "boxed": false
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "REPEAT"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "NAVIGATOR",
+                "LISTS",
+                "SLEEP",
+                "QUICK_LIST",
+                "SOUND"
+              ],
+              "icons": {
+                "LISTS": {
+                  "file": "icon-planet.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SLEEP": {
+                  "file": "icon-moon.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-sky.jpg",
+      "dim": 10,
+      "tint": false
+    },
+    "OTHERS": {
+      "file": "background-sky.jpg",
+      "dim": 50,
+      "tint": false
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-planet.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-planet.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-planet.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-star.png",
+      "dim": 0,
+      "tint": true
+    }
+  }
+}

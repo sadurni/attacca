@@ -1,0 +1,26 @@
+# Build outputs, caches and IDE state, in every part
+.gradle/
+.idea/
+.kotlin/
+build/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Release signing: never in the repository (see android/README.md)
+keystore.properties
+*.jks
+*.keystore
+
+# Rockbox plugin builds (published as release files, not committed)
+rockbox/out/
+
+# Local working notes and tools, not part of the project
+memory/
+CLAUDE.md
+PLAN.md
+desktop/PLAN.md
+desktop/CLAUDE-old.md
+dev/

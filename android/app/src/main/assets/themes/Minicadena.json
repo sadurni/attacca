@@ -1,0 +1,401 @@
+{
+  "format": 1,
+  "name": "Attacca the Block",
+  "dark": true,
+  "background": "#FF1A1B1E",
+  "surface": "#FF2A2C30",
+  "text": "#FFE9ECEF",
+  "textSecondary": "#A6E9ECEF",
+  "accent": "#FF4FE3C1",
+  "coverAccent": false,
+  "excluded": "#FFFFB300",
+  "danger": "#FFFF5252",
+  "corners": 0.6,
+  "textScale": 1.0,
+  "font": "MONOSPACE",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "image": {
+        "file": "background-lcd.jpg",
+        "dim": 0,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "TEXT",
+          "template": "[{position}/{count}][  {duration}][  {format}][ {bitrate}]",
+          "size": "SMALL"
+        },
+        {
+          "type": "TITLE",
+          "framed": false,
+          "lines": [
+            {
+              "kind": "TITLE",
+              "size": "LARGE"
+            },
+            {
+              "kind": "ARTIST",
+              "size": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "type": "TEXT",
+          "template": "[{samplerate}][ · {bits}][ · {gain}]",
+          "size": "SMALL"
+        }
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "image": {
+        "file": "background-lcd.jpg",
+        "dim": 0,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "PROGRESS"
+        }
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "image": {
+        "file": "background-deck.jpg",
+        "dim": 0,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            "PREVIOUS_ALBUM",
+            "PREVIOUS",
+            "PLAY_PAUSE",
+            "NEXT",
+            "NEXT_ALBUM"
+          ],
+          "icons": {
+            "PREVIOUS_ALBUM": {
+              "file": "key-previous-album.png",
+              "dim": 0,
+              "tint": false
+            },
+            "PREVIOUS": {
+              "file": "key-previous.png",
+              "dim": 0,
+              "tint": false
+            },
+            "PLAY_PAUSE": {
+              "file": "key-play-pause.png",
+              "dim": 0,
+              "tint": false
+            },
+            "NEXT": {
+              "file": "key-next.png",
+              "dim": 0,
+              "tint": false
+            },
+            "NEXT_ALBUM": {
+              "file": "key-next-album.png",
+              "dim": 0,
+              "tint": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "BOX",
+      "framed": true,
+      "image": {
+        "file": "background-grille.jpg",
+        "dim": 0,
+        "tint": false
+      },
+      "children": [
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            "SHUFFLE",
+            "QUEUE",
+            "SOUND",
+            "QUICK_LIST",
+            "SLEEP",
+            "NAVIGATOR",
+            "REPEAT"
+          ],
+          "icons": {
+            "SHUFFLE": {
+              "file": "key-shuffle.png",
+              "dim": 0,
+              "tint": false
+            },
+            "QUEUE": {
+              "file": "key-cassette.png",
+              "dim": 0,
+              "tint": false
+            },
+            "SOUND": {
+              "file": "key-knob.png",
+              "dim": 0,
+              "tint": false
+            },
+            "QUICK_LIST": {
+              "file": "key-quick.png",
+              "dim": 0,
+              "tint": false
+            },
+            "SLEEP": {
+              "file": "key-sleep.png",
+              "dim": 0,
+              "tint": false
+            },
+            "NAVIGATOR": {
+              "file": "key-menu.png",
+              "dim": 0,
+              "tint": false
+            },
+            "REPEAT": {
+              "file": "key-repeat.png",
+              "dim": 0,
+              "tint": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 40,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "image": {
+                "file": "background-grille.jpg",
+                "dim": 0,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "BUTTONS",
+                  "buttons": [
+                    "SHUFFLE",
+                    "QUEUE",
+                    "SOUND",
+                    "QUICK_LIST",
+                    "SLEEP",
+                    "NAVIGATOR",
+                    "REPEAT"
+                  ],
+                  "icons": {
+                    "SHUFFLE": {
+                      "file": "key-shuffle.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "QUEUE": {
+                      "file": "key-cassette.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "SOUND": {
+                      "file": "key-knob.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "QUICK_LIST": {
+                      "file": "key-quick.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "SLEEP": {
+                      "file": "key-sleep.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "NAVIGATOR": {
+                      "file": "key-menu.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "REPEAT": {
+                      "file": "key-repeat.png",
+                      "dim": 0,
+                      "tint": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 60,
+          "children": [
+            {
+              "type": "BOX",
+              "framed": true,
+              "image": {
+                "file": "background-lcd.jpg",
+                "dim": 0,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "TEXT",
+                  "template": "[{position}/{count}][  {duration}][  {format}][ {bitrate}]",
+                  "size": "SMALL"
+                },
+                {
+                  "type": "TITLE",
+                  "framed": false,
+                  "lines": [
+                    {
+                      "kind": "TITLE",
+                      "size": "LARGE"
+                    },
+                    {
+                      "kind": "ARTIST",
+                      "size": "MEDIUM"
+                    }
+                  ]
+                },
+                {
+                  "type": "TEXT",
+                  "template": "[{samplerate}][ · {bits}][ · {gain}]",
+                  "size": "SMALL"
+                }
+              ]
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "image": {
+                "file": "background-lcd.jpg",
+                "dim": 0,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "PROGRESS"
+                }
+              ]
+            },
+            {
+              "type": "BOX",
+              "framed": true,
+              "image": {
+                "file": "background-deck.jpg",
+                "dim": 0,
+                "tint": false
+              },
+              "children": [
+                {
+                  "type": "BUTTONS",
+                  "buttons": [
+                    "PREVIOUS_ALBUM",
+                    "PREVIOUS",
+                    "PLAY_PAUSE",
+                    "NEXT",
+                    "NEXT_ALBUM"
+                  ],
+                  "icons": {
+                    "PREVIOUS_ALBUM": {
+                      "file": "key-previous-album.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "PREVIOUS": {
+                      "file": "key-previous.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "PLAY_PAUSE": {
+                      "file": "key-play-pause.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "NEXT": {
+                      "file": "key-next.png",
+                      "dim": 0,
+                      "tint": false
+                    },
+                    "NEXT_ALBUM": {
+                      "file": "key-next-album.png",
+                      "dim": 0,
+                      "tint": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-panel.jpg",
+      "dim": 0,
+      "tint": false
+    },
+    "OTHERS": {
+      "file": "background-panel.jpg",
+      "dim": 45,
+      "tint": false
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-cassette.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-cd.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-cd.png",
+      "dim": 0,
+      "tint": true
+    },
+    "SOUND": {
+      "file": "icon-knob.png",
+      "dim": 0,
+      "tint": true
+    },
+    "DEVICES": {
+      "file": "icon-speaker.png",
+      "dim": 0,
+      "tint": true
+    }
+  }
+}

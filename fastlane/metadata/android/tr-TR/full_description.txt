@@ -1,0 +1,33 @@
+<p><i>“Müzik koleksiyonunu yeniden keşfet: onu yeni şekillerde, en iyi sesle dinle.”</i></p>
+
+<p><b>Kendi müziğin, sanki biri her parçayı önceden dinlemiş gibi çalıyor.</b> Her şarkının bir sonrakine aktığı listeler, eksiksiz bir ses zinciri, şarkıyı hareketli bir manzara olarak izlemek için O'rama ve kendin şekillendirdiğin temalar. Özgür, açık kaynak ve gizliliğe saygılı.</p>
+
+<p>Attacca telefonunuzdaki müziği — klasörleri ve çalma listelerini — çalar ve onu kendisi dinler: her parçanın sonu, sesi ve havası telefonda analiz edilir; böylece bir parçanın sonu bir sonrakinin başına akabilir. Hiçbir şey hiçbir yere gönderilmez: uygulamanın internet erişimi yoktur.</p>
+
+<p><b>Akan listeler</b></p>
+<ul>
+<li>Herhangi bir listeyi zincirleyin, her parça bir sonrakine aksın; tüm albümler sondan başa zincirlenebilir.</li>
+<li>Herhangi bir parçadan liste: sesce en yakın parçalar, ondan başlayarak zincirlenmiş, filtrelerle (yıllar, tempo, enerji, ruh hali, vokal, süre, son zamanlarda dinlemedikleriniz).</li>
+<li>Hızlı ve rastgele listeler, enerji eğrileri, ses ailelerinizden bir seçki, bir parçadan diğerine köprü, tek parça gibi tüm albümler, belirli bir süre için liste.</li>
+<li>Kendi koleksiyonunuzda, telefonda çalışan bir ses tanıma ağı tarafından bulunan ruh halleri ve ses aileleri.</li>
+<li>Oluşturduğu her liste için bir dahil etme listesi (izin ver veya engelle); koşullardan oluşan akıllı listeler; bitmeyen listeler.</li>
+</ul>
+
+<p><b>Çalma ve ses</b></p>
+<ul>
+<li>Boşluksuz (gapless) çalma, her parçanın nasıl bittiğine uyabilen çapraz geçiş, sessizlik kırpma, ReplayGain (ve bu bilgisi olmayan dosyalar için ölçülen ses seviyesi).</li>
+<li>Kendi ses işleme: ekolayzır (grafik veya parametrik, kulaklık düzeltmeleri), dinamik ve sanal bas, stereo genişliği, crossfeed, kompresör ve true-peak sınırlayıcı; her çıkış aygıtı için bir profil.</li>
+<li>Aygıtlar: her çıkış kendi listesine devam edebilir, kendi ses düzeyini ayarlayabilir ve bağlandığında çalmaya başlayabilir.</li>
+</ul>
+
+<p><b>Sizin tarzınız</b></p>
+<ul>
+<li>Kendi renkleri, yazı tipleri, arka planları, simgeleri olan temalar ve sizin düzenlediğiniz bir Şimdi çalıyor düzeni; başlamak için bir galeri.</li>
+<li>Sanatçılara, albümlere, türlere, on yıllara, ruh hallerine ve ailelere göre müzik; klasörler; şarkı sözleri, yer imleri, uyku zamanlayıcısı, hız, A-B tekrarı; dinleme istatistikleri.</li>
+<li>Android Auto, ana ekran widget'ı, her şeyin yedeği, 23 dil.</li>
+<li>Attacca O'rama: çalan şarkı, dalga biçiminden, ruh hâlinden ve ritminden çizilen hareketli bir manzara olarak. Keşfedilecek birkaç küçük sürprizle.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) aynı şekilde analiz eder ve kitaplığı paylaşır; Rockbox çalarlar için ve tarayıcıda listeler oluşturur.</p>
+
+<p>İzinlerin nedeni: klasörlerinizi ve çalma listelerinizi bulundukları yerden çalmak için tüm dosyalara erişim; diğer uygulamaların üzerinde görüntüleme, pil optimizasyonu olmaması ve yakındaki aygıtlar yalnızca çalar kapalıyken bir Bluetooth aygıtı bağlandığında çalmaya başlamak içindir.</p>

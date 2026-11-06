@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attacca Web</title>
+<meta name="description" content="Chained playlists in the browser from an Attacca Desktop library (.bpcr2)">
+<style>
+:root {
+  --bg: #ffffff; --surface: #f4f4f4; --line: #d8d8d8; --text: #1b1b1b; --dim: #666;
+  --accent: #d32f2f; --on-accent: #fff; --chip: #ffdad6;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121212; --surface: #1e1e1e; --line: #333; --text: #eee; --dim: #9a9a9a;
+          --accent: #ff453a; --on-accent: #fff; --chip: #4a2522; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+header h1 { font-size: 20px; margin: 0; flex: 1; }
+header svg { width: 32px; height: 32px; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } }
+section { background: var(--surface); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+section h2 { font-size: 16px; margin: 0 0 10px; }
+.hint { color: var(--dim); font-size: 13px; margin: 6px 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; }
+.row > label { min-width: 120px; }
+input[type=text], input[type=number], select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: inherit; }
+input[type=number] { width: 90px; }
+input[type=text] { min-width: 0; flex: 1; }
+button { font: inherit; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); color: var(--text); padding: 7px 16px; cursor: pointer; }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.chip { border-radius: 8px; padding: 5px 10px; font-size: 13px; }
+.chip.on { background: var(--chip); border-color: var(--accent); }
+#drop { border: 2px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; }
+#drop.over { border-color: var(--accent); }
+.found { max-height: 220px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 6px; }
+.found div { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.found div:hover { background: var(--chip); }
+.found small { display: block; color: var(--dim); }
+.list { background: var(--surface); border-radius: 10px; margin-bottom: 8px; }
+.list .head { display: flex; gap: 10px; align-items: center; padding: 10px 14px; cursor: pointer; }
+.list .head b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list ol { margin: 0; padding: 0 14px 10px 40px; font-size: 13px; }
+.list ol li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dim { color: var(--dim); font-size: 13px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="13" fill="#000"/>
+    <g fill="#ff453a"><rect x="13" y="26" width="4.2" height="8" rx=".6"/><rect x="19" y="21" width="4.2" height="13" rx=".6"/><rect x="25" y="17" width="4.2" height="17" rx=".6"/></g>
+    <g fill="#fff"><rect x="32.8" y="17" width="4.2" height="17" rx=".6"/><rect x="38.8" y="21" width="4.2" height="13" rx=".6"/><rect x="44.8" y="26" width="4.2" height="8" rx=".6"/></g>
+    <path d="M20 14 Q31 3 42 14" stroke="#fff" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+    <circle cx="14.7" cy="40.7" r="1.7" fill="#ff453a"/><rect x="19.5" y="39.4" width="31.5" height="2.6" rx="1.3" fill="#ff453a"/>
+    <circle cx="14.7" cy="47.2" r="1.7" fill="#fff"/><rect x="19.5" y="45.9" width="26.5" height="2.6" rx="1.3" fill="#fff"/>
+    <circle cx="14.7" cy="53.7" r="1.7" fill="#fff"/><rect x="19.5" y="52.4" width="21.5" height="2.6" rx="1.3" fill="#fff"/></svg>
+  <h1>Attacca Web</h1>
+  <select id="lang" aria-label="Language"></select>
+</header>
+<main>
+<div>
+  <section>
+    <h2 data-t="library"></h2>
+    <div id="drop"><span data-t="drop"></span><br><br><input type="file" id="file" accept=".bpcr2"></div>
+    <p class="hint" id="summary"></p>
+  </section>
+  <div id="form" class="hidden">
+    <section>
+      <h2 data-t="what"></h2>
+      <div class="chips" id="kinds"></div>
+      <p class="hint" id="kindHint"></p>
+      <div id="seedBox">
+        <div class="row"><b id="seedChosen"></b><button id="seedNone" class="hidden" data-t="noSeed"></button></div>
+        <div class="row"><input type="text" id="seedSearch"></div>
+        <div class="found hidden" id="seedFound"></div>
+        <div class="row" id="seedOptions">
+          <label><input type="checkbox" id="sameMood" checked> <span data-t="sameMood"></span></label>
+          <label><input type="checkbox" id="sameFamily"> <span data-t="sameFamily"></span></label>
+        </div>
+        <div class="row" id="fitRow"><button id="fit" disabled data-t="fit"></button><span class="dim" id="fitResult"></span></div>
+      </div>
+      <div id="seed2Box">
+        <div class="row"><b id="seed2Chosen"></b> <button id="swapEnds" data-t="swap"></button></div>
+        <div class="row"><input type="text" id="seed2Search"></div>
+        <div class="found hidden" id="seed2Found"></div>
+      </div>
+      <div id="timeBox" class="row"><label data-t="listMinutes"></label><input type="number" id="listMinutes" min="1" max="6000" value="60"></div>
+      <div id="reorderBox" class="row"><input type="file" id="playlist" accept=".m3u,.m3u8,.pls,.txt"><span class="dim" id="playlistInfo"></span></div>
+      <div class="row"><label data-t="count" id="countLabel"></label><input type="number" id="count" min="2" max="5000" value="150">
+        <label data-t="spacing"></label><input type="number" id="spacing" min="0" max="50"></div>
+    </section>
+    <section id="filters">
+      <h2 data-t="filters"></h2>
+      <div class="chips" id="moods"></div>
+      <div class="chips" id="families"></div>
+      <div class="row"><input type="text" id="artist" list="artists"><datalist id="artists"></datalist>
+        <input type="text" id="genre" list="genres"><datalist id="genres"></datalist></div>
+      <div class="row"><label data-t="years"></label><input type="number" id="yearFrom"> – <input type="number" id="yearTo"></div>
+      <div class="row"><label>BPM</label><input type="number" id="bpmMin"> – <input type="number" id="bpmMax"></div>
+      <div class="row"><label data-t="minutes"></label><input type="number" id="minMinutes" min="0" value="1"> – <input type="number" id="maxMinutes" min="0" value="20"></div>
+      <div class="row"><label data-t="energy"></label><input type="number" id="eMin" min="0" max="100" step="5" value="0"> – <input type="number" id="eMax" min="0" max="100" step="5" value="100"> %</div>
+      <div class="row"><label data-t="positivity"></label><input type="number" id="pMin" min="0" max="100" step="5" value="0"> – <input type="number" id="pMax" min="0" max="100" step="5" value="100"> %</div>
+      <div class="row"><label data-t="voice"></label><select id="voice"><option value="0" data-t="any"></option><option value="1" data-t="withVoice"></option><option value="2" data-t="instrumental"></option></select>
+        <label><input type="checkbox" id="onlyIncluded"> <span data-t="onlyIncluded"></span></label>
+        <button id="clear" data-t="clear"></button></div>
+      <p class="hint" data-t="filtersHint"></p>
+    </section>
+    <section>
+      <h2 data-t="saving"></h2>
+      <div class="row"><label data-t="base"></label><input type="text" id="base"></div>
+      <p class="hint" data-t="baseHint"></p>
+      <div class="row"><button class="primary" id="make" data-t="make"></button><span class="dim" id="status"></span></div>
+    </section>
+  </div>
+</div>
+<div id="results"></div>
+</main>
+<script>
+"use strict";
+// ---------- Texts ----------
+const TEXTS = {
+  en: {
+    library: "Library", drop: "Drop attaccaplg.bpcr2 here, or choose it (Attacca Desktop → Attacca → For Rockbox and the web generator).",
+    summary: (n, date, base) => `${n} songs · exported ${date} · music at ${base}`, bad: "That is not an Attacca Desktop library (.bpcr2).",
+    what: "What list", fromTrack: "From a song", byFilters: "By filters", automatic: "Automatic", reorder: "Reorder a list",
+    hintSeed: "The songs closest to the one chosen, chained from it.", hintFilters: "One list of the songs passing the filters, each end chained into a similar start.",
+    hintAuto: "One list per mood and sound family, as Attacca's generated lists.", hintReorder: "A playlist (M3U, M3U8) in chained order; songs are found by their path.",
+    search: "Search a song: artist, title, album", sameMood: "Same mood", sameFamily: "Same sound family",
+    fit: "Fit the filters to the song", fitOk: n => `${n} songs to choose from.`, fitShort: n => `Only ${n} songs to choose from, even with the filters wide open: try without same mood or family.`,
+    count: "Songs", spacing: "Same artist again after", filters: "Filters", years: "Years", minutes: "Minutes", energy: "Energy", positivity: "Positivity",
+    voice: "Voice", any: "Any", withVoice: "With voice", instrumental: "Instrumental", onlyIncluded: "Only included", clear: "Clear filters",
+    filtersHint: "Energy and positivity in percent of this library (0: the lowest song, 100: the highest). Empty fields do not filter.",
+    artist: "Artist", genre: "Genre (tag)", saving: "Saving", base: "Music folder", baseHint: "Where the music is on the device that plays the lists; the paths are written from there.",
+    make: "Make", noSongs: "No songs pass those filters.", chooseSeed: "Choose a song first.", choosePlaylist: "Choose a playlist first.",
+    songs: n => `${n} songs`, links: "links", download: "Download", downloadAll: "Download all", lists: n => n === 1 ? "1 list" : `${n} lists`,
+    placed: (a, b) => `${a} of ${b} songs found in the library.`,
+    moods: ["Energetic", "Cheerful", "Calm", "Melancholic", "Tense"],
+    kRiseFall: "Energy up and down", kWarmUp: "Warming up", kWindDown: "Winding down", kSampler: "Sampler of sound families",
+    kContrast: "The opposite", kForTime: "For a set time", kAlbums: "Albums like this one", kBridge: "Bridge",
+    hintRiseFall: "Starts calm, livens up to a peak and calms down again; each song near the one before. From the song chosen, or from one of the right energy at random.",
+    hintWarmUp: "From calm to lively, little by little. From the song chosen, or from a calm one at random.",
+    hintWindDown: "From lively to calm, little by little: for the end of the day or for sleeping. From the song chosen, or from a lively one at random.",
+    hintSampler: "The most typical songs of every sound family, chained: what your collection sounds like.",
+    hintContrast: "The songs least like the one chosen, chained: to get out of the routine.",
+    hintForTime: "Songs like the one chosen, chained from it, lasting about the minutes given: a trip, a workout.",
+    hintAlbums: "Whole albums (folders) that sound like the album (folder) of the song chosen, chained album by album.",
+    hintBridge: "A way from one song to another: the songs in between each a step further from the first and nearer the second.",
+    kRandom: "Random song of a mood", swap: "Swap the ends",
+    hintRandom: "A song at random among those of the moods chosen below (of any without one), and the songs closest to it, chained from it.",
+    noSeed: "Without a song", fromSong: "From", toSong: "To", search2: "Search the last song: artist, title, album",
+    listMinutes: "Minutes of the list", chooseTwo: "Choose two different songs first.", albumsNote: n => n === 1 ? "1 album." : `${n} albums.`,
+  },
+  es: {
+    library: "Biblioteca", drop: "Suelta aquí attaccaplg.bpcr2, o elígelo (Attacca Desktop → Attacca → Para Rockbox y el generador web).",
+    summary: (n, date, base) => `${n} canciones · exportada ${date} · música en ${base}`, bad: "Eso no es una biblioteca de Attacca Desktop (.bpcr2).",
+    what: "Qué lista", fromTrack: "Desde una canción", byFilters: "Por filtros", automatic: "Automáticas", reorder: "Reordenar una lista",
+    hintSeed: "Las canciones más parecidas a la elegida, encadenadas desde ella.", hintFilters: "Una lista con las canciones que pasan los filtros, cada final encadenado con un principio parecido.",
+    hintAuto: "Una lista por estado de ánimo y familia de sonido, como las listas generadas de Attacca.", hintReorder: "Una lista (M3U, M3U8) en orden encadenado; las canciones se buscan por su ruta.",
+    search: "Buscar una canción: artista, título, álbum", sameMood: "Mismo ánimo", sameFamily: "Misma familia de sonido",
+    fit: "Ajustar los filtros a la canción", fitOk: n => `${n} canciones entre las que elegir.`, fitShort: n => `Solo ${n} canciones entre las que elegir, aun con los filtros abiertos del todo: prueba sin mismo ánimo o familia.`,
+    count: "Canciones", spacing: "Mismo artista otra vez tras", filters: "Filtros", years: "Años", minutes: "Minutos", energy: "Energía", positivity: "Positividad",
+    voice: "Voz", any: "Cualquiera", withVoice: "Con voz", instrumental: "Instrumental", onlyIncluded: "Solo incluidas", clear: "Quitar filtros",
+    filtersHint: "Energía y positividad en porcentaje de esta biblioteca (0: la canción más baja, 100: la más alta). Los campos vacíos no filtran.",
+    artist: "Artista", genre: "Género (etiqueta)", saving: "Al guardar", base: "Carpeta de música", baseHint: "Dónde está la música en el aparato que reproduce las listas; las rutas se escriben desde ahí.",
+    make: "Hacer", noSongs: "Ninguna canción pasa esos filtros.", chooseSeed: "Elige antes una canción.", choosePlaylist: "Elige antes una lista.",
+    songs: n => `${n} canciones`, links: "enlaces", download: "Descargar", downloadAll: "Descargar todas", lists: n => n === 1 ? "1 lista" : `${n} listas`,
+    placed: (a, b) => `${a} de ${b} canciones encontradas en la biblioteca.`,
+    moods: ["Enérgico", "Alegre", "Tranquilo", "Melancólico", "Tenso"],
+    kRiseFall: "Energía que sube y baja", kWarmUp: "Para ir subiendo", kWindDown: "Para ir bajando", kSampler: "Muestrario de familias de sonido",
+    kContrast: "Lo contrario", kForTime: "Para un tiempo", kAlbums: "Álbumes como este", kBridge: "Puente",
+    hintRiseFall: "Empieza tranquila, se anima hasta un máximo y vuelve a calmarse; cada canción parecida a la anterior. Desde la canción elegida, o desde una de la energía justa al azar.",
+    hintWarmUp: "De tranquila a animada, poco a poco. Desde la canción elegida, o desde una tranquila al azar.",
+    hintWindDown: "De animada a tranquila, poco a poco: para el final del día o para dormir. Desde la canción elegida, o desde una animada al azar.",
+    hintSampler: "Las canciones más típicas de cada familia de sonido, encadenadas: cómo suena tu colección.",
+    hintContrast: "Las canciones menos parecidas a la elegida, encadenadas: para salir de la rutina.",
+    hintForTime: "Canciones como la elegida, encadenadas desde ella, que duran unos minutos dados: un viaje, un entrenamiento.",
+    hintAlbums: "Álbumes enteros (carpetas) que suenan como el álbum (carpeta) de la canción elegida, encadenados álbum a álbum.",
+    hintBridge: "Un camino de una canción a otra: las de en medio, cada una un paso más lejos de la primera y más cerca de la segunda.",
+    kRandom: "Canción al azar de un ánimo", swap: "Intercambiar los extremos",
+    hintRandom: "Una canción al azar entre las de los ánimos elegidos abajo (de cualquiera sin ninguno), y las canciones más cercanas a ella, encadenadas desde ella.",
+    noSeed: "Sin canción", fromSong: "De", toSong: "A", search2: "Buscar la última canción: artista, título, álbum",
+    listMinutes: "Minutos de la lista", chooseTwo: "Elige antes dos canciones distintas.", albumsNote: n => n === 1 ? "1 álbum." : `${n} álbumes.`,
+  },
+};
+// The other languages: plain texts with {0}, {1}… where the English has values (see below).
+/* BEGIN generated texts */
+const MORE_TEXTS = {"ca":{"library":"Biblioteca","drop":"Deixa anar aquí attaccaplg.bpcr2, o tria'l (Attacca Desktop → Attacca → Per a Rockbox i el generador web).","bad":"Això no és una biblioteca d'Attacca Desktop (.bpcr2).","what":"Quina llista","fromTrack":"Des d'una cançó","byFilters":"Per filtres","automatic":"Automàtiques","reorder":"Reordena una llista","hintSeed":"Les cançons més semblants a la triada, encadenades des d'ella.","hintFilters":"Una llista amb les cançons que passen els filtres, cada final encadenat amb un inici semblant.","hintAuto":"Una llista per estat d'ànim i família de so, com les llistes generades d'Attacca.","hintReorder":"Una llista (M3U, M3U8) en ordre encadenat; les cançons es busquen per la seva ruta.","search":"Cerca una cançó: artista, títol, àlbum","sameMood":"Mateix estat d'ànim","sameFamily":"Mateixa família de so","fit":"Ajusta els filtres a la cançó","count":"Cançons","spacing":"El mateix artista de nou després de","filters":"Filtres","years":"Anys","minutes":"Minuts","energy":"Energia","positivity":"Positivitat","voice":"Veu","any":"Qualsevol","withVoice":"Amb veu","instrumental":"Instrumental","onlyIncluded":"Només incloses","clear":"Treu els filtres","filtersHint":"Energia i positivitat en percentatge d'aquesta biblioteca (0: la cançó més baixa, 100: la més alta). Els camps buits no filtren.","artist":"Artista","genre":"Gènere (etiqueta)","saving":"En desar","base":"Carpeta de música","baseHint":"On és la música a l'aparell que reprodueix les llistes; les rutes s'escriuen des d'allà.","make":"Fes","noSongs":"Cap cançó passa aquests filtres.","chooseSeed":"Tria abans una cançó.","choosePlaylist":"Tria abans una llista.","links":"enllaços","download":"Baixa","downloadAll":"Baixa-les totes","kRiseFall":"Energia que puja i baixa","kWarmUp":"Per anar pujant","kWindDown":"Per anar baixant","kSampler":"Mostrari de famílies de so","kContrast":"El contrari","kForTime":"Per a un temps","kAlbums":"Àlbums com aquest","kBridge":"Pont","hintRiseFall":"Comença tranquil·la, s'anima fins a un màxim i es torna a calmar; cada cançó semblant a l'anterior. Des de la cançó triada, o des d'una de l'energia justa a l'atzar.","hintWarmUp":"De tranquil·la a animada, a poc a poc. Des de la cançó triada, o des d'una de tranquil·la a l'atzar.","hintWindDown":"D'animada a tranquil·la, a poc a poc: per al final del dia o per dormir. Des de la cançó triada, o des d'una d'animada a l'atzar.","hintSampler":"Les cançons més típiques de cada família de so, encadenades: com sona la teva col·lecció.","hintContrast":"Les cançons menys semblants a la triada, encadenades: per sortir de la rutina.","hintForTime":"Cançons com la triada, encadenades des d'ella, que duren uns minuts donats: un viatge, un entrenament.","hintAlbums":"Àlbums sencers (carpetes) que sonen com l'àlbum (carpeta) de la cançó triada, encadenats àlbum a àlbum.","hintBridge":"Un camí d'una cançó a una altra: les del mig, cadascuna un pas més lluny de la primera i més a prop de la segona.","kRandom":"Cançó a l'atzar d'un estat d'ànim","swap":"Intercanvia els extrems","hintRandom":"Una cançó a l'atzar entre les dels estats d'ànim triats a sota (de qualsevol si no n'hi ha cap), i les cançons més properes a ella, encadenades des d'ella.","noSeed":"Sense cançó","fromSong":"De","toSong":"A","search2":"Cerca l'última cançó: artista, títol, àlbum","listMinutes":"Minuts de la llista","chooseTwo":"Tria abans dues cançons diferents.","summary":"{0} cançons · exportada {1} · música a {2}","fitOk":"{0} cançons entre les quals triar.","fitShort":"Només {0} cançons entre les quals triar, fins i tot amb els filtres oberts del tot: prova sense el mateix estat d'ànim o família.","songs":"{0} cançons","lists":{"one":"1 llista","other":"{0} llistes"},"placed":"{0} de {1} cançons trobades a la biblioteca.","albumsNote":{"one":"1 àlbum.","other":"{0} àlbums."},"moods":["Enèrgic","Alegre","Tranquil","Melancòlic","Tens"]},"gl":{"library":"Biblioteca","drop":"Solta aquí attaccaplg.bpcr2, ou escólleo (Attacca Desktop → Attacca → Para Rockbox e o xerador web).","bad":"Iso non é unha biblioteca de Attacca Desktop (.bpcr2).","what":"Que lista","fromTrack":"Desde unha canción","byFilters":"Por filtros","automatic":"Automáticas","reorder":"Reordenar unha lista","hintSeed":"As cancións máis parecidas á escollida, encadeadas desde ela.","hintFilters":"Unha lista coas cancións que pasan os filtros, cada final encadeado cun comezo parecido.","hintAuto":"Unha lista por estado de ánimo e familia de son, como as listas xeradas de Attacca.","hintReorder":"Unha lista (M3U, M3U8) en orde encadeada; as cancións búscanse pola súa ruta.","search":"Buscar unha canción: artista, título, álbum","sameMood":"Mesmo estado de ánimo","sameFamily":"Mesma familia de son","fit":"Axustar os filtros á canción","count":"Cancións","spacing":"O mesmo artista outra vez tras","filters":"Filtros","years":"Anos","minutes":"Minutos","energy":"Enerxía","positivity":"Positividade","voice":"Voz","any":"Calquera","withVoice":"Con voz","instrumental":"Instrumental","onlyIncluded":"Só as incluídas","clear":"Quitar filtros","filtersHint":"Enerxía e positividade en porcentaxe desta biblioteca (0: a canción máis baixa, 100: a máis alta). Os campos baleiros non filtran.","artist":"Artista","genre":"Xénero (etiqueta)","saving":"Ao gardar","base":"Cartafol de música","baseHint":"Onde está a música no aparello que reproduce as listas; as rutas escríbense desde alí.","make":"Facer","noSongs":"Ningunha canción pasa eses filtros.","chooseSeed":"Escolle antes unha canción.","choosePlaylist":"Escolle antes unha lista.","links":"ligazóns","download":"Descargar","downloadAll":"Descargar todas","kRiseFall":"Enerxía que sobe e baixa","kWarmUp":"Para ir subindo","kWindDown":"Para ir baixando","kSampler":"Mostrario de familias de son","kContrast":"O contrario","kForTime":"Para un tempo","kAlbums":"Álbums como este","kBridge":"Ponte","hintRiseFall":"Comeza tranquila, anímase ata un máximo e volve calmarse; cada canción parecida á anterior. Desde a canción escollida, ou desde unha da enerxía xusta ao chou.","hintWarmUp":"De tranquila a animada, aos poucos. Desde a canción escollida, ou desde unha tranquila ao chou.","hintWindDown":"De animada a tranquila, aos poucos: para o final do día ou para durmir. Desde a canción escollida, ou desde unha animada ao chou.","hintSampler":"As cancións máis típicas de cada familia de son, encadeadas: como soa a túa colección.","hintContrast":"As cancións menos parecidas á escollida, encadeadas: para saír da rutina.","hintForTime":"Cancións como a escollida, encadeadas desde ela, que duran uns minutos dados: unha viaxe, un adestramento.","hintAlbums":"Álbums enteiros (cartafoles) que soan como o álbum (cartafol) da canción escollida, encadeados álbum a álbum.","hintBridge":"Un camiño dunha canción a outra: as do medio, cada unha un paso máis lonxe da primeira e máis preto da segunda.","kRandom":"Canción ao chou dun estado de ánimo","swap":"Intercambiar os extremos","hintRandom":"Unha canción ao chou entre as dos estados de ánimo escollidos abaixo (de calquera se non hai ningún), e as cancións máis próximas a ela, encadeadas desde ela.","noSeed":"Sen canción","fromSong":"De","toSong":"A","search2":"Buscar a última canción: artista, título, álbum","listMinutes":"Minutos da lista","chooseTwo":"Escolle antes dúas cancións distintas.","summary":"{0} cancións · exportada {1} · música en {2}","fitOk":"{0} cancións entre as que escoller.","fitShort":"Só {0} cancións entre as que escoller, aínda cos filtros abertos de todo: proba sen o mesmo estado de ánimo ou familia.","songs":"{0} cancións","lists":{"one":"1 lista","other":"{0} listas"},"placed":"{0} de {1} cancións atopadas na biblioteca.","albumsNote":{"one":"1 álbum.","other":"{0} álbums."},"moods":["Enérxico","Alegre","Tranquilo","Melancólico","Tenso"]},"eu":{"library":"Liburutegia","drop":"Jaregin attaccaplg.bpcr2 hemen, edo aukeratu (Attacca Desktop → Attacca → Rockbox-erako eta web-sorgailurako).","bad":"Hori ez da Attacca Desktop liburutegi bat (.bpcr2).","what":"Zein zerrenda","fromTrack":"Abesti batetik","byFilters":"Iragazkien arabera","automatic":"Automatikoak","reorder":"Berrordenatu zerrenda bat","hintSeed":"Aukeratutakoaren antzekoenak diren abestiak, hartatik kateatuta.","hintFilters":"Iragazkiak gainditzen dituzten abestien zerrenda bat, amaiera bakoitza antzeko hasiera batekin kateatuta.","hintAuto":"Zerrenda bat aldarte eta soinu-familia bakoitzeko, Attaccaren sortutako zerrendak bezala.","hintReorder":"Zerrenda bat (M3U, M3U8) kateatutako ordenan; abestiak beren bidearen arabera bilatzen dira.","search":"Bilatu abesti bat: artista, izenburua, albuma","sameMood":"Aldarte bera","sameFamily":"Soinu-familia bera","fit":"Doitu iragazkiak abestira","count":"Abestiak","spacing":"Artista bera berriro, honen ondoren","filters":"Iragazkiak","years":"Urteak","minutes":"Minutuak","energy":"Energia","positivity":"Positibotasuna","voice":"Ahotsa","any":"Edozein","withVoice":"Ahotsarekin","instrumental":"Instrumentala","onlyIncluded":"Sartutakoak soilik","clear":"Kendu iragazkiak","filtersHint":"Energia eta positibotasuna liburutegi honen ehunekotan (0: abestirik baxuena, 100: altuena). Eremu hutsek ez dute iragazten.","artist":"Artista","genre":"Generoa (etiketa)","saving":"Gordetzean","base":"Musika-karpeta","baseHint":"Zerrendak erreproduzitzen dituen gailuan musika non dagoen; bideak hortik idazten dira.","make":"Egin","noSongs":"Ez dago iragazki horiek gainditzen dituen abestirik.","chooseSeed":"Aukeratu lehenago abesti bat.","choosePlaylist":"Aukeratu lehenago zerrenda bat.","links":"loturak","download":"Deskargatu","downloadAll":"Deskargatu denak","kRiseFall":"Igo eta jaisten den energia","kWarmUp":"Pixkanaka igotzeko","kWindDown":"Pixkanaka jaisteko","kSampler":"Soinu-familien lagina","kContrast":"Kontrakoa","kForTime":"Denbora jakin baterako","kAlbums":"Hau bezalako albumak","kBridge":"Zubia","hintRiseFall":"Lasai hasten da, gailur bateraino biziagotzen da eta berriro lasaitzen da; abesti bakoitza aurrekoaren antzekoa. Aukeratutako abestitik, edo energia egokiko ausazko batetik.","hintWarmUp":"Lasaitik bizira, pixkanaka. Aukeratutako abestitik, edo ausazko abesti lasai batetik.","hintWindDown":"Bizitik lasaira, pixkanaka: egunaren amaierarako edo lo egiteko. Aukeratutako abestitik, edo ausazko abesti bizi batetik.","hintSampler":"Soinu-familia bakoitzeko abesti tipikoenak, kateatuta: zure bilduma nola entzuten den.","hintContrast":"Aukeratutakoaren antz gutxien duten abestiak, kateatuta: errutinatik ateratzeko.","hintForTime":"Aukeratutakoa bezalako abestiak, hartatik kateatuta, emandako minutuak gutxi gorabehera irauten dutenak: bidaia bat, entrenamendu bat.","hintAlbums":"Aukeratutako abestiaren albuma (karpeta) bezala entzuten diren album (karpeta) osoak, albumez album kateatuta.","hintBridge":"Abesti batetik beste baterako bidea: tarteko abestiak, bakoitza urrats bat urrunago lehenengotik eta hurbilago bigarrenetik.","kRandom":"Aldarte bateko ausazko abestia","swap":"Trukatu muturrak","hintRandom":"Ausazko abesti bat behean aukeratutako aldarteetakoen artetik (edozeinetakoa, bat ere aukeratu ez bada), eta haren abesti hurbilenak, hartatik kateatuta.","noSeed":"Abestirik gabe","fromSong":"Hemendik","toSong":"Honaino","search2":"Bilatu azken abestia: artista, izenburua, albuma","listMinutes":"Zerrendaren minutuak","chooseTwo":"Aukeratu lehenago bi abesti desberdin.","summary":"{0} abesti · esportatua: {1} · musika hemen: {2}","fitOk":"{0} abesti aukeratzeko.","fitShort":"{0} abesti bakarrik aukeratzeko, iragazkiak guztiz irekita ere: probatu aldarte edo familia bera gabe.","songs":"{0} abesti","lists":{"one":"1 zerrenda","other":"{0} zerrenda"},"placed":"{1} abestitatik {0} aurkituta liburutegian.","albumsNote":{"one":"1 album.","other":"{0} album."},"moods":["Energikoa","Alaia","Lasaia","Malenkoniatsua","Tentsioduna"]},"pt":{"library":"Biblioteca","drop":"Larga aqui attaccaplg.bpcr2, ou escolhe-o (Attacca Desktop → Attacca → Para o Rockbox e o gerador web).","bad":"Isso não é uma biblioteca do Attacca Desktop (.bpcr2).","what":"Que lista","fromTrack":"A partir de uma canção","byFilters":"Por filtros","automatic":"Automáticas","reorder":"Reordenar uma lista","hintSeed":"As canções mais parecidas com a escolhida, encadeadas a partir dela.","hintFilters":"Uma lista com as canções que passam nos filtros, cada final encadeado com um início parecido.","hintAuto":"Uma lista por estado de espírito e família sonora, como as listas geradas do Attacca.","hintReorder":"Uma lista (M3U, M3U8) por ordem encadeada; as canções são encontradas pelo caminho.","search":"Pesquisar uma canção: artista, título, álbum","sameMood":"Mesmo estado de espírito","sameFamily":"Mesma família sonora","fit":"Ajustar os filtros à canção","count":"Canções","spacing":"O mesmo artista outra vez após","filters":"Filtros","years":"Anos","minutes":"Minutos","energy":"Energia","positivity":"Positividade","voice":"Voz","any":"Qualquer","withVoice":"Com voz","instrumental":"Instrumental","onlyIncluded":"Só incluídas","clear":"Limpar filtros","filtersHint":"Energia e positividade em percentagem desta biblioteca (0: a canção mais baixa, 100: a mais alta). Os campos vazios não filtram.","artist":"Artista","genre":"Género (etiqueta)","saving":"Ao guardar","base":"Pasta de música","baseHint":"Onde está a música no aparelho que reproduz as listas; os caminhos são escritos a partir daí.","make":"Criar","noSongs":"Nenhuma canção passa nesses filtros.","chooseSeed":"Escolhe primeiro uma canção.","choosePlaylist":"Escolhe primeiro uma lista.","links":"ligações","download":"Transferir","downloadAll":"Transferir todas","kRiseFall":"Energia que sobe e desce","kWarmUp":"Para aquecer","kWindDown":"Para acalmar","kSampler":"Amostra de famílias sonoras","kContrast":"O contrário","kForTime":"Para um tempo definido","kAlbums":"Álbuns como este","kBridge":"Ponte","hintRiseFall":"Começa calma, anima-se até um máximo e volta a acalmar; cada canção parecida com a anterior. A partir da canção escolhida, ou de uma com a energia certa ao acaso.","hintWarmUp":"De calma a animada, aos poucos. A partir da canção escolhida, ou de uma calma ao acaso.","hintWindDown":"De animada a calma, aos poucos: para o fim do dia ou para dormir. A partir da canção escolhida, ou de uma animada ao acaso.","hintSampler":"As canções mais típicas de cada família sonora, encadeadas: como soa a tua coleção.","hintContrast":"As canções menos parecidas com a escolhida, encadeadas: para sair da rotina.","hintForTime":"Canções como a escolhida, encadeadas a partir dela, com a duração aproximada dos minutos indicados: uma viagem, um treino.","hintAlbums":"Álbuns inteiros (pastas) que soam como o álbum (pasta) da canção escolhida, encadeados álbum a álbum.","hintBridge":"Um caminho de uma canção para outra: as do meio, cada uma um passo mais longe da primeira e mais perto da segunda.","kRandom":"Canção aleatória de um estado de espírito","swap":"Trocar os extremos","hintRandom":"Uma canção ao acaso entre as dos estados de espírito escolhidos abaixo (de qualquer um se não houver nenhum), e as canções mais próximas dela, encadeadas a partir dela.","noSeed":"Sem canção","fromSong":"De","toSong":"Até","search2":"Pesquisar a última canção: artista, título, álbum","listMinutes":"Minutos da lista","chooseTwo":"Escolhe primeiro duas canções diferentes.","summary":"{0} canções · exportada {1} · música em {2}","fitOk":"{0} canções por onde escolher.","fitShort":"Só {0} canções por onde escolher, mesmo com os filtros totalmente abertos: experimenta sem o mesmo estado de espírito ou família.","songs":"{0} canções","lists":{"one":"1 lista","other":"{0} listas"},"placed":"{0} de {1} canções encontradas na biblioteca.","albumsNote":{"one":"1 álbum.","other":"{0} álbuns."},"moods":["Enérgico","Alegre","Calmo","Melancólico","Tenso"]},"pt-BR":{"library":"Biblioteca","drop":"Solte attaccaplg.bpcr2 aqui ou escolha-o (Attacca Desktop → Attacca → Para o Rockbox e o gerador web).","bad":"Isso não é uma biblioteca do Attacca Desktop (.bpcr2).","what":"Qual lista","fromTrack":"A partir de uma música","byFilters":"Por filtros","automatic":"Automáticas","reorder":"Reordenar uma lista","hintSeed":"As músicas mais parecidas com a escolhida, encadeadas a partir dela.","hintFilters":"Uma lista das músicas que passam pelos filtros, cada final encadeado com um início parecido.","hintAuto":"Uma lista por humor e família sonora, como as listas geradas do Attacca.","hintReorder":"Uma playlist (M3U, M3U8) em ordem encadeada; as músicas são encontradas pelo caminho.","search":"Pesquisar uma música: artista, título, álbum","sameMood":"Mesmo humor","sameFamily":"Mesma família sonora","fit":"Ajustar os filtros à música","count":"Músicas","spacing":"Mesmo artista de novo após","filters":"Filtros","years":"Anos","minutes":"Minutos","energy":"Energia","positivity":"Positividade","voice":"Voz","any":"Qualquer","withVoice":"Com voz","instrumental":"Instrumental","onlyIncluded":"Só incluídas","clear":"Limpar filtros","filtersHint":"Energia e positividade em porcentagem desta biblioteca (0: a música mais baixa, 100: a mais alta). Campos vazios não filtram.","artist":"Artista","genre":"Gênero (tag)","saving":"Ao salvar","base":"Pasta de música","baseHint":"Onde fica a música no aparelho que toca as listas; os caminhos são escritos a partir dali.","make":"Fazer","noSongs":"Nenhuma música passa por esses filtros.","chooseSeed":"Escolha uma música primeiro.","choosePlaylist":"Escolha uma playlist primeiro.","links":"ligações","download":"Baixar","downloadAll":"Baixar todas","kRiseFall":"Energia que sobe e desce","kWarmUp":"Para aquecer","kWindDown":"Para relaxar","kSampler":"Amostra de famílias sonoras","kContrast":"O contrário","kForTime":"Para um tempo definido","kAlbums":"Álbuns como este","kBridge":"Ponte","hintRiseFall":"Começa calma, vai se animando até um pico e volta a se acalmar; cada música parecida com a anterior. A partir da música escolhida, ou de uma com a energia certa ao acaso.","hintWarmUp":"De calma a animada, pouco a pouco. A partir da música escolhida, ou de uma calma ao acaso.","hintWindDown":"De animada a calma, pouco a pouco: para o fim do dia ou para dormir. A partir da música escolhida, ou de uma animada ao acaso.","hintSampler":"As músicas mais típicas de cada família sonora, encadeadas: como soa a sua coleção.","hintContrast":"As músicas menos parecidas com a escolhida, encadeadas: para sair da rotina.","hintForTime":"Músicas como a escolhida, encadeadas a partir dela, durando mais ou menos os minutos indicados: uma viagem, um treino.","hintAlbums":"Álbuns inteiros (pastas) que soam como o álbum (pasta) da música escolhida, encadeados álbum a álbum.","hintBridge":"Um caminho de uma música a outra: as do meio, cada uma um passo mais longe da primeira e mais perto da segunda.","kRandom":"Música ao acaso de um humor","swap":"Trocar as pontas","hintRandom":"Uma música ao acaso entre as dos humores escolhidos abaixo (de qualquer um se não houver nenhum), e as músicas mais próximas dela, encadeadas a partir dela.","noSeed":"Sem música","fromSong":"De","toSong":"Até","search2":"Pesquisar a última música: artista, título, álbum","listMinutes":"Minutos da lista","chooseTwo":"Escolha primeiro duas músicas diferentes.","summary":"{0} músicas · exportada {1} · música em {2}","fitOk":"{0} músicas para escolher.","fitShort":"Só {0} músicas para escolher, mesmo com os filtros totalmente abertos: tente sem mesmo humor ou família.","songs":"{0} músicas","lists":{"one":"1 lista","other":"{0} listas"},"placed":"{0} de {1} músicas encontradas na biblioteca.","albumsNote":{"one":"1 álbum.","other":"{0} álbuns."},"moods":["Energético","Alegre","Calmo","Melancólico","Tenso"]},"fr":{"library":"Bibliothèque","drop":"Déposez attaccaplg.bpcr2 ici, ou choisissez-le (Attacca Desktop → Attacca → Pour Rockbox et le générateur web).","bad":"Ce n’est pas une bibliothèque Attacca Desktop (.bpcr2).","what":"Quelle liste","fromTrack":"À partir d’un morceau","byFilters":"Par filtres","automatic":"Automatiques","reorder":"Réordonner une liste","hintSeed":"Les morceaux les plus proches de celui choisi, enchaînés à partir de lui.","hintFilters":"Une liste des morceaux qui passent les filtres, chaque fin enchaînée à un début semblable.","hintAuto":"Une liste par ambiance et famille sonore, comme les listes générées d’Attacca.","hintReorder":"Une playlist (M3U, M3U8) dans l’ordre enchaîné ; les morceaux sont retrouvés par leur chemin.","search":"Rechercher un morceau : artiste, titre, album","sameMood":"Même ambiance","sameFamily":"Même famille sonore","fit":"Ajuster les filtres au morceau","count":"Morceaux","spacing":"Même artiste à nouveau après","filters":"Filtres","years":"Années","minutes":"Minutes","energy":"Énergie","positivity":"Positivité","voice":"Voix","any":"N’importe laquelle","withVoice":"Avec voix","instrumental":"Instrumental","onlyIncluded":"Inclus seulement","clear":"Effacer les filtres","filtersHint":"Énergie et positivité en pourcentage de cette bibliothèque (0 : le morceau le plus bas, 100 : le plus haut). Les champs vides ne filtrent pas.","artist":"Artiste","genre":"Genre (tag)","saving":"À l’enregistrement","base":"Dossier de musique","baseHint":"Où se trouve la musique sur l’appareil qui lit les listes ; les chemins sont écrits à partir de là.","make":"Créer","noSongs":"Aucun morceau ne passe ces filtres.","chooseSeed":"Choisissez d’abord un morceau.","choosePlaylist":"Choisissez d’abord une playlist.","links":"liens","download":"Télécharger","downloadAll":"Tout télécharger","kRiseFall":"Énergie qui monte et descend","kWarmUp":"Montée en douceur","kWindDown":"Descente en douceur","kSampler":"Échantillon des familles sonores","kContrast":"L’opposé","kForTime":"Pour une durée donnée","kAlbums":"Albums comme celui-ci","kBridge":"Pont","hintRiseFall":"Commence calme, s’anime jusqu’à un sommet et se calme à nouveau ; chaque morceau proche du précédent. À partir du morceau choisi, ou d’un morceau à la bonne énergie pris au hasard.","hintWarmUp":"Du calme à l’animé, petit à petit. À partir du morceau choisi, ou d’un morceau calme pris au hasard.","hintWindDown":"De l’animé au calme, petit à petit : pour la fin de la journée ou pour dormir. À partir du morceau choisi, ou d’un morceau animé pris au hasard.","hintSampler":"Les morceaux les plus typiques de chaque famille sonore, enchaînés : le son de votre collection.","hintContrast":"Les morceaux les moins proches de celui choisi, enchaînés : pour sortir de la routine.","hintForTime":"Des morceaux comme celui choisi, enchaînés à partir de lui, pour environ le nombre de minutes indiqué : un trajet, une séance de sport.","hintAlbums":"Des albums entiers (dossiers) qui sonnent comme l’album (dossier) du morceau choisi, enchaînés album par album.","hintBridge":"Un chemin d’un morceau à un autre : ceux du milieu, chacun un pas plus loin du premier et plus près du second.","kRandom":"Morceau au hasard d’une ambiance","swap":"Inverser les extrémités","hintRandom":"Un morceau au hasard parmi ceux des ambiances choisies ci-dessous (de n’importe laquelle si aucune), et les morceaux les plus proches de lui, enchaînés à partir de lui.","noSeed":"Sans morceau","fromSong":"De","toSong":"À","search2":"Rechercher le dernier morceau : artiste, titre, album","listMinutes":"Minutes de la liste","chooseTwo":"Choisissez d’abord deux morceaux différents.","summary":"{0} morceaux · exportée {1} · musique dans {2}","fitOk":"{0} morceaux parmi lesquels choisir.","fitShort":"Seulement {0} morceaux parmi lesquels choisir, même avec les filtres grands ouverts : essayez sans même ambiance ni famille.","songs":"{0} morceaux","lists":{"one":"1 liste","other":"{0} listes"},"placed":"{0} sur {1} morceaux trouvés dans la bibliothèque.","albumsNote":{"one":"1 album.","other":"{0} albums."},"moods":["Énergique","Joyeux","Calme","Mélancolique","Tendu"]},"it":{"library":"Libreria","drop":"Trascina qui attaccaplg.bpcr2, o sceglilo (Attacca Desktop → Attacca → Per Rockbox e il generatore web).","bad":"Questa non è una libreria di Attacca Desktop (.bpcr2).","what":"Quale lista","fromTrack":"Da un brano","byFilters":"Per filtri","automatic":"Automatiche","reorder":"Riordina una lista","hintSeed":"I brani più vicini a quello scelto, concatenati a partire da esso.","hintFilters":"Una lista dei brani che passano i filtri, ogni finale concatenato a un inizio simile.","hintAuto":"Una lista per atmosfera e famiglia sonora, come le liste generate di Attacca.","hintReorder":"Una playlist (M3U, M3U8) in ordine concatenato; i brani vengono trovati dal loro percorso.","search":"Cerca un brano: artista, titolo, album","sameMood":"Stessa atmosfera","sameFamily":"Stessa famiglia sonora","fit":"Adatta i filtri al brano","count":"Brani","spacing":"Stesso artista di nuovo dopo","filters":"Filtri","years":"Anni","minutes":"Minuti","energy":"Energia","positivity":"Positività","voice":"Voce","any":"Qualsiasi","withVoice":"Con voce","instrumental":"Strumentale","onlyIncluded":"Solo inclusi","clear":"Azzera i filtri","filtersHint":"Energia e positività in percentuale di questa libreria (0: il brano più basso, 100: il più alto). I campi vuoti non filtrano.","artist":"Artista","genre":"Genere (tag)","saving":"Al salvataggio","base":"Cartella musicale","baseHint":"Dove si trova la musica sul dispositivo che riproduce le liste; i percorsi vengono scritti a partire da lì.","make":"Crea","noSongs":"Nessun brano passa questi filtri.","chooseSeed":"Scegli prima un brano.","choosePlaylist":"Scegli prima una playlist.","links":"collegamenti","download":"Scarica","downloadAll":"Scarica tutte","kRiseFall":"Energia che sale e scende","kWarmUp":"Per scaldarsi","kWindDown":"Per rilassarsi","kSampler":"Campionario di famiglie sonore","kContrast":"L’opposto","kForTime":"Per un tempo dato","kAlbums":"Album come questo","kBridge":"Ponte","hintRiseFall":"Inizia calma, si anima fino a un picco e torna a calmarsi; ogni brano vicino al precedente. Dal brano scelto, o da uno con l’energia giusta a caso.","hintWarmUp":"Da calma a vivace, poco a poco. Dal brano scelto, o da uno calmo a caso.","hintWindDown":"Da vivace a calma, poco a poco: per la fine della giornata o per dormire. Dal brano scelto, o da uno vivace a caso.","hintSampler":"I brani più tipici di ogni famiglia sonora, concatenati: come suona la tua raccolta.","hintContrast":"I brani meno simili a quello scelto, concatenati: per uscire dalla routine.","hintForTime":"Brani come quello scelto, concatenati a partire da esso, che durano circa i minuti indicati: un viaggio, un allenamento.","hintAlbums":"Album interi (cartelle) che suonano come l’album (cartella) del brano scelto, concatenati album per album.","hintBridge":"Un percorso da un brano a un altro: quelli in mezzo, ognuno un passo più lontano dal primo e più vicino al secondo.","kRandom":"Brano a caso di un’atmosfera","swap":"Scambia gli estremi","hintRandom":"Un brano a caso tra quelli delle atmosfere scelte qui sotto (di qualsiasi se non ce n’è nessuna), e i brani più vicini a esso, concatenati a partire da esso.","noSeed":"Senza brano","fromSong":"Da","toSong":"A","search2":"Cerca l’ultimo brano: artista, titolo, album","listMinutes":"Minuti della lista","chooseTwo":"Scegli prima due brani diversi.","summary":"{0} brani · esportata {1} · musica in {2}","fitOk":"{0} brani tra cui scegliere.","fitShort":"Solo {0} brani tra cui scegliere, anche con i filtri del tutto aperti: prova senza stessa atmosfera o famiglia.","songs":"{0} brani","lists":{"one":"1 lista","other":"{0} liste"},"placed":"{0} di {1} brani trovati nella libreria.","albumsNote":{"one":"1 album.","other":"{0} album."},"moods":["Energico","Allegro","Calmo","Malinconico","Teso"]},"de":{"library":"Bibliothek","drop":"Lege attaccaplg.bpcr2 hier ab oder wähle sie aus (Attacca Desktop → Attacca → Für Rockbox und den Web-Generator).","bad":"Das ist keine Attacca-Desktop-Bibliothek (.bpcr2).","what":"Welche Liste","fromTrack":"Ab einem Titel","byFilters":"Nach Filtern","automatic":"Automatisch","reorder":"Eine Liste umsortieren","hintSeed":"Die dem gewählten ähnlichsten Titel, von ihm aus verkettet.","hintFilters":"Eine Liste der Titel, die die Filter passieren, jedes Ende mit einem ähnlichen Anfang verkettet.","hintAuto":"Eine Liste pro Stimmung und Klangfamilie, wie die generierten Listen von Attacca.","hintReorder":"Eine Playlist (M3U, M3U8) in verketteter Reihenfolge; Titel werden über ihren Pfad gefunden.","search":"Einen Titel suchen: Interpret, Titel, Album","sameMood":"Gleiche Stimmung","sameFamily":"Gleiche Klangfamilie","fit":"Filter an den Titel anpassen","count":"Titel","spacing":"Gleicher Interpret wieder nach","filters":"Filter","years":"Jahre","minutes":"Minuten","energy":"Energie","positivity":"Positivität","voice":"Gesang","any":"Beliebig","withVoice":"Mit Gesang","instrumental":"Instrumental","onlyIncluded":"Nur eingeschlossene","clear":"Filter löschen","filtersHint":"Energie und Positivität in Prozent dieser Bibliothek (0: der niedrigste Titel, 100: der höchste). Leere Felder filtern nicht.","artist":"Interpret","genre":"Genre (Tag)","saving":"Beim Speichern","base":"Musikordner","baseHint":"Wo die Musik auf dem Gerät liegt, das die Listen abspielt; die Pfade werden von dort aus geschrieben.","make":"Erstellen","noSongs":"Kein Titel passt zu diesen Filtern.","chooseSeed":"Wähle zuerst einen Titel.","choosePlaylist":"Wähle zuerst eine Playlist.","links":"Verbindungen","download":"Herunterladen","downloadAll":"Alle herunterladen","kRiseFall":"Energie auf und ab","kWarmUp":"Langsam steigern","kWindDown":"Langsam runterkommen","kSampler":"Querschnitt der Klangfamilien","kContrast":"Das Gegenteil","kForTime":"Für eine feste Zeit","kAlbums":"Alben wie dieses","kBridge":"Brücke","hintRiseFall":"Beginnt ruhig, steigert sich bis zu einem Höhepunkt und beruhigt sich wieder; jeder Titel nah am vorigen. Ab dem gewählten Titel oder ab einem zufälligen mit passender Energie.","hintWarmUp":"Von ruhig zu lebhaft, nach und nach. Ab dem gewählten Titel oder ab einem zufälligen ruhigen.","hintWindDown":"Von lebhaft zu ruhig, nach und nach: für das Ende des Tages oder zum Einschlafen. Ab dem gewählten Titel oder ab einem zufälligen lebhaften.","hintSampler":"Die typischsten Titel jeder Klangfamilie, verkettet: so klingt deine Sammlung.","hintContrast":"Die dem gewählten am wenigsten ähnlichen Titel, verkettet: um aus der Routine zu kommen.","hintForTime":"Titel wie der gewählte, von ihm aus verkettet, die etwa die angegebenen Minuten dauern: eine Fahrt, ein Training.","hintAlbums":"Ganze Alben (Ordner), die wie das Album (der Ordner) des gewählten Titels klingen, Album für Album verkettet.","hintBridge":"Ein Weg von einem Titel zum anderen: die Titel dazwischen jeweils einen Schritt weiter vom ersten und näher am zweiten.","kRandom":"Zufälliger Titel einer Stimmung","swap":"Enden tauschen","hintRandom":"Ein zufälliger Titel unter denen der unten gewählten Stimmungen (aus jeder, wenn keine gewählt ist), und die ihm ähnlichsten Titel, von ihm aus verkettet.","noSeed":"Ohne Titel","fromSong":"Von","toSong":"Nach","search2":"Den letzten Titel suchen: Interpret, Titel, Album","listMinutes":"Minuten der Liste","chooseTwo":"Wähle zuerst zwei verschiedene Titel.","summary":"{0} Titel · exportiert {1} · Musik unter {2}","fitOk":"{0} Titel zur Auswahl.","fitShort":"Nur {0} Titel zur Auswahl, selbst mit ganz offenen Filtern: Versuche es ohne gleiche Stimmung oder Familie.","songs":"{0} Titel","lists":{"one":"1 Liste","other":"{0} Listen"},"placed":"{0} von {1} Titeln in der Bibliothek gefunden.","albumsNote":{"one":"1 Album.","other":"{0} Alben."},"moods":["Energisch","Fröhlich","Ruhig","Melancholisch","Angespannt"]},"nl":{"library":"Bibliotheek","drop":"Zet attaccaplg.bpcr2 hier neer of kies het (Attacca Desktop → Attacca → Voor Rockbox en de webgenerator).","bad":"Dat is geen bibliotheek van Attacca Desktop (.bpcr2).","what":"Welke lijst","fromTrack":"Vanaf een nummer","byFilters":"Met filters","automatic":"Automatisch","reorder":"Een lijst herordenen","hintSeed":"De nummers die het meest op het gekozen nummer lijken, vanaf daar aaneengeregen.","hintFilters":"Eén lijst van de nummers die door de filters komen, elk einde aaneengeregen met een vergelijkbaar begin.","hintAuto":"Eén lijst per stemming en klankfamilie, zoals de gegenereerde lijsten van Attacca.","hintReorder":"Een afspeellijst (M3U, M3U8) in aaneengeregen volgorde; nummers worden gevonden op hun pad.","search":"Zoek een nummer: artiest, titel, album","sameMood":"Zelfde stemming","sameFamily":"Zelfde klankfamilie","fit":"Filters op het nummer afstemmen","count":"Nummers","spacing":"Zelfde artiest weer na","filters":"Filters","years":"Jaren","minutes":"Minuten","energy":"Energie","positivity":"Positiviteit","voice":"Stem","any":"Maakt niet uit","withVoice":"Met zang","instrumental":"Instrumentaal","onlyIncluded":"Alleen ingesloten","clear":"Filters wissen","filtersHint":"Energie en positiviteit in procenten van deze bibliotheek (0: het laagste nummer, 100: het hoogste). Lege velden filteren niet.","artist":"Artiest","genre":"Genre (tag)","saving":"Opslaan","base":"Muziekmap","baseHint":"Waar de muziek staat op het apparaat dat de lijsten afspeelt; de paden worden vanaf daar geschreven.","make":"Maken","noSongs":"Geen nummers komen door die filters.","chooseSeed":"Kies eerst een nummer.","choosePlaylist":"Kies eerst een afspeellijst.","links":"koppelingen","download":"Downloaden","downloadAll":"Alles downloaden","kRiseFall":"Energie op en neer","kWarmUp":"Opwarmen","kWindDown":"Tot rust komen","kSampler":"Staalkaart van klankfamilies","kContrast":"Het tegenovergestelde","kForTime":"Voor een vaste tijd","kAlbums":"Albums zoals dit","kBridge":"Brug","hintRiseFall":"Begint rustig, wordt levendiger tot een hoogtepunt en komt weer tot rust; elk nummer lijkt op het vorige. Vanaf het gekozen nummer, of vanaf een willekeurig nummer met de juiste energie.","hintWarmUp":"Van rustig naar levendig, beetje bij beetje. Vanaf het gekozen nummer, of vanaf een willekeurig rustig nummer.","hintWindDown":"Van levendig naar rustig, beetje bij beetje: voor het einde van de dag of om te slapen. Vanaf het gekozen nummer, of vanaf een willekeurig levendig nummer.","hintSampler":"De meest typische nummers van elke klankfamilie, aaneengeregen: zo klinkt je collectie.","hintContrast":"De nummers die het minst op het gekozen nummer lijken, aaneengeregen: om uit de sleur te komen.","hintForTime":"Nummers zoals het gekozen nummer, vanaf daar aaneengeregen, die ongeveer het opgegeven aantal minuten duren: een reis, een training.","hintAlbums":"Hele albums (mappen) die klinken zoals het album (de map) van het gekozen nummer, album na album aaneengeregen.","hintBridge":"Een weg van het ene nummer naar het andere: elk nummer ertussen een stap verder van het eerste en dichter bij het tweede.","kRandom":"Willekeurig nummer van een stemming","swap":"De uiteinden omwisselen","hintRandom":"Een willekeurig nummer uit de hieronder gekozen stemmingen (uit alle als er geen gekozen is), en de nummers die er het meest op lijken, vanaf daar aaneengeregen.","noSeed":"Zonder nummer","fromSong":"Van","toSong":"Naar","search2":"Zoek het laatste nummer: artiest, titel, album","listMinutes":"Minuten van de lijst","chooseTwo":"Kies eerst twee verschillende nummers.","summary":"{0} nummers · geëxporteerd {1} · muziek in {2}","fitOk":"{0} nummers om uit te kiezen.","fitShort":"Maar {0} nummers om uit te kiezen, zelfs met de filters wijd open: probeer het zonder zelfde stemming of familie.","songs":"{0} nummers","lists":{"one":"1 lijst","other":"{0} lijsten"},"placed":"{0} van {1} nummers gevonden in de bibliotheek.","albumsNote":{"one":"1 album.","other":"{0} albums."},"moods":["Energiek","Vrolijk","Rustig","Melancholisch","Gespannen"]},"sv":{"library":"Bibliotek","drop":"Släpp attaccaplg.bpcr2 här eller välj den (Attacca Desktop → Attacca → För Rockbox och webbgeneratorn).","bad":"Det är inget Attacca Desktop-bibliotek (.bpcr2).","what":"Vilken lista","fromTrack":"Från en låt","byFilters":"Efter filter","automatic":"Automatiska","reorder":"Ordna om en lista","hintSeed":"Låtarna som ligger närmast den valda, kedjade från den.","hintFilters":"En lista med låtarna som klarar filtren, varje slut kedjat till en liknande början.","hintAuto":"En lista per stämning och ljudfamilj, som Attaccas genererade listor.","hintReorder":"En spellista (M3U, M3U8) i kedjad ordning; låtarna hittas efter sin sökväg.","search":"Sök en låt: artist, titel, album","sameMood":"Samma stämning","sameFamily":"Samma ljudfamilj","fit":"Anpassa filtren till låten","count":"Låtar","spacing":"Samma artist igen efter","filters":"Filter","years":"År","minutes":"Minuter","energy":"Energi","positivity":"Positivitet","voice":"Röst","any":"Valfri","withVoice":"Med sång","instrumental":"Instrumental","onlyIncluded":"Bara inkluderade","clear":"Rensa filter","filtersHint":"Energi och positivitet i procent av det här biblioteket (0: den lägsta låten, 100: den högsta). Tomma fält filtrerar inte.","artist":"Artist","genre":"Genre (tagg)","saving":"Sparande","base":"Musikmapp","baseHint":"Var musiken finns på enheten som spelar listorna; sökvägarna skrivs därifrån.","make":"Skapa","noSongs":"Inga låtar klarar de filtren.","chooseSeed":"Välj en låt först.","choosePlaylist":"Välj en spellista först.","links":"länkar","download":"Ladda ner","downloadAll":"Ladda ner alla","kRiseFall":"Energi upp och ner","kWarmUp":"Uppvärmning","kWindDown":"Nedvarvning","kSampler":"Smakprov på ljudfamiljer","kContrast":"Motsatsen","kForTime":"Under en viss tid","kAlbums":"Album som det här","kBridge":"Bro","hintRiseFall":"Börjar lugnt, blir livligare upp till en topp och lugnar sig igen; varje låt nära den förra. Från den valda låten, eller från en slumpad låt med rätt energi.","hintWarmUp":"Från lugnt till livligt, lite i taget. Från den valda låten, eller från en slumpad lugn låt.","hintWindDown":"Från livligt till lugnt, lite i taget: för slutet av dagen eller för att somna. Från den valda låten, eller från en slumpad livlig låt.","hintSampler":"De mest typiska låtarna i varje ljudfamilj, kedjade: så låter din samling.","hintContrast":"Låtarna som liknar den valda minst, kedjade: för att komma ur vardagslunken.","hintForTime":"Låtar som den valda, kedjade från den, som varar ungefär de angivna minuterna: en resa, ett träningspass.","hintAlbums":"Hela album (mappar) som låter som albumet (mappen) för den valda låten, kedjade album för album.","hintBridge":"En väg från en låt till en annan: låtarna emellan var och en ett steg längre från den första och närmare den andra.","kRandom":"Slumpad låt med en stämning","swap":"Byt plats på ändarna","hintRandom":"En slumpad låt bland dem med stämningarna som valts nedan (med vilken som helst om ingen är vald), och låtarna närmast den, kedjade från den.","noSeed":"Utan låt","fromSong":"Från","toSong":"Till","search2":"Sök den sista låten: artist, titel, album","listMinutes":"Listans minuter","chooseTwo":"Välj två olika låtar först.","summary":"{0} låtar · exporterat {1} · musik i {2}","fitOk":"{0} låtar att välja bland.","fitShort":"Bara {0} låtar att välja bland, även med filtren helt öppna: försök utan samma stämning eller familj.","songs":"{0} låtar","lists":{"one":"1 lista","other":"{0} listor"},"placed":"{0} av {1} låtar hittades i biblioteket.","albumsNote":{"one":"1 album.","other":"{0} album."},"moods":["Energisk","Glad","Lugn","Melankolisk","Spänd"]},"pl":{"library":"Biblioteka","drop":"Upuść tutaj attaccaplg.bpcr2 lub wybierz go (Attacca Desktop → Attacca → Dla Rockbox i generatora w sieci).","bad":"To nie jest biblioteka Attacca Desktop (.bpcr2).","what":"Jaka lista","fromTrack":"Od utworu","byFilters":"Według filtrów","automatic":"Automatyczne","reorder":"Zmień kolejność listy","hintSeed":"Utwory najbliższe wybranemu, połączone od niego.","hintFilters":"Jedna lista utworów, które przechodzą filtry, każdy koniec połączony z podobnym początkiem.","hintAuto":"Jedna lista na każdy nastrój i rodzinę brzmień, jak wygenerowane listy Attacca.","hintReorder":"Playlista (M3U, M3U8) w połączonej kolejności; utwory są wyszukiwane po ścieżce.","search":"Szukaj utworu: wykonawca, tytuł, album","sameMood":"Ten sam nastrój","sameFamily":"Ta sama rodzina brzmień","fit":"Dopasuj filtry do utworu","count":"Utwory","spacing":"Ten sam wykonawca ponownie po","filters":"Filtry","years":"Lata","minutes":"Minuty","energy":"Energia","positivity":"Pozytywność","voice":"Głos","any":"Dowolne","withVoice":"Z wokalem","instrumental":"Instrumentalne","onlyIncluded":"Tylko włączone","clear":"Wyczyść filtry","filtersHint":"Energia i pozytywność w procentach tej biblioteki (0: najniższy utwór, 100: najwyższy). Puste pola nie filtrują.","artist":"Wykonawca","genre":"Gatunek (tag)","saving":"Zapisywanie","base":"Folder z muzyką","baseHint":"Gdzie jest muzyka na urządzeniu, które odtwarza listy; ścieżki są zapisywane od tego miejsca.","make":"Utwórz","noSongs":"Żaden utwór nie przechodzi tych filtrów.","chooseSeed":"Najpierw wybierz utwór.","choosePlaylist":"Najpierw wybierz playlistę.","links":"połączenia","download":"Pobierz","downloadAll":"Pobierz wszystkie","kRiseFall":"Energia w górę i w dół","kWarmUp":"Rozgrzewka","kWindDown":"Wyciszenie","kSampler":"Przegląd rodzin brzmień","kContrast":"Przeciwieństwo","kForTime":"Na określony czas","kAlbums":"Albumy jak ten","kBridge":"Most","hintRiseFall":"Zaczyna się spokojnie, ożywia się do szczytu i znów uspokaja; każdy utwór blisko poprzedniego. Od wybranego utworu albo od losowego o odpowiedniej energii.","hintWarmUp":"Od spokojnego do żywego, krok po kroku. Od wybranego utworu albo od losowego spokojnego.","hintWindDown":"Od żywego do spokojnego, krok po kroku: na koniec dnia albo do snu. Od wybranego utworu albo od losowego żywego.","hintSampler":"Najbardziej typowe utwory każdej rodziny brzmień, połączone: tak brzmi twoja kolekcja.","hintContrast":"Utwory najmniej podobne do wybranego, połączone: aby wyjść z rutyny.","hintForTime":"Utwory podobne do wybranego, połączone od niego, trwające mniej więcej podaną liczbę minut: podróż, trening.","hintAlbums":"Całe albumy (foldery), które brzmią jak album (folder) wybranego utworu, połączone album po albumie.","hintBridge":"Droga od jednego utworu do drugiego: każdy utwór pośrodku o krok dalej od pierwszego i bliżej drugiego.","kRandom":"Losowy utwór o danym nastroju","swap":"Zamień końce","hintRandom":"Losowy utwór spośród utworów o nastrojach wybranych poniżej (o dowolnym, jeśli żaden nie jest wybrany) i najbliższe mu utwory, połączone od niego.","noSeed":"Bez utworu","fromSong":"Od","toSong":"Do","search2":"Szukaj ostatniego utworu: wykonawca, tytuł, album","listMinutes":"Minuty listy","chooseTwo":"Najpierw wybierz dwa różne utwory.","summary":"Utwory: {0} · eksport {1} · muzyka w {2}","fitOk":"Utwory do wyboru: {0}.","fitShort":"Utwory do wyboru: tylko {0}, nawet przy szeroko otwartych filtrach: spróbuj bez tego samego nastroju lub rodziny.","songs":"Utwory: {0}","lists":{"one":"1 lista","other":"Listy: {0}"},"placed":"Znaleziono w bibliotece {0} z {1} utw.","albumsNote":{"one":"1 album.","other":"Albumy: {0}."},"moods":["Energetyczny","Radosny","Spokojny","Melancholijny","Napięty"]},"ro":{"library":"Bibliotecă","drop":"Trage aici attaccaplg.bpcr2 sau alege-l (Attacca Desktop → Attacca → Pentru Rockbox și generatorul web).","bad":"Aceasta nu e o bibliotecă Attacca Desktop (.bpcr2).","what":"Ce listă","fromTrack":"De la o piesă","byFilters":"După filtre","automatic":"Automate","reorder":"Reordonează o listă","hintSeed":"Piesele cele mai apropiate de cea aleasă, înlănțuite pornind de la ea.","hintFilters":"O listă cu piesele care trec de filtre, fiecare sfârșit înlănțuit cu un început asemănător.","hintAuto":"O listă pentru fiecare stare și familie de sunet, ca listele generate de Attacca.","hintReorder":"O listă de redare (M3U, M3U8) în ordine înlănțuită; piesele sunt găsite după cale.","search":"Caută o piesă: artist, titlu, album","sameMood":"Aceeași stare","sameFamily":"Aceeași familie de sunet","fit":"Potrivește filtrele la piesă","count":"Piese","spacing":"Același artist din nou după","filters":"Filtre","years":"Ani","minutes":"Minute","energy":"Energie","positivity":"Pozitivitate","voice":"Voce","any":"Oricare","withVoice":"Cu voce","instrumental":"Instrumental","onlyIncluded":"Doar incluse","clear":"Șterge filtrele","filtersHint":"Energie și pozitivitate în procente din această bibliotecă (0: piesa cea mai joasă, 100: cea mai înaltă). Câmpurile goale nu filtrează.","artist":"Artist","genre":"Gen (etichetă)","saving":"Salvare","base":"Dosarul de muzică","baseHint":"Unde se află muzica pe dispozitivul care redă listele; căile se scriu de acolo.","make":"Creează","noSongs":"Nicio piesă nu trece de aceste filtre.","chooseSeed":"Alege mai întâi o piesă.","choosePlaylist":"Alege mai întâi o listă de redare.","links":"legături","download":"Descarcă","downloadAll":"Descarcă tot","kRiseFall":"Energie care urcă și coboară","kWarmUp":"Pentru încălzire","kWindDown":"Pentru relaxare","kSampler":"Mostre din familiile de sunet","kContrast":"Opusul","kForTime":"Pentru un timp dat","kAlbums":"Albume ca acesta","kBridge":"Pod","hintRiseFall":"Începe calm, se înviorează până la un vârf și se calmează din nou; fiecare piesă apropiată de cea dinainte. De la piesa aleasă sau de la una aleatorie cu energia potrivită.","hintWarmUp":"De la calm la animat, încetul cu încetul. De la piesa aleasă sau de la una calmă aleatorie.","hintWindDown":"De la animat la calm, încetul cu încetul: pentru sfârșitul zilei sau pentru somn. De la piesa aleasă sau de la una animată aleatorie.","hintSampler":"Cele mai tipice piese din fiecare familie de sunet, înlănțuite: cum sună colecția ta.","hintContrast":"Piesele cele mai puțin asemănătoare cu cea aleasă, înlănțuite: ca să ieși din rutină.","hintForTime":"Piese ca cea aleasă, înlănțuite pornind de la ea, care durează cam câte minute ai dat: o călătorie, un antrenament.","hintAlbums":"Albume întregi (dosare) care sună ca albumul (dosarul) piesei alese, înlănțuite album cu album.","hintBridge":"Un drum de la o piesă la alta: piesele dintre ele, fiecare cu un pas mai departe de prima și mai aproape de a doua.","kRandom":"Piesă aleatorie a unei stări","swap":"Inversează capetele","hintRandom":"O piesă aleatorie dintre cele cu stările alese mai jos (din oricare, dacă nu e aleasă niciuna) și piesele cele mai apropiate de ea, înlănțuite pornind de la ea.","noSeed":"Fără piesă","fromSong":"De la","toSong":"La","search2":"Caută ultima piesă: artist, titlu, album","listMinutes":"Minutele listei","chooseTwo":"Alege mai întâi două piese diferite.","summary":"Piese: {0} · exportată {1} · muzica în {2}","fitOk":"Piese din care să alegi: {0}.","fitShort":"Doar {0} piese din care să alegi, chiar cu filtrele larg deschise: încearcă fără aceeași stare sau familie.","songs":"Piese: {0}","lists":{"one":"1 listă","other":"Liste: {0}"},"placed":"Găsite în bibliotecă: {0} din {1} piese.","albumsNote":{"one":"1 album.","other":"Albume: {0}."},"moods":["Energic","Vesel","Calm","Melancolic","Tensionat"]},"ru":{"library":"Библиотека","drop":"Перетащите сюда attaccaplg.bpcr2 или выберите его (Attacca Desktop → Attacca → Для Rockbox и веб-генератора).","bad":"Это не библиотека Attacca Desktop (.bpcr2).","what":"Какой список","fromTrack":"От трека","byFilters":"По фильтрам","automatic":"Автоматические","reorder":"Переупорядочить список","hintSeed":"Треки, ближайшие к выбранному, сцепленные от него.","hintFilters":"Один список из треков, прошедших фильтры, каждый конец сцеплен с похожим началом.","hintAuto":"По списку на каждое настроение и звуковое семейство, как сгенерированные списки Attacca.","hintReorder":"Плейлист (M3U, M3U8) в сцепленном порядке; треки ищутся по пути.","search":"Найти трек: исполнитель, название, альбом","sameMood":"То же настроение","sameFamily":"То же звуковое семейство","fit":"Подогнать фильтры под трек","count":"Треки","spacing":"Тот же исполнитель снова через","filters":"Фильтры","years":"Годы","minutes":"Минуты","energy":"Энергия","positivity":"Позитивность","voice":"Голос","any":"Любое","withVoice":"С голосом","instrumental":"Инструментал","onlyIncluded":"Только включённые","clear":"Сбросить фильтры","filtersHint":"Энергия и позитивность в процентах по этой библиотеке (0 — самый низкий трек, 100 — самый высокий). Пустые поля не фильтруют.","artist":"Исполнитель","genre":"Жанр (тег)","saving":"При сохранении","base":"Папка с музыкой","baseHint":"Где находится музыка на устройстве, которое воспроизводит списки; пути записываются оттуда.","make":"Создать","noSongs":"Ни один трек не проходит эти фильтры.","chooseSeed":"Сначала выберите трек.","choosePlaylist":"Сначала выберите плейлист.","links":"связи","download":"Скачать","downloadAll":"Скачать все","kRiseFall":"Энергия вверх и вниз","kWarmUp":"Разогрев","kWindDown":"Затихание","kSampler":"Обзор звуковых семейств","kContrast":"Противоположность","kForTime":"На заданное время","kAlbums":"Похожие альбомы","kBridge":"Мост","hintRiseFall":"Начинается спокойно, оживляется до пика и снова успокаивается; каждый трек близок к предыдущему. От выбранного трека или от случайного трека подходящей энергии.","hintWarmUp":"От спокойного к живому, понемногу. От выбранного трека или от случайного спокойного.","hintWindDown":"От живого к спокойному, понемногу: для конца дня или для сна. От выбранного трека или от случайного живого.","hintSampler":"Самые типичные треки каждого звукового семейства, сцепленные: как звучит ваша коллекция.","hintContrast":"Треки, меньше всего похожие на выбранный, сцепленные: чтобы выйти из рутины.","hintForTime":"Треки, похожие на выбранный, сцепленные от него, примерно на заданное число минут: поездка, тренировка.","hintAlbums":"Целые альбомы (папки), звучащие как альбом (папка) выбранного трека, сцепленные альбом за альбомом.","hintBridge":"Путь от одного трека к другому: каждый трек между ними на шаг дальше от первого и ближе ко второму.","kRandom":"Случайный трек настроения","swap":"Поменять концы местами","hintRandom":"Случайный трек из выбранных ниже настроений (из любого, если ни одно не выбрано) и ближайшие к нему треки, сцепленные от него.","noSeed":"Без трека","fromSong":"От","toSong":"До","search2":"Найти последний трек: исполнитель, название, альбом","listMinutes":"Минуты списка","chooseTwo":"Сначала выберите два разных трека.","summary":"Треков: {0} · экспорт {1} · музыка в {2}","fitOk":"Треков на выбор: {0}.","fitShort":"Треков на выбор лишь {0}, даже с полностью открытыми фильтрами: попробуйте без того же настроения или семейства.","songs":"Треков: {0}","lists":{"one":"1 список","other":"Списков: {0}"},"placed":"Найдено в библиотеке: {0} из {1}.","albumsNote":{"one":"1 альбом.","other":"Альбомов: {0}."},"moods":["Энергичное","Весёлое","Спокойное","Меланхоличное","Напряжённое"]},"uk":{"library":"Бібліотека","drop":"Перетягніть сюди attaccaplg.bpcr2 або виберіть його (Attacca Desktop → Attacca → Для Rockbox і вебгенератора).","bad":"Це не бібліотека Attacca Desktop (.bpcr2).","what":"Який список","fromTrack":"Від треку","byFilters":"За фільтрами","automatic":"Автоматичні","reorder":"Перевпорядкувати список","hintSeed":"Треки, найближчі до вибраного, зчеплені від нього.","hintFilters":"Один список треків, що проходять фільтри, кожен кінець зчеплено зі схожим початком.","hintAuto":"Один список на кожен настрій і звукову родину, як згенеровані списки Attacca.","hintReorder":"Плейлист (M3U, M3U8) у зчепленому порядку; треки шукаються за шляхом.","search":"Пошук треку: виконавець, назва, альбом","sameMood":"Той самий настрій","sameFamily":"Та сама звукова родина","fit":"Підігнати фільтри до треку","count":"Треки","spacing":"Той самий виконавець знову через","filters":"Фільтри","years":"Роки","minutes":"Хвилини","energy":"Енергія","positivity":"Позитивність","voice":"Голос","any":"Будь-який","withVoice":"З голосом","instrumental":"Інструментальні","onlyIncluded":"Лише включені","clear":"Скинути фільтри","filtersHint":"Енергія й позитивність у відсотках цієї бібліотеки (0: найнижчий трек, 100: найвищий). Порожні поля не фільтрують.","artist":"Виконавець","genre":"Жанр (тег)","saving":"Збереження","base":"Папка з музикою","baseHint":"Де музика на пристрої, що відтворює списки; шляхи записуються звідти.","make":"Створити","noSongs":"Жоден трек не проходить ці фільтри.","chooseSeed":"Спершу виберіть трек.","choosePlaylist":"Спершу виберіть плейлист.","links":"зв’язки","download":"Завантажити","downloadAll":"Завантажити всі","kRiseFall":"Енергія вгору й униз","kWarmUp":"Розігрів","kWindDown":"Заспокоєння","kSampler":"Добірка звукових родин","kContrast":"Протилежне","kForTime":"На заданий час","kAlbums":"Альбоми, схожі на цей","kBridge":"Міст","hintRiseFall":"Починається спокійно, пожвавлюється до піку й знову заспокоюється; кожен трек близький до попереднього. Від вибраного треку або від випадкового з потрібною енергією.","hintWarmUp":"Від спокійного до жвавого, потроху. Від вибраного треку або від випадкового спокійного.","hintWindDown":"Від жвавого до спокійного, потроху: на кінець дня чи для сну. Від вибраного треку або від випадкового жвавого.","hintSampler":"Найтиповіші треки кожної звукової родини, зчеплені: як звучить ваша колекція.","hintContrast":"Треки, найменш схожі на вибраний, зчеплені: щоб вирватися з рутини.","hintForTime":"Треки, схожі на вибраний, зчеплені від нього, приблизно на задану кількість хвилин: поїздка, тренування.","hintAlbums":"Цілі альбоми (папки), що звучать як альбом (папка) вибраного треку, зчеплені альбом за альбомом.","hintBridge":"Шлях від одного треку до іншого: кожен проміжний трек на крок далі від першого й ближче до другого.","kRandom":"Випадковий трек настрою","swap":"Поміняти кінці місцями","hintRandom":"Випадковий трек серед треків настроїв, вибраних нижче (будь-якого, якщо не вибрано жодного), і найближчі до нього треки, зчеплені від нього.","noSeed":"Без треку","fromSong":"Від","toSong":"До","search2":"Пошук останнього треку: виконавець, назва, альбом","listMinutes":"Хвилин у списку","chooseTwo":"Спершу виберіть два різні треки.","summary":"Треків: {0} · експортовано {1} · музика в {2}","fitOk":"Треків на вибір: {0}.","fitShort":"Лише {0} треків на вибір, навіть із повністю відкритими фільтрами: спробуйте без того самого настрою чи родини.","songs":"Треків: {0}","lists":{"one":"1 список","other":"Списків: {0}"},"placed":"Знайдено в бібліотеці: {0} з {1} треків.","albumsNote":{"one":"1 альбом.","other":"Альбомів: {0}."},"moods":["Енергійний","Веселий","Спокійний","Меланхолійний","Напружений"]},"el":{"library":"Βιβλιοθήκη","drop":"Αφήστε εδώ το attaccaplg.bpcr2 ή επιλέξτε το (Attacca Desktop → Attacca → Για το Rockbox και τη γεννήτρια web).","bad":"Αυτό δεν είναι βιβλιοθήκη του Attacca Desktop (.bpcr2).","what":"Ποια λίστα","fromTrack":"Από ένα τραγούδι","byFilters":"Με φίλτρα","automatic":"Αυτόματες","reorder":"Αναδιάταξη λίστας","hintSeed":"Τα τραγούδια που μοιάζουν περισσότερο με το επιλεγμένο, σε αλυσίδα από αυτό.","hintFilters":"Μία λίστα με τα τραγούδια που περνούν τα φίλτρα, κάθε τέλος δεμένο σε αλυσίδα με μια παρόμοια αρχή.","hintAuto":"Μία λίστα ανά διάθεση και ηχητική οικογένεια, όπως οι δημιουργημένες λίστες του Attacca.","hintReorder":"Μια λίστα αναπαραγωγής (M3U, M3U8) σε αλυσιδωτή σειρά· τα τραγούδια βρίσκονται από τη διαδρομή τους.","search":"Αναζήτηση τραγουδιού: καλλιτέχνης, τίτλος, άλμπουμ","sameMood":"Ίδια διάθεση","sameFamily":"Ίδια ηχητική οικογένεια","fit":"Προσαρμογή των φίλτρων στο τραγούδι","count":"Τραγούδια","spacing":"Ίδιος καλλιτέχνης ξανά μετά από","filters":"Φίλτρα","years":"Χρόνια","minutes":"Λεπτά","energy":"Ενέργεια","positivity":"Θετικότητα","voice":"Φωνή","any":"Οποιοδήποτε","withVoice":"Με φωνή","instrumental":"Ορχηστρικό","onlyIncluded":"Μόνο τα συμπεριλαμβανόμενα","clear":"Καθαρισμός φίλτρων","filtersHint":"Ενέργεια και θετικότητα σε ποσοστό αυτής της βιβλιοθήκης (0: το χαμηλότερο τραγούδι, 100: το υψηλότερο). Τα κενά πεδία δεν φιλτράρουν.","artist":"Καλλιτέχνης","genre":"Είδος (ετικέτα)","saving":"Κατά την αποθήκευση","base":"Φάκελος μουσικής","baseHint":"Πού βρίσκεται η μουσική στη συσκευή που παίζει τις λίστες· οι διαδρομές γράφονται από εκεί.","make":"Δημιουργία","noSongs":"Κανένα τραγούδι δεν περνά αυτά τα φίλτρα.","chooseSeed":"Επιλέξτε πρώτα ένα τραγούδι.","choosePlaylist":"Επιλέξτε πρώτα μια λίστα αναπαραγωγής.","links":"σύνδεσμοι","download":"Λήψη","downloadAll":"Λήψη όλων","kRiseFall":"Ενέργεια που ανεβαίνει και πέφτει","kWarmUp":"Σταδιακό ανέβασμα","kWindDown":"Σταδιακό χαλάρωμα","kSampler":"Δείγματα ηχητικών οικογενειών","kContrast":"Το αντίθετο","kForTime":"Για ορισμένο χρόνο","kAlbums":"Άλμπουμ σαν αυτό","kBridge":"Γέφυρα","hintRiseFall":"Ξεκινά ήρεμα, ζωντανεύει ως μια κορυφή και ηρεμεί ξανά· κάθε τραγούδι κοντά στο προηγούμενο. Από το επιλεγμένο τραγούδι ή από ένα τυχαίο με την κατάλληλη ενέργεια.","hintWarmUp":"Από ήρεμα σε ζωντανά, σιγά σιγά. Από το επιλεγμένο τραγούδι ή από ένα τυχαίο ήρεμο.","hintWindDown":"Από ζωντανά σε ήρεμα, σιγά σιγά: για το τέλος της ημέρας ή για ύπνο. Από το επιλεγμένο τραγούδι ή από ένα τυχαίο ζωντανό.","hintSampler":"Τα πιο χαρακτηριστικά τραγούδια κάθε ηχητικής οικογένειας, σε αλυσίδα: πώς ακούγεται η συλλογή σας.","hintContrast":"Τα τραγούδια που μοιάζουν λιγότερο με το επιλεγμένο, σε αλυσίδα: για να βγείτε από τη ρουτίνα.","hintForTime":"Τραγούδια σαν το επιλεγμένο, σε αλυσίδα από αυτό, που διαρκούν περίπου τα λεπτά που δόθηκαν: ένα ταξίδι, μια προπόνηση.","hintAlbums":"Ολόκληρα άλμπουμ (φάκελοι) που ακούγονται σαν το άλμπουμ (φάκελο) του επιλεγμένου τραγουδιού, σε αλυσίδα άλμπουμ με άλμπουμ.","hintBridge":"Ένας δρόμος από ένα τραγούδι σε άλλο: τα ενδιάμεσα τραγούδια, το καθένα ένα βήμα πιο μακριά από το πρώτο και πιο κοντά στο δεύτερο.","kRandom":"Τυχαίο τραγούδι μιας διάθεσης","swap":"Εναλλαγή των άκρων","hintRandom":"Ένα τυχαίο τραγούδι ανάμεσα σε αυτά των διαθέσεων που επιλέγονται παρακάτω (οποιασδήποτε αν δεν επιλεγεί καμία), και τα τραγούδια που μοιάζουν περισσότερο με αυτό, σε αλυσίδα από αυτό.","noSeed":"Χωρίς τραγούδι","fromSong":"Από","toSong":"Έως","search2":"Αναζήτηση του τελευταίου τραγουδιού: καλλιτέχνης, τίτλος, άλμπουμ","listMinutes":"Λεπτά της λίστας","chooseTwo":"Επιλέξτε πρώτα δύο διαφορετικά τραγούδια.","summary":"Τραγούδια: {0} · εξαγωγή {1} · μουσική στο {2}","fitOk":"Τραγούδια για επιλογή: {0}.","fitShort":"Μόνο {0} τραγούδια για επιλογή, ακόμη και με τα φίλτρα εντελώς ανοιχτά: δοκιμάστε χωρίς ίδια διάθεση ή οικογένεια.","songs":"Τραγούδια: {0}","lists":{"one":"1 λίστα","other":"{0} λίστες"},"placed":"Βρέθηκαν {0} από {1} τραγούδια στη βιβλιοθήκη.","albumsNote":{"one":"1 άλμπουμ.","other":"{0} άλμπουμ."},"moods":["Ενεργητική","Χαρούμενη","Ήρεμη","Μελαγχολική","Τεταμένη"]},"tr":{"library":"Kitaplık","drop":"attaccaplg.bpcr2 dosyasını buraya bırakın veya seçin (Attacca Desktop → Attacca → Rockbox ve web oluşturucu için).","bad":"Bu bir Attacca Desktop kitaplığı (.bpcr2) değil.","what":"Hangi liste","fromTrack":"Bir şarkıdan","byFilters":"Filtrelere göre","automatic":"Otomatik","reorder":"Bir listeyi yeniden sırala","hintSeed":"Seçilene en yakın şarkılar, ondan başlayarak zincirlenmiş.","hintFilters":"Filtrelerden geçen şarkılardan tek liste, her son benzer bir başlangıca zincirlenir.","hintAuto":"Attacca'nın oluşturduğu listeler gibi, her ruh hali ve ses ailesi için bir liste.","hintReorder":"Zincirli sırada bir çalma listesi (M3U, M3U8); şarkılar yollarıyla bulunur.","search":"Şarkı ara: sanatçı, başlık, albüm","sameMood":"Aynı ruh hali","sameFamily":"Aynı ses ailesi","fit":"Filtreleri şarkıya uydur","count":"Şarkılar","spacing":"Aynı sanatçı tekrar şu kadar sonra","filters":"Filtreler","years":"Yıllar","minutes":"Dakika","energy":"Enerji","positivity":"Pozitiflik","voice":"Vokal","any":"Herhangi","withVoice":"Vokalli","instrumental":"Enstrümantal","onlyIncluded":"Yalnızca dahil olanlar","clear":"Filtreleri temizle","filtersHint":"Bu kitaplığa göre yüzde olarak enerji ve pozitiflik (0: en düşük şarkı, 100: en yüksek). Boş alanlar filtrelemez.","artist":"Sanatçı","genre":"Tür (etiket)","saving":"Kaydederken","base":"Müzik klasörü","baseHint":"Listeleri çalan cihazda müziğin yeri; yollar oradan itibaren yazılır.","make":"Oluştur","noSongs":"Bu filtrelerden geçen şarkı yok.","chooseSeed":"Önce bir şarkı seçin.","choosePlaylist":"Önce bir çalma listesi seçin.","links":"bağlantı","download":"İndir","downloadAll":"Tümünü indir","kRiseFall":"Yükselip alçalan enerji","kWarmUp":"Isınma","kWindDown":"Sakinleşme","kSampler":"Ses ailelerinden örnekler","kContrast":"Tersi","kForTime":"Belirli bir süre için","kAlbums":"Buna benzer albümler","kBridge":"Köprü","hintRiseFall":"Sakin başlar, bir zirveye kadar canlanır ve yeniden sakinleşir; her şarkı bir öncekine yakındır. Seçilen şarkıdan ya da uygun enerjide rastgele bir şarkıdan.","hintWarmUp":"Sakinden canlıya, azar azar. Seçilen şarkıdan ya da rastgele sakin bir şarkıdan.","hintWindDown":"Canlıdan sakine, azar azar: günün sonu ya da uyku için. Seçilen şarkıdan ya da rastgele canlı bir şarkıdan.","hintSampler":"Her ses ailesinin en tipik şarkıları, zincirlenmiş: koleksiyonunuzun nasıl tınladığı.","hintContrast":"Seçilene en az benzeyen şarkılar, zincirlenmiş: rutinden çıkmak için.","hintForTime":"Seçilene benzeyen, ondan başlayarak zincirlenen ve verilen dakika kadar süren şarkılar: bir yolculuk, bir antrenman.","hintAlbums":"Seçilen şarkının albümüne (klasörüne) benzeyen tam albümler (klasörler), albüm albüm zincirlenmiş.","hintBridge":"Bir şarkıdan diğerine bir yol: aradaki şarkıların her biri birinciden bir adım daha uzak, ikinciye bir adım daha yakın.","kRandom":"Bir ruh halinden rastgele şarkı","swap":"Uçları değiştir","hintRandom":"Aşağıda seçilen ruh hallerindeki (hiçbiri seçilmediyse herhangi birindeki) şarkılar arasından rastgele bir şarkı ve ona en yakın şarkılar, ondan başlayarak zincirlenmiş.","noSeed":"Şarkısız","fromSong":"Başlangıç","toSong":"Bitiş","search2":"Son şarkıyı ara: sanatçı, başlık, albüm","listMinutes":"Listenin dakikası","chooseTwo":"Önce iki farklı şarkı seçin.","summary":"{0} şarkı · dışa aktarıldı: {1} · müzik: {2}","fitOk":"Seçilecek şarkı: {0}.","fitShort":"Filtreler tamamen açıkken bile seçilecek şarkı sayısı yalnızca {0}: aynı ruh hali veya aile olmadan deneyin.","songs":"{0} şarkı","lists":{"one":"1 liste","other":"{0} liste"},"placed":"Kitaplıkta bulunan: {0} / {1} şarkı.","albumsNote":{"one":"1 albüm.","other":"{0} albüm."},"moods":["Enerjik","Neşeli","Sakin","Melankolik","Gergin"]},"ja":{"library":"ライブラリ","drop":"attaccaplg.bpcr2 をここにドロップするか、選択してください（Attacca Desktop → Attacca → Rockbox と Web ジェネレーター用）。","bad":"これは Attacca Desktop のライブラリ（.bpcr2）ではありません。","what":"どのリスト","fromTrack":"曲から","byFilters":"フィルターで","automatic":"自動","reorder":"リストを並べ替え","hintSeed":"選んだ曲に最も近い曲を、その曲からチェーンします。","hintFilters":"フィルターを通過した曲で 1 つのリスト。各曲の終わりを、似た始まりにチェーンします。","hintAuto":"ムードとサウンドファミリーごとに 1 つのリスト（Attacca の自動生成リストと同じ）。","hintReorder":"プレイリスト（M3U、M3U8）をチェーンの順に並べ替えます。曲はパスで探します。","search":"曲を検索: アーティスト、タイトル、アルバム","sameMood":"同じムード","sameFamily":"同じサウンドファミリー","fit":"フィルターを曲に合わせる","count":"曲数","spacing":"同じアーティストの再登場まで","filters":"フィルター","years":"年","minutes":"分","energy":"エネルギー","positivity":"ポジティブ度","voice":"ボーカル","any":"指定なし","withVoice":"ボーカルあり","instrumental":"インスト","onlyIncluded":"対象のみ","clear":"フィルターをクリア","filtersHint":"エネルギーとポジティブ度は、このライブラリ内のパーセントです（0: 最も低い曲、100: 最も高い曲）。空欄の項目では絞り込みません。","artist":"アーティスト","genre":"ジャンル（タグ）","saving":"保存時","base":"音楽フォルダ","baseHint":"リストを再生する機器での音楽の場所。パスはそこから書き込まれます。","make":"作成","noSongs":"そのフィルターに合う曲はありません。","chooseSeed":"先に曲を選んでください。","choosePlaylist":"先にプレイリストを選んでください。","links":"つなぎ","download":"ダウンロード","downloadAll":"すべてダウンロード","kRiseFall":"上がって下がるエネルギー","kWarmUp":"ウォームアップ","kWindDown":"クールダウン","kSampler":"サウンドファミリーのサンプラー","kContrast":"正反対","kForTime":"指定した時間","kAlbums":"これに似たアルバム","kBridge":"ブリッジ","hintRiseFall":"穏やかに始まり、ピークまで盛り上がって、また落ち着きます。各曲は前の曲に近いものです。選んだ曲から、またはちょうどよいエネルギーの曲からランダムに始めます。","hintWarmUp":"穏やかから活発へ、少しずつ。選んだ曲から、または穏やかな曲からランダムに始めます。","hintWindDown":"活発から穏やかへ、少しずつ。一日の終わりや眠る前に。選んだ曲から、または活発な曲からランダムに始めます。","hintSampler":"各サウンドファミリーの最も典型的な曲をチェーンします。あなたのコレクションがどんな音かがわかります。","hintContrast":"選んだ曲に最も似ていない曲をチェーンします。いつもの流れから抜け出すために。","hintForTime":"選んだ曲に似た曲をその曲からチェーンし、指定した分数くらいの長さにします。移動やトレーニングに。","hintAlbums":"選んだ曲のアルバム（フォルダ）に似た音のアルバム（フォルダ）全体を、アルバムごとにチェーンします。","hintBridge":"ある曲から別の曲への道のり: 間の曲は、1 曲ごとに最初の曲から離れ、2 曲目に近づきます。","kRandom":"ムードのランダムな曲","swap":"両端を入れ替える","hintRandom":"下で選んだムード（何も選ばなければすべて）の曲からランダムに 1 曲を選び、それに最も近い曲をその曲からチェーンします。","noSeed":"曲なし","fromSong":"開始","toSong":"終了","search2":"最後の曲を検索: アーティスト、タイトル、アルバム","listMinutes":"リストの長さ（分）","chooseTwo":"先に異なる 2 曲を選んでください。","summary":"{0} 曲 · 書き出し {1} · 音楽の場所 {2}","fitOk":"選べる曲は {0} 曲です。","fitShort":"フィルターを全開にしても、選べる曲は {0} 曲だけです。同じムードやファミリーの条件を外してみてください。","songs":"{0} 曲","lists":{"one":"リスト 1 件","other":"{0} 件のリスト"},"placed":"{1} 曲中 {0} 曲がライブラリに見つかりました。","albumsNote":{"one":"アルバム 1 枚。","other":"アルバム {0} 枚。"},"moods":["エネルギッシュ","陽気","穏やか","メランコリック","緊迫"]},"ko":{"library":"라이브러리","drop":"attaccaplg.bpcr2를 여기에 놓거나 선택하세요 (Attacca Desktop → Attacca → Rockbox와 웹 생성기용).","bad":"Attacca Desktop 라이브러리(.bpcr2)가 아니에요.","what":"어떤 목록","fromTrack":"곡에서","byFilters":"필터로","automatic":"자동","reorder":"목록 재정렬","hintSeed":"고른 곡과 가장 가까운 곡들을 그 곡부터 연결해요.","hintFilters":"필터를 통과한 곡으로 만든 목록 하나. 각 곡의 끝을 비슷한 시작과 연결해요.","hintAuto":"분위기와 사운드 계열마다 목록 하나 (Attacca의 자동 생성 목록처럼).","hintReorder":"재생목록(M3U, M3U8)을 연결 순서로 재정렬해요. 곡은 경로로 찾아요.","search":"곡 검색: 아티스트, 제목, 앨범","sameMood":"같은 분위기","sameFamily":"같은 사운드 계열","fit":"필터를 곡에 맞추기","count":"곡 수","spacing":"같은 아티스트가 다시 나오기까지","filters":"필터","years":"연도","minutes":"분","energy":"에너지","positivity":"긍정도","voice":"보컬","any":"모두","withVoice":"보컬 있음","instrumental":"연주곡","onlyIncluded":"포함된 곡만","clear":"필터 지우기","filtersHint":"에너지와 긍정도는 이 라이브러리 기준 백분율이에요 (0: 가장 낮은 곡, 100: 가장 높은 곡). 빈 칸은 필터링하지 않아요.","artist":"아티스트","genre":"장르 (태그)","saving":"저장할 때","base":"음악 폴더","baseHint":"목록을 재생하는 기기에서 음악의 위치예요. 경로는 거기서부터 써져요.","make":"만들기","noSongs":"그 필터를 통과하는 곡이 없어요.","chooseSeed":"먼저 곡을 고르세요.","choosePlaylist":"먼저 재생목록을 고르세요.","links":"연결","download":"다운로드","downloadAll":"모두 다운로드","kRiseFall":"오르내리는 에너지","kWarmUp":"워밍업","kWindDown":"쿨다운","kSampler":"사운드 계열 샘플러","kContrast":"정반대","kForTime":"정해진 시간 동안","kAlbums":"이것과 비슷한 앨범","kBridge":"다리","hintRiseFall":"차분하게 시작해 절정까지 활기를 띠다가 다시 차분해져요. 각 곡은 앞 곡과 비슷해요. 고른 곡에서, 또는 알맞은 에너지의 곡에서 무작위로 시작해요.","hintWarmUp":"차분함에서 활기참으로, 조금씩. 고른 곡에서, 또는 차분한 곡에서 무작위로 시작해요.","hintWindDown":"활기참에서 차분함으로, 조금씩: 하루를 마무리하거나 잠들 때. 고른 곡에서, 또는 활기찬 곡에서 무작위로 시작해요.","hintSampler":"각 사운드 계열에서 가장 대표적인 곡들을 연결해요: 내 컬렉션이 어떤 소리인지 알 수 있어요.","hintContrast":"고른 곡과 가장 다른 곡들을 연결해요: 익숙한 흐름에서 벗어나고 싶을 때.","hintForTime":"고른 곡과 비슷한 곡들을 그 곡부터 연결해, 정한 분만큼 이어져요: 여행이나 운동할 때.","hintAlbums":"고른 곡의 앨범(폴더)과 비슷한 소리의 앨범(폴더) 전체를 앨범 단위로 연결해요.","hintBridge":"한 곡에서 다른 곡으로 가는 길: 사이의 곡들은 하나씩 첫 곡에서 멀어지고 두 번째 곡에 가까워져요.","kRandom":"분위기의 무작위 곡","swap":"양 끝 바꾸기","hintRandom":"아래에서 고른 분위기(아무것도 고르지 않으면 전체)의 곡 중 하나를 무작위로 고르고, 그 곡과 가장 가까운 곡들을 그 곡부터 연결해요.","noSeed":"곡 없음","fromSong":"시작","toSong":"끝","search2":"마지막 곡 검색: 아티스트, 제목, 앨범","listMinutes":"목록 길이(분)","chooseTwo":"먼저 서로 다른 곡 두 개를 고르세요.","summary":"곡 {0}개 · {1}에 내보냄 · 음악 위치 {2}","fitOk":"고를 수 있는 곡 {0}개.","fitShort":"필터를 최대로 열어도 고를 수 있는 곡이 {0}개뿐이에요. 같은 분위기나 계열 조건을 빼 보세요.","songs":"곡 {0}개","lists":{"one":"목록 1개","other":"목록 {0}개"},"placed":"{1}곡 중 {0}곡을 라이브러리에서 찾았어요.","albumsNote":{"one":"앨범 1개.","other":"앨범 {0}개."},"moods":["활기찬","경쾌한","차분한","우울한","긴장된"]},"zh-CN":{"library":"媒体库","drop":"将 attaccaplg.bpcr2 拖放到这里，或选择它（Attacca Desktop → Attacca → 用于 Rockbox 和网页生成器）。","bad":"那不是 Attacca Desktop 媒体库（.bpcr2）。","what":"哪种列表","fromTrack":"从一首歌曲","byFilters":"按筛选条件","automatic":"自动","reorder":"重新排序列表","hintSeed":"与所选歌曲最接近的歌曲，从它开始衔接。","hintFilters":"用通过筛选的歌曲生成一个列表，每首的结尾衔接到相似的开头。","hintAuto":"每种情绪和声音类别各一个列表，与 Attacca 自动生成的列表相同。","hintReorder":"将播放列表（M3U、M3U8）按衔接顺序重新排列；歌曲按路径查找。","search":"搜索歌曲：艺术家、标题、专辑","sameMood":"相同情绪","sameFamily":"相同声音类别","fit":"按此歌曲调整筛选","count":"歌曲数","spacing":"同一艺术家再次出现的间隔","filters":"筛选条件","years":"年份","minutes":"分钟","energy":"能量","positivity":"积极度","voice":"人声","any":"任意","withVoice":"有人声","instrumental":"器乐","onlyIncluded":"仅限包含的曲目","clear":"清除筛选条件","filtersHint":"能量和积极度为此媒体库内的百分比（0：最低的歌曲，100：最高的歌曲）。留空的字段不进行筛选。","artist":"艺术家","genre":"流派（标签）","saving":"保存时","base":"音乐文件夹","baseHint":"播放列表的设备上音乐所在的位置；路径从这里开始写入。","make":"生成","noSongs":"没有歌曲符合这些筛选条件。","chooseSeed":"请先选择一首歌曲。","choosePlaylist":"请先选择一个播放列表。","links":"衔接","download":"下载","downloadAll":"全部下载","kRiseFall":"能量起伏","kWarmUp":"热身","kWindDown":"放松","kSampler":"声音类别精选","kContrast":"相反","kForTime":"指定时长","kAlbums":"与此相似的专辑","kBridge":"桥接","hintRiseFall":"平静开始，逐渐升到高潮，再平静下来；每首都与前一首相近。从所选歌曲开始，或随机从一首能量合适的歌曲开始。","hintWarmUp":"从平静到活跃，循序渐进。从所选歌曲开始，或随机从一首平静的歌曲开始。","hintWindDown":"从活跃到平静，循序渐进：适合一天的结束或入睡。从所选歌曲开始，或随机从一首活跃的歌曲开始。","hintSampler":"每个声音类别中最典型的歌曲，衔接在一起：听听你的收藏是什么样的声音。","hintContrast":"与所选歌曲最不相似的歌曲，衔接在一起：跳出日常。","hintForTime":"与所选歌曲相似的歌曲，从它开始衔接，时长约为指定的分钟数：适合旅途或锻炼。","hintAlbums":"与所选歌曲的专辑（文件夹）听起来相似的整张专辑（文件夹），按专辑依次衔接。","hintBridge":"从一首歌曲到另一首的路径：中间的每首歌曲都离第一首更远一步、离第二首更近一步。","kRandom":"某种情绪的随机歌曲","swap":"交换两端","hintRandom":"从下方所选情绪（未选则为任意情绪）的歌曲中随机选一首，以及与它最接近的歌曲，从它开始衔接。","noSeed":"不选歌曲","fromSong":"起点","toSong":"终点","search2":"搜索最后一首歌曲：艺术家、标题、专辑","listMinutes":"列表分钟数","chooseTwo":"请先选择两首不同的歌曲。","summary":"{0} 首歌曲 · 导出于 {1} · 音乐位于 {2}","fitOk":"有 {0} 首歌曲可选。","fitShort":"即使筛选条件全部放开，也只有 {0} 首歌曲可选：试试去掉相同情绪或类别。","songs":"{0} 首歌曲","lists":{"one":"1 个列表","other":"{0} 个列表"},"placed":"{1} 首歌曲中有 {0} 首在媒体库中找到。","albumsNote":{"one":"1 张专辑。","other":"{0} 张专辑。"},"moods":["活力","欢快","平静","忧郁","紧张"]},"zh-TW":{"library":"媒體庫","drop":"將 attaccaplg.bpcr2 拖放到這裡，或選擇它（Attacca Desktop → Attacca → 用於 Rockbox 和網頁產生器）。","bad":"那不是 Attacca Desktop 媒體庫（.bpcr2）。","what":"哪種清單","fromTrack":"從一首歌曲","byFilters":"依篩選條件","automatic":"自動","reorder":"重新排序清單","hintSeed":"與所選歌曲最接近的歌曲，從它開始銜接。","hintFilters":"用通過篩選的歌曲產生一個清單，每首的結尾銜接到相似的開頭。","hintAuto":"每種情緒和聲音類別各一個清單，與 Attacca 自動產生的清單相同。","hintReorder":"將播放清單（M3U、M3U8）依銜接順序重新排列；歌曲依路徑尋找。","search":"搜尋歌曲：演出者、標題、專輯","sameMood":"相同情緒","sameFamily":"相同聲音類別","fit":"依此歌曲調整篩選","count":"歌曲數","spacing":"同一演出者再次出現的間隔","filters":"篩選條件","years":"年份","minutes":"分鐘","energy":"能量","positivity":"正向程度","voice":"人聲","any":"不限","withVoice":"有人聲","instrumental":"演奏曲","onlyIncluded":"僅限包含的曲目","clear":"清除篩選條件","filtersHint":"能量和正向程度為此媒體庫內的百分比（0：最低的歌曲，100：最高的歌曲）。空白的欄位不會篩選。","artist":"演出者","genre":"曲風（標籤）","saving":"儲存時","base":"音樂資料夾","baseHint":"播放清單的裝置上音樂所在的位置；路徑從這裡開始寫入。","make":"產生","noSongs":"沒有歌曲符合這些篩選條件。","chooseSeed":"請先選擇一首歌曲。","choosePlaylist":"請先選擇一個播放清單。","links":"銜接","download":"下載","downloadAll":"全部下載","kRiseFall":"能量起伏","kWarmUp":"暖身","kWindDown":"放鬆","kSampler":"聲音類別精選","kContrast":"相反","kForTime":"指定時長","kAlbums":"與此相似的專輯","kBridge":"橋接","hintRiseFall":"平靜開始，逐漸升到高潮，再平靜下來；每首都與前一首相近。從所選歌曲開始，或隨機從一首能量合適的歌曲開始。","hintWarmUp":"從平靜到活躍，循序漸進。從所選歌曲開始，或隨機從一首平靜的歌曲開始。","hintWindDown":"從活躍到平靜，循序漸進：適合一天的結束或入睡。從所選歌曲開始，或隨機從一首活躍的歌曲開始。","hintSampler":"每個聲音類別中最典型的歌曲，銜接在一起：聽聽你的收藏是什麼樣的聲音。","hintContrast":"與所選歌曲最不相似的歌曲，銜接在一起：跳脫日常。","hintForTime":"與所選歌曲相似的歌曲，從它開始銜接，時長約為指定的分鐘數：適合旅途或運動。","hintAlbums":"與所選歌曲的專輯（資料夾）聽起來相似的整張專輯（資料夾），依專輯依序銜接。","hintBridge":"從一首歌曲到另一首的路徑：中間的每首歌曲都離第一首更遠一步、離第二首更近一步。","kRandom":"某種情緒的隨機歌曲","swap":"交換兩端","hintRandom":"從下方所選情緒（未選則為任何情緒）的歌曲中隨機選一首，以及與它最接近的歌曲，從它開始銜接。","noSeed":"不選歌曲","fromSong":"起點","toSong":"終點","search2":"搜尋最後一首歌曲：演出者、標題、專輯","listMinutes":"清單分鐘數","chooseTwo":"請先選擇兩首不同的歌曲。","summary":"{0} 首歌曲 · 匯出於 {1} · 音樂位於 {2}","fitOk":"有 {0} 首歌曲可選。","fitShort":"即使篩選條件全部放開，也只有 {0} 首歌曲可選：試試去掉相同情緒或類別。","songs":"{0} 首歌曲","lists":{"one":"1 個清單","other":"{0} 個清單"},"placed":"{1} 首歌曲中有 {0} 首在媒體庫中找到。","albumsNote":{"one":"1 張專輯。","other":"{0} 張專輯。"},"moods":["活力","歡快","平靜","憂鬱","緊張"]}};
+/* END generated texts */
+const LANGS = {en: "English", es: "Español", ca: "Català", gl: "Galego", eu: "Euskara", pt: "Português", "pt-BR": "Português (Brasil)",
+  fr: "Français", it: "Italiano", de: "Deutsch", nl: "Nederlands", sv: "Svenska", pl: "Polski", ro: "Română", ru: "Русский",
+  uk: "Українська", el: "Ελληνικά", tr: "Türkçe", ja: "日本語", ko: "한국어", "zh-CN": "简体中文", "zh-TW": "繁體中文"};
+function pickLang(wanted) {
+  const w = (wanted || "en").replace("_", "-");
+  if (LANGS[w] && (w === "en" || w === "es" || MORE_TEXTS[w])) return w;
+  const base = w.split("-")[0];
+  if (base === "zh") return /TW|HK|Hant/i.test(w) ? "zh-TW" : "zh-CN";
+  if (base === "pt" && /BR/i.test(w)) return "pt-BR";
+  return LANGS[base] && (base === "en" || base === "es" || MORE_TEXTS[base]) ? base : "en";
+}
+let lang = pickLang(localStorage.getItem("lang") || navigator.language);
+const t = k => {
+  if (lang === "en" || lang === "es") return TEXTS[lang][k];
+  const v = MORE_TEXTS[lang][k], en = TEXTS.en[k];
+  if (v === undefined) return en;
+  if (typeof en !== "function") return v;
+  // Values into the text; {one, other} for a count of one or more.
+  return (...a) => {
+    const text = typeof v === "string" ? v : (a[0] === 1 ? v.one : v.other);
+    return text.replace(/\{(\d)\}/g, (_, i) => a[+i]);
+  };
+};
+const $ = id => document.getElementById(id);
+
+// ---------- Library (.bpcr2, see PlayerDb.kt in Attacca Desktop) ----------
+const REC = 160, EDGE = 47, VEC = 58, NONE16 = 0xFFFF, NONE32 = 0xFFFFFFFF;
+const F_INCLUDED = 1, F_HEAD = 2, F_TAIL = 4, VOICE_PERCENTILE = 3000;
+let L = null;
+
+function readLibrary(buf) {
+  const v = new DataView(buf);
+  const magic = new TextDecoder().decode(new Uint8Array(buf, 0, 5));
+  if (magic !== "BPCR2" || v.getUint16(52, true) !== VEC || v.getUint16(54, true) !== EDGE * 2) throw new Error("bad");
+  const h = {
+    n: v.getUint32(8, true), recsize: v.getUint32(12, true), dictoff: v.getUint32(16, true), recoff: v.getUint32(20, true),
+    edgeoff: v.getUint32(24, true), stroff: v.getUint32(28, true), strsize: v.getUint32(32, true),
+    spacing: v.getUint16(36, true), created: v.getUint32(40, true), base: v.getUint32(48, true),
+    yearmin: v.getUint16(56, true), yearmax: v.getUint16(58, true), bpmmin: v.getUint16(60, true), bpmmax: v.getUint16(62, true),
+  };
+  const bytes = new Uint8Array(buf), dec = new TextDecoder();
+  const str = off => { if (off === NONE32 || off >= h.strsize) return ""; const s = h.stroff + off; let e = s; while (bytes[e]) e++; return dec.decode(bytes.subarray(s, e)); };
+  const dicts = []; let off = h.dictoff;
+  for (let d = 0; d < 4; d++) { const n = v.getUint32(off, true); const list = []; for (let i = 0; i < n; i++) list.push(str(v.getUint32(off + 4 + i * 4, true))); dicts.push(list); off += 4 + n * 4; }
+  const recs = [];
+  for (let i = 0; i < h.n; i++) {
+    const o = h.recoff + i * h.recsize, vec = new Int16Array(VEC);
+    for (let d = 0; d < VEC; d++) vec[d] = v.getInt16(o + 44 + d * 2, true);
+    const artist = v.getUint16(o + 24, true), genre = v.getUint16(o + 26, true);
+    recs.push({
+      i, title: str(v.getUint32(o, true)), path: str(v.getUint32(o + 4, true)), album: str(v.getUint32(o + 8, true)),
+      edge: v.getUint32(o + 20, true), artist, artistName: artist === NONE16 ? "" : dicts[0][artist], genre,
+      duration: v.getUint16(o + 28, true), year: v.getUint16(o + 30, true), bpm100: v.getUint16(o + 32, true),
+      energy: v.getUint16(o + 34, true), positivity: v.getUint16(o + 36, true), voice: v.getUint16(o + 38, true),
+      mood: v.getUint8(o + 40), mood2: v.getUint8(o + 43) - 1, family: v.getUint8(o + 41), flags: v.getUint8(o + 42), vec,
+    });
+  }
+  const edges = new Int16Array(buf, h.edgeoff, (h.stroff - h.edgeoff) / 2);
+  return { h, dicts, recs, edges, base: str(h.base), created: str(h.created) };
+}
+
+// ---------- Scoring (integers, as the Rockbox plugin) ----------
+const EXP = []; for (let i = 0; i < 258; i++) EXP.push(i === 0 ? 65535 : Math.min(65535, Math.round(Math.exp(-i / 32) * 65536)));
+function expNeg(num, den) { const tt = Math.floor(num * 8192 / den), i = tt >> 8, f = tt & 255; return i >= 256 ? 0 : EXP[i] - (((EXP[i] - EXP[i + 1]) * f) >> 8); }
+function edgeSimilarity(e, endOff, s, startOff) {
+  let dot = 0; for (let i = 0; i < 12; i++) dot += e[endOff + i] * s[startOff + i];
+  const harmony = Math.floor((Math.floor(dot / 4096) + 65536) / 2);
+  let sq = 0; for (let i = 0; i < 16; i++) { const d = e[endOff + 12 + i] - s[startOff + 12 + i]; sq += d * d; }
+  const timbre = expNeg(Math.floor(Math.sqrt(Math.floor(sq / 16))), 600);
+  const level = expNeg(Math.abs(e[endOff + 28] - s[startOff + 28]), 800);
+  const activity = expNeg(Math.abs(e[endOff + 29] - s[startOff + 29]), 700);
+  // Edges with timbre and tempo (key >= 0): Attacca's learnt score.
+  if (e[endOff + 45] >= 0 && s[startOff + 45] >= 0) return similarityWithTimbre(e, endOff, s, startOff, harmony, timbre, activity);
+  return Math.floor((40 * harmony + 35 * timbre + 15 * level + 10 * activity) / 100);
+}
+function keyCompatibility(a, b) {
+  const fifths = k => k < 12 ? (k * 7) % 12 : (((k - 12 + 3) % 12) * 7) % 12;
+  const fa = fifths(a), fb = fifths(b), steps = Math.min(((fa - fb) % 12 + 12) % 12, ((fb - fa) % 12 + 12) % 12);
+  const sameMode = (a >= 12) === (b >= 12);
+  if (a === b) return 65536;
+  if (steps === 0) return 58982;
+  if (steps === 1 && sameMode) return 52429;
+  if (a % 12 === b % 12) return 39322;
+  if (steps === 1) return 39322;
+  if (steps === 2) return 26214;
+  return 9830;
+}
+function asClearAs(value, clarity) { const c = Math.max(0, Math.min(10000, clarity)); return 32768 + Math.trunc((value - 32768) * c / 10000); }
+function similarityWithTimbre(e, endOff, s, startOff, harmony, bands, activity) {
+  const key = asClearAs(keyCompatibility(e[endOff + 45], s[startOff + 45]), Math.min(e[endOff + 46], s[startOff + 46]));
+  let sq = 0; for (let i = 0; i < 13; i++) { const d = e[endOff + 30 + i] - s[startOff + 30 + i]; sq += d * d; }
+  const timbre = expNeg(Math.floor(Math.sqrt(sq)), 111);
+  let tempo = 32768;
+  const ta = e[endOff + 43], tb = s[startOff + 43];
+  if (ta !== 0 && tb !== 0) {
+    const r = ta - tb, d = Math.min(Math.abs(r), Math.abs(r - 1000), Math.abs(r + 1000));
+    tempo = asClearAs(expNeg(d, 40), Math.min(e[endOff + 44], s[startOff + 44]) * 2);
+  }
+  return Math.floor((4 * harmony + 5 * key + 16 * bands + 29 * timbre + 12 * activity + 33 * tempo) / 99);
+}
+function transition(a, b) {
+  // A whole album (albums like one) links by its last song's end into the next album's first start.
+  if (a.tracks) a = a.last;
+  if (b.tracks) b = b.first;
+  if (a.edge === NONE32 || b.edge === NONE32 || !(a.flags & F_TAIL) || !(b.flags & F_HEAD)) return 0;
+  return edgeSimilarity(L.edges, a.edge * 2 * EDGE + EDGE, L.edges, b.edge * 2 * EDGE);
+}
+function distance(a, b) { let s = 0; for (let i = 0; i < VEC; i++) { const d = a.vec[i] - b.vec[i]; s += d * d; } return Math.floor(Math.sqrt(s)); }
+
+// Improving an order (as Attacca and the Rockbox plugin): runs of 1 to 3 songs move between two
+// others while the links gain worth (a weak link, below 0.5, loses 1.5 times its shortfall) and
+// the artist rule is not broken more; windows of 200 songs, half overlapping, as the plugin.
+const WEAK = 32768, IMPROVE_WINDOW = 200, IMPROVE_PASSES = 10, MAX_RUN = 3;
+function worth(sc) { return sc >= WEAK ? sc : sc - Math.floor((WEAK - sc) * 3 / 2); }
+function brokenRule(s, from, to, spacing) {
+  if (spacing <= 0) return 0;
+  let count = 0;
+  for (let i = from; i < to; i++) {
+    if (s[i].artist === NONE16) continue;
+    for (let j = i - 1; j >= from && j >= i - spacing; j--) if (s[j].artist === s[i].artist) { count++; break; }
+  }
+  return count;
+}
+function moveRun(s, i, run, after) {
+  const moved = s.splice(i, run);
+  s.splice(after > i ? after - run + 1 : after + 1, 0, ...moved);
+}
+function improveWindow(s, from, to, end, spacing) {
+  const last = to === end ? to : to - 1;
+  let rules = brokenRule(s, from, to, spacing);
+  for (let pass = 0; pass < IMPROVE_PASSES; pass++) {
+    let improved = false;
+    for (let run = 1; run <= MAX_RUN; run++) {
+      for (let i = from + 1; i + run <= last; i++) {
+        const before = s[i - 1], s0 = s[i], s1 = s[i + run - 1], after = i + run < to ? s[i + run] : null;
+        let removal = -worth(transition(before, s0));
+        if (after) removal += worth(transition(before, after)) - worth(transition(s1, after));
+        let best = 0, bestAt = -1;
+        for (let j = from; j < last; j++) {
+          if (j >= i - 1 && j < i + run) continue;
+          const c = s[j], d = j + 1 < to ? s[j + 1] : null;
+          let gain = removal + worth(transition(c, s0));
+          if (d) gain += worth(transition(s1, d)) - worth(transition(c, d));
+          if (gain > best) { best = gain; bestAt = j; }
+        }
+        if (bestAt < 0) continue;
+        const copy = s.slice(from, to);
+        moveRun(s, i, run, bestAt);
+        const now = brokenRule(s, from, to, spacing);
+        if (now <= rules) { rules = now; improved = true; } else s.splice(from, to - from, ...copy);
+      }
+    }
+    if (!improved) break;
+  }
+}
+function improveChain(s, n, spacing) {
+  if (n < 4) return;
+  for (let from = 0; ; from += IMPROVE_WINDOW / 2) {
+    const to = Math.min(n, from + IMPROVE_WINDOW);
+    improveWindow(s, from, to, n, spacing);
+    if (to === n) return;
+  }
+}
+
+/** Greedy end→start chain avoiding the last `spacing` artists, stopping at `limit`, then improved. Returns [songs, mean link 0..1]. */
+// As Attacca's ChainEngine.repairSpacing (and the plugin): near the end the greedy pass may have
+// only songs of one artist left and put them together; each song too soon after another of its
+// artist moves to where it keeps the spacing and loses least in links (the first stays first).
+function repairSpacing(s, spacing) {
+  if (spacing <= 0 || s.length < 3) return;
+  const fits = (artist, at) => {
+    if (artist === NONE16) return true;
+    for (let k = at - 1; k >= 0 && k >= at - spacing; k--) if (s[k].artist === artist) return false;
+    for (let k = at; k < s.length && k < at + spacing; k++) if (s[k].artist === artist) return false;
+    return true;
+  };
+  let moves = 0;
+  for (let i = 1; i < s.length;) {
+    let soon = false;
+    if (s[i].artist !== NONE16 && moves <= 2 * s.length) for (let j = i - 1; j >= 0 && j >= i - spacing; j--) if (s[j].artist === s[i].artist) { soon = true; break; }
+    if (!soon) { i++; continue; }
+    const t = s.splice(i, 1)[0];
+    let bestAt = -1, best = 0;
+    for (let at = 1; at <= s.length; at++) {
+      if (!fits(t.artist, at)) continue;
+      let gain = worth(transition(s[at - 1], t));
+      if (at < s.length) gain += worth(transition(t, s[at])) - worth(transition(s[at - 1], s[at]));
+      if (bestAt < 0 || gain > best) { best = gain; bestAt = at; }
+    }
+    const at = bestAt < 0 ? i : bestAt;
+    s.splice(at, 0, t);
+    if (bestAt >= 0) { moves++; if (at > i) continue; }
+    i++;
+  }
+}
+
+function chain(songs, start, limit, spacing) {
+  const s = songs.slice(); if (!s.length) return [[], 0];
+  limit = !limit || limit > s.length ? s.length : limit;
+  if (start < 0) start = Math.floor(Math.random() * s.length);
+  [s[0], s[start]] = [s[start], s[0]];
+  let sum = 0;
+  for (let pos = 1; pos < limit; pos++) {
+    const cur = s[pos - 1]; let bv = -1, ba = -1, sv = 0, sa = 0;
+    for (let i = pos; i < s.length; i++) {
+      const sc = transition(cur, s[i]);
+      if (ba < 0 || sc > sa) { sa = sc; ba = i; }
+      if (bv >= 0 && sc <= sv) continue;
+      let repeated = false;
+      if (s[i].artist !== NONE16) for (let j = pos - 1; j >= 0 && j >= pos - spacing; j--) if (s[j].artist === s[i].artist) { repeated = true; break; }
+      if (!repeated) { sv = sc; bv = i; }
+    }
+    const pick = bv >= 0 ? bv : ba;
+    [s[pos], s[pick]] = [s[pick], s[pos]];
+  }
+  const out = s.slice(0, limit);
+  repairSpacing(out, spacing);
+  improveChain(out, limit, spacing);
+  for (let pos = 1; pos < limit; pos++) sum += transition(out[pos - 1], out[pos]);
+  return [out, limit > 1 ? sum / (limit - 1) / 65536 : 0];
+}
+
+// ---------- Filters ----------
+const state = { kind: "seed", seed: null, seed2: null, moods: new Set(), families: new Set(), playlist: null };
+function num(id) { const v = parseInt($(id).value, 10); return isNaN(v) ? 0 : v; }
+function limitsOfForm() {
+  return { yearFrom: num("yearFrom"), yearTo: num("yearTo"), bpmMin: num("bpmMin"), bpmMax: num("bpmMax"),
+    eMin: num("eMin"), eMax: $("eMax").value === "" ? 100 : num("eMax"), pMin: num("pMin"), pMax: $("pMax").value === "" ? 100 : num("pMax"), voice: num("voice") };
+}
+function within(r, l) {
+  if (l.yearFrom && (!r.year || r.year < l.yearFrom)) return false;
+  if (l.yearTo && (!r.year || r.year > l.yearTo)) return false;
+  if (l.bpmMin && r.bpm100 < l.bpmMin * 100) return false;
+  if (l.bpmMax && r.bpm100 > l.bpmMax * 100) return false;
+  if (l.eMin > 0 && r.energy < l.eMin * 100) return false;
+  if (l.eMax < 100 && r.energy > l.eMax * 100) return false;
+  if (l.pMin > 0 && r.positivity < l.pMin * 100) return false;
+  if (l.pMax < 100 && r.positivity > l.pMax * 100) return false;
+  if (l.voice === 1 && r.voice < VOICE_PERCENTILE) return false;
+  if (l.voice === 2 && r.voice >= VOICE_PERCENTILE) return false;
+  return true;
+}
+function matchesBase(r, seed) {
+  if ($("onlyIncluded").checked && !(r.flags & F_INCLUDED)) return false;
+  // Song length (1 to 20 minutes unless changed, as Attacca); an unknown length (0) passes.
+  const minM = num("minMinutes"), maxM = num("maxMinutes");
+  if (r.duration && minM && r.duration < minM * 60) return false;
+  if (r.duration && maxM && r.duration > maxM * 60) return false;
+  const artist = $("artist").value.trim().toLowerCase(), genre = $("genre").value.trim().toLowerCase();
+  if (artist && !r.artistName.toLowerCase().includes(artist)) return false;
+  if (genre && !(r.genre !== NONE16 && L.dicts[1][r.genre].toLowerCase().includes(genre))) return false;
+  if (seed && $("sameMood").checked) { if (r.mood !== seed.mood && r.mood2 !== seed.mood) return false; }
+  else if (state.moods.size && !state.moods.has(r.mood) && !state.moods.has(r.mood2)) return false;
+  if (seed && $("sameFamily").checked) { if (r.family !== seed.family) return false; }
+  else if (state.families.size && !state.families.has(r.family)) return false;
+  return true;
+}
+
+// Fitting to the seed (as Attacca's ListGenerator.fitToSeed and the Rockbox plugin).
+const STEPS = [10, 15, 20, 30, 40, 60, 80, 120, 200];
+const floorDiv = (a, b) => Math.floor(a / b), ceilDiv = (a, b) => Math.ceil(a / b);
+function around(seed, step, voice, years) {
+  const m = Math.floor((2 * step + 5) / 10), h = L.h, l = { yearFrom: 0, yearTo: 0, bpmMin: 0, bpmMax: 0, voice };
+  if (years && seed.year) { if (seed.year - m > h.yearmin) l.yearFrom = seed.year - m; if (seed.year + m < h.yearmax) l.yearTo = seed.year + m; }
+  if (seed.bpm100) {
+    const lo = Math.floor(seed.bpm100 * (1000 - 4 * step) / 100000), hi = Math.ceil(seed.bpm100 * (1000 + 4 * step) / 100000);
+    if (lo * 100 > h.bpmmin) l.bpmMin = lo; if (hi * 100 < h.bpmmax) l.bpmMax = hi;
+  }
+  const eLo = floorDiv(seed.energy - 50 * step, 500) * 5, eHi = ceilDiv(seed.energy + 50 * step, 500) * 5;
+  const pLo = floorDiv(seed.positivity - 50 * step, 500) * 5, pHi = ceilDiv(seed.positivity + 50 * step, 500) * 5;
+  l.eMin = Math.max(0, eLo); l.eMax = Math.min(100, eHi); l.pMin = Math.max(0, pLo); l.pMax = Math.min(100, pHi);
+  return l;
+}
+function fitToSeed() {
+  const seed = state.seed, count = Math.max(2, num("count") || 150);
+  const voice = seed.voice >= VOICE_PERCENTILE ? 1 : 2;
+  const tries = STEPS.map(s => around(seed, s, voice, true)).concat(STEPS.map(s => around(seed, s, voice, false)),
+    [around(seed, 120, 0, false), around(seed, 200, 0, false), { yearFrom: 0, yearTo: 0, bpmMin: 0, bpmMax: 0, eMin: 0, eMax: 100, pMin: 0, pMax: 100, voice: 0 }]);
+  const counts = new Array(tries.length).fill(0); let withYear = 0;
+  for (const r of L.recs) {
+    if (r.year) withYear++;
+    if (r === seed || !matchesBase(r, seed)) continue;
+    for (let k = 0; k < tries.length; k++) if (within(r, tries[k])) counts[k]++;
+  }
+  const years = seed.year && withYear * 2 >= L.recs.length;
+  const order = []; for (let k = years ? 0 : STEPS.length; k < tries.length; k++) order.push(k);
+  const chosen = order.find(k => counts[k] >= count * 10) ?? order.find(k => counts[k] >= count * 2) ?? order[order.length - 1];
+  const l = tries[chosen];
+  const set = (id, v) => { $(id).value = v ? v : ""; };
+  set("yearFrom", l.yearFrom); set("yearTo", l.yearTo); set("bpmMin", l.bpmMin); set("bpmMax", l.bpmMax);
+  $("eMin").value = l.eMin; $("eMax").value = l.eMax; $("pMin").value = l.pMin; $("pMax").value = l.pMax; $("voice").value = l.voice;
+  $("fitResult").textContent = counts[chosen] >= count * 2 ? t("fitOk")(counts[chosen]) : t("fitShort")(counts[chosen]);
+}
+
+// ---------- Lists ----------
+// As Attacca's ListGenerator.spread (and the plugin): the `take` closest that a list of `count` can
+// chain keeping the artist spacing, no artist more often than it allows (the closest songs are often
+// one album; the seed's artist counts once); filled with the closest left out when nothing else is there.
+// `seed` may be one song or a list of the songs already in (none, both ends of a bridge).
+function spread(closest, take, count, spacing, seed) {
+  if (spacing <= 0 || take >= closest.length) return closest.slice(0, take);
+  const per = Math.max(1, Math.floor((count + spacing) / (spacing + 1)));
+  const uses = new Map(), chosen = new Set();
+  for (const s of Array.isArray(seed) ? seed : [seed]) if (s.artist !== NONE16) uses.set(s.artist, (uses.get(s.artist) || 0) + 1);
+  let i = 0;
+  for (; i < closest.length && chosen.size < take; i++) {
+    const a = closest[i].artist;
+    if (a !== NONE16) {
+      if ((uses.get(a) || 0) >= per) continue;
+      uses.set(a, (uses.get(a) || 0) + 1);
+    }
+    chosen.add(closest[i]);
+  }
+  for (let j = 0; j < i && chosen.size < take; j++) chosen.add(closest[j]);
+  return closest.filter(r => chosen.has(r));
+}
+
+// ---------- More kinds of list (as Attacca's ListGenerator, region "More kinds of list") ----------
+const PEAK_AT = 0.65, ENERGY_STEP = 0.1, LINK_WEIGHT = 2, BRIDGE_WINDOW = 4;
+const TIME_MARGIN = 1.6, TIME_SLACK = 60, DEFAULT_LENGTH = 240, MAX_TIME_SONGS = 2000;
+const marginFor = count => Math.max(1, Math.floor((count + 9) / 10));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const nearestFirst = (seed, songs) => songs.map(r => [r, distance(seed, r)]).sort((a, b) => a[1] - b[1] || a[0].i - b[0].i).map(x => x[0]);
+function meanLink(songs) { let s = 0; for (let k = 1; k < songs.length; k++) s += transition(songs[k - 1], songs[k]); return songs.length > 1 ? s / (songs.length - 1) / 65536 : 0; }
+function recentArtists(path, spacing) {
+  const set = new Set();
+  for (let k = Math.max(0, path.length - spacing); k < path.length; k++) if (path[k].artist !== NONE16) set.add(path[k].artist);
+  return set;
+}
+/** The `count` songs closest to `seed` passing `pass`, chained from it (the "From a song" list). */
+function fromSeed(seed, pass, count, spacing) {
+  const closest = nearestFirst(seed, L.recs.filter(r => r !== seed && pass(r)));
+  const pool = spread(closest, count + marginFor(count) - 1, count, spacing, seed);
+  return chain([seed].concat(pool), 0, count, spacing)[0];
+}
+/** `members`, most typical (nearest their middle) first. */
+function byTypicality(members) {
+  const centre = new Array(VEC).fill(0);
+  for (const r of members) for (let d = 0; d < VEC; d++) centre[d] += r.vec[d] / members.length;
+  return members.map(r => { let s = 0; for (let d = 0; d < VEC; d++) s += (r.vec[d] - centre[d]) ** 2; return [r, s]; })
+    .sort((a, b) => a[1] - b[1] || a[0].i - b[0].i).map(x => x[0]);
+}
+/**
+ * `count` songs whose energy follows `shape` (riseFall: calm to a peak and back; warmUp; windDown),
+ * each also near the one before in likeness and leading well into it, no artist again within
+ * `spacing` unless nothing else is left. Starts at `start` when given, else at random among the 20
+ * nearest the curve's start. Likeness and energy weigh alike: a typical distance (median of 200
+ * random pairs) counts as much as an energy off by 0.1; a link from perfect to none as 2 of those.
+ */
+function energyCurve(shape, start, pass, count, spacing) {
+  const members = L.recs.filter(r => r === start || pass(r));
+  if (members.length < 2) return members;
+  const target = p => shape === "riseFall" ? (p < PEAK_AT ? 0.15 + 0.8 * (p / PEAK_AT) : 0.95 - 0.8 * ((p - PEAK_AT) / (1 - PEAK_AT)))
+    : shape === "warmUp" ? 0.1 + 0.85 * p : 0.9 - 0.85 * p;
+  const energy = r => r.energy / 10000;
+  const pairs = []; for (let k = 0; k < 200; k++) pairs.push(distance(pick(members), pick(members)));
+  const typical = Math.max(1e-6, pairs.sort((a, b) => a - b)[100]);
+  const n = Math.min(count, members.length);
+  const first = start || pick(members.slice().sort((a, b) => Math.abs(energy(a) - target(0)) - Math.abs(energy(b) - target(0)) || a.i - b.i).slice(0, 20));
+  const path = [first], used = new Set([first]);
+  while (path.length < n) {
+    const goal = target(path.length / (n - 1)), recent = recentArtists(path, spacing), last = path[path.length - 1];
+    let best = null, bestCost = Infinity;
+    for (let pass2 = 0; pass2 < 2 && !best; pass2++) {
+      for (const r of members) {
+        if (used.has(r)) continue;
+        if (pass2 === 0 && r.artist !== NONE16 && recent.has(r.artist)) continue;
+        // Energy on the curve, likeness, and how the last one's end leads into this start; each term
+        // is >= 0, so one already over the best is passed by before the dearer ones are worked out.
+        let cost = Math.abs(energy(r) - goal) / ENERGY_STEP;
+        if (cost >= bestCost) continue;
+        cost += distance(last, r) / typical;
+        if (cost >= bestCost) continue;
+        cost += (1 - transition(last, r) / 65536) * LINK_WEIGHT;
+        if (cost < bestCost) { bestCost = cost; best = r; }
+      }
+    }
+    if (!best) break;
+    path.push(best); used.add(best);
+  }
+  return path;
+}
+/**
+ * The most typical songs of every sound family, taken in turns (the most typical of each family,
+ * then the next of each…) until `count` (at least one each), all chained from the most typical.
+ */
+function sampler(pass, count, spacing) {
+  const families = new Map();
+  for (const r of L.recs) if (pass(r)) { if (!families.has(r.family)) families.set(r.family, []); families.get(r.family).push(r); }
+  if (!families.size) return [];
+  const queues = [...families.values()].map(byTypicality), want = Math.max(count, families.size), pool = [];
+  for (let turn = 0; pool.length < want && queues.some(q => turn < q.length); turn++)
+    for (const q of queues) { if (pool.length >= want) break; if (turn < q.length) pool.push(q[turn]); }
+  return chain(pool, pool.indexOf(byTypicality(pool)[0]), 0, spacing)[0];
+}
+/** `count` songs as unlike `seed` as the library has (artist cap as spread), chained from the farthest. */
+function contrast(seed, pass, count, spacing) {
+  const farthest = L.recs.filter(r => r !== seed && pass(r)).map(r => [r, distance(seed, r)])
+    .sort((a, b) => b[1] - a[1] || a[0].i - b[0].i).map(x => x[0]);
+  const pool = spread(farthest, count + marginFor(count), count, spacing, []);
+  return pool.length ? chain(pool, 0, count, spacing)[0] : [];
+}
+/**
+ * Songs like `seed`, chained from it, lasting about `minutes` (±60 s): one that would go over is passed
+ * by, the gap left is filled with the leftover that fits it best, else one song (not the first) is
+ * swapped for a longer one that closes it.
+ */
+function forTime(seed, pass, minutes, spacing) {
+  const target = minutes * 60, known = L.recs.filter(r => r.duration > 0);
+  const average = known.length ? Math.max(30, Math.trunc(known.reduce((s, r) => s + r.duration, 0) / known.length)) : DEFAULT_LENGTH;
+  const asked = Math.min(MAX_TIME_SONGS, Math.max(3, Math.trunc(target / average * TIME_MARGIN)));
+  const ids = fromSeed(seed, pass, asked, spacing), length = r => r.duration || average;
+  const chosen = []; let total = 0;
+  for (const r of ids) {
+    if (total + length(r) > target + TIME_SLACK) continue;
+    chosen.push(r); total += length(r);
+    if (total >= target - TIME_SLACK) break;
+  }
+  const gap = target - total;
+  if (gap > TIME_SLACK) {
+    let best = null;
+    for (const r of ids) if (!chosen.includes(r) && length(r) <= gap + TIME_SLACK && (!best || Math.abs(length(r) - gap) < Math.abs(length(best) - gap))) best = r;
+    if (best) { chosen.push(best); total += length(best); }
+  }
+  const left = target - total;
+  if (left > TIME_SLACK) {
+    const spare = ids.filter(r => !chosen.includes(r));
+    for (let at = chosen.length - 1; at > 0; at--) {
+      const wanted = length(chosen[at]) + left, other = spare.find(r => Math.abs(length(r) - wanted) <= TIME_SLACK);
+      if (other) { chosen[at] = other; break; }
+    }
+  }
+  return chosen;
+}
+const folderOf = p => { const k = p.lastIndexOf("/"); return k < 0 ? "" : p.slice(0, k); };
+/**
+ * Whole albums (folders) most like the seed's album (folder), closest first (each as close as its
+ * songs are on average to their nearest song of the seed's album), until `count` songs; songs in
+ * path order in each album; albums chained end→start, albums of the same artist apart.
+ */
+function albumsLike(seed, pass, count, spacing) {
+  const folder = folderOf(seed.path), seeds = L.recs.filter(r => folderOf(r.path) === folder), groups = new Map();
+  for (const r of L.recs) { const f = folderOf(r.path); if (f !== folder && pass(r)) { if (!groups.has(f)) groups.set(f, []); groups.get(f).push(r); } }
+  const ranked = [...groups.values()].map(m => {
+    let sum = 0; for (const r of m) { let best = Infinity; for (const s of seeds) best = Math.min(best, distance(s, r)); sum += best; }
+    return [m, sum / m.length];
+  }).sort((a, b) => a[1] - b[1] || a[0][0].i - b[0][0].i);
+  const albums = []; let total = 0;
+  for (const [m] of ranked) {
+    if (total >= count) break;
+    const album = m.slice().sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+    albums.push({ tracks: album, first: album[0], last: album[album.length - 1], artist: album[0].artist });
+    total += album.length;
+  }
+  if (!albums.length) return { songs: [], albums: 0 };
+  const [order] = chain(albums, 0, 0, spacing);
+  return { songs: order.flatMap(a => a.tracks), albums: albums.length };
+}
+/**
+ * A way from `from` to `to`: `count` songs with both ends; in between the ones of smallest detour
+ * (distance from the first plus to the last, less the direct one; artist cap as spread), walked in
+ * order along the way, each next the best link among the next 4 still to place (artist spacing kept
+ * when one of them allows it).
+ */
+function bridge(from, to, pass, count, spacing) {
+  const direct = distance(from, to), along = new Map(), detour = new Map();
+  for (const r of L.recs) {
+    if (r === from || r === to || !pass(r)) continue;
+    const a = distance(from, r), b = distance(r, to);
+    detour.set(r, a + b - direct); along.set(r, a / Math.max(a + b, 1e-6));
+  }
+  const byDetour = [...detour.keys()].sort((a, b) => detour.get(a) - detour.get(b) || a.i - b.i);
+  const waiting = spread(byDetour, Math.max(0, count - 2), count, spacing, [from, to]).sort((a, b) => along.get(a) - along.get(b) || a.i - b.i);
+  const path = [from];
+  while (waiting.length) {
+    const last = path[path.length - 1], recent = recentArtists(path, spacing), window = waiting.slice(0, BRIDGE_WINDOW);
+    const fresh = of => of.filter(r => r.artist === NONE16 || !recent.has(r.artist));
+    // All of the next few by an artist heard just now: a little further on (the first free one
+    // among the next 12) before giving way.
+    let options = fresh(window);
+    if (!options.length) options = fresh(waiting.slice(0, BRIDGE_WINDOW * 3)).slice(0, 1);
+    if (!options.length) options = window;
+    let next = options[0], best = transition(last, next);
+    for (const r of options) { const sc = transition(last, r); if (sc > best) { best = sc; next = r; } }
+    waiting.splice(waiting.indexOf(next), 1); path.push(next);
+  }
+  path.push(to);
+  return path;
+}
+const SEED_KINDS = { seed: 1, contrast: 1, forTime: 1, albums: 1, bridge: 1 }, CURVES = { riseFall: "rise_and_fall", warmUp: "warm_up", windDown: "wind_down" };
+
+function make() {
+  const spacing = $("spacing").value === "" ? L.h.spacing : num("spacing");
+  const count = Math.max(2, num("count") || 150), lim = limitsOfForm();
+  const lists = []; let note = "";
+  // The filters as the other kinds use them ("same mood / family" belongs to "From a song" only).
+  const pass = r => matchesBase(r, null) && within(r, lim);
+  const seed = state.seed;
+  if (SEED_KINDS[state.kind] && !seed) return status(t("chooseSeed"));
+  if (state.kind === "seed") {
+    const songs = fromSeed(seed, r => matchesBase(r, seed) && within(r, lim), count, spacing);
+    lists.push({ name: "seed_" + seed.title, songs, links: meanLink(songs) });
+  } else if (CURVES[state.kind]) {
+    const songs = energyCurve(state.kind, seed, pass, count, spacing);
+    if (songs.length) lists.push({ name: CURVES[state.kind], songs, links: meanLink(songs) });
+  } else if (state.kind === "sampler") {
+    const songs = sampler(pass, count, spacing);
+    if (songs.length) lists.push({ name: "sampler", songs, links: meanLink(songs) });
+  } else if (state.kind === "contrast") {
+    const songs = contrast(seed, pass, count, spacing);
+    if (songs.length) lists.push({ name: "opposite_" + seed.title, songs, links: meanLink(songs) });
+  } else if (state.kind === "forTime") {
+    const minutes = Math.max(1, num("listMinutes") || 60), songs = forTime(seed, pass, minutes, spacing);
+    lists.push({ name: minutes + "_minutes_" + seed.title, songs, links: meanLink(songs) });
+  } else if (state.kind === "albums") {
+    const { songs, albums } = albumsLike(seed, pass, count, spacing);
+    if (songs.length) { lists.push({ name: "albums_like_" + (seed.album || folderOf(seed.path).split("/").pop()), songs, links: meanLink(songs) }); note = t("albumsNote")(albums); }
+  } else if (state.kind === "bridge") {
+    if (!state.seed2 || state.seed2 === seed) return status(t("chooseTwo"));
+    const songs = bridge(seed, state.seed2, pass, count, spacing);
+    lists.push({ name: "bridge_" + seed.title + "_" + state.seed2.title, songs, links: meanLink(songs) });
+  } else if (state.kind === "random") {
+    // As Attacca's random list: a song at random of the moods chosen (its second mood counts),
+    // and the closest songs to it, as "From a song".
+    const pool = L.recs.filter(r => (!state.moods.size || state.moods.has(r.mood) || state.moods.has(r.mood2)) && pass(r));
+    if (pool.length) {
+      const start = pool[Math.floor(Math.random() * pool.length)];
+      const songs = fromSeed(start, r => matchesBase(r, start) && within(r, lim), count, spacing);
+      lists.push({ name: "random_" + start.title, songs, links: meanLink(songs) });
+    }
+  } else if (state.kind === "filters") {
+    const pool = L.recs.filter(r => matchesBase(r, null) && within(r, lim));
+    if (pool.length) {
+      const [songs, links] = chain(pool, -1, count, spacing);
+      const parts = [...state.moods].map(m => L.dicts[2][m]).concat([...state.families].map(f => L.dicts[3][f]), $("genre").value.trim(), $("artist").value.trim()).filter(Boolean);
+      lists.push({ name: parts.join("_") || "playlist", songs, links });
+    }
+  } else if (state.kind === "auto") {
+    const groups = new Map();
+    for (const r of L.recs) if (matchesBase(r, null) && within(r, lim)) { const k = r.mood * 256 + r.family; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+    for (const k of [...groups.keys()].sort((a, b) => a - b)) {
+      const members = groups.get(k); if (members.length < 8) continue;
+      // Starts with the most typical member (closest to the group's centre).
+      const centre = new Array(VEC).fill(0); for (const r of members) for (let d = 0; d < VEC; d++) centre[d] += r.vec[d] / members.length;
+      let first = 0, best = Infinity;
+      members.forEach((r, i) => { let s = 0; for (let d = 0; d < VEC; d++) s += (r.vec[d] - centre[d]) ** 2; if (s < best) { best = s; first = i; } });
+      const [songs, links] = chain(members, first, count, spacing);
+      lists.push({ name: L.dicts[2][k >> 8] + "_" + L.dicts[3][k & 255], songs, links });
+    }
+  } else {
+    if (!state.playlist) return status(t("choosePlaylist"));
+    const byFull = new Map(), byTail = new Map();
+    for (const r of L.recs) { byFull.set(r.path.toLowerCase(), r); const tl = tail(r.path); if (!byTail.has(tl)) byTail.set(tl, r); }
+    const seen = new Set(), songs = [];
+    for (const line of state.playlist.lines) {
+      const p = line.replace(/\\/g, "/").replace(/^file:\/\/\/?/, "");
+      let r = null; for (const [k, v] of byFull) { if (p.toLowerCase().endsWith("/" + k) || p.toLowerCase() === k) { r = v; break; } }
+      if (!r) r = byTail.get(tail(p));
+      if (r && !seen.has(r)) { seen.add(r); songs.push(r); }
+    }
+    note = t("placed")(songs.length, state.playlist.lines.length);
+    if (songs.length) { const [s, links] = chain(songs, 0, 0, spacing); lists.push({ name: state.playlist.name + "_chained", songs: s, links }); }
+  }
+  show(lists, note);
+}
+function tail(p) { const parts = p.toLowerCase().split("/"); return parts.slice(-2).join("/"); }
+function status(text) { $("status").textContent = text; }
+
+function m3u8(list) {
+  const base = $("base").value.trim().replace(/[\\/]+$/, ""), win = base.includes("\\");
+  const lines = ["#EXTM3U"];
+  for (const r of list.songs) {
+    lines.push(`#EXTINF:${r.duration},${r.artistName} - ${r.title}`);
+    lines.push(win ? base + "\\" + r.path.replace(/\//g, "\\") : base + "/" + r.path);
+  }
+  return lines.join("\n") + "\n";
+}
+function fileName(name) { return (name.replace(/[^A-Za-z0-9_.-]/g, "_") || "playlist") + ".m3u8"; }
+function download(list) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([m3u8(list)], { type: "audio/x-mpegurl" }));
+  a.download = fileName(list.name); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function show(lists, note) {
+  const box = $("results"); box.innerHTML = "";
+  const head = document.createElement("div"); head.className = "row";
+  head.innerHTML = `<b style="flex:1">${lists.length ? t("lists")(lists.length) : t("noSongs")}</b>`;
+  if (lists.length > 1) { const all = document.createElement("button"); all.textContent = t("downloadAll"); all.onclick = () => lists.forEach((l, i) => setTimeout(() => download(l), i * 300)); head.appendChild(all); }
+  box.appendChild(head);
+  if (note) { const p = document.createElement("p"); p.className = "hint"; p.textContent = note; box.appendChild(p); }
+  lists.forEach((list, idx) => {
+    const d = document.createElement("div"); d.className = "list";
+    const secs = list.songs.reduce((s, r) => s + r.duration, 0);
+    const time = `${Math.floor(secs / 3600)}:${String(Math.floor(secs / 60) % 60).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+    d.innerHTML = `<div class="head"><b></b><span class="dim">${t("songs")(list.songs.length)} · ${time} · ${t("links")} ${list.links.toFixed(2)}</span></div><ol class="${lists.length > 1 || idx ? "hidden" : ""}"></ol>`;
+    d.querySelector("b").textContent = list.name;
+    const btn = document.createElement("button"); btn.textContent = t("download"); btn.onclick = e => { e.stopPropagation(); download(list); };
+    d.querySelector(".head").appendChild(btn);
+    const ol = d.querySelector("ol");
+    for (const r of list.songs) { const li = document.createElement("li"); li.textContent = `${r.artistName} — ${r.title}`; ol.appendChild(li); }
+    d.querySelector(".head").onclick = () => ol.classList.toggle("hidden");
+    box.appendChild(d);
+  });
+  status("");
+}
+
+// ---------- Page ----------
+const KINDS = [["seed", "fromTrack", "hintSeed"], ["filters", "byFilters", "hintFilters"], ["auto", "automatic", "hintAuto"], ["reorder", "reorder", "hintReorder"],
+  ["riseFall", "kRiseFall", "hintRiseFall"], ["warmUp", "kWarmUp", "hintWarmUp"], ["windDown", "kWindDown", "hintWindDown"], ["sampler", "kSampler", "hintSampler"],
+  ["contrast", "kContrast", "hintContrast"], ["forTime", "kForTime", "hintForTime"], ["albums", "kAlbums", "hintAlbums"], ["bridge", "kBridge", "hintBridge"], ["random", "kRandom", "hintRandom"]];
+function chip(label, on, click) { const b = document.createElement("button"); b.className = "chip" + (on ? " on" : ""); b.textContent = label; b.onclick = click; return b; }
+function render() {
+  document.documentElement.lang = lang; $("lang").value = lang;
+  document.querySelectorAll("[data-t]").forEach(e => { const v = t(e.dataset.t); if (typeof v === "string") e.textContent = v; });
+  $("seedSearch").placeholder = t("search"); $("artist").placeholder = t("artist"); $("genre").placeholder = t("genre");
+  const kinds = $("kinds"); kinds.innerHTML = "";
+  for (const [k, label] of KINDS)
+    kinds.appendChild(chip(t(label), state.kind === k, () => { state.kind = k; render(); }));
+  $("kindHint").textContent = t(KINDS.find(k => k[0] === state.kind)[2]);
+  const k = state.kind, optional = !!CURVES[k];
+  $("seedBox").classList.toggle("hidden", !SEED_KINDS[k] && !optional);
+  $("seedOptions").classList.toggle("hidden", k !== "seed"); $("fitRow").classList.toggle("hidden", k !== "seed");
+  $("seedNone").classList.toggle("hidden", !optional || !state.seed);
+  $("seed2Box").classList.toggle("hidden", k !== "bridge");
+  $("timeBox").classList.toggle("hidden", k !== "forTime");
+  $("countLabel").classList.toggle("hidden", k === "forTime"); $("count").classList.toggle("hidden", k === "forTime");
+  $("seed2Search").placeholder = t("search2");
+  $("reorderBox").classList.toggle("hidden", state.kind !== "reorder");
+  $("filters").classList.toggle("hidden", state.kind === "reorder");
+  if (!L) return;
+  $("summary").textContent = t("summary")(L.recs.length, L.created, L.base);
+  const moods = $("moods"); moods.innerHTML = "";
+  t("moods").forEach((m, i) => moods.appendChild(chip(m, state.moods.has(i), () => { state.moods.has(i) ? state.moods.delete(i) : state.moods.add(i); render(); })));
+  const fams = $("families"); fams.innerHTML = "";
+  L.dicts[3].forEach((f, i) => fams.appendChild(chip(`${i + 1}. ${f.replace(/-/g, ", ")}`, state.families.has(i), () => { state.families.has(i) ? state.families.delete(i) : state.families.add(i); render(); })));
+  const named = r => r ? `${r.artistName} — ${r.title}` : "";
+  $("seedChosen").textContent = k === "bridge" ? `${t("fromSong")}: ${named(state.seed)}` : named(state.seed);
+  $("seed2Chosen").textContent = `${t("toSong")}: ${named(state.seed2)}`;
+  $("fit").disabled = !state.seed;
+}
+function load(file) {
+  file.arrayBuffer().then(buf => {
+    try { L = readLibrary(buf); } catch (e) { $("summary").textContent = t("bad"); return; }
+    $("form").classList.remove("hidden");
+    $("base").value = L.base; $("spacing").value = L.h.spacing;
+    $("artists").innerHTML = L.dicts[0].slice(0, 5000).map(a => `<option value="${a.replace(/"/g, "&quot;")}">`).join("");
+    $("genres").innerHTML = L.dicts[1].map(g => `<option value="${g.replace(/"/g, "&quot;")}">`).join("");
+    state.seed = null; state.seed2 = null; render();
+  });
+}
+$("file").onchange = e => e.target.files[0] && load(e.target.files[0]);
+const drop = $("drop");
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); e.dataTransfer.files[0] && load(e.dataTransfer.files[0]); };
+for (const [code, name] of Object.entries(LANGS)) {
+  if (code !== "en" && code !== "es" && !MORE_TEXTS[code]) continue;
+  const o = document.createElement("option"); o.value = code; o.textContent = name; $("lang").appendChild(o);
+}
+$("lang").onchange = e => { lang = e.target.value; try { localStorage.setItem("lang", lang); } catch (x) {} render(); };
+function searchSongs(input, found, choose) { $(input).oninput = e => {
+  const words = e.target.value.toLowerCase().split(/\s+/).filter(Boolean), box = $(found);
+  box.innerHTML = ""; box.classList.toggle("hidden", words.length === 0 || !L);
+  if (!words.length || !L) return;
+  let n = 0;
+  for (const r of L.recs) {
+    const hay = (r.artistName + " " + r.title + " " + r.album + " " + r.path).toLowerCase();
+    if (!words.every(w => hay.includes(w))) continue;
+    const d = document.createElement("div"); d.innerHTML = "<span></span><small></small>";
+    d.firstChild.textContent = `${r.artistName} — ${r.title}`; d.lastChild.textContent = r.path;
+    d.onclick = () => { choose(r); $(input).value = ""; box.classList.add("hidden"); render(); };
+    box.appendChild(d); if (++n >= 30) break;
+  }
+}; }
+searchSongs("seedSearch", "seedFound", r => { state.seed = r; $("fitResult").textContent = ""; });
+searchSongs("seed2Search", "seed2Found", r => { state.seed2 = r; });
+$("swapEnds").onclick = () => { [state.seed, state.seed2] = [state.seed2, state.seed]; render(); };
+$("seedNone").onclick = () => { state.seed = null; render(); };
+$("fit").onclick = fitToSeed;
+$("clear").onclick = () => {
+  state.moods.clear(); state.families.clear();
+  for (const id of ["artist", "genre", "yearFrom", "yearTo", "bpmMin", "bpmMax"]) $(id).value = "";
+  $("eMin").value = 0; $("eMax").value = 100; $("pMin").value = 0; $("pMax").value = 100; $("voice").value = 0; $("onlyIncluded").checked = false;
+  $("minMinutes").value = 1; $("maxMinutes").value = 20;
+  $("fitResult").textContent = ""; render();
+};
+$("playlist").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(text => {
+    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith("#"));
+    state.playlist = { name: f.name.replace(/\.[^.]+$/, ""), lines };
+    $("playlistInfo").textContent = t("songs")(lines.length);
+  });
+};
+$("make").onclick = () => { status("…"); setTimeout(make, 20); };
+render();
+</script>
+</body>
+</html>

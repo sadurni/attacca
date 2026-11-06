@@ -1,0 +1,33 @@
+<p><i>„Entdecke deine Musiksammlung neu: hör sie auf neue Weise, mit dem besten Klang.“</i></p>
+
+<p><b>Deine eigene Musik, gespielt, als hätte jemand vorher jeden Titel angehört.</b> Listen, in denen jeder Song in den nächsten übergeht, eine vollständige Klangkette, O'rama, um den Song als bewegte Landschaft zu sehen, und Themes, die du selbst gestaltest. Frei, quelloffen und privat.</p>
+
+<p>Attacca spielt die Musik auf deinem Handy – Ordner und Playlists – und hört sie selbst an: Anfang und Ende jedes Titels, sein Klang und seine Stimmung werden auf dem Handy analysiert, sodass das Ende eines Titels in den Anfang des nächsten übergeht. Es wird nichts irgendwohin gesendet: Die App hat keinen Internetzugriff.</p>
+
+<p><b>Listen, die fließen</b></p>
+<ul>
+<li>Verkette jede Liste, sodass jeder Titel in den nächsten übergeht; auch ganze Alben, vom Ende des einen zum Anfang des anderen.</li>
+<li>Eine Liste ab jedem Titel: die klanglich ähnlichsten Titel, von ihm aus verkettet, mit Filtern (Jahre, Tempo, Energie, Stimmung, Gesang, Länge, was du länger nicht gehört hast).</li>
+<li>Schnelle und zufällige Listen, Energiekurven, ein Querschnitt deiner Klangfamilien, eine Brücke von einem Titel zum anderen, ganze Alben wie eines, eine Liste für eine bestimmte Dauer.</li>
+<li>Stimmungen und Klangfamilien, die in deiner eigenen Sammlung von einem Klangerkennungs-Netz gefunden werden, das auf dem Handy läuft.</li>
+<li>Eine Einschlussliste (erlauben oder sperren) für jede Liste, die es erstellt; intelligente Listen nach Bedingungen; endlose Listen.</li>
+</ul>
+
+<p><b>Wiedergabe und Klang</b></p>
+<ul>
+<li>Lückenlose Wiedergabe, Überblendung, die dem Ende jedes Titels folgen kann, Stilleschnitt, ReplayGain (und gemessene Lautheit für Dateien ohne diesen Wert).</li>
+<li>Eigene Klangverarbeitung: Equalizer (grafisch oder parametrisch, Kopfhörerkorrekturen), dynamischer und virtueller Bass, Stereobreite, Crossfeed, Kompressor und True-Peak-Limiter; ein Profil pro Ausgabegerät.</li>
+<li>Geräte: Jeder Ausgang kann seine eigene Liste fortsetzen, seine Lautstärke festlegen und beim Verbinden die Wiedergabe starten.</li>
+</ul>
+
+<p><b>Ganz nach deinem Geschmack</b></p>
+<ul>
+<li>Designs mit eigenen Farben, Schriften, Hintergründen, Symbolen und einem Läuft-gerade-Layout, das du selbst anordnest; eine Galerie zum Einstieg.</li>
+<li>Musik nach Interpreten, Alben, Genres, Jahrzehnten, Stimmungen und Familien; Ordner; Songtexte, Lesezeichen, Sleep-Timer, Wiedergabetempo, A-B-Wiederholung; Hörstatistiken.</li>
+<li>Android Auto, Widget, Sicherung von allem, 23 Sprachen.</li>
+<li>Attacca O'rama: der laufende Titel als bewegte Landschaft, gezeichnet aus seiner Wellenform, seiner Stimmung und seinem Takt. Mit ein paar kleinen Überraschungen zum Entdecken.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analysiert auf dieselbe Weise, teilt die Bibliothek und erstellt Listen für Rockbox-Player und im Browser.</p>
+
+<p>Warum die Berechtigungen: Zugriff auf alle Dateien, um deine Ordner und Playlists dort abzuspielen, wo sie liegen; Anzeige über anderen Apps, keine Akkuoptimierung und Geräte in der Nähe, nur um die Wiedergabe zu starten, wenn sich ein Bluetooth-Gerät verbindet und der Player geschlossen ist.</p>

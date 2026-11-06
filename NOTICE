@@ -1,0 +1,26 @@
+Attacca
+Copyright (c) 2026 The Attacca authors
+
+The Android app, Attacca Desktop, the web page and the shared core are under the MIT License
+(LICENSE). The Rockbox plugin (rockbox/) is under the GNU General Public License, version 2 or
+later (rockbox/LICENSE), as Rockbox plugins are.
+
+This project includes or uses:
+
+- YAMNet sound classifier weights (core/assets/sound/soundnet.bin, converted to Attacca's own
+  format by tools/export_soundnet.py), from https://www.kaggle.com/models/google/yamnet.
+  Copyright Google LLC, Apache License 2.0.
+
+Android app (libraries, fetched at build time):
+- AndroidX (Media3, Compose, Core, AppCompat, Activity, Lifecycle, Palette), Kotlin,
+  kotlinx.coroutines, Guava: Apache License 2.0.
+- jaudiotagger: GNU Lesser General Public License 2.1.
+
+Attacca Desktop (libraries, fetched at build time and included in its packages):
+- Compose Multiplatform, Kotlin, kotlinx.coroutines: Apache License 2.0.
+- jaudiotagger, mp3spi, vorbisspi, JFLAC: GNU Lesser General Public License 2.1.
+- JNativeHook (the keyboard's media keys in Attacca Desktop): GNU Lesser General Public License 3.
+- sqlite-jdbc: Apache License 2.0.
+- JSON-java (org.json): Public Domain.
+- The player's icons (desktop/src/main/kotlin/.../ui/PlayerIcons.kt): path data of Material
+  Symbols, Copyright Google LLC, Apache License 2.0.

@@ -1,0 +1,33 @@
+<p><i>«Redescobreix la teva col·lecció de música: escolta-la de maneres noves, amb el millor so.»</i></p>
+
+<p><b>La teva música, sonant com si algú hagués escoltat abans cada tema.</b> Llistes on cada cançó porta a la següent, una cadena de so completa, O'rama per veure la cançó com un paisatge en moviment i temes que modeles tu. Lliure, de codi obert i privada.</p>
+
+<p>Attacca reprodueix la música del mòbil —carpetes i llistes— i l'escolta ell mateix: el principi i el final de cada tema, com sona i el seu estat d'ànim s'analitzen al mòbil, perquè el final d'un tema porti al principi del següent. No s'envia res enlloc: l'app no té accés a internet.</p>
+
+<p><b>Llistes que flueixen</b></p>
+<ul>
+<li>Encadena qualsevol llista perquè cada tema porti al següent; també àlbums sencers, del final d'un al principi de l'altre.</li>
+<li>Una llista des de qualsevol tema: els més semblants en so, encadenats des d'ell, amb filtres (anys, tempo, energia, estat d'ànim, veu, durada, el que no has escoltat últimament).</li>
+<li>Llistes ràpides i a l'atzar, corbes d'energia, un tast de les teves famílies de so, un camí d'un tema a un altre, àlbums sencers com un de sol, una llista per a un temps determinat.</li>
+<li>Estats d'ànim i famílies de so trobats a la teva pròpia col·lecció per una xarxa de reconeixement de so que funciona al mòbil.</li>
+<li>Una llista d'inclusió (permetre o bloquejar) per a totes les llistes que fa; llistes intel·ligents per condicions; llistes que no s'acaben.</li>
+</ul>
+
+<p><b>Reproducció i so</b></p>
+<ul>
+<li>Reproducció sense pauses (gapless), crossfade que pot seguir com acaba cada tema, retall de silencis, ReplayGain (i sonoritat mesurada per als fitxers que no en tenen).</li>
+<li>El seu propi tractament de so: equalitzador (gràfic o paramètric, correccions d'auriculars), greus dinàmics i virtuals, amplada estèreo, crossfeed, compressor i limitador de pic real; un perfil per a cada dispositiu de sortida.</li>
+<li>Dispositius: cada sortida pot continuar la seva pròpia llista, fixar el seu volum i començar a sonar en connectar-se.</li>
+</ul>
+
+<p><b>A la teva manera</b></p>
+<ul>
+<li>Temes amb els seus propis colors, tipus de lletra, fons, icones i una pantalla de S'està reproduint que tu distribueixes; una galeria per començar.</li>
+<li>Música per artistes, àlbums, gèneres, dècades, estats d'ànim i famílies; carpetes; lletres, marcadors, temporitzador d'apagada, velocitat, repetició A-B; estadístiques d'escolta.</li>
+<li>Android Auto, widget, còpia de seguretat de tot, 23 idiomes.</li>
+<li>Attacca O'rama: la cançó que sona com un paisatge en moviment, fet de la seva forma d'ona, el seu estat d'ànim i el seu ritme. Amb algunes petites sorpreses per descobrir.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analitza igual i comparteix la biblioteca, i fa llistes per a reproductors amb Rockbox i al navegador.</p>
+
+<p>Per què els permisos: accés a tots els fitxers, per reproduir les teves carpetes i llistes allà on són; mostrar sobre altres apps, sense optimització de bateria i dispositius propers, només per començar a sonar quan es connecta un dispositiu Bluetooth amb el reproductor tancat.</p>

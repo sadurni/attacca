@@ -1,0 +1,14 @@
+# Text files are stored with LF; scripts keep the line ends their system needs.
+* text=auto
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Binaries.
+*.jar binary
+*.bin binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.ttf binary
+*.otf binary

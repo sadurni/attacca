@@ -1,0 +1,234 @@
+{
+  "format": 1,
+  "name": "Shark Attacca",
+  "dark": true,
+  "background": "#FF07182B",
+  "surface": "#FF10283F",
+  "text": "#FFE6F1F8",
+  "textSecondary": "#A6E6F1F8",
+  "accent": "#FFF2C14E",
+  "coverAccent": false,
+  "excluded": "#FFFFB74D",
+  "danger": "#FFFF6B6B",
+  "corners": 0.8,
+  "textScale": 1.0,
+  "font": "SERIF",
+  "playerBackground": "PLAIN",
+  "playerLayout": [
+    {
+      "type": "COVER"
+    },
+    {
+      "type": "TITLE",
+      "framed": true,
+      "image": {
+        "file": "background-waves-night.jpg",
+        "dim": 35,
+        "tint": false,
+        "dimLight": 60,
+        "fileLight": "background-waves-day.jpg"
+      },
+      "lines": [
+        {
+          "kind": "TITLE"
+        },
+        {
+          "kind": "ARTIST"
+        },
+        {
+          "kind": "ALBUM"
+        }
+      ]
+    },
+    {
+      "type": "TEXT",
+      "template": "{format}[ · {samplerate}][ · {loudness}][ · {duration}]",
+      "size": "SMALL",
+      "boxed": false
+    },
+    {
+      "type": "PROGRESS"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "PREVIOUS_ALBUM",
+        "PREVIOUS",
+        "PLAY_PAUSE",
+        "NEXT",
+        "NEXT_ALBUM"
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        "SHUFFLE",
+        "QUEUE",
+        "FAVORITE",
+        "QUICK_LIST",
+        "NAVIGATOR",
+        "SOUND",
+        "REPEAT"
+      ],
+      "icons": {
+        "QUEUE": {
+          "file": "icon-wave.png",
+          "dim": 0,
+          "tint": true
+        },
+        "SOUND": {
+          "file": "icon-lighthouse.png",
+          "dim": 0,
+          "tint": true
+        }
+      }
+    }
+  ],
+  "playerLayoutLandscape": [
+    {
+      "type": "BOX",
+      "framed": false,
+      "horizontal": true,
+      "children": [
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 36,
+          "children": [
+            {
+              "type": "COVER"
+            },
+            {
+              "type": "TEXT",
+              "template": "{format}[ · {samplerate}][ · {loudness}][ · {duration}]",
+              "size": "SMALL",
+              "boxed": false
+            }
+          ]
+        },
+        {
+          "type": "SPACE",
+          "width": 19
+        },
+        {
+          "type": "BOX",
+          "framed": false,
+          "width": 45,
+          "children": [
+            {
+              "type": "TITLE",
+              "framed": true,
+              "image": {
+                "file": "background-waves-night.jpg",
+                "dim": 35,
+                "tint": false,
+                "dimLight": 60,
+                "fileLight": "background-waves-day.jpg"
+              },
+              "lines": [
+                {
+                  "kind": "TITLE"
+                },
+                {
+                  "kind": "ARTIST"
+                },
+                {
+                  "kind": "ALBUM"
+                }
+              ]
+            },
+            {
+              "type": "PROGRESS"
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "PREVIOUS_ALBUM",
+                "PREVIOUS",
+                "PLAY_PAUSE",
+                "NEXT",
+                "NEXT_ALBUM"
+              ]
+            },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                "SHUFFLE",
+                "QUEUE",
+                "FAVORITE",
+                "QUICK_LIST",
+                "NAVIGATOR",
+                "SOUND",
+                "REPEAT"
+              ],
+              "icons": {
+                "QUEUE": {
+                  "file": "icon-wave.png",
+                  "dim": 0,
+                  "tint": true
+                },
+                "SOUND": {
+                  "file": "icon-lighthouse.png",
+                  "dim": 0,
+                  "tint": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backgrounds": {
+    "PLAYER": {
+      "file": "background-coast-night.jpg",
+      "dim": 15,
+      "tint": false,
+      "dimLight": 35,
+      "fileLight": "background-coast-day.jpg",
+      "fileWide": "background-coast-wide-night.jpg",
+      "fileWideLight": "background-coast-wide-day.jpg"
+    },
+    "OTHERS": {
+      "file": "background-coast-night.jpg",
+      "dim": 55,
+      "tint": false,
+      "dimLight": 78,
+      "fileLight": "background-coast-day.jpg",
+      "fileWide": "background-coast-wide-night.jpg",
+      "fileWideLight": "background-coast-wide-day.jpg"
+    }
+  },
+  "icons": {
+    "PLAYLIST": {
+      "file": "icon-wave.png",
+      "dim": 0,
+      "tint": true
+    },
+    "NO_COVER": {
+      "file": "icon-wheel.png",
+      "dim": 0,
+      "tint": true
+    },
+    "LISTS": {
+      "file": "icon-anchor.png",
+      "dim": 0,
+      "tint": true
+    },
+    "BOOKMARKS": {
+      "file": "icon-anchor.png",
+      "dim": 0,
+      "tint": true
+    }
+  },
+  "alternate": {
+    "dark": false,
+    "background": "#FFEAF3F8",
+    "surface": "#FFD6E6F0",
+    "text": "#FF0B2236",
+    "textSecondary": "#B30B2236",
+    "accent": "#FF1F6FA8",
+    "excluded": "#FFE07B00",
+    "danger": "#FFC62828"
+  }
+}

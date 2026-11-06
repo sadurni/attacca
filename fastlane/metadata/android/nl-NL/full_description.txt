@@ -1,0 +1,33 @@
+<p><i>„Herontdek je muziekcollectie: luister er op nieuwe manieren naar, met het beste geluid.”</i></p>
+
+<p><b>Je eigen muziek, gespeeld alsof iemand eerst elk nummer heeft beluisterd.</b> Lijsten waarin elk nummer overgaat in het volgende, een complete geluidsketen, O'rama om het nummer te zien als een bewegend landschap, en thema's die je zelf vormgeeft. Vrij, open source en privé.</p>
+
+<p>Attacca speelt de muziek op je telefoon af — mappen en afspeellijsten — en luistert er zelf naar: het begin en het einde van elk nummer, de klank en de stemming worden op de telefoon geanalyseerd, zodat het einde van het ene nummer overgaat in het begin van het volgende. Er wordt niets ergens naartoe gestuurd: de app heeft geen internettoegang.</p>
+
+<p><b>Lijsten die vloeien</b></p>
+<ul>
+<li>Rijg elke lijst aaneen zodat elk nummer overgaat in het volgende; ook hele albums, van het einde van het ene naar het begin van het andere.</li>
+<li>Een lijst vanaf elk nummer: de klankmatig dichtstbijzijnde nummers, vanaf dat nummer aaneengerijgd, met filters (jaren, tempo, energie, stemming, zang, lengte, wat je de laatste tijd niet hebt gehoord).</li>
+<li>Snelle en willekeurige lijsten, energiecurves, een voorproefje van je klankfamilies, een brug van het ene nummer naar het andere, hele albums als één, een lijst voor een bepaalde tijd.</li>
+<li>Stemmingen en klankfamilies, gevonden in je eigen verzameling door een geluidsherkenningsnetwerk dat op de telefoon draait.</li>
+<li>Een insluitlijst (toestaan of blokkeren) voor elke lijst die de app maakt; slimme lijsten op basis van voorwaarden; eindeloze lijsten.</li>
+</ul>
+
+<p><b>Afspelen en geluid</b></p>
+<ul>
+<li>Naadloos afspelen, crossfade die kan meebewegen met hoe elk nummer eindigt, stiltes inkorten, ReplayGain (en gemeten luidheid voor bestanden zonder).</li>
+<li>Eigen geluidsbewerking: equalizer (grafisch of parametrisch, hoofdtelefooncorrecties), dynamische en virtuele bas, stereobreedte, crossfeed, compressor en true-peak-limiter; een profiel per uitvoerapparaat.</li>
+<li>Apparaten: elke uitvoer kan zijn eigen lijst vervolgen, zijn volume instellen en beginnen met spelen zodra hij verbinding maakt.</li>
+</ul>
+
+<p><b>Op jouw manier</b></p>
+<ul>
+<li>Thema's met eigen kleuren, lettertypen, achtergronden, pictogrammen en een Nu speelt-indeling die je zelf opmaakt; een galerij om mee te beginnen.</li>
+<li>Muziek per artiest, album, genre, decennium, stemming en familie; mappen; songteksten, bladwijzers, slaaptimer, afspeelsnelheid, A-B-herhaling; luisterstatistieken.</li>
+<li>Android Auto, widget, back-up van alles, 23 talen.</li>
+<li>Attacca O'rama: het nummer dat speelt als een bewegend landschap, getekend uit zijn golfvorm, stemming en ritme. Met een paar kleine verrassingen om te ontdekken.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analyseert op dezelfde manier, deelt de bibliotheek en maakt lijsten voor Rockbox-spelers en in de browser.</p>
+
+<p>Waarom de rechten: toegang tot alle bestanden, om je mappen en afspeellijsten af te spelen waar ze staan; weergave over andere apps, geen batterijoptimalisatie en apparaten in de buurt, alleen om te beginnen met spelen wanneer een Bluetooth-apparaat verbindt terwijl de speler gesloten is.</p>

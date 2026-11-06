@@ -1,0 +1,33 @@
+<p><i>«Redescubra a sua coleção de música: ouça-a de formas novas, com o melhor som.»</i></p>
+
+<p><b>A sua própria música, a tocar como se alguém tivesse ouvido cada faixa antes.</b> Listas em que cada música leva à seguinte, uma cadeia de som completa, O'rama para ver a música como uma paisagem em movimento e temas moldados por si. Livre, de código aberto e privada.</p>
+
+<p>O Attacca reproduz a música do teu telemóvel — pastas e listas de reprodução — e ouve-a por si próprio: o final de cada faixa, o seu som e o seu ambiente são analisados no telemóvel, para que o fim de uma faixa possa conduzir ao início da seguinte. Nada é enviado para lado nenhum: a aplicação não tem acesso à internet.</p>
+
+<p><b>Listas que fluem</b></p>
+<ul>
+<li>Encadeia qualquer lista para que cada faixa conduza à seguinte; álbuns inteiros podem ser encadeados do fim ao início.</li>
+<li>Uma lista a partir de qualquer faixa: as faixas mais próximas no som, encadeadas a partir dela, com filtros (anos, andamento, energia, ambiente, voz, duração, o que não ouves há algum tempo).</li>
+<li>Listas rápidas e aleatórias, curvas de energia, uma amostra das tuas famílias de som, uma ponte de uma faixa para outra, álbuns inteiros como se fossem um, uma lista para um tempo definido.</li>
+<li>Ambientes e famílias de som encontrados na tua própria coleção por uma rede de reconhecimento de som que corre no telemóvel.</li>
+<li>Uma lista de inclusão (permitir ou bloquear) para cada lista que cria; listas inteligentes feitas a partir de condições; listas infinitas.</li>
+</ul>
+
+<p><b>Reprodução e som</b></p>
+<ul>
+<li>Reprodução sem pausas (gapless), crossfade que pode seguir a forma como cada faixa termina, corte de silêncio, ReplayGain (e volume medido para ficheiros que não o têm).</li>
+<li>Processamento de som próprio: equalizador (gráfico ou paramétrico, correções para auscultadores), graves dinâmicos e virtuais, largura estéreo, crossfeed, compressor e limitador de true-peak; um perfil por dispositivo de saída.</li>
+<li>Dispositivos: cada saída pode continuar a sua própria lista, definir o seu volume e começar a reproduzir quando se liga.</li>
+</ul>
+
+<p><b>À tua maneira</b></p>
+<ul>
+<li>Temas com cores, tipos de letra, fundos e ícones próprios e um esquema de A reproduzir que organizas tu; uma galeria para começar.</li>
+<li>Música por artistas, álbuns, géneros, décadas, ambientes e famílias; pastas; letras, marcadores, temporizador de suspensão, velocidade, repetição A-B; estatísticas de audição.</li>
+<li>Android Auto, widget no ecrã principal, cópia de segurança de tudo, 23 idiomas.</li>
+<li>Attacca O'rama: a música que está a tocar como uma paisagem em movimento, feita da sua forma de onda, do seu estado de espírito e do seu ritmo. Com algumas pequenas surpresas por descobrir.</li>
+</ul>
+
+<p>O Attacca Desktop (Windows, Linux, macOS) analisa da mesma forma e partilha a biblioteca, e cria listas para leitores Rockbox e no navegador.</p>
+
+<p>Porquê as permissões: acesso a todos os ficheiros, para reproduzir as tuas pastas e listas onde estão; apresentação sobre outras aplicações, sem otimização da bateria e dispositivos próximos, apenas para começar a reproduzir quando um dispositivo Bluetooth se liga com o leitor fechado.</p>

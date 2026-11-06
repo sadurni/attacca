@@ -1,0 +1,62 @@
+# The Android app: built and tested on every push and pull request; on a version tag (v1.2.3) the
+# signed APK is attached to the GitHub release. Signing needs these repository secrets:
+# KEYSTORE_BASE64 (the .jks, base64), KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD. Without them the
+# APK is signed with a debug key (fine for testing, not for publishing).
+name: Android
+
+on:
+  push:
+    paths: ["android/**", "core/**", "fastlane/**", ".github/workflows/android.yml"]
+    tags: ["v*"]
+  pull_request:
+    paths: ["android/**", "core/**", "fastlane/**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the build date is the last commit's (reproducible builds)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Release key
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > release.jks
+          printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
+      - run: chmod +x gradlew
+      - run: ./gradlew testDebugUnitTest assembleRelease
+      # Named attacca-<version>.apk: the name F-Droid looks for when it compares its build with
+      # this signed one (reproducible builds, see dev/fdroid).
+      - name: Name
+        run: |
+          VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | tr -d '\r')
+          if [[ "$GITHUB_REF" == refs/tags/v* && "${GITHUB_REF_NAME#v}" != "$VERSION" ]]; then
+            echo "The tag $GITHUB_REF_NAME does not match versionName $VERSION"; exit 1
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "app/build/outputs/apk/release/attacca-$VERSION.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: attacca-apk
+          path: android/app/build/outputs/apk/release/attacca-*.apk
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/attacca-*.apk

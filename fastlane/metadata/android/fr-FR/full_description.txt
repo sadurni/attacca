@@ -1,0 +1,33 @@
+<p><i>« Redécouvrez votre collection de musique : écoutez-la autrement, avec le meilleur son. »</i></p>
+
+<p><b>Votre propre musique, jouée comme si quelqu'un avait écouté chaque morceau avant vous.</b> Des listes où chaque chanson mène à la suivante, une chaîne audio complète, O'rama pour voir la chanson comme un paysage en mouvement, et des thèmes que vous façonnez vous-même. Libre, open source et respectueuse de la vie privée.</p>
+
+<p>Attacca lit la musique de votre téléphone — dossiers et listes — et l'écoute lui-même : le début et la fin de chaque titre, sa sonorité et son ambiance sont analysés sur le téléphone, pour que la fin d'un titre mène au début du suivant. Rien n'est envoyé nulle part : l'appli n'a pas accès à internet.</p>
+
+<p><b>Des listes qui coulent</b></p>
+<ul>
+<li>Enchaînez n'importe quelle liste pour que chaque titre mène au suivant ; les albums entiers aussi, de la fin de l'un au début de l'autre.</li>
+<li>Une liste à partir de n'importe quel titre : les plus proches par le son, enchaînés depuis celui-ci, avec des filtres (années, tempo, énergie, ambiance, voix, durée, ce que vous n'avez pas écouté récemment).</li>
+<li>Listes rapides et aléatoires, courbes d'énergie, un échantillon de vos familles sonores, un pont d'un titre à un autre, des albums entiers comme un seul, une liste pour une durée donnée.</li>
+<li>Ambiances et familles sonores trouvées dans votre propre collection par un réseau de reconnaissance sonore qui tourne sur le téléphone.</li>
+<li>Une liste d'inclusion (autoriser ou bloquer) pour chaque liste créée ; des listes intelligentes selon des conditions ; des listes sans fin.</li>
+</ul>
+
+<p><b>Lecture et son</b></p>
+<ul>
+<li>Lecture sans coupure, fondu enchaîné qui peut suivre la façon dont chaque titre se termine, suppression des silences, ReplayGain (et volume mesuré pour les fichiers qui n'en ont pas).</li>
+<li>Son propre traitement du son : égaliseur (graphique ou paramétrique, corrections pour casques), basses dynamiques et virtuelles, largeur stéréo, crossfeed, compresseur et limiteur de crête réelle ; un profil par appareil de sortie.</li>
+<li>Appareils : chaque sortie peut reprendre sa propre liste, régler son volume et lancer la lecture à la connexion.</li>
+</ul>
+
+<p><b>À votre façon</b></p>
+<ul>
+<li>Des thèmes avec leurs propres couleurs, polices, fonds, icônes et un écran Lecture en cours que vous disposez vous-même ; une galerie pour commencer.</li>
+<li>Musique par artistes, albums, genres, décennies, ambiances et familles ; dossiers ; paroles, signets, minuterie de veille, vitesse, répétition A-B ; statistiques d'écoute.</li>
+<li>Android Auto, widget, sauvegarde de tout, 23 langues.</li>
+<li>Attacca O'rama : le morceau en cours comme un paysage en mouvement, dessiné d'après sa forme d'onde, son humeur et son rythme. Avec quelques petites surprises à découvrir.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) analyse de la même façon, partage la bibliothèque et crée des listes pour les lecteurs Rockbox et dans le navigateur.</p>
+
+<p>Pourquoi ces autorisations : accès à tous les fichiers, pour lire vos dossiers et listes là où ils se trouvent ; affichage par-dessus les autres applis, pas d'optimisation de la batterie et appareils à proximité, uniquement pour lancer la lecture quand un appareil Bluetooth se connecte alors que le lecteur est fermé.</p>
