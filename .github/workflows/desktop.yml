@@ -8,6 +8,7 @@ name: Desktop
 on:
   push:
     paths: ["desktop/**", "core/**", "web/**", "rockbox/**", ".github/workflows/desktop.yml"]
+    branches: [main]
     tags: ["v*"]
   pull_request:
     paths: ["desktop/**", "core/**"]

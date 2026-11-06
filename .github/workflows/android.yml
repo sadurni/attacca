@@ -7,6 +7,7 @@ name: Android
 on:
   push:
     paths: ["android/**", "core/**", "fastlane/**", ".github/workflows/android.yml"]
+    branches: [main]
     tags: ["v*"]
   pull_request:
     paths: ["android/**", "core/**", "fastlane/**"]
