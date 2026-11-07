@@ -8,7 +8,8 @@ install and nothing sent anywhere: the file is read in the browser.
   as either) and sound family, and **Fit the
   filters to the song** (10 times the songs asked for, at least twice), as Attacca.
 - **By filters**: mood, sound family, artist, genre tag, years, BPM, song length (1 to 20 minutes
-  unless changed), energy, positivity, voice, only included. 150 songs per list unless changed.
+  unless changed), energy, positivity, voice, only included (with a library that carries several
+  inclusion lists: Music, which of them lists keep to). 150 songs per list unless changed.
 - **Automatic**: one list per mood and sound family.
 - **Random song of a mood**: a song at random among those of the moods chosen (of any without one),
   and the songs closest to it, as Attacca's random list. The **bridge** can swap its ends.

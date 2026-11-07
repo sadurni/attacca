@@ -47,8 +47,10 @@ class WorkNotifications(private val app: AttaccaApp, private val scope: Coroutin
             ID_SCAN,
             R.string.work_library_title,
             R.string.library_scan_progress,
-            kotlinx.coroutines.flow.combine(app.libraryScanner.progress, app.chainAnalyzer.libraryProgress) { scan, chain ->
+            kotlinx.coroutines.flow.combine(app.libraryScanner.progress, app.chainAnalyzer.libraryProgress, com.sadurni.attacca.library.DamageCheck.progress) { scan, chain, damage ->
                 scan?.let { Work(it.done, it.total, it.remainingMs, R.string.library_scan_progress) }
+                    // The check for damaged tracks keeps the app going with the screen off too.
+                    ?: damage?.takeIf { chain == null }?.let { Work(it.done, it.total, it.remainingMs, R.string.damaged_checking) }
                     ?: chain?.let { Work(it.done, it.total, it.remainingMs, when (it.pass) {
                             com.sadurni.attacca.chain.ChainAnalyzer.Pass.CHAIN -> R.string.chain_library_progress
                             com.sadurni.attacca.chain.ChainAnalyzer.Pass.SILENCES -> R.string.chain_silence_progress

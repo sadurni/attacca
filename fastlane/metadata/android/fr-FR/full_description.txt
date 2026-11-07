@@ -24,6 +24,7 @@
 <ul>
 <li>Des thèmes avec leurs propres couleurs, polices, fonds, icônes et un écran Lecture en cours que vous disposez vous-même ; une galerie pour commencer.</li>
 <li>Musique par artistes, albums, genres, décennies, ambiances et familles ; dossiers ; paroles, signets, minuterie de veille, vitesse, répétition A-B ; statistiques d'écoute.</li>
+<li>Un court guide pour les premiers pas, des réglages avec recherche, des modèles de son pour chaque type d'appareil, et les morceaux endommagés détectés, marqués et réparés.</li>
 <li>Android Auto, widget, sauvegarde de tout, 23 langues.</li>
 <li>Attacca O'rama : le morceau en cours comme un paysage en mouvement, dessiné d'après sa forme d'onde, son humeur et son rythme. Avec quelques petites surprises à découvrir.</li>
 </ul>

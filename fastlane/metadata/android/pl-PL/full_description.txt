@@ -24,6 +24,7 @@
 <ul>
 <li>Motywy z własnymi kolorami, czcionkami, tłami, ikonami i układem ekranu Teraz odtwarzane, który sam ustawiasz; galeria na start.</li>
 <li>Muzyka według wykonawców, albumów, gatunków, dekad, nastrojów i rodzin; foldery; teksty, zakładki, wyłącznik czasowy, prędkość, powtarzanie A-B; statystyki słuchania.</li>
+<li>Krótki przewodnik po pierwszych krokach, ustawienia z wyszukiwaniem, szablony dźwięku dla każdego rodzaju urządzenia oraz uszkodzone utwory wykrywane, oznaczane i naprawiane.</li>
 <li>Android Auto, widżet na ekranie głównym, kopia zapasowa wszystkiego, 23 języki.</li>
 <li>Attacca O'rama: odtwarzany utwór jako ruchomy krajobraz, narysowany z jego przebiegu fali, nastroju i rytmu. Z kilkoma małymi niespodziankami do odkrycia.</li>
 </ul>

@@ -49,6 +49,21 @@ class Palette(
     /** Sun, moon, lamps, windows. */
     val light: Int,
 ) {
+    /**
+     * The same colours with the land standing out from the sky: the far and middle land more
+     * saturated, and darker (or lighter, on a dark sky) where they are close to the sky's colour.
+     */
+    fun vivid(): Palette {
+        val sky = Colors.luma(skyBottom)
+        fun stand(c: Int, gap: Float): Int {
+            val s = Colors.saturate(c, 1.35f)
+            val d = Colors.luma(s) - sky
+            if (kotlin.math.abs(d) >= gap) return s
+            return if (sky > 0.45f) Colors.darker(s, (gap - kotlin.math.abs(d)) * 1.6f) else Colors.lighter(s, (gap - kotlin.math.abs(d)) * 1.2f)
+        }
+        return Palette(skyTop, skyBottom, stand(far, 0.15f), stand(mid, 0.22f), Colors.saturate(near, 1.15f), accent, light)
+    }
+
     fun mix(other: Palette, t: Float) = Palette(
         Colors.mix(skyTop, other.skyTop, t), Colors.mix(skyBottom, other.skyBottom, t),
         Colors.mix(far, other.far, t), Colors.mix(mid, other.mid, t), Colors.mix(near, other.near, t),
@@ -311,6 +326,16 @@ object Colors {
     }
 
     /** How light [c] looks (0 black … 1 white). */
+    /** [c] with its saturation times [k] (around its own grey). */
+    fun saturate(c: Int, k: Float): Int {
+        val r = (c shr 16) and 0xFF
+        val g = (c shr 8) and 0xFF
+        val b = c and 0xFF
+        val grey = r * 0.3f + g * 0.59f + b * 0.11f
+        fun ch(v: Int) = (grey + (v - grey) * k).toInt().coerceIn(0, 255)
+        return (c and 0xFF000000.toInt()) or (ch(r) shl 16) or (ch(g) shl 8) or ch(b)
+    }
+
     fun luma(c: Int): Float = (((c shr 16) and 0xFF) * 0.3f + ((c shr 8) and 0xFF) * 0.59f + (c and 0xFF) * 0.11f) / 255f
 
     fun darker(c: Int, amount: Float): Int = mix(c, (c and 0xFF000000.toInt()), amount)

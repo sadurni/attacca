@@ -1,0 +1,6 @@
+• Przewodnik na start; Ustawienia z wyszukiwarką i najważniejszymi opcjami.
+• Szablony dźwięku dla rodzaju urządzenia, proponowane przy nowym.
+• Kilka list włączeń, po jednej na okazję, przełączane jednym dotknięciem (też według urządzenia i na odtwarzaczach).
+• Uszkodzone utwory: wykrywane, oznaczane ⚠ / △, pomijane w listach; uszkodzone MP3 naprawiane.
+• Wyszukiwanie okładki albumu w sieci na podstawie tagów.
+• O'rama: płaskie mosty i stacje z przeszkodami do skakania, żywsze kolory.

@@ -65,7 +65,7 @@ class FrameRepeats {
                 return
             }
             if (confirmed) {
-                android.util.Log.d("RepeatSkip", "left out $dropped frames repeated from $distance frames before, up to ${timeUs / 1000} ms")
+                log?.invoke("left out $dropped frames repeated from $distance frames before, up to ${timeUs / 1000} ms")
             }
             release(out)
         }
@@ -132,6 +132,10 @@ class FrameRepeats {
     }
 
     companion object {
+        /** Where to note what was left out (the app's log); nothing by default. */
+        @JvmStatic
+        var log: ((String) -> Unit)? = null
+
         private val BITRATES = intArrayOf(0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)
         private val RATES = intArrayOf(44100, 48000, 32000)
 
@@ -245,12 +249,20 @@ class FrameRepeats {
                     continue
                 }
                 val next = i + size
-                val followed = next + 4 > end || header(data, next).let { frameSize(it) > 0 && it and STREAM_MASK == first and STREAM_MASK }
+                // A tag after the music (APE, Lyrics3, ID3) is the end of the frames, not garbage.
+                val followed = next + 4 > end || header(data, next).let { frameSize(it) > 0 && it and STREAM_MASK == first and STREAM_MASK } ||
+                    tagAt(data, next)
                 out(i, size, index * 1152 * 1_000_000L / rate, !followed || otherFormat(h, first))
                 index++
                 i = next
             }
             return true
+        }
+
+        /** Whether a tag kept after the music starts at [at]: APEv2, Lyrics3 or ID3. */
+        private fun tagAt(data: ByteArray, at: Int): Boolean {
+            fun starts(text: String) = at + text.length <= data.size && text.indices.all { data[at + it] == text[it].code.toByte() }
+            return starts("APETAGEX") || starts("LYRICSBEGIN") || starts("TAG") || starts("ID3")
         }
 
         /** Frames in a row that make a repeat (about 0.2 s). */

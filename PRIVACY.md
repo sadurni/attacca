@@ -3,7 +3,11 @@
 Attacca, Attacca Desktop, Attacca Web and Attacca for Rockbox collect nothing and send nothing.
 
 - **No internet**: the Android app does not even ask for the internet permission. Nothing it
-  measures, nothing you play and none of your settings ever leave your devices.
+  measures, nothing you play and none of your settings ever leave your devices. Its *Search the
+  web* button for a cover only opens your own browser, with the artist and album to search for.
+- **The one exception, on your request**: Attacca Desktop's **Covers** page looks for album covers
+  online only when you ask it to; it sends the album and artist names to an open music database
+  (MusicBrainz) and fetches the pictures from its Cover Art Archive. Nothing else is sent.
 - **Everything is measured on your own devices**, from the audio files themselves (the sound
   recognition network runs on the phone or the PC, from a file shipped with the app).
 - **What is stored, and where**: the analysis, the listening statistics and the settings stay in the

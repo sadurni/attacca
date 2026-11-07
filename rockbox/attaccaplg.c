@@ -92,6 +92,7 @@ enum {
     S_OTHER, S_RISE_FALL, S_WARM_UP, S_WIND_DOWN, S_SAMPLER, S_OPPOSITE, S_FOR_TIME, S_ALBUMS,
     S_BRIDGE, S_MINUTES, S_CURVE_START, S_PICK_ARTIST, S_PICK_SONG,
     S_BRIDGE_TO, S_RANDOM, S_XF, S_XF_LEN, S_XF_OLD_DB, S_XF_ON, S_XF_OFF, S_XF_JUMP,
+    S_KEEP_ALBUMS, S_LIBRARY, S_SET, S_EVERYTHING, S_SKIP_FADE,
     S_COUNT_
 };
 
@@ -122,6 +123,9 @@ static const char *const texts_en[S_COUNT_] = {
     "Automatic crossfade on: it goes on in the background",
     "Automatic crossfade off: your own crossfade is back",
     "Jump over long silences",
+    "Keep albums whole",
+    "Library", "Music", "Everything",
+    "Fade on skips",
 };
 
 static const char *const texts_es[S_COUNT_] = {
@@ -153,6 +157,9 @@ static const char *const texts_es[S_COUNT_] = {
     "Fundido automático activado: sigue en segundo plano",
     "Fundido automático desactivado: vuelve tu propio fundido",
     "Saltar los silencios largos",
+    "Álbumes enteros, sin fundidos",
+    "Biblioteca", "Música", "Todo",
+    "Fundir al saltar",
 };
 
 /* BEGIN generated texts: the other languages of Attacca (dev tooling writes this part) */
@@ -235,6 +242,9 @@ static const char *const texts_ca[S_COUNT_] = {
     "Crossfade automàtic activat: continua en segon pla",
     "Crossfade automàtic desactivat: torna el teu crossfade",
     "Salta els silencis llargs",
+    "Àlbums sencers, sense crossfade",
+    "Biblioteca", "Música", "Tot",
+    "Fon en saltar",
 };
 static const char *const texts_gl[S_COUNT_] = {
     "Attacca",
@@ -315,6 +325,9 @@ static const char *const texts_gl[S_COUNT_] = {
     "Crossfade automático activado: segue en segundo plano",
     "Crossfade automático desactivado: volve o teu propio crossfade",
     "Saltar os silencios longos",
+    "Álbums enteiros, sen crossfade",
+    "Biblioteca", "Música", "Todo",
+    "Fundir ao saltar",
 };
 static const char *const texts_eu[S_COUNT_] = {
     "Attacca",
@@ -395,6 +408,9 @@ static const char *const texts_eu[S_COUNT_] = {
     "Crossfade automatikoa aktibatuta: atzeko planoan jarraitzen du",
     "Crossfade automatikoa desaktibatuta: zure crossfadea itzuli da",
     "Saltatu isilune luzeak",
+    "Albumak osorik, crossfaderik gabe",
+    "Liburutegia", "Musika", "Dena",
+    "Urtu saltatzean",
 };
 static const char *const texts_pt[S_COUNT_] = {
     "Attacca",
@@ -475,6 +491,9 @@ static const char *const texts_pt[S_COUNT_] = {
     "Crossfade automático ativado: continua em segundo plano",
     "Crossfade automático desativado: volta o teu crossfade",
     "Saltar silêncios longos",
+    "Álbuns inteiros, sem crossfade",
+    "Biblioteca", "Música", "Tudo",
+    "Fundir ao saltar",
 };
 static const char *const texts_pt_br[S_COUNT_] = {
     "Attacca",
@@ -555,6 +574,9 @@ static const char *const texts_pt_br[S_COUNT_] = {
     "Crossfade automático ligado: continua em segundo plano",
     "Crossfade automático desligado: seu crossfade voltou",
     "Pular silêncios longos",
+    "Álbuns inteiros, sem crossfade",
+    "Biblioteca", "Música", "Tudo",
+    "Fundir ao pular",
 };
 static const char *const texts_fr[S_COUNT_] = {
     "Attacca",
@@ -635,6 +657,9 @@ static const char *const texts_fr[S_COUNT_] = {
     "Fondu enchaîné automatique activé : il continue en arrière-plan",
     "Fondu enchaîné automatique désactivé : votre fondu enchaîné revient",
     "Sauter les longs silences",
+    "Albums entiers, sans fondu",
+    "Bibliothèque", "Musique", "Tout",
+    "Fondu en sautant",
 };
 static const char *const texts_it[S_COUNT_] = {
     "Attacca",
@@ -715,6 +740,9 @@ static const char *const texts_it[S_COUNT_] = {
     "Dissolvenza automatica attiva: continua in secondo piano",
     "Dissolvenza automatica disattivata: torna la tua dissolvenza",
     "Salta i silenzi lunghi",
+    "Album interi, senza dissolvenza",
+    "Libreria", "Musica", "Tutto",
+    "Dissolvenza nei salti",
 };
 static const char *const texts_de[S_COUNT_] = {
     "Attacca",
@@ -795,6 +823,9 @@ static const char *const texts_de[S_COUNT_] = {
     "Automatische Überblendung an: läuft im Hintergrund weiter",
     "Automatische Überblendung aus: deine eigene Überblendung ist zurück",
     "Lange Stille überspringen",
+    "Alben am Stück, ohne Überblendung",
+    "Bibliothek", "Musik", "Alles",
+    "Beim Springen überblenden",
 };
 static const char *const texts_nl[S_COUNT_] = {
     "Attacca",
@@ -875,6 +906,9 @@ static const char *const texts_nl[S_COUNT_] = {
     "Automatische crossfade aan: werkt op de achtergrond",
     "Automatische crossfade uit: je eigen crossfade is terug",
     "Lange stiltes overslaan",
+    "Albums heel, zonder crossfade",
+    "Bibliotheek", "Muziek", "Alles",
+    "Overvloeien bij overslaan",
 };
 static const char *const texts_sv[S_COUNT_] = {
     "Attacca",
@@ -955,6 +989,9 @@ static const char *const texts_sv[S_COUNT_] = {
     "Automatisk övertoning på: den fortsätter i bakgrunden",
     "Automatisk övertoning av: din egen övertoning är tillbaka",
     "Hoppa över långa tystnader",
+    "Hela album, utan övertoning",
+    "Bibliotek", "Musik", "Allt",
+    "Tona över vid hopp",
 };
 static const char *const texts_pl[S_COUNT_] = {
     "Attacca",
@@ -1035,6 +1072,9 @@ static const char *const texts_pl[S_COUNT_] = {
     "Automatyczne przenikanie wł.: działa w tle",
     "Automatyczne przenikanie wył.: wraca twoje przenikanie",
     "Przeskakuj długą ciszę",
+    "Całe albumy, bez przenikania",
+    "Biblioteka", "Muzyka", "Wszystko",
+    "Przenikanie przy przeskoku",
 };
 static const char *const texts_ro[S_COUNT_] = {
     "Attacca",
@@ -1115,6 +1155,9 @@ static const char *const texts_ro[S_COUNT_] = {
     "Crossfade automat pornit: continuă în fundal",
     "Crossfade automat oprit: revine crossfade-ul tău",
     "Sari peste liniștile lungi",
+    "Albume întregi, fără crossfade",
+    "Bibliotecă", "Muzică", "Tot",
+    "Estompare la salt",
 };
 static const char *const texts_ru[S_COUNT_] = {
     "Attacca",
@@ -1195,6 +1238,9 @@ static const char *const texts_ru[S_COUNT_] = {
     "Автоматический кроссфейд включён: работает в фоне",
     "Автоматический кроссфейд выключен: вернулся ваш кроссфейд",
     "Перескакивать длинную тишину",
+    "Альбомы целиком, без кроссфейда",
+    "Библиотека", "Музыка", "Всё",
+    "Кроссфейд при переходе",
 };
 static const char *const texts_uk[S_COUNT_] = {
     "Attacca",
@@ -1275,6 +1321,9 @@ static const char *const texts_uk[S_COUNT_] = {
     "Автоматичний кросфейд увімкнено: він працює у фоні",
     "Автоматичний кросфейд вимкнено: ваш власний кросфейд повернувся",
     "Перестрибувати довгу тишу",
+    "Альбоми цілком, без кросфейду",
+    "Бібліотека", "Музика", "Усе",
+    "Кросфейд при переході",
 };
 static const char *const texts_el[S_COUNT_] = {
     "Attacca",
@@ -1355,6 +1404,9 @@ static const char *const texts_el[S_COUNT_] = {
     "Αυτόματο crossfade ενεργό: συνεχίζει στο παρασκήνιο",
     "Αυτόματο crossfade ανενεργό: επιστρέφει το δικό σας crossfade",
     "Παράλειψη μεγάλων σιωπών",
+    "Ολόκληρα άλμπουμ, χωρίς crossfade",
+    "Βιβλιοθήκη", "Μουσική", "Όλα",
+    "Crossfade στα άλματα",
 };
 static const char *const texts_tr[S_COUNT_] = {
     "Attacca",
@@ -1435,6 +1487,9 @@ static const char *const texts_tr[S_COUNT_] = {
     "Otomatik çapraz geçiş açık: arka planda sürer",
     "Otomatik çapraz geçiş kapalı: kendi çapraz geçişiniz geri döndü",
     "Uzun sessizlikleri atla",
+    "Albümler bütün, geçişsiz",
+    "Kitaplık", "Müzik", "Hepsi",
+    "Atlarken geçiş",
 };
 static const char *const texts_ja[S_COUNT_] = {
     "Attacca",
@@ -1515,6 +1570,9 @@ static const char *const texts_ja[S_COUNT_] = {
     "自動クロスフェード オン: バックグラウンドで続きます",
     "自動クロスフェード オフ: 自分のクロスフェードに戻ります",
     "長い無音を飛ばす",
+    "アルバムはそのまま、クロスフェードなし",
+    "ライブラリ", "音楽", "すべて",
+    "スキップ時にクロスフェード",
 };
 static const char *const texts_ko[S_COUNT_] = {
     "Attacca",
@@ -1595,6 +1653,9 @@ static const char *const texts_ko[S_COUNT_] = {
     "자동 크로스페이드 켬: 백그라운드에서 계속돼요",
     "자동 크로스페이드 끔: 내 크로스페이드로 돌아가요",
     "긴 무음 건너뛰기",
+    "앨범은 그대로, 크로스페이드 없이",
+    "라이브러리", "음악", "전체",
+    "건너뛸 때 크로스페이드",
 };
 static const char *const texts_zh_cn[S_COUNT_] = {
     "Attacca",
@@ -1675,6 +1736,9 @@ static const char *const texts_zh_cn[S_COUNT_] = {
     "自动交叉淡化已开启：在后台继续",
     "自动交叉淡化已关闭：恢复你自己的交叉淡化",
     "跳过长静音",
+    "专辑完整播放，不交叉淡化",
+    "音乐库", "音乐", "全部",
+    "跳过时交叉淡化",
 };
 static const char *const texts_zh_tw[S_COUNT_] = {
     "Attacca",
@@ -1755,6 +1819,9 @@ static const char *const texts_zh_tw[S_COUNT_] = {
     "自動交叉淡化已開啟：在背景繼續",
     "自動交叉淡化已關閉：恢復你自己的交叉淡化",
     "略過長靜音",
+    "專輯完整播放，不交叉淡化",
+    "音樂庫", "音樂", "全部",
+    "跳過時交叉淡化",
 };
 static const struct { const char *lang; const char *const *texts; } more_texts[] = {
     { "catala", texts_ca },
@@ -1813,6 +1880,16 @@ static const char *const *texts_for(const char *lang)
 #define CFG_VERSION 1
 #define NAME_LEN 96
 
+/* The library's inclusion sets (its fifth dictionary; none in libraries written before), the one
+   chosen by name (empty: none, everything) and its bit in the records (-1: none). */
+static uint32_t set_n;
+static uint32_t *set_off;
+static char incl_set_name[NAME_LEN];
+static int set_bit = -1;
+#define SETS_OFFSET 168
+struct record;
+static void apply_set(uint32_t i, struct record *r, bool windowed);
+
 static struct {
     int count, spacing, play, start_current, only_inc, same_mood, same_family;
     int year_from, year_to, bpm_min, bpm_max;   /* 0 = no limit */
@@ -1824,7 +1901,10 @@ static struct {
     int xf_on, xf_len;                          /* automatic crossfade, and its blends (seconds) */
     int xf_saved, xf_user[6];                   /* the user's own crossfade while it runs */
     int xf_jump;                                /* jump to the next song over long silences */
-} cfg = { 150, -1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 100, 0, 100, 0, 1, 20, 60, 0, 0, 10, 0, { 0 }, 0 };
+    int blend_albums;                           /* blends inside an album too (off: albums kept whole) */
+    int xf_mode_set;                            /* the crossfade mode the plugin set, + 1 (0: none) */
+    int skip_fade;                              /* skips by hand blend (with the user's own crossfade) */
+} cfg = { 150, -1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 100, 0, 100, 0, 1, 20, 60, 0, 0, 10, 0, { 0 }, 0, 0, 0, 0 };
 
 /* Category filters by name, so they survive a new library; resolved to indexes on load. */
 static char cat_name[4][NAME_LEN];          /* artist, genre, mood, family (as the dictionaries) */
@@ -1861,11 +1941,15 @@ static struct configdata config[] = {
     { TYPE_INT, 0, 1, { .int_p = &cfg.xf_user[4] }, "own fade out mix", NULL },
     { TYPE_INT, 0, 5, { .int_p = &cfg.xf_user[5] }, "own crossfade mode", NULL },
     { TYPE_INT, 0, 1, { .int_p = &cfg.xf_jump }, "jump silences", NULL },
+    { TYPE_INT, 0, 1, { .int_p = &cfg.blend_albums }, "blend albums", NULL },
+    { TYPE_INT, 0, 6, { .int_p = &cfg.xf_mode_set }, "crossfade mode set", NULL },
+    { TYPE_INT, 0, 1, { .int_p = &cfg.skip_fade }, "fade on skips", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[0] }, "artist", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[1] }, "genre", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[2] }, "mood", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[3] }, "family", NULL },
     { TYPE_STRING, 0, MAX_PATH, { .string = dbpath }, "library", NULL },
+    { TYPE_STRING, 0, NAME_LEN, { .string = incl_set_name }, "inclusion set", NULL },
 };
 #define N_CONFIG ((int)(sizeof(config) / sizeof(config[0])))
 
@@ -1975,7 +2059,10 @@ static bool seq_read(struct window *w, uint32_t off, void *dst, size_t len)
 
 static bool get_record(uint32_t i, struct record *r)
 {
-    return seq_read(&rwin, H.recoff + i * H.recsize, r, sizeof(*r));
+    if (!seq_read(&rwin, H.recoff + i * H.recsize, r, sizeof(*r)))
+        return false;
+    apply_set(i, r, true);
+    return true;
 }
 
 static uint32_t rd32(const uint8_t *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((uint32_t)p[3] << 24); }
@@ -1986,6 +2073,28 @@ static void close_db(void)
     if (dbfd >= 0)
         rb->close(dbfd);
     dbfd = -1;
+}
+
+/** The bit of the chosen set (by name) in this library; none when it has no set of that name. */
+static void resolve_set(void)
+{
+    char buf[NAME_LEN];
+    set_bit = -1;
+    for (uint32_t i = 0; incl_set_name[0] && i < set_n; i++)
+        if (!rb->strcmp(get_str(set_off[i], buf, sizeof(buf)), incl_set_name))
+            set_bit = i;
+}
+
+/** A record's "included" flag as the chosen set says (the library's own otherwise). */
+static void apply_set(uint32_t i, struct record *r, bool windowed)
+{
+    if (set_bit < 0)
+        return;
+    uint8_t m[4];
+    uint32_t at = H.recoff + i * H.recsize + SETS_OFFSET;
+    if (windowed ? !seq_read(&rwin, at, m, 4) : !read_at(at, m, 4))
+        return;
+    r->flags = (r->flags & ~F_INCLUDED) | (((rd32(m) >> set_bit) & 1) ? F_INCLUDED : 0);
 }
 
 static const char *open_db(const char *path)
@@ -2034,7 +2143,20 @@ static const char *open_db(const char *path)
         }
         off += 4 + dict_n[d] * 4;
     }
+    /* The inclusion sets, when the library has them. */
+    set_n = 0;
+    set_off = NULL;
+    set_bit = -1;
+    if (rd32(h + 44) > N_DICTS && H.recsize >= SETS_OFFSET + 4) {
+        uint8_t c[4];
+        if (read_at(off, c, 4) && rd32(c) > 0 && rd32(c) <= 32) {
+            set_off = palloc(rd32(c) * 4);
+            if (set_off && read_at(off + 4, set_off, rd32(c) * 4))
+                set_n = rd32(c);
+        }
+    }
     get_str(H.base, base, sizeof(base));
+    resolve_set();
     rb->strlcpy(dbpath, path, sizeof(dbpath));
     return NULL;
 }
@@ -2664,6 +2786,7 @@ static void file_name(char *out, size_t size, const char *name)
 #if defined(HAVE_CROSSFADE) && !defined(HOST_TEST)
 static bool has_ends(void);
 static void xf_take_over(void);
+static bool xf_wanted(void);
 #endif
 
 static void output(struct song *s, int n, const char *list_name, uint32_t avg)
@@ -2705,7 +2828,7 @@ static void output(struct song *s, int n, const char *list_name, uint32_t avg)
         rb->plugin_release_audio_buffer();
         audio_taken = false;
     }
-    if (cfg.xf_on && has_ends())
+    if ((cfg.xf_on && has_ends()) || (!cfg.xf_on && xf_wanted()))
         xf_take_over();
 #else
     if (audio_taken) {
@@ -2995,6 +3118,10 @@ static struct {
     long guard[64];
     long stack[(DEFAULT_STACK_SIZE * 4) / sizeof(long)];
     int cur, next;            /* the pair set up last */
+    uint32_t hcur, hnext;     /* and the hashes of their paths (songs out of the library have no record) */
+    struct xf_values plan;    /* the join planned for the end of the current song */
+    bool ready;               /* the library's paths are read (before that, joins go by folders) */
+    bool armed;               /* the plan is set in Rockbox's settings (near the song's end) */
     long jump_at;             /* where in the current song to jump to the next one (ms), or -1 */
     uint32_t jump_song;       /* hash of the path of the song to jump from */
     struct xf_values jump;    /* the crossfade for that jump */
@@ -3007,9 +3134,20 @@ static struct {
    up again, even while a song plays (playback stuck until Rockbox was restarted). So the sum
    stays at the longest join, and a shorter one is the same blend started later: the song that
    ends keeps playing at full level that much longer, and the next one waits as long. */
-static void xf_set(const struct xf_values *v)
+static void xf_set(const struct xf_values *in)
 {
     struct user_settings *s = rb->global_settings;
+    /* Never past the sound buffer set aside (the user's own crossfade may be longer). */
+    struct xf_values c = *in;
+    const struct xf_values *v = &c;
+    if (c.out_duration > XF_MAX_DURATION)
+        c.out_duration = XF_MAX_DURATION;
+    if (c.out_delay + c.out_duration > XF_MAX_DELAY + XF_MAX_DURATION)
+        c.out_delay = XF_MAX_DELAY + XF_MAX_DURATION - c.out_duration;
+    if (c.in_delay > c.out_delay + c.out_duration)
+        c.in_delay = c.out_delay + c.out_duration;
+    if (c.in_duration > XF_MAX_DURATION)
+        c.in_duration = XF_MAX_DURATION;
     int pad = XF_MAX_DELAY + XF_MAX_DURATION - (v->out_delay + v->out_duration);
     if (pad < 0)
         pad = 0;
@@ -3017,7 +3155,12 @@ static void xf_set(const struct xf_values *v)
     s->crossfade_fade_out_duration = v->out_duration;
     s->crossfade_fade_in_delay = v->in_delay + pad;
     s->crossfade_fade_in_duration = v->in_duration;
-    s->crossfade_fade_out_mixmode = v->mix;
+    /* A join without a blend (an album played on) is made in mix mode: Rockbox then leaves the
+       song that ends as it is and starts the next one right where the sound it holds ends. Out of
+       mix mode it shortens the ending song's delay to what it holds (often less than the padding
+       above) but not the next one's, which then started in the wrong place: a gap or a jump. */
+    bool none = v->out_delay == 0 && v->out_duration == 0 && v->in_delay == 0 && v->in_duration == 0;
+    s->crossfade_fade_out_mixmode = none ? 1 : v->mix;
 }
 
 /** The user's own crossfade, as it was before the automatic one took over. */
@@ -3055,6 +3198,30 @@ static bool follows_on_album(int a_rec, int b_rec)
     get_str(a.path, fa, sizeof(fa));
     get_str(b.path, fb, sizeof(fb));
     return rb->strcmp(fa, fb) < 0;
+}
+
+/**
+ * `next` comes after `cur` in the same folder, by file name: an album played through, for songs
+ * the library does not know.
+ */
+static bool follows_in_folder(const char *cur, const char *next)
+{
+    const char *sa = rb->strrchr(cur, '/'), *sb = rb->strrchr(next, '/');
+    if (!sa || !sb || sa - cur != sb - next || rb->strncmp(cur, next, sa - cur))
+        return false;
+    return rb->strcmp(sa + 1, sb + 1) < 0;
+}
+
+/**
+ * Whether the background helper has anything to do: the automatic crossfade, or keeping albums
+ * whole while the user's own crossfade would blend them.
+ */
+static bool xf_wanted(void)
+{
+    if (cfg.xf_on)
+        return true;
+    int mode = cfg.xf_saved ? cfg.xf_user[5] : rb->global_settings->crossfade;
+    return !cfg.blend_albums && mode != CROSSFADE_ENABLE_OFF;
 }
 
 /* Each join set up, written down so it can be checked on the player (Rockbox opens .txt files):
@@ -3145,6 +3312,75 @@ static const char *xf_next_path(void)
     return xf_next_info.filename;
 }
 
+/**
+ * The values a skip by hand finds: the user's own crossfade when skips blend, else none (a clean
+ * cut). Rockbox has one set of values for every change, so these stay in place for most of the
+ * song and the join's own go in only near its end ([xf_arm]).
+ */
+static void xf_manual(void)
+{
+    struct xf_values v;
+    if (cfg.skip_fade)
+        xf_user(&v);
+    else
+        rb->memset(&v, 0, sizeof(v));
+    xf_set(&v);
+}
+
+/* How long before the end of a song its join is set: Rockbox decides the join when it has decoded
+   the song to its end, its sound buffer (the crossfade's delay and length) ahead of the playing. */
+#define XF_ARM_MS ((XF_MAX_DELAY + XF_MAX_DURATION + 10) * 1000L)
+
+/** Sets the planned join once the song nears its end; back to the skip values if moved back by hand. */
+static bool xf_is_none(const struct xf_values *v)
+{
+    return v->out_delay == 0 && v->out_duration == 0 && v->in_delay == 0 && v->in_duration == 0;
+}
+
+/**
+ * Rockbox's crossfade mode the plugin works with: "Always" when skips by hand blend (or jumps
+ * over silences, which are skips for Rockbox), else the user's own, "automatic track change only"
+ * when theirs was off.
+ */
+static int xf_base_mode(void)
+{
+    if ((cfg.xf_on && cfg.xf_jump) || cfg.skip_fade)
+        return CROSSFADE_ENABLE_ALWAYS;
+    return cfg.xf_user[5] == CROSSFADE_ENABLE_OFF ? CROSSFADE_ENABLE_AUTOSKIP : cfg.xf_user[5];
+}
+
+/**
+ * Sets Rockbox's crossfade mode. Between modes that crossfade at all the sound buffer keeps its
+ * size, so this takes effect at once without stopping the music.
+ */
+static void xf_mode(int mode)
+{
+    if (rb->global_settings->crossfade == mode)
+        return;
+    rb->global_settings->crossfade = mode;
+    cfg.xf_mode_set = mode + 1;
+    rb->settings_apply(false);
+}
+
+static void xf_arm(void)
+{
+    struct mp3entry *cur = rb->audio_current_track();
+    if (!cur || !cur->path[0] || hash_bytes(cur->path, cur->path + rb->strlen(cur->path)) != xf.hcur)
+        return;
+    long left = (long)cur->length - (long)cur->elapsed;
+    if (!xf.armed && left <= XF_ARM_MS) {
+        xf_set(&xf.plan);
+        /* A join without a blend: Rockbox's own gapless playback, by crossfading only skips by
+           hand for this change (a crossfade of no length still blended the two songs on players). */
+        xf_mode(xf_is_none(&xf.plan) ? CROSSFADE_ENABLE_MANSKIP : xf_base_mode());
+        xf.armed = true;
+    } else if (xf.armed && left > XF_ARM_MS + 5000) {
+        xf_manual();
+        xf_mode(xf_base_mode());
+        xf.armed = false;
+    }
+}
+
 /** Sets up the join between the song playing and the next one, once both are known. */
 static void xf_check(void)
 {
@@ -3154,23 +3390,43 @@ static void xf_check(void)
     const char *next = xf_next_path();
     if (!next)
         return;
-    int a = find_path(cur->path), b = find_path(next);
-    if (a == xf.cur && b == xf.next)
+    /* Until the library's paths are read (it takes a while with a big one), songs are told
+       apart by their folders only. */
+    int a = xf.ready ? find_path(cur->path) : -1, b = xf.ready ? find_path(next) : -1;
+    /* The same two songs as last time: nothing to do. By their paths, as songs out of the
+       library (no record) would all look alike: a list of such songs then an album kept the
+       list's join for the album's first. */
+    uint32_t hc = hash_bytes(cur->path, cur->path + rb->strlen(cur->path));
+    uint32_t hn = hash_bytes(next, next + rb->strlen(next));
+    if (hc == xf.hcur && hn == xf.hnext)
         return;
     xf.cur = a;
     xf.next = b;
+    xf.hcur = hc;
+    xf.hnext = hn;
     xf.jump_at = -1;
     struct ends ea, eb;
     struct xf_values v;
     const char *how;
+    bool keep = !cfg.blend_albums;
     if (a < 0 || b < 0) {
-        xf_user(&v);    /* a song out of the library: the user's own crossfade */
-        how = a < 0 ? "this song is not in the library: your own crossfade" : "the next song is not in the library: your own crossfade";
-    } else if (!read_ends(a, &ea) || !read_ends(b, &eb)) {
-        xf_user(&v);
-        how = "the library has no song ends (export it again): your own crossfade";
+        if (keep && follows_in_folder(cur->path, next)) {
+            rb->memset(&v, 0, sizeof(v));
+            how = "same folder, next in order: no blend";
+        } else {
+            xf_user(&v);    /* a song out of the library: the user's own crossfade */
+            how = a < 0 ? "this song is not in the library: your own crossfade" : "the next song is not in the library: your own crossfade";
+        }
+    } else if (!cfg.xf_on || !read_ends(a, &ea) || !read_ends(b, &eb)) {
+        if (keep && (follows_on_album(a, b) || follows_in_folder(cur->path, next))) {
+            rb->memset(&v, 0, sizeof(v));
+            how = "same album: no blend";
+        } else {
+            xf_user(&v);
+            how = cfg.xf_on ? "the library has no song ends (export it again): your own crossfade" : "your own crossfade";
+        }
     } else {
-        bool gapless = follows_on_album(a, b);
+        bool gapless = keep && follows_on_album(a, b);
         plan_join(&ea, &eb, gapless, cfg.xf_len, &v);
         how = gapless ? "same album: no gap, no blend"
             : ea.ending == END_FADES ? "it fades out by itself: whole, mixed"
@@ -3186,7 +3442,10 @@ static void xf_check(void)
             }
         }
     }
-    xf_set(&v);
+    xf.plan = v;
+    xf.armed = false;
+    xf_manual();
+    xf_arm();
     xf_log(cur, next, how, &v, xf.jump_at);
 }
 
@@ -3271,7 +3530,12 @@ static void xf_thread(void)
     bool in_usb = false;
     /* The songs' paths are read here, not before leaving the menu (that held the player for
        seconds with a big library); without them the joins are left to Rockbox. */
+    /* The first join at once, by folders, while the library's paths are read. */
+    xf.ready = false;
+    xf_check();
     bool ready = read_hashes(&xf.stopping);
+    xf.ready = ready;
+    xf.hcur = xf.hnext = 0;   /* the same songs again, now with the library */
     while (true) {
         /* Also every few seconds: the next song may be known only a while after a change; ten
            times a second while a jump is due. */
@@ -3291,10 +3555,11 @@ static void xf_thread(void)
                 break;
             /* While a jump is due, the quick polls only watch the time. */
             if (ev.id != SYS_TIMEOUT || xf.jump_at < 0) {
-                if (cfg.xf_jump)
+                if (cfg.xf_on && cfg.xf_jump)
                     xf_skip_leading_silence();
                 xf_check();
             }
+            xf_arm();
             xf_tick();
             break;
         }
@@ -3307,6 +3572,8 @@ static void xf_stop_thread(void)
         return;
     rb->remove_event(PLAYBACK_EVENT_TRACK_CHANGE, xf_event);
     rb->remove_event(PLAYBACK_EVENT_TRACK_BUFFER, xf_event);
+    rb->remove_event(PLAYBACK_EVENT_START_PLAYBACK, xf_event);
+    rb->remove_event(PLAYBACK_EVENT_NEXTTRACKID3_AVAILABLE, xf_event);
     xf.stopping = true;
     rb->queue_post(&xf.queue, EV_XF_EXIT, 0);
     rb->thread_wait(xf.id);
@@ -3362,21 +3629,26 @@ static void xf_take_over(void)
         cfg.xf_user[4] = s->crossfade_fade_out_mixmode;
         cfg.xf_user[5] = s->crossfade;
         cfg.xf_saved = 1;
+    } else if (cfg.xf_mode_set && s->crossfade != cfg.xf_mode_set - 1) {
+        /* Changed by the user in Rockbox's settings since: that is their crossfade now. */
+        cfg.xf_user[5] = s->crossfade;
     }
     bool apply = false;
     /* Jumping is a skip: Rockbox must crossfade those too. */
-    int mode = cfg.xf_jump ? CROSSFADE_ENABLE_ALWAYS
-        : (s->crossfade == CROSSFADE_ENABLE_OFF ? CROSSFADE_ENABLE_AUTOSKIP : s->crossfade);
+    int mode = xf_base_mode();
     if (s->crossfade != mode) {
         s->crossfade = mode;
         apply = true;
     }
-    /* Only the sum sizes the buffer (each join keeps it: see xf_set). */
-    if (s->crossfade_fade_out_delay + s->crossfade_fade_out_duration != XF_MAX_DELAY + XF_MAX_DURATION) {
-        s->crossfade_fade_out_delay = XF_MAX_DELAY;
-        s->crossfade_fade_out_duration = XF_MAX_DURATION;
+    cfg.xf_mode_set = mode + 1;
+    /* Only the sum sizes the buffer (each join keeps it: see xf_set). No blend meanwhile (the
+       values xf_set gives keep that sum): until the first join is worked out, a song never
+       blends with the full length set aside for the longest joins. */
+    if (s->crossfade_fade_out_delay + s->crossfade_fade_out_duration != XF_MAX_DELAY + XF_MAX_DURATION)
         apply = true;
-    }
+    struct xf_values none;
+    rb->memset(&none, 0, sizeof(none));
+    xf_set(&none);
     if (apply)
         xf_apply();
 }
@@ -3389,7 +3661,11 @@ static void xf_give_back(void)
     struct xf_values v;
     xf_user(&v);
     xf_set(&v);
-    rb->global_settings->crossfade = cfg.xf_user[5];
+    /* A mode the user chose meanwhile in Rockbox's settings stays; else theirs from before. */
+    int now = rb->global_settings->crossfade;
+    if (!cfg.xf_mode_set || now == cfg.xf_mode_set - 1)
+        rb->global_settings->crossfade = cfg.xf_user[5];
+    cfg.xf_mode_set = 0;
     cfg.xf_saved = 0;
     xf_apply();
 }
@@ -3397,7 +3673,7 @@ static void xf_give_back(void)
 /** Stays in the background setting up each join. False (with a message) when it cannot. */
 static bool xf_go_resident(void)
 {
-    if (!has_ends()) {
+    if (cfg.xf_on && !has_ends()) {
         rb->splash(HZ * 3, T(S_XF_OLD_DB));
         return false;
     }
@@ -3405,6 +3681,7 @@ static bool xf_go_resident(void)
         return false;
     xf_take_over();
     xf.cur = xf.next = -1;
+    xf.hcur = xf.hnext = 0;
     xf.jump_at = -1;
     xf.seek_done = -1;
     xf.stopping = false;
@@ -3418,6 +3695,9 @@ static bool xf_go_resident(void)
     xf.active = true;
     rb->add_event(PLAYBACK_EVENT_TRACK_CHANGE, xf_event);
     rb->add_event(PLAYBACK_EVENT_TRACK_BUFFER, xf_event);
+    /* A new list started (an album after a list): its first join set up at once. */
+    rb->add_event(PLAYBACK_EVENT_START_PLAYBACK, xf_event);
+    rb->add_event(PLAYBACK_EVENT_NEXTTRACKID3_AVAILABLE, xf_event);
     rb->plugin_tsr(xf_exit_tsr);
     rb->queue_post(&xf.queue, EV_XF_CHECK, 0);
     return true;
@@ -3566,7 +3846,10 @@ static int seed_list(int seed_rec, const struct record *seed, int count, struct 
 
 static bool read_record(int rec, struct record *r)
 {
-    return rec >= 0 && (uint32_t)rec < H.n && read_at(H.recoff + rec * H.recsize, r, sizeof(*r));
+    if (rec < 0 || (uint32_t)rec >= H.n || !read_at(H.recoff + rec * H.recsize, r, sizeof(*r)))
+        return false;
+    apply_set(rec, r, false);
+    return true;
 }
 
 static void from_current(void)
@@ -4718,11 +5001,37 @@ static const char *more_label(int i, char *buf, size_t len)
     case 7: return label_value(buf, len, S_POS_MAX, fmt_pct_max(v, sizeof(v), cfg.p_max, NULL));
     case 8: return label_value(buf, len, S_VOICE,
                                cfg.voice == 1 ? T(S_VOICE_VOICE) : cfg.voice == 2 ? T(S_VOICE_INSTR) : T(S_ANY));
-    case 9: return label_value(buf, len, S_ONLY_INC, cfg.only_inc ? T(S_YES) : T(S_NO));
+    case 9:
+        if (set_n > 0)
+            return label_value(buf, len, S_SET, cfg.only_inc && set_bit >= 0 ? incl_set_name : T(S_EVERYTHING));
+        return label_value(buf, len, S_ONLY_INC, cfg.only_inc ? T(S_YES) : T(S_NO));
     case 10: return label_value(buf, len, S_MIN_MINUTES, fmt_off(v, sizeof(v), cfg.min_minutes, ""));
     case 11: return label_value(buf, len, S_MAX_MINUTES, fmt_off(v, sizeof(v), cfg.max_minutes, ""));
     default: return T(S_RESET);
     }
+}
+
+static const char *set_label(int i, char *buf, size_t len)
+{
+    if (i == 0)
+        return T(S_EVERYTHING);
+    return get_str(set_off[i - 1], buf, len);
+}
+
+/** Which inclusion set lists keep to: everything, or one of the library's sets. */
+static void choose_set(void)
+{
+    int sel = cfg.only_inc && set_bit >= 0 ? set_bit + 1 : 0;
+    if (run_menu(T(S_SET), set_n + 1, &sel, set_label) < 0)
+        return;
+    if (sel == 0) {
+        incl_set_name[0] = '\0';
+        cfg.only_inc = 0;
+    } else {
+        get_str(set_off[sel - 1], incl_set_name, sizeof(incl_set_name));
+        cfg.only_inc = 1;
+    }
+    resolve_set();
 }
 
 static void more_menu(void)
@@ -4739,7 +5048,12 @@ static void more_menu(void)
         case 6: rb->set_int(T(S_POS_MIN), "", UNIT_INT, &cfg.p_min, NULL, 5, 0, 100, fmt_pct_min); break;
         case 7: rb->set_int(T(S_POS_MAX), "", UNIT_INT, &cfg.p_max, NULL, 5, 0, 100, fmt_pct_max); break;
         case 8: cfg.voice = (cfg.voice + 1) % 3; break;
-        case 9: cfg.only_inc = !cfg.only_inc; break;
+        case 9:
+            if (set_n > 0)
+                choose_set();
+            else
+                cfg.only_inc = !cfg.only_inc;
+            break;
         case 10: rb->set_int(T(S_MIN_MINUTES), "", UNIT_INT, &cfg.min_minutes, NULL, 1, 0, 600, fmt_off); break;
         case 11: rb->set_int(T(S_MAX_MINUTES), "", UNIT_INT, &cfg.max_minutes, NULL, 1, 0, 600, fmt_off); break;
         default:
@@ -4858,7 +5172,36 @@ static void other_menu(void)
     }
 }
 
-#define MAIN_ITEMS 17
+#define MAIN_ITEMS 20
+#define MAX_LIBS 16
+static char lib_paths[MAX_LIBS][MAX_PATH];
+static int lib_count;
+
+static const char *lib_label(int i, char *buf, size_t len)
+{
+    (void)buf; (void)len;
+    const char *slash = rb->strrchr(lib_paths[i], '/');
+    return slash ? slash + 1 : lib_paths[i];
+}
+
+/** Adds the .bpcr2 files of [dir] (ending in '/') to the libraries to choose from. */
+static void find_libs(const char *dir)
+{
+#ifdef HOST_TEST
+    (void)dir;
+#else
+    DIR *d = rb->opendir(dir);
+    if (!d)
+        return;
+    struct dirent *e;
+    while (lib_count < MAX_LIBS && (e = rb->readdir(d)) != NULL) {
+        size_t n = rb->strlen(e->d_name);
+        if (n > 6 && !rb->strcasecmp(e->d_name + n - 6, ".bpcr2"))
+            rb->snprintf(lib_paths[lib_count++], MAX_PATH, "%s%s", dir, e->d_name);
+    }
+    rb->closedir(d);
+#endif
+}
 
 static const char *main_label(int i, char *buf, size_t len)
 {
@@ -4880,8 +5223,43 @@ static const char *main_label(int i, char *buf, size_t len)
     case 13: return label_value(buf, len, S_XF, cfg.xf_on ? T(S_YES) : T(S_NO));
     case 14: rb->snprintf(v, sizeof(v), "%d s", cfg.xf_len); return label_value(buf, len, S_XF_LEN, v);
     case 15: return label_value(buf, len, S_XF_JUMP, cfg.xf_jump ? T(S_YES) : T(S_NO));
+    case 16: return label_value(buf, len, S_KEEP_ALBUMS, cfg.blend_albums ? T(S_NO) : T(S_YES));
+    case 17: {
+        const char *slash = rb->strrchr(dbpath, '/');
+        return label_value(buf, len, S_LIBRARY, slash ? slash + 1 : dbpath);
+    }
+    case 18: return label_value(buf, len, S_SKIP_FADE, cfg.skip_fade ? T(S_YES) : T(S_NO));
     default: return T(S_INFO);
     }
+}
+
+/** Opens another of the libraries found (the plugin's memory taken back from [mark]). */
+static void choose_library(size_t mark)
+{
+    lib_count = 0;
+    find_libs(HOME "/");
+    find_libs(ROCKBOX_DIR "/");
+    if (lib_count == 0) {
+        rb->splash(HZ * 2, T(S_NO_DB));
+        return;
+    }
+    int sel = 0;
+    for (int i = 0; i < lib_count; i++)
+        if (!rb->strcmp(lib_paths[i], dbpath))
+            sel = i;
+    if (run_menu(T(S_LIBRARY), lib_count, &sel, lib_label) < 0)
+        return;
+    static char was[MAX_PATH];
+    rb->strlcpy(was, dbpath, sizeof(was));
+    pbuf.used = mark;
+    hpath = htail = NULL;
+    const char *err = open_db(lib_paths[sel]);
+    if (err) {
+        rb->splash(HZ * 2, err);
+        pbuf.used = mark;
+        open_db(was);
+    }
+    resolve_filters();
 }
 
 static void info(void)
@@ -4917,7 +5295,7 @@ enum plugin_status plugin_start(const void *parameter)
 #ifdef XF_RESIDENT
     if (parameter == rb->plugin_tsr) {
         /* Back after another plugin: the automatic crossfade goes on, without the menu. */
-        if (cfg.xf_on && dbpath[0] && !open_db(dbpath) && xf_go_resident())
+        if (xf_wanted() && dbpath[0] && !open_db(dbpath) && xf_go_resident())
             return PLUGIN_OK;
         close_db();
         return PLUGIN_OK;
@@ -5010,6 +5388,27 @@ enum plugin_status plugin_start(const void *parameter)
             /* Back to the user's crossfade mode when it stops jumping (set again on leaving if on). */
             if (!cfg.xf_jump && cfg.xf_saved) {
                 rb->global_settings->crossfade = cfg.xf_user[5] == CROSSFADE_ENABLE_OFF ? CROSSFADE_ENABLE_AUTOSKIP : cfg.xf_user[5];
+                cfg.xf_mode_set = rb->global_settings->crossfade + 1;
+                xf_apply();
+            }
+#endif
+            break;
+        case 16:
+            cfg.blend_albums = !cfg.blend_albums;
+#ifdef XF_RESIDENT
+            /* Nothing left for the helper: the user's own crossfade back. */
+            if (!xf_wanted() && cfg.xf_saved)
+                xf_give_back();
+#endif
+            break;
+        case 17: choose_library(before_db); break;
+        case 18:
+            cfg.skip_fade = !cfg.skip_fade;
+#ifdef XF_RESIDENT
+            /* Rockbox's mode follows when the plugin goes on in the background. */
+            if (cfg.xf_saved) {
+                rb->global_settings->crossfade = xf_base_mode();
+                cfg.xf_mode_set = rb->global_settings->crossfade + 1;
                 xf_apply();
             }
 #endif
@@ -5022,8 +5421,8 @@ enum plugin_status plugin_start(const void *parameter)
         configfile_save(CFG_FILE, config, N_CONFIG, CFG_VERSION);
     }
 #ifdef XF_RESIDENT
-    /* The automatic crossfade stays in the background (with the library open). */
-    if (cfg.xf_on && !xf_go_resident())
+    /* The automatic crossfade (or keeping albums whole) stays in the background, with the library open. */
+    if (xf_wanted() && !xf_go_resident())
         cfg.xf_on = 0;
     configfile_save(CFG_FILE, config, N_CONFIG, CFG_VERSION);
     if (xf.active)

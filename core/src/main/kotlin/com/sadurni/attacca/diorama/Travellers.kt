@@ -90,7 +90,11 @@ private fun ease(u: Float) = u * u * (3f - 2f * u)
 /** A move's pose: how high (in sizes), turned how much (radians, clockwise), arms up (0 … 1). */
 private class Pose(var lift: Float = 0f, var angle: Float = 0f, var arms: Float = 0f)
 
-private fun Scene.pose(backwards: Boolean = false): Pose {
+/** A move's pose, lifted over what rises on the way ([Scene.jumpLift]). */
+private fun Scene.pose(backwards: Boolean = false): Pose =
+    trickPose(backwards).also { it.lift += jumpLift(travellerX) / min(h * 0.11f, w * 0.12f) }
+
+private fun Scene.trickPose(backwards: Boolean): Pose {
     val u = moveAt()
     val pose = Pose()
     if (u < 0f) return pose
@@ -593,6 +597,9 @@ private fun Scene.icebergRider(x: Float, s: Float, color: Int) {
     val top = water - s * 0.5f + rock
     val ice = Colors.mix(p.mid, 0xFFFFFFFF.toInt(), 0.3f)
     out.polygon(ice)
+    // Its foot well under the water line: it floats in the sea, not on it.
+    val under = water + s * 0.32f + rock
+    out.point(x - s * 1.15f, under)
     out.point(x - s * 1.1f, water + s * 0.05f + rock)
     out.point(x - s * 0.85f, top + s * 0.18f)
     out.point(x - s * 0.5f, top + s * 0.02f)
@@ -600,12 +607,25 @@ private fun Scene.icebergRider(x: Float, s: Float, color: Int) {
     out.point(x + s * 0.45f, top + s * 0.04f)
     out.point(x + s * 0.75f, top + s * 0.2f)
     out.point(x + s * 1.05f, water + s * 0.05f + rock)
+    out.point(x + s * 1.1f, under)
     out.polygon(Colors.alpha(Colors.darker(ice, 0.2f), 0.7f))
-    out.point(x + s * 0.45f, top + s * 0.04f); out.point(x + s * 0.75f, top + s * 0.2f); out.point(x + s * 1.05f, water + s * 0.05f + rock); out.point(x + s * 0.3f, water + s * 0.05f + rock)
+    out.point(x + s * 0.45f, top + s * 0.04f); out.point(x + s * 0.75f, top + s * 0.2f); out.point(x + s * 1.05f, water + s * 0.05f + rock); out.point(x + s * 1.1f, under); out.point(x + s * 0.3f, under)
     // A penguin for company, sometimes.
     if (hash(lane.originMs.toInt(), 311) < 0.5f) penguin(x - s * 0.6f, top + s * 0.12f, s * 0.35f, 7)
-    // The water around it, in front.
-    out.rect(Colors.alpha(p.near, 0.85f), x - s * 1.2f, water + s * 0.03f, x + s * 1.2f, water + s * 0.14f)
+    // The sea in front of it, with its waves, over the part under the water.
+    out.polygon(Colors.alpha(p.near, 0.92f))
+    var wx = x - s * 1.4f
+    while (wx <= x + s * 1.4f) {
+        out.point(wx, seaY(wx) + s * 0.06f)
+        wx += s * 0.1f
+    }
+    out.point(x + s * 1.4f, water + s * 0.45f); out.point(x - s * 1.4f, water + s * 0.45f)
+    out.polyline(Colors.alpha(p.accent, 0.45f), s * 0.025f)
+    wx = x - s * 1.2f
+    while (wx <= x + s * 1.2f) {
+        out.point(wx, seaY(wx) + s * 0.06f)
+        wx += s * 0.1f
+    }
     // Standing, looking ahead; the arm rises with the music, both on a move.
     val pz = pose()
     val foot = top + s * 0.02f - pz.lift * s

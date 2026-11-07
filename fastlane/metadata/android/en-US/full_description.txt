@@ -24,6 +24,7 @@
 <ul>
 <li>Themes with their own colors, fonts, backgrounds, icons and a Now playing layout you arrange; a gallery to start from.</li>
 <li>Music by artists, albums, genres, decades, moods and families; folders; lyrics, bookmarks, sleep timer, speed, A-B repeat; listening statistics.</li>
+<li>A short setup guide for the first steps, settings with a search, sound templates for each kind of device, and damaged tracks found, marked and repaired.</li>
 <li>Android Auto, a home-screen widget, backup of everything, 23 languages.</li>
 <li>Attacca O'rama: the playing song as a moving landscape, drawn from its waveform, mood and beat. With a few little surprises to find.</li>
 </ul>

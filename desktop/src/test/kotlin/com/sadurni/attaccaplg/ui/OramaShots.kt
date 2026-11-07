@@ -30,10 +30,12 @@ import kotlin.random.Random
 
 /**
  * Development: Attacca O'rama's worlds drawn without a screen, upright and wide, with a made-up
- * song shape and levels, and a frame halfway through a change of track. Args: output folder.
+ * song shape and levels, and a frame halfway through a change of track. Args: output folder, and
+ * optionally the start of the names of the shots to make (the others are skipped).
  */
 fun main(args: Array<String>) {
     val out = File(args.getOrElse(0) { "build/orama-shots" }).apply { mkdirs() }
+    only = args.getOrNull(1)
     val looks = linkedMapOf(
         "castle" to SongFacts(mood = Mood.TENSE, energy = 0.85f, positivity = 0.15f, voice = 0.5f, family = FamilyName(listOf(Trait.BASS to true, Trait.DISTORTION to true))),
         "city" to SongFacts(mood = Mood.ENERGETIC, energy = 0.8f, positivity = 0.7f, voice = 0.8f),
@@ -120,6 +122,29 @@ fun main(args: Array<String>) {
                 d.show(Diorama.Song("village-$name-$seed", Looks.of(facts), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
                 shot(File(out, "village-$name-$seed-$k.png"), 960, 480, d, start + into - 2_000, startMs = 50_000)
             }
+        }
+    }
+    // Over bridges and along stations (the way stays level, things to jump on it), and on roads.
+    for ((name, place) in listOf("meadow" to "bridge", "castle" to "bridge", "coast" to "bridge", "city" to "bridge", "city" to "station")) {
+        val kinds = when (name) {
+            "meadow" -> listOf("bridge", "tunnel", "village")
+            "city" -> listOf("bridge", "tunnel", "station")
+            "coast" -> listOf("wheel", "bridge", "village")
+            else -> listOf("ruins", "bridge", "tunnel")
+        }
+        val slot = (0 until 60).firstOrNull { i -> Diorama.hash(i, 501) <= 0.8f && kinds[(Diorama.hash(i, 502) * 3).toInt().coerceAtMost(2)] == place } ?: continue
+        val start = slot * 45_000L + 13_500L
+        for ((k, into) in listOf(-2_500L, 0L, 2_000L, 4_000L, 6_500L).withIndex()) {
+            val d = Diorama()
+            d.show(Diorama.Song("way-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+            shot(File(out, "way-$place-$name-$k.png"), 960, 480, d, start + into - 2_000, startMs = 50_000)
+        }
+    }
+    for (name in listOf("city", "neon")) {
+        for (k in 0 until 6) {
+            val d = Diorama()
+            d.show(Diorama.Song("road-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+            shot(File(out, "road-$name-$k.png"), 960, 480, d, 20_000L + k * 9_000L, startMs = 50_000L + k * 211L)
         }
     }
     // The four dogs, one by one, and all together: moments when the meadow's runner is a dog or the pack
@@ -320,7 +345,11 @@ private fun songShape(r: Random): FloatArray = FloatArray(512) { i ->
 }
 
 /** Runs [d] for two seconds of made-up levels from [startMs] (so the live values settle), then saves the frame. */
+/** The start of the names of the shots to make; null: all. */
+private var only: String? = null
+
 private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, startMs: Long = 0, warm: Int = 120) {
+    if (only?.let { prefix -> prefix.split(',').none { file.name.startsWith(it) } } == true) return
     val list = DrawList()
     val raw = FloatArray(3)
     for (k in 0..warm) {

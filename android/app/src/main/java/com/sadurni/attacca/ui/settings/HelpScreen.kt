@@ -56,22 +56,22 @@ import com.sadurni.attacca.ui.theme.LocalAttaccaColors
 private data class HelpTopic(val icon: ImageVector, val title: Int, val body: Int, val more: List<Int> = emptyList(), val gallery: Boolean = false)
 
 private val topics = listOf(
-    HelpTopic(Icons.Rounded.RocketLaunch, R.string.help_start_title, R.string.help_start_body),
+    HelpTopic(Icons.Rounded.RocketLaunch, R.string.help_start_title, R.string.help_start_body, listOf(R.string.help_start_guide)),
     HelpTopic(Icons.Rounded.Explore, R.string.help_nav_title, R.string.help_nav_body),
-    HelpTopic(Icons.Rounded.PlayCircle, R.string.help_player_title, R.string.help_player_body, listOf(R.string.help_player_cover, R.string.help_player_cover_view, R.string.help_player_long_press, R.string.help_player_sound, R.string.help_player_boxes, R.string.help_player_plays, R.string.help_orama, R.string.help_orama_more, R.string.help_orama_gates, R.string.help_orama_buttons, R.string.help_orama_surprises)),
+    HelpTopic(Icons.Rounded.PlayCircle, R.string.help_player_title, R.string.help_player_body, listOf(R.string.help_player_cover, R.string.help_player_cover_view, R.string.help_player_long_press, R.string.help_player_sound, R.string.help_player_boxes, R.string.help_player_plays, R.string.help_orama, R.string.help_orama_more, R.string.help_orama_gates, R.string.help_orama_buttons, R.string.help_orama_way, R.string.help_orama_surprises)),
     HelpTopic(Icons.Rounded.MusicNote, R.string.help_playback_title, R.string.help_playback_body, listOf(R.string.help_crossfade, R.string.help_listening, R.string.help_playback_more, R.string.help_playback_extra)),
     HelpTopic(Icons.Rounded.LibraryMusic, R.string.help_lists_title, R.string.help_lists_body, listOf(R.string.help_strip_icons, R.string.help_lists_delete, R.string.help_lists_more, R.string.help_lists_tools, R.string.help_lists_quick, R.string.help_lists_random, R.string.help_lists_other, R.string.help_lists_making, R.string.help_lists_count, R.string.help_lists_chain_from, R.string.help_favorites_included, R.string.help_lists_tabs)),
     HelpTopic(Icons.AutoMirrored.Rounded.QueueMusic, R.string.help_queue_title, R.string.help_queue_body, listOf(R.string.help_strip_icons, R.string.help_queue_undo, R.string.help_queue_undo_last)),
-    HelpTopic(Icons.Rounded.Folder, R.string.help_browser_title, R.string.help_browser_body, listOf(R.string.help_browser_more, R.string.help_music_bridge)),
-    HelpTopic(Icons.Rounded.Album, R.string.help_music_title, R.string.help_music_body, listOf(R.string.help_music_grouped, R.string.help_music_bridge, R.string.help_music_by_year)),
-    HelpTopic(Icons.Rounded.GraphicEq, R.string.help_sound_title, R.string.help_sound_body, listOf(R.string.help_sound_more, R.string.help_sound_bass, R.string.help_sound_peq, R.string.help_sound_presets)),
+    HelpTopic(Icons.Rounded.Folder, R.string.help_browser_title, R.string.help_browser_body, listOf(R.string.help_browser_more, R.string.help_music_bridge, R.string.help_damaged)),
+    HelpTopic(Icons.Rounded.Album, R.string.help_music_title, R.string.help_music_body, listOf(R.string.help_music_grouped, R.string.help_music_bridge, R.string.help_music_by_year, R.string.help_cover_search)),
+    HelpTopic(Icons.Rounded.GraphicEq, R.string.help_sound_title, R.string.help_sound_body, listOf(R.string.help_sound_templates, R.string.help_sound_more, R.string.help_sound_bass, R.string.help_sound_peq, R.string.help_sound_presets)),
     HelpTopic(Icons.Rounded.Headphones, R.string.help_devices_title, R.string.help_devices_body, listOf(R.string.help_devices_fold, R.string.help_devices_notifications)),
     HelpTopic(Icons.Rounded.AutoAwesome, R.string.help_chain_title, R.string.help_chain_body, listOf(R.string.help_chain_silences, R.string.help_moods)),
-    HelpTopic(Icons.Rounded.PriorityHigh, R.string.help_inclusion_title, R.string.help_inclusion_body, listOf(R.string.help_inclusion_default)),
+    HelpTopic(Icons.Rounded.PriorityHigh, R.string.help_inclusion_title, R.string.help_inclusion_body, listOf(R.string.help_inclusion_sets, R.string.help_inclusion_default)),
     HelpTopic(Icons.Rounded.Palette, R.string.help_themes_title, R.string.help_themes_body, listOf(R.string.help_themes_layout, R.string.help_themes_images, R.string.help_themes_names, R.string.help_themes_parts, R.string.help_themes_system_mood, R.string.help_themes_desktop), gallery = true),
     HelpTopic(Icons.Rounded.DirectionsCar, R.string.help_car_title, R.string.help_car_body, listOf(R.string.help_car_cover)),
     HelpTopic(Icons.Rounded.Speed, R.string.help_performance_title, R.string.help_performance_body),
-    HelpTopic(Icons.Rounded.Settings, R.string.help_settings_title, R.string.help_settings_body, listOf(R.string.help_settings_hints, R.string.help_backup_auto, R.string.help_exchange, R.string.help_player_places, R.string.help_language, R.string.help_about_changelog)),
+    HelpTopic(Icons.Rounded.Settings, R.string.help_settings_title, R.string.help_settings_body, listOf(R.string.help_settings_search, R.string.help_settings_hints, R.string.help_backup_auto, R.string.help_exchange, R.string.help_player_places, R.string.help_language, R.string.help_about_changelog)),
 )
 
 /** How to use the app: one topic per part of it, opened with a tap. */

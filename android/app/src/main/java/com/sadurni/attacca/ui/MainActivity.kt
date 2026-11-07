@@ -166,6 +166,7 @@ private val Screen.tips: com.sadurni.attacca.ui.common.TipsScreen?
         Screen.BROWSER -> com.sadurni.attacca.ui.common.TipsScreen.BROWSER
         Screen.MUSIC -> com.sadurni.attacca.ui.common.TipsScreen.MUSIC
         Screen.SOUND -> com.sadurni.attacca.ui.common.TipsScreen.SOUND
+        Screen.SETTINGS -> com.sadurni.attacca.ui.common.TipsScreen.SETTINGS
         Screen.DEVICES -> com.sadurni.attacca.ui.common.TipsScreen.DEVICES
         Screen.THEME_EDITOR -> com.sadurni.attacca.ui.common.TipsScreen.THEME_EDITOR
         else -> null
@@ -332,6 +333,8 @@ class MainActivity : AppCompatActivity() {
             direction = NavDirection.SWITCH
             history = history.dropLast(1).filter { it != target } + target
         }
+        // A device used for the first time: a sound template for it.
+        com.sadurni.attacca.ui.settings.NewDeviceTemplatePrompt()
         var tagTarget by rememberSaveable { mutableStateOf<String?>(null) }
         var infoTarget by rememberSaveable { mutableStateOf<String?>(null) }
         // Settings opened on the page of the cover gestures (long press on the cover).

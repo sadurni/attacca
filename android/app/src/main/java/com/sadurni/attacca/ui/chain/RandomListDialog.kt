@@ -76,5 +76,6 @@ fun RandomListDialog(onStart: (Mood?, Boolean, Int) -> Unit, onDismiss: () -> Un
 internal fun OnlyIncludedSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
     val chain by LocalContext.current.app.settings.chain.collectAsStateWithLifecycle()
     val hasList = chain.inclusion() != null
+    InclusionSetPicker()
     com.sadurni.attacca.ui.settings.SwitchRow(stringResource(R.string.only_included), checked && hasList, onChange, enabled = hasList)
 }

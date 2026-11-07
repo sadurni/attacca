@@ -59,6 +59,8 @@ import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.Swipe
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
 private enum class SettingsPage { PLAYBACK, CROSSFADE, SILENCE, LISTENING, APPEARANCE, GESTURES, LIBRARY, CHAINING, INCLUSION, BACKGROUND, LANGUAGE, BACKUP }
@@ -72,6 +74,12 @@ fun SettingsScreen(
     onThemeGallery: () -> Unit = {},
 ) {
     val settings = LocalContext.current.app.settings
+    var guide by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (guide) {
+        SetupGuide(onDone = { guide = false })
+        return
+    }
+    var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     CategoryScreen(
         title = stringResource(R.string.settings_title),
         pages = SettingsPage.entries.toTypedArray(),
@@ -83,8 +91,29 @@ fun SettingsScreen(
         pageTitle = { stringResource(it.titleRes) },
         onBack = onBack,
         menu = { open ->
-            for (page in SettingsPage.entries) {
-                CategoryRow(page.icon, stringResource(page.titleRes), pageSummary(page)) { open(page) }
+            androidx.compose.material3.OutlinedTextField(
+                query,
+                { query = it },
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.settings_search)) },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.cancel)) }
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            if (query.isNotBlank()) {
+                SettingsSearchResults(query) { open(it) }
+            } else {
+                CategoryRow(Icons.Rounded.AutoAwesome, stringResource(R.string.setup_title), stringResource(R.string.setup_entry_summary)) { guide = true }
+                SectionTitle(stringResource(R.string.settings_essentials))
+                EssentialsSection(settings) { open(it) }
+                for (group in SettingsGroup.entries) {
+                    SectionTitle(stringResource(group.titleRes))
+                    for (page in group.pages) {
+                        CategoryRow(page.icon, stringResource(page.titleRes), pageSummary(page)) { open(page) }
+                    }
+                }
             }
         },
     ) { page ->
@@ -106,6 +135,127 @@ fun SettingsScreen(
             SettingsPage.BACKUP -> BackupSection()
         }
     }
+}
+
+/** The settings pages under the theme they belong to, in the order the menu shows them. */
+private enum class SettingsGroup(val titleRes: Int, val pages: List<SettingsPage>) {
+    PLAY(R.string.settings_group_playback, listOf(SettingsPage.PLAYBACK, SettingsPage.CROSSFADE, SettingsPage.SILENCE)),
+    LISTS(R.string.settings_group_lists, listOf(SettingsPage.CHAINING, SettingsPage.INCLUSION)),
+    LIBRARY(R.string.settings_group_library, listOf(SettingsPage.LIBRARY, SettingsPage.LISTENING, SettingsPage.BACKUP)),
+    LOOK(R.string.settings_group_look, listOf(SettingsPage.APPEARANCE, SettingsPage.GESTURES, SettingsPage.LANGUAGE)),
+    ADVANCED(R.string.settings_group_advanced, listOf(SettingsPage.BACKGROUND)),
+}
+
+/** What each page holds, by the names of its settings, for the search. */
+private val SettingsPage.searchTerms: List<Int>
+    get() = when (this) {
+        SettingsPage.PLAYBACK -> listOf(
+            R.string.section_fades, R.string.fade_duration, R.string.sleep_fade, R.string.section_rewind, R.string.rewind_after_pause,
+            R.string.rewind_seconds, R.string.endless_title, R.string.endless_switch, R.string.section_folder_change,
+            R.string.section_other_sounds, R.string.focus_duck_title, R.string.focus_resume, R.string.go_to_end, R.string.to_end_seconds,
+            R.string.section_album_shuffle, R.string.albums_by_tag, R.string.albums_by_folder,
+        )
+        SettingsPage.CROSSFADE -> listOf(
+            R.string.crossfade_duration, R.string.crossfade_skip_album, R.string.crossfade_only_shuffle, R.string.crossfade_style,
+            R.string.crossfade_style_auto, R.string.crossfade_style_mix, R.string.skip_crossfade,
+        )
+        SettingsPage.SILENCE -> listOf(
+            R.string.silence_enabled, R.string.silence_start, R.string.silence_end, R.string.silence_gapless,
+            R.string.silence_threshold, R.string.silence_min, R.string.silence_margin,
+        )
+        SettingsPage.LISTENING -> listOf(R.string.listening_tracks_played, R.string.listening_plays, R.string.listen_log, R.string.listening_clear)
+        SettingsPage.INCLUSION -> listOf(R.string.inclusion_list, R.string.inclusion_allow, R.string.inclusion_block, R.string.lists_only_included, R.string.inclusion_manage)
+        SettingsPage.BACKGROUND -> listOf(
+            R.string.section_car, R.string.car_buttons, R.string.section_when_closed, R.string.resume_when_closed,
+            R.string.section_performance, R.string.audio_buffer, R.string.efficient_scheduling,
+        )
+        SettingsPage.APPEARANCE -> listOf(
+            R.string.dynamic_accent, R.string.blurred_background, R.string.cover_behind_screens, R.string.section_player_screen,
+            R.string.remaining_time, R.string.widget_section, R.string.section_tips, R.string.tips_show,
+            R.string.section_keep_screen_on, R.string.section_waveform,
+        )
+        SettingsPage.GESTURES -> emptyList()
+        SettingsPage.LIBRARY -> listOf(R.string.music_folder, R.string.library_scan, R.string.library_stats, R.string.ignored_title, R.string.damaged_title)
+        SettingsPage.CHAINING -> listOf(
+            R.string.chain_analysis, R.string.chain_auto, R.string.chain_analyze_now, R.string.chain_silences, R.string.chain_measure_silences,
+            R.string.chain_measure_whole, R.string.chain_edge_seconds, R.string.chain_threads, R.string.chain_keep_screen_on,
+            R.string.chain_reanalyze, R.string.chain_order, R.string.chain_save_made, R.string.chain_quick_not_played,
+            R.string.chain_artist_spacing, R.string.random_list, R.string.random_ask_mood, R.string.random_shake,
+        )
+        SettingsPage.LANGUAGE -> emptyList()
+        SettingsPage.BACKUP -> listOf(
+            R.string.backup_create, R.string.backup_restore, R.string.auto_backup_title, R.string.exchange_section,
+            R.string.exchange_export, R.string.exchange_import, R.string.player_db_export,
+        )
+    }
+
+private val accents = Regex("\\p{Mn}+")
+
+/** Lowercase and without accents, so "musica" finds "Música". */
+private fun searchable(text: String): String =
+    accents.replace(java.text.Normalizer.normalize(text.lowercase(), java.text.Normalizer.Form.NFD), "")
+
+/** The pages whose title or settings match [query], each with the settings that do. */
+@Composable
+private fun SettingsSearchResults(query: String, open: (SettingsPage) -> Unit) {
+    val q = searchable(query.trim())
+    var any = false
+    for (group in SettingsGroup.entries) for (page in group.pages) {
+        val title = stringResource(page.titleRes)
+        val hits = page.searchTerms.map { stringResource(it) }.filter { searchable(it).contains(q) }
+        if (hits.isEmpty() && !searchable(title).contains(q)) continue
+        any = true
+        CategoryRow(page.icon, title, hits.take(3).joinToString(" · ")) { open(page) }
+    }
+    if (!any) Hint(stringResource(R.string.search_nothing))
+}
+
+/**
+ * The few settings that matter most, at hand: the music folder, the analysis in the background
+ * and how tracks follow each other.
+ */
+@Composable
+private fun EssentialsSection(settings: com.sadurni.attacca.settings.AppSettings, open: (SettingsPage) -> Unit) {
+    val context = LocalContext.current
+    val playback by settings.playback.collectAsStateWithLifecycle()
+    val chain by settings.chain.collectAsStateWithLifecycle()
+    val trim by settings.trim.collectAsStateWithLifecycle()
+    val folder = settings.musicFolder
+    CategoryRow(Icons.Rounded.LibraryMusic, stringResource(R.string.music_folder), folder ?: stringResource(R.string.music_folder_none)) { open(SettingsPage.LIBRARY) }
+    SwitchRow(stringResource(R.string.chain_auto), chain.autoAnalyze, onChange = { on ->
+        settings.updateChain { it.copy(autoAnalyze = on) }
+        if (on && folder != null) context.app.chainAnalyzer.analyzeLibrary(java.io.File(folder))
+    }, enabled = folder != null)
+    Text(stringResource(R.string.settings_transitions), fontSize = AttaccaType.body, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
+    val current = when {
+        playback.crossfadeMs == 0 -> 0
+        playback.crossfadeStyle == com.sadurni.attacca.dsp.CrossfadeStyle.AUTOMATIC -> 1
+        else -> 2
+    }
+    SegmentedChoice(
+        listOf(
+            1 to stringResource(R.string.crossfade_style_auto),
+            2 to stringResource(R.string.crossfade_style_crossfade),
+            0 to stringResource(R.string.settings_transition_none),
+        ),
+        current,
+    ) { v ->
+        settings.updatePlayback {
+            when (v) {
+                0 -> it.copy(crossfadeMs = 0)
+                1 -> it.copy(crossfadeMs = if (it.crossfadeMs > 0) it.crossfadeMs else 6_000, crossfadeStyle = com.sadurni.attacca.dsp.CrossfadeStyle.AUTOMATIC)
+                else -> it.copy(
+                    crossfadeMs = if (it.crossfadeMs > 0) it.crossfadeMs else 5_000,
+                    crossfadeStyle = if (it.crossfadeStyle == com.sadurni.attacca.dsp.CrossfadeStyle.AUTOMATIC) com.sadurni.attacca.dsp.CrossfadeStyle.CROSSFADE else it.crossfadeStyle,
+                )
+            }
+        }
+    }
+    SwitchRow(stringResource(R.string.crossfade_skip_album), playback.crossfadeSkipSameAlbum, { v ->
+        settings.updatePlayback { it.copy(crossfadeSkipSameAlbum = v) }
+    }, enabled = playback.crossfadeMs > 0)
+    SwitchRow(stringResource(R.string.silence_enabled), trim.enabled, { v -> settings.updateTrim { it.copy(enabled = v) } })
+    Hint(stringResource(R.string.settings_essentials_hint))
 }
 
 private val SettingsPage.titleRes: Int
@@ -844,6 +994,7 @@ private fun MusicFolderSection(settings: com.sadurni.attacca.settings.AppSetting
         }
         Hint(stringResource(R.string.library_scan_hint))
         LibraryStatsSection(current, last)
+        DamagedSection(current)
     }
     IgnoredSection()
 }
@@ -954,6 +1105,9 @@ private fun LibraryStatsSection(folder: String, last: com.sadurni.attacca.librar
     StatRow(stringResource(R.string.library_stats_time), com.sadurni.attacca.ui.common.formatTotalTime(s.durationMs))
     StatRow(stringResource(R.string.library_stats_size), com.sadurni.attacca.ui.common.formatSize(s.bytes))
     if (s.untagged > 0) StatRow(stringResource(R.string.library_stats_untagged), n(s.untagged))
+    val damaged by com.sadurni.attacca.library.DamagedTracks.all.collectAsStateWithLifecycle()
+    val damagedHere = remember(damaged, folder) { com.sadurni.attacca.library.DamagedTracks.under(folder).size }
+    if (damagedHere > 0) StatRow(stringResource(R.string.damaged_title), n(damagedHere))
     StatRow(
         stringResource(R.string.library_stats_formats),
         s.formats.joinToString("\n") { (ext, count) -> "$ext  ${n(count)} (${(count * 100 + s.tracks / 2) / s.tracks} %)" },
@@ -1227,6 +1381,7 @@ private fun ChainingPage(settings: com.sadurni.attacca.settings.AppSettings) {
 private fun InclusionSection(settings: com.sadurni.attacca.settings.AppSettings) {
     val context = LocalContext.current
     val chain by settings.chain.collectAsStateWithLifecycle()
+    InclusionSetsSection(settings)
     val pick = rememberLauncherForActivityResult(OpenDocumentAt()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         PickerMemory.put(context, PickerMemory.INCLUSION_LIST, uri)
@@ -1335,6 +1490,64 @@ private fun InclusionSection(settings: com.sadurni.attacca.settings.AppSettings)
             dismissButton = { TextButton(onClick = { confirmReimport = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
+}
+
+/**
+ * The inclusion sets: which one is in use (or none: everything), and making, renaming and
+ * forgetting them. What follows on the page is the set in use.
+ */
+@Composable
+private fun InclusionSetsSection(settings: com.sadurni.attacca.settings.AppSettings) {
+    val chain by settings.chain.collectAsStateWithLifecycle()
+    var dialog by remember { mutableStateOf<String?>(null) } // "new" | "rename" | "copy"
+    var confirmDelete by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val app = LocalContext.current.app
+    SectionTitle(stringResource(R.string.inclusion_sets_title))
+    RadioRow(stringResource(R.string.inclusion_everything), chain.activeSet == null) { com.sadurni.attacca.settings.InclusionSets.select(settings, null) }
+    for (set in chain.inclusionSets) {
+        RadioRow(set.name, chain.activeSet == set.id) { com.sadurni.attacca.settings.InclusionSets.select(settings, set.id) }
+    }
+    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        TextButton(onClick = { dialog = "new" }) { Text(stringResource(R.string.inclusion_set_new)) }
+        if (chain.activeSet != null) {
+            TextButton(onClick = { dialog = "rename" }) { Text(stringResource(R.string.profile_rename)) }
+            TextButton(onClick = { dialog = "copy" }) { Text(stringResource(R.string.inclusion_set_duplicate)) }
+            TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.profile_delete)) }
+        }
+    }
+    Hint(stringResource(R.string.inclusion_sets_hint))
+    val activeName = com.sadurni.attacca.settings.InclusionSets.nameOf(chain, chain.activeSet).orEmpty()
+    when (dialog) {
+        "new" -> NameDialog(stringResource(R.string.inclusion_set_new), "", onConfirm = { name ->
+            com.sadurni.attacca.settings.InclusionSets.create(settings, name)
+            dialog = null
+        }, onDismiss = { dialog = null })
+        "copy" -> NameDialog(stringResource(R.string.inclusion_set_duplicate), stringResource(R.string.inclusion_set_copy_name, activeName), onConfirm = { name ->
+            val id = chain.activeSet
+            dialog = null
+            if (id != null) scope.launch { runCatching { app.inclusionStore.duplicate(id, name) } }
+        }, onDismiss = { dialog = null })
+        "rename" -> NameDialog(stringResource(R.string.profile_rename), activeName, onConfirm = { name ->
+            chain.activeSet?.let { com.sadurni.attacca.settings.InclusionSets.rename(settings, it, name) }
+            dialog = null
+        }, onDismiss = { dialog = null })
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.profile_delete)) },
+            text = { Text(stringResource(R.string.inclusion_set_delete_confirm, activeName)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    chain.activeSet?.let { com.sadurni.attacca.settings.InclusionSets.delete(settings, it) }
+                }) { Text(stringResource(R.string.profile_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+    if (chain.activeSet != null) SectionTitle(activeName)
 }
 
 /** Backup of settings, caches and lists to a zip, and restore from one. */

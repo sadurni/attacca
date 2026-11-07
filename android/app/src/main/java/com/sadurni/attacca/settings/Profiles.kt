@@ -87,7 +87,7 @@ object DeviceIdentity {
     }
 
     private fun configured(rule: DeviceRule): Int =
-        listOf(rule.profileId != null, rule.resumeList != null, rule.autoPlay, !rule.followLastList, rule.volumePercent != null, rule.notificationPercent != null)
+        listOf(rule.profileId != null, rule.resumeList != null, rule.autoPlay, !rule.followLastList, rule.volumePercent != null, rule.notificationPercent != null, rule.inclusionSet != null)
             .count { it }
 }
 
@@ -107,7 +107,14 @@ data class DeviceRule(
     val volumePercent: Int? = null,
     /** Notification volume set whenever this device becomes the output, in percent; null leaves it alone. */
     val notificationPercent: Int? = null,
-)
+    /** The inclusion set put in use when this device becomes the output: a set's id, [EVERYTHING], or null to leave it alone. */
+    val inclusionSet: String? = null,
+) {
+    companion object {
+        /** [inclusionSet]: no set (everything may be used). */
+        const val EVERYTHING = ""
+    }
+}
 
 data class ProfilesState(
     val profiles: List<DspProfile>,
@@ -147,6 +154,37 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
 
     private val _active = MutableStateFlow(_state.value.resolveProfile(null))
     val active: StateFlow<DspProfile> = _active.asStateFlow()
+
+    private val _newDevice = MutableStateFlow<OutputDevice?>(null)
+
+    /** An output seen for the first time (not the phone's speaker), to offer a sound template for. */
+    val newDevice: StateFlow<OutputDevice?> = _newDevice.asStateFlow()
+
+    fun dismissNewDevice() {
+        _newDevice.value = null
+    }
+
+    /**
+     * A profile with [template] applied over the active one's settings, named [name] (one of that
+     * name already there is replaced), assigned to [deviceKey] or, without one, to [type].
+     */
+    fun applyTemplate(template: SoundTemplate, name: String, deviceKey: String?, type: OutputType?): DspProfile {
+        val settings = template.applyTo(_active.value.settings)
+        val existing = _state.value.profiles.firstOrNull { it.name == name && it.id != ProfilesState.DEFAULT_PROFILE_ID }
+        val profile = existing?.copy(settings = settings) ?: DspProfile(UUID.randomUUID().toString(), name, settings)
+        mutate { s ->
+            s.copy(profiles = if (existing != null) s.profiles.map { if (it.id == profile.id) profile else it } else s.profiles + profile)
+        }
+        when {
+            deviceKey != null -> assignProfile(deviceKey, profile.id)
+            type != null -> setTypeDefault(type, profile.id)
+        }
+        return profile
+    }
+
+    /** [template] applied over the settings of the profile [id] itself. */
+    fun applyTemplateToProfile(id: String, template: SoundTemplate) =
+        mutate { s -> s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(settings = template.applyTo(it.settings)) else it }) }
 
     fun setCurrentDevice(device: OutputDevice?) {
         _currentDevice.value = device
@@ -206,12 +244,17 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
     fun setNotificationVolume(deviceKey: String, percent: Int?) =
         mutate { s -> s.copy(devices = s.devices.map { if (it.key == deviceKey) it.copy(notificationPercent = percent) else it }) }
 
+    fun setInclusionSet(deviceKey: String, set: String?) =
+        mutate { s -> s.copy(devices = s.devices.map { if (it.key == deviceKey) it.copy(inclusionSet = set) else it }) }
+
     fun forgetDevice(deviceKey: String) = mutate { s -> s.copy(devices = s.devices.filter { it.key != deviceKey }) }
 
     private fun rememberDevice(device: OutputDevice) {
         val devices = _state.value.devices
         val updated = DeviceIdentity.remember(devices, device)
+        val firstTime = devices.none { DeviceIdentity.sameDevice(it.key, device.key) }
         if (updated != devices) mutate { it.copy(devices = updated) }
+        if (firstTime && device.type != OutputType.SPEAKER) _newDevice.value = device
     }
 
     private fun mutate(transform: (ProfilesState) -> ProfilesState) {
@@ -263,7 +306,8 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
                         .put("autoPlay", it.autoPlay)
                         .put("followLastList", it.followLastList)
                         .put("volumePercent", it.volumePercent ?: JSONObject.NULL)
-                        .put("notificationPercent", it.notificationPercent ?: JSONObject.NULL),
+                        .put("notificationPercent", it.notificationPercent ?: JSONObject.NULL)
+                        .put("inclusionSet", it.inclusionSet ?: JSONObject.NULL),
                 )
             }
             val defaults = JSONObject()
@@ -290,6 +334,7 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
                     followLastList = d.optBoolean("followLastList", true),
                     volumePercent = if (d.isNull("volumePercent") || !d.has("volumePercent")) null else d.optInt("volumePercent"),
                     notificationPercent = if (d.isNull("notificationPercent") || !d.has("notificationPercent")) null else d.optInt("notificationPercent"),
+                    inclusionSet = if (d.isNull("inclusionSet") || !d.has("inclusionSet")) null else d.optString("inclusionSet"),
                 )
             }
             val defaultsJson = json.optJSONObject("typeDefaults") ?: JSONObject()

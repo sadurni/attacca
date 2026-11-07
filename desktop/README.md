@@ -111,6 +111,19 @@ all those connected, without choosing anything.
   bass, stereo width, balance and channels (mono, swapped, karaoke…), crossfeed or virtual
   speakers for headphones, compressor and limiter; every change moves smoothly while playing.
   Each output (sound card, headphones…) keeps its own sound, as the phone's device profiles.
+- **Covers**: every album's cover at a glance, with those without one marked. *Find the missing
+  covers* looks for them online in an open music database ([MusicBrainz](https://musicbrainz.org)
+  and its [Cover Art Archive](https://coverartarchive.org)) by album and artist; clicking an album
+  (or *Search for a cover online…* on its page in Music) shows the editions found to choose
+  another. What is found is kept by Attacca Desktop (in its data folder, `covers/`) and shows
+  wherever the album's cover does; you decide whether it is also saved as `cover.jpg` in the
+  album's folder, so the phone and other players see it too. Nothing else is sent anywhere: only
+  the album and artist searched for.
+- **Damaged tracks** (Library): every MP3 checked, several at once, for broken frames inside the
+  music (bursts of noise) or stretches written twice (the music jumps back) — the same check as
+  the phone's; files the scan could not read count too. They are marked ⚠ in Tracks, left out of
+  lists unless that is turned off, and a damaged MP3 can be repaired: written again without its
+  broken or repeated pieces, the original kept beside it as `.bk` (not taken for music) or deleted.
 - **Library**: the music folder, scanning (progress, stop), what was measured, the moods and sound
   families of the collection (click one for a list of it), which tracks lists may use.
 - **Tracks**: the whole library, searchable and sortable; start a list from any track.
@@ -151,6 +164,12 @@ all those connected, without choosing anything.
   `attacca_family`, `attacca_bpm`, `attacca_energy`, `attacca_positivity` — so that, for example,
   `beet ls attacca_mood:calm` lists the calm tracks. Tracks are matched by their file, so beets
   should keep the files where Attacca Desktop scans them.
+
+## What's new
+
+See [CHANGELOG.md](../CHANGELOG.md). In 1.1.0: the **Covers** page (covers looked for online, kept
+here and, if wanted, saved in the album folders) and O'rama's smoother ground, with level bridges,
+stations and roads.
 
 ## Use
 

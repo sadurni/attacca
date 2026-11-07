@@ -34,6 +34,12 @@ object Inclusions {
      * folders, albums and artists take in what the library has now. [mode] allows only its tracks,
      * or all but them.
      */
+    /** Every inclusion set of [db] with what it allows, by name (a set without a list: as its mode says of an empty one). */
+    fun sets(db: com.sadurni.attaccaplg.library.LibraryDb, library: Library): List<Pair<String, Inclusion>> =
+        com.sadurni.attacca.library.InclusionSet.listFromJson(db.meta("inclusion_sets")).map { set ->
+            set.name to (set.list?.let(::File)?.takeIf { it.isFile }?.let { inclusion(it, set.mode, library) } ?: Inclusion(set.mode) { emptyList() })
+        }
+
     fun inclusion(list: File, mode: InclusionMode, library: Library): Inclusion =
         Inclusion(mode) {
             if (isRulesFile(list)) {

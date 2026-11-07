@@ -52,6 +52,7 @@ plays them so one song flows into the next.
 
 ## Contents
 
+- [What's new](#whats-new)
 - [Features](#features)
 - [Sound processing](#sound-processing)
 - [Screenshots](#screenshots)
@@ -110,7 +111,18 @@ plays them so one song flows into the next.
   album, the artist's tracks or the list — that last track then plays out whole, without
   crossfade), playback
   speed and, apart from it, pitch in semitones, A-B repeat, bookmarks, lyrics (`.lrc` and
-  embedded), tag editor, sharing tracks with other apps.
+  embedded), tag editor, sharing tracks with other apps. In the tag editor, *Search the web*
+  opens the browser with the artist and album to find the cover; the picture saved there is then
+  set for the album with *Choose a picture* (Attacca itself has no internet access).
+- **Damaged tracks** are found as the library is scanned, as they play (broken or repeated MP3
+  frames, files the player stops on) or with Settings → Library → *Check new and changed tracks*
+  (each file read through once, several at once, with the time left in a notification: broken
+  frames, stretches written twice, files cut short or unreadable; a check stopped halfway goes on
+  later with what is left, and *Check all again* checks every track once more). They are counted in the statistics, marked ⚠ in Folders and Music (△ for a folder
+  with some inside) and left out of the lists Attacca makes unless that is turned off. A damaged
+  MP3 can be repaired: written again without its broken and repeated frames (the encoder's
+  information frame made to match), the original kept beside it as `.bk` (not taken for music) or
+  deleted, as chosen.
 - **Other sounds**: a notification or another app sounding briefly lowers the volume, pauses the
   music or is ignored, as chosen; after a call the music can come back by itself.
 - **Track information** screen: pictures first, then file, audio format (codec, bit rate, sample
@@ -134,6 +146,11 @@ plays them so one song flows into the next.
   - meadows, forests and mountains with someone walking;
   - a cold sea with icebergs adrift, someone standing on one and now and then a whale's tail;
   - space, with a ship over the surface of a moon.
+
+  The near ground follows the music smoothly and the traveller jumps its quick rises; bridges,
+  stations and roads stay level, and there the rises become things to jump over (crates, barrels,
+  logs, rocks, bricks, benches, suitcases, ramps and traffic cones). At a station the train runs
+  beyond the platform, behind the traveller.
 
   Its colours follow the cover's: the land its main colour, the horizon and small bright things its
   accent (the same one the theme takes). The weather follows the sound: heavy, dark music brings a
@@ -329,6 +346,12 @@ plays them so one song flows into the next.
   lists Attacca makes (generated, from a track or a group, quick, random, other lists, endless)
   take only the included ones is set once in Settings; every list starts from that and can change
   it as it is made, for that list only.
+- **Several inclusion lists**, one for each occasion (with the children, with friends, just you…):
+  kept by name in Settings → Inclusion lists, each with its own M3U8, mode and rules, one in use at
+  a time or none (*Everything*). The one in use is changed in a tap from Lists, the ⋮ menu of Now
+  playing and the dialogs that make lists, and a device can put one in use when it connects
+  (Devices). The library for players carries all of them, for the Rockbox plugin and the web page
+  to choose from. A single list from an earlier version becomes the first of them.
   Tracks, albums, artists and folders (with subfolders) are added or taken out from their
   menus; they are kept as rules in a text file next to the list, which is computed from them
   (so new files in those folders, albums or artists join it after each scan). A list edited by
@@ -368,7 +391,12 @@ plays them so one song flows into the next.
 
 ### Devices
 - **DSP profiles assigned to output devices** (speaker, wired headphones, each Bluetooth
-  device…), switched automatically and without clicks.
+  device…), switched automatically and without clicks. **Sound templates** start a profile from
+  what suits a kind of device: headphones (strong crossfeed, as speakers in front), earbuds (light
+  crossfeed, a gentle bass lift), car (levels evened out over the road noise, more bass), portable
+  speaker and phone speaker (bass heard through its harmonics, even levels) or home stereo (nothing
+  added). Sound → *Template…* applies one, and the first time a new device plays Attacca offers one
+  for it, as that device's own profile.
 - **A list per device**: each device (the phone speaker included) continues its own list, which
   can follow the last list played on it. The list is loaded when the device connects and when
   the player opens with it as the output.
@@ -394,6 +422,13 @@ plays them so one song flows into the next.
   place it.
 
 ### Interface
+- **First steps**: after choosing the music folder, a short **setup guide** goes through the
+  analysis in the background, how you listen most of the time (a sound template for the default
+  profile) and how one track gives way to the next (automatic blends, a classic crossfade or one
+  after another, albums kept whole, silence skipping); it is in Settings → Setup guide whenever
+  wanted again. **Settings** open with a search that finds any setting by its name, the
+  essentials (music folder, background analysis, transitions, silence skipping) and the rest
+  grouped by theme: playing, lists and chaining, library, look and feel, advanced.
 - Jetpack Compose, Material 3; white, dark and black themes with the accent color taken from
   the cover art, kept for what is active (playing, selected, switched on); one type scale and
   three corner radii across the app; system bars follow the app's theme.
@@ -485,6 +520,13 @@ plays them so one song flows into the next.
 - 23 languages, chosen in the app apart from the phone's — also from the flag at the top of the
   side menu (Catalan, Basque and Galician with their own flags, drawn by the app), whose list
   names every language in itself and in English, so the way back is always readable.
+
+## What's new
+
+The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
+new). In 1.1.0: the setup guide and the reorganised Settings, sound templates per device, damaged
+tracks (found, marked, repaired), covers searched on the web, and a smoother O'rama with level
+bridges, stations and roads.
 
 ## Sound processing
 

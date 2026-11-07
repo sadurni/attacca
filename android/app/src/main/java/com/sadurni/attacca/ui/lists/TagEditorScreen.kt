@@ -127,7 +127,7 @@ fun TagEditorScreen(mediaId: String, onBack: () -> Unit) {
                     )
                 }
                 Hint(stringResource(R.string.tags_hint))
-                AlbumCoverSection(file)
+                AlbumCoverSection(file, edited.albumArtist.ifBlank { edited.artist }, edited.album)
                 Spacer(Modifier.height(24.dp))
             }
         }

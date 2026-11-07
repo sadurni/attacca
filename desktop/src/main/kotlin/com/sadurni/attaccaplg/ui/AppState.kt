@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class Page { PLAYING, ORAMA, MUSIC, LIBRARY, TRACKS, LISTS, SOUND, EXCHANGE, THEMES, SETTINGS }
+enum class Page { PLAYING, ORAMA, MUSIC, COVERS, LIBRARY, TRACKS, LISTS, SOUND, EXCHANGE, THEMES, SETTINGS }
 
 /** The Lists page: making lists, or the lists kept (Attacca's way). */
 enum class ListsView { MAKE, SAVED }
@@ -67,6 +67,12 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
         private set
     var inclusionMode by mutableStateOf(modeOf(db.meta("inclusion_mode")))
         private set
+
+    /** The inclusion lists kept by name, and the one in use (null: none, every track), as on the phone. */
+    var inclusionSets by mutableStateOf(com.sadurni.attacca.library.InclusionSet.listFromJson(db.meta("inclusion_sets")))
+        private set
+    var activeSet by mutableStateOf(db.meta("inclusion_active")?.takeIf { it.isNotBlank() })
+        private set
     var edgeSeconds by mutableStateOf(db.edgeSeconds)
         private set
 
@@ -81,6 +87,111 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
 
     /** A message for the bottom of the window. */
     var message by mutableStateOf<String?>(null)
+
+    /** The tracks found damaged (path within the music folder → what), and the check under way (done, total). */
+    var damaged by mutableStateOf<Map<String, com.sadurni.attaccaplg.library.Damage.Found>>(emptyMap())
+        private set
+    var damageCheck by mutableStateOf<Pair<Int, Int>?>(null)
+        private set
+    /** About how long the check still takes (ms), once it can be told. */
+    var damageRemainingMs by mutableStateOf<Long?>(null)
+        private set
+    @Volatile private var cancelDamage = false
+    var skipDamaged by mutableStateOf(db.meta("skip_damaged") != "false")
+        private set
+
+    fun changeSkipDamaged(on: Boolean) {
+        db.setMeta("skip_damaged", on.toString())
+        skipDamaged = on
+        reload()
+    }
+
+    /**
+     * Checks the MP3s of the library for damage, several at once: those never checked or changed
+     * since ([all]: every one again, so a check stopped halfway goes on where it was otherwise).
+     * The lists follow when done.
+     */
+    fun checkDamage(all: Boolean = false) {
+        val root = db.musicRoot ?: return
+        if (damageCheck != null) return
+        if (all) synchronized(db) { runCatching { db.clearDamageChecked() } }
+        val checked = synchronized(db) { runCatching { db.damageChecked() }.getOrDefault(emptyMap()) }
+        val tracks = library?.all?.filter { t ->
+            val f = File(root, t.path)
+            val c = checked[t.path]
+            c == null || c[0] != f.length() || c[1] != f.lastModified()
+        } ?: return
+        val started = System.currentTimeMillis()
+        damageRemainingMs = null
+        cancelDamage = false
+        damageCheck = 0 to tracks.size
+        scope.launch {
+            val done = java.util.concurrent.atomic.AtomicInteger()
+            withContext(Dispatchers.IO) {
+                val pool = java.util.concurrent.Executors.newFixedThreadPool((Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1))
+                try {
+                    tracks.map { t ->
+                        pool.submit {
+                            if (cancelDamage) return@submit
+                            val file = File(root, t.path)
+                            val result = runCatching { com.sadurni.attaccaplg.library.Damage.check(file) }.getOrNull()
+                            synchronized(db) {
+                                if (result == null) runCatching { db.forgetDamaged(t.path) }
+                                else runCatching { db.putDamaged(t.path, file.length(), file.lastModified(), result.first, result.second) }
+                                runCatching { db.putDamageChecked(t.path, file.length(), file.lastModified()) }
+                            }
+                            val n = done.incrementAndGet()
+                            if (n % 25 == 0) {
+                                val elapsed = System.currentTimeMillis() - started
+                                // After a few seconds the pace so far tells the time left.
+                                val left = if (elapsed > 5_000) elapsed * (tracks.size - n) / n else null
+                                scope.launch { damageCheck = n to tracks.size; damageRemainingMs = left }
+                            }
+                        }
+                    }.forEach { it.get() }
+                } finally {
+                    pool.shutdown()
+                }
+            }
+            damageCheck = null
+            reload()
+        }
+    }
+
+    fun stopDamageCheck() {
+        cancelDamage = true
+    }
+
+    /** Checks [path] again: forgotten when fine. */
+    fun recheckDamaged(path: String) {
+        val root = db.musicRoot ?: return
+        scope.launch {
+            val file = File(root, path)
+            val result = withContext(Dispatchers.IO) { runCatching { com.sadurni.attaccaplg.library.Damage.check(file) }.getOrNull() }
+            synchronized(db) {
+                if (result == null) db.forgetDamaged(path) else db.putDamaged(path, file.length(), file.lastModified(), result.first, result.second)
+            }
+            message = if (result == null) tr("It is fine now", "Ahora está bien") else tr("Still damaged", "Sigue dañada")
+            reload()
+        }
+    }
+
+    fun forgetDamaged(path: String) {
+        synchronized(db) { db.forgetDamaged(path) }
+        reload()
+    }
+
+    /** Repairs the MP3 [path] (the original kept beside it as .bk, or deleted); it is measured again by the next scan. */
+    fun repairDamaged(path: String, keepOriginal: Boolean) {
+        val root = db.musicRoot ?: return
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) { runCatching { com.sadurni.attacca.playback.Mp3Damage.repairFile(File(root, path), keepOriginal) }.getOrDefault(false) }
+            if (ok) synchronized(db) { db.forgetDamaged(path) }
+            message = if (ok) tr("Repaired: scan the library to measure it again.", "Reparada: escanea la biblioteca para medirla de nuevo.")
+            else tr("It could not be repaired", "No se ha podido reparar")
+            reload()
+        }
+    }
 
     val lists = ListsForm(prefs)
 
@@ -134,8 +245,12 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
             }
             library = made
             musicRoot = db.musicRoot?.path
+            damaged = withContext(Dispatchers.IO) { synchronized(db) { com.sadurni.attaccaplg.library.Damage.read(db, db.musicRoot) } }
             inclusionList = db.meta("inclusion_list")?.takeIf { it.isNotBlank() }
             inclusionMode = modeOf(db.meta("inclusion_mode"))
+            inclusionSets = com.sadurni.attacca.library.InclusionSet.listFromJson(db.meta("inclusion_sets"))
+            activeSet = db.meta("inclusion_active")?.takeIf { it.isNotBlank() }
+            keepSetsInStep()
             edgeSeconds = db.edgeSeconds
             lists.libraryChanged(made)
             loading = false
@@ -193,6 +308,81 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
         inclusionList = list?.absolutePath
         inclusionMode = mode
         lists.onlyIncluded = lists.onlyIncluded && list != null
+        keepSetsInStep()
+    }
+
+    /**
+     * The set in use follows the list and mode; a list chosen with none in use (or kept from
+     * before sets existed) becomes a set named after its file.
+     */
+    private fun keepSetsInStep() {
+        var sets = inclusionSets
+        var active = activeSet?.takeIf { id -> sets.any { it.id == id } }
+        val list = inclusionList
+        if (active == null && list != null) {
+            val set = com.sadurni.attacca.library.InclusionSet(java.util.UUID.randomUUID().toString(), uniqueSetName(File(list).nameWithoutExtension.ifBlank { "List" }), list, inclusionMode)
+            sets = sets + set
+            active = set.id
+        }
+        if (active != null) sets = sets.map { if (it.id == active) it.copy(list = list, mode = inclusionMode) else it }
+        saveSets(sets, active)
+    }
+
+    private fun saveSets(sets: List<com.sadurni.attacca.library.InclusionSet>, active: String?) {
+        inclusionSets = sets
+        activeSet = active
+        db.setMeta("inclusion_sets", com.sadurni.attacca.library.InclusionSet.listToJson(sets))
+        db.setMeta("inclusion_active", active ?: "")
+    }
+
+    /** Puts the set [id] in use (null: none, every track). */
+    fun selectSet(id: String?) {
+        val set = inclusionSets.firstOrNull { it.id == id }
+        activeSet = set?.id
+        db.setMeta("inclusion_active", set?.id ?: "")
+        setInclusion(set?.list?.let(::File), set?.mode ?: inclusionMode)
+        lists.onlyIncluded = set != null
+    }
+
+    fun createSet(name: String) {
+        val set = com.sadurni.attacca.library.InclusionSet(java.util.UUID.randomUUID().toString(), uniqueSetName(name.trim().ifBlank { "List" }), null, InclusionMode.BLOCK)
+        saveSets(inclusionSets + set, activeSet)
+        selectSet(set.id)
+    }
+
+    /** A copy of the set [id] named [name] (its list file copied, rules too), put in use to be changed. */
+    fun duplicateSet(id: String, name: String) {
+        val set = inclusionSets.firstOrNull { it.id == id } ?: return
+        val newName = uniqueSetName(name.trim().ifBlank { set.name })
+        val copy = set.list?.let(::File)?.takeIf { it.isFile }?.let { list ->
+            val base = list.name.substringBefore('.')
+            val ext = list.name.substring(base.length)
+            var target = File(list.parentFile, newName.replace(Regex("[\\\\/:*?\"<>|]"), "_") + ext)
+            var n = 2
+            while (target.exists()) target = File(list.parentFile, newName.replace(Regex("[\\\\/:*?\"<>|]"), "_") + " ${n++}" + ext)
+            runCatching { list.copyTo(target) }.getOrNull()
+        }
+        val made = com.sadurni.attacca.library.InclusionSet(java.util.UUID.randomUUID().toString(), newName, copy?.absolutePath, set.mode)
+        saveSets(inclusionSets + made, activeSet)
+        selectSet(made.id)
+    }
+
+    fun renameSet(id: String, name: String) {
+        val others = inclusionSets.filter { it.id != id }
+        saveSets(inclusionSets.map { if (it.id == id) it.copy(name = uniqueSetName(name.trim().ifBlank { it.name }, others)) else it }, activeSet)
+    }
+
+    fun deleteSet(id: String) {
+        if (activeSet == id) selectSet(null)
+        saveSets(inclusionSets.filter { it.id != id }, activeSet)
+    }
+
+    private fun uniqueSetName(name: String, among: List<com.sadurni.attacca.library.InclusionSet> = inclusionSets): String {
+        val taken = among.map { it.name.lowercase() }.toSet()
+        if (name.lowercase() !in taken) return name
+        var n = 2
+        while ("$name $n".lowercase() in taken) n++
+        return "$name $n"
     }
 
     fun changeEdgeSeconds(seconds: Int) {

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.sadurni.attaccaplg"
-version = "1.0.0"
+version = "1.1.0"
 
 kotlin {
     jvmToolchain(17)
@@ -204,9 +204,10 @@ compose.desktop {
             description = "Attacca Desktop"
             vendor = "Attacca"
             // SQLite (java.sql), sound and dialogs (java.desktop), screen readers when the system has them
-            // on (jdk.accessibility), Spanish number formats (jdk.localedata), tag reading (java.logging, java.prefs).
+            // on (jdk.accessibility), Spanish number formats (jdk.localedata), tag reading (java.logging, java.prefs),
+            // covers searched online (java.net.http).
             modules(
-                "java.sql", "java.desktop", "java.logging", "java.prefs", "java.instrument", "java.naming",
+                "java.sql", "java.desktop", "java.logging", "java.prefs", "java.instrument", "java.naming", "java.net.http",
                 "jdk.unsupported", "jdk.accessibility", "jdk.localedata", "jdk.charsets", "jdk.crypto.ec",
             )
             windows {

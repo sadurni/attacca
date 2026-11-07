@@ -24,6 +24,7 @@
 <ul>
 <li>Temas com cores, fontes, fundos e ícones próprios e um layout de Tocando agora que você mesmo organiza; uma galeria para começar.</li>
 <li>Músicas por artistas, álbuns, gêneros, décadas, climas e famílias; pastas; letras, marcadores, timer de suspensão, velocidade, repetição A-B; estatísticas de audição.</li>
+<li>Um guia curto para os primeiros passos, configurações com busca, modelos de som para cada tipo de aparelho, e faixas danificadas encontradas, marcadas e reparadas.</li>
 <li>Android Auto, widget na tela inicial, backup de tudo, 23 idiomas.</li>
 <li>Attacca O'rama: a música que está tocando como uma paisagem em movimento, feita da sua forma de onda, do seu clima e do seu ritmo. Com algumas pequenas surpresas para descobrir.</li>
 </ul>

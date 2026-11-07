@@ -527,8 +527,12 @@ private fun BrowserRow(
         Column(Modifier.weight(1f).padding(start = 16.dp, top = 8.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (file.isDirectory) {
-                    if (!(isRoot && subtitle == null)) com.sadurni.attacca.ui.common.FolderExcludedMark(file.absolutePath)
+                    if (!(isRoot && subtitle == null)) {
+                        com.sadurni.attacca.ui.common.FolderDamagedMark(file.absolutePath)
+                        com.sadurni.attacca.ui.common.FolderExcludedMark(file.absolutePath)
+                    }
                 } else if (AudioFiles.isAudio(file)) {
+                    com.sadurni.attacca.ui.common.DamagedMark(file.absolutePath)
                     com.sadurni.attacca.ui.common.ExcludedMark(file.absolutePath)
                 }
                 Text(

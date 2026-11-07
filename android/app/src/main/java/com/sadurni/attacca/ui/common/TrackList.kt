@@ -114,6 +114,7 @@ fun TrackRow(
         Box(Modifier.padding(start = 8.dp)) { TrackThumbnail(mediaId) }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                DamagedMark(mediaId)
                 ExcludedMark(mediaId)
                 Text(
                     title,
@@ -181,6 +182,47 @@ fun FolderExcludedMark(path: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .padding(end = 3.dp)
             .semantics { contentDescription = description },
+    )
+}
+
+/** The colour of the damaged-track marks: never the same as the inclusion list's. */
+val DamagedColor = androidx.compose.ui.graphics.Color(0xFFE5484D)
+
+/** A warning triangle in front of a track found damaged (see [com.sadurni.attacca.library.DamagedTracks]). */
+@Composable
+fun DamagedMark(path: String, modifier: Modifier = Modifier) {
+    if (path.contains("://")) return
+    val all by com.sadurni.attacca.library.DamagedTracks.all.collectAsStateWithLifecycle()
+    if (path !in all) return
+    val description = stringResource(R.string.damaged_mark)
+    Text(
+        "⚠",
+        color = DamagedColor,
+        fontSize = 15.sp,
+        modifier = modifier.padding(end = 4.dp).semantics { contentDescription = description },
+    )
+}
+
+/** The same for a folder: "⚠" when all its music is damaged (with the subfolders), "△" when part of it is. */
+@Composable
+fun FolderDamagedMark(path: String, modifier: Modifier = Modifier) {
+    val all by com.sadurni.attacca.library.DamagedTracks.all.collectAsStateWithLifecycle()
+    val mark by androidx.compose.runtime.produceState(com.sadurni.attacca.library.DamagedTracks.FolderMark.NONE, path, all) {
+        value = kotlinx.coroutines.withContext(com.sadurni.attacca.Background.dispatcher) {
+            com.sadurni.attacca.library.DamagedTracks.folderMark(path)
+        }
+    }
+    val (symbol, description) = when (mark) {
+        com.sadurni.attacca.library.DamagedTracks.FolderMark.NONE -> return
+        com.sadurni.attacca.library.DamagedTracks.FolderMark.ALL -> "⚠" to stringResource(R.string.damaged_mark_all)
+        com.sadurni.attacca.library.DamagedTracks.FolderMark.PART -> "△" to stringResource(R.string.damaged_mark_part)
+    }
+    Text(
+        symbol,
+        color = DamagedColor,
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = modifier.padding(end = 4.dp).semantics { contentDescription = description },
     )
 }
 

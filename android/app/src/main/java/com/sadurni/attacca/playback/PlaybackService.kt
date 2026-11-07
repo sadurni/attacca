@@ -209,6 +209,10 @@ class PlaybackService : MediaLibraryService() {
                     }
                     return
                 }
+                // The file is there but cannot be played: damaged.
+                if (id != null && java.io.File(id).isFile) {
+                    com.sadurni.attacca.library.DamagedTracks.report(id, com.sadurni.attacca.library.DamagedTracks.Kind.PLAY_ERROR)
+                }
                 if (!player.hasNextMediaItem() || failedInARow >= player.mediaItemCount) {
                     failedInARow = 0
                     return

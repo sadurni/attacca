@@ -32,7 +32,8 @@ import kotlin.math.sqrt
  *  38 edge seconds u16 · 40 creation date (string) u32 · 44 dictionaries u32 (4) · 48 music folder
  *  on the device (string) u32 · 52 vector size u16 · 54 edge size in bytes u16 · 56 first year u16 ·
  *  58 last year u16 · 60 lowest BPM ×100 u16 · 62 highest BPM ×100 u16.
- * Dictionaries (artist, genre tag, mood, sound family): count u32, then that many string offsets u32.
+ * Dictionaries (artist, genre tag, mood, sound family, inclusion sets): count u32, then that many
+ *  string offsets u32. Libraries written before have only the first four (the header says how many).
  * Record (160 bytes): 0 title · 4 path within the music folder · 8 album (strings, u32) · 12 hash of
  *  the full path on the device · 16 hash of its last two parts (FNV-1a, ASCII lower case) · 20 edge
  *  block u32 (none: 0xFFFFFFFF) · 24 artist u16 · 26 genre u16 (none: 0xFFFF) · 28 seconds u16 ·
@@ -42,8 +43,10 @@ import kotlin.math.sqrt
  *  timbre, see Moods; a library classified by traits only fills the first 10) · 160 how it starts
  *  and ends, for the player's automatic crossfade ([Ends]): start of the sound u16 · silence after
  *  the sound u16 · length of its own fade-out u16 (all ×10 ms) · ending u8 (0 unknown, 1 neither,
- *  2 fades out by itself, 3 ends hard) · flags u8 (1 starts softly). Readers step by the record
- *  size of the header, so those written before (160 bytes) and after read each other's files.
+ *  2 fades out by itself, 3 ends hard) · flags u8 (1 starts softly) · 168 the inclusion sets the
+ *  track is in, u32 (bit k: set k of the fifth dictionary). Readers step by the record size of
+ *  the header, so those written before (160 or 168 bytes) and after read each other's files. The
+ *  "included" flag follows the set in use when the library was written (else: every track).
  * Edge block: start then end, each 47 i16: pitch classes centred and scaled to length 16384 (12),
  *  bands ×100 dB (16), level ×100 dB, ln(flux + 0.05) ×1000, timbre coefficients ×100 (13),
  *  log2(tempo) ×1000 (0: none), beat clarity ×10000, key (0–11 major, 12–23 minor; −1: an edge
@@ -53,7 +56,7 @@ object PlayerDbFormat {
     const val EXTENSION = "bpcr2"
     private const val HEADER = 64
     private const val VECTOR = Moods.SOUND_COMPONENTS + SoundProfile.TIMBRE_SIZE
-    private const val RECORD = 44 + VECTOR * 2 + 8
+    private const val RECORD = 44 + VECTOR * 2 + 8 + 4
 
     /** The blend length the endings are judged for (the player's own length may differ). */
     const val REFERENCE_BLEND_MS = 10_000
@@ -80,6 +83,8 @@ object PlayerDbFormat {
         val included: Boolean,
         /** How it starts and ends; null when not measured. */
         val ends: Ends? = null,
+        /** The inclusion sets it is in: bit k for set k of those written. */
+        val sets: Int = 0,
     )
 
     /**
@@ -105,7 +110,16 @@ object PlayerDbFormat {
      * Writes [tracks] (track i is track i of [classification]) for a device whose music folder is
      * [base] (e.g. "/<microSD1>/Music"). Returns the tracks written.
      */
-    fun write(tracks: List<Track>, classification: Classification, base: String, spacing: Int, edgeSeconds: Int, file: File): Int {
+    fun write(
+        tracks: List<Track>,
+        classification: Classification,
+        base: String,
+        spacing: Int,
+        edgeSeconds: Int,
+        file: File,
+        /** The names of the inclusion sets (all different), in the order of [Track.sets]' bits (at most 32). */
+        setNames: List<String> = emptyList(),
+    ): Int {
         require(tracks.size == classification.moods.size)
         val k = classification
         val strings = Strings()
@@ -113,6 +127,7 @@ object PlayerDbFormat {
         val genres = Dict(strings)
         val moods = Dict(strings).apply { Mood.entries.forEach { add(it.name.lowercase()) } }
         val families = Dict(strings).apply { k.familyNames.indices.forEach { add(familyName(k.familyNames, it)) } }
+        val sets = Dict(strings).apply { setNames.take(InclusionSet.MAX_FOR_PLAYERS).forEach { add(it) } }
         val root = base.trim().trimEnd('/', '\\').replace('\\', '/')
 
         val records = ByteBuffer.allocate(tracks.size * RECORD).order(ByteOrder.LITTLE_ENDIAN)
@@ -143,6 +158,7 @@ object PlayerDbFormat {
             val v = k.vectors[i]
             for (d in 0 until VECTOR) records.putShort((v.getOrElse(d) { 0f } * 1000).roundToInt().coerceIn(-32767, 32767).toShort())
             putEnds(records, t)
+            records.putInt(t.sets)
             check(records.position() - start == RECORD)
             if (hasEdges) {
                 putEdge(edges, t.head)
@@ -151,7 +167,7 @@ object PlayerDbFormat {
             }
         }
         val dicts = ByteArrayOutputStream()
-        for (d in listOf(artists, genres, moods, families)) dicts.write(d.bytes())
+        for (d in listOf(artists, genres, moods, families, sets)) dicts.write(d.bytes())
         val created = strings.add(SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date()))
         val baseString = strings.add(root)
 
@@ -165,7 +181,7 @@ object PlayerDbFormat {
         val header = ByteBuffer.allocate(HEADER).order(ByteOrder.LITTLE_ENDIAN)
         header.put("BPCR2".toByteArray()).put(ByteArray(3))
         header.putInt(tracks.size).putInt(RECORD).putInt(dictOff).putInt(recOff).putInt(edgeOff).putInt(strOff).putInt(stringBytes.size)
-        header.putShort(spacing.toShort()).putShort(edgeSeconds.toShort()).putInt(created).putInt(4).putInt(baseString)
+        header.putShort(spacing.toShort()).putShort(edgeSeconds.toShort()).putInt(created).putInt(5).putInt(baseString)
         header.putShort(VECTOR.toShort()).putShort((EDGE_VALUES * 2).toShort())
         header.putShort((years.minOrNull() ?: 0).toShort()).putShort((years.maxOrNull() ?: 0).toShort())
         header.putShort((bpms.minOrNull() ?: 0).toShort()).putShort((bpms.maxOrNull() ?: 0).toShort())

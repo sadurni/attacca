@@ -30,8 +30,12 @@ class Library(db: LibraryDb) {
     val all: List<StoredTrack> = db.all()
     val byPath: Map<String, StoredTrack> = all.associateBy { it.path }
 
+    /** Tracks found damaged, left out of the lists when so set (Library → Damaged tracks). */
+    val damaged: Set<String> = runCatching { db.damaged().keys }.getOrDefault(emptySet())
+    private val skipDamaged = db.meta("skip_damaged") != "false"
+
     /** Tracks with features: the ones lists are made of. */
-    private val measured = all.filter { it.features != null }
+    private val measured = all.filter { it.features != null && !(skipDamaged && it.path in damaged) }
     private val index = measured.withIndex().associate { (i, t) -> t.path to i }
 
     val generator: ListGenerator = run {

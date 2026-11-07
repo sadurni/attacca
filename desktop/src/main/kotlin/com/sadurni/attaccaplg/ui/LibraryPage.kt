@@ -103,6 +103,7 @@ fun LibraryPage(state: AppState) {
                     ClassesSection(state, library)
                 }
                 InclusionSection(state)
+                if (library != null) DamagedSection(state, library)
                 androidx.compose.foundation.layout.Spacer(Modifier.padding(4.dp))
             }
             PageScrollbar(scroll, Modifier.align(Alignment.CenterEnd).fillMaxHeight())
@@ -299,6 +300,33 @@ private fun InclusionSection(state: AppState) {
                 "Una lista de inclusión (M3U8, p. ej. la de Attacca, o el archivo de reglas de Attacca .rules.txt, que se vuelve a calcular cada vez): las listas hechas con «Solo incluidas» toman solo las pistas que permite (o todas menos las que tiene).",
             ),
         )
+        // The lists kept by name, one for each occasion: which is in use.
+        Text(tr("Inclusion lists", "Listas de inclusión"), fontWeight = FontWeight.Medium)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.FilterChip(state.activeSet == null, { state.selectSet(null) }, { Text(tr("Everything", "Todo")) })
+            for (set in state.inclusionSets) {
+                androidx.compose.material3.FilterChip(state.activeSet == set.id, { state.selectSet(set.id) }, { Text(set.name) })
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { state.askName = NameRequest(tr("New inclusion list", "Nueva lista de inclusión"), "") { state.createSet(it) } }) {
+                Text(tr("New list", "Lista nueva"))
+            }
+            val active = state.inclusionSets.firstOrNull { it.id == state.activeSet }
+            if (active != null) {
+                TextButton(onClick = { state.askName = NameRequest(tr("Rename", "Cambiar el nombre"), active.name) { state.renameSet(active.id, it) } }) {
+                    Text(tr("Rename", "Cambiar el nombre"))
+                }
+                TextButton(onClick = { state.askName = NameRequest(tr("Duplicate", "Duplicar"), tr("${active.name} (copy)", "${active.name} (copia)")) { state.duplicateSet(active.id, it) } }) {
+                    Text(tr("Duplicate", "Duplicar"))
+                }
+                TextButton(onClick = { state.deleteSet(active.id) }) { Text(tr("Forget", "Olvidar")) }
+            }
+        }
+        Hint(tr(
+            "One inclusion list for each occasion (with the children, with friends…): the one in use is what lists keep to, and all of them go into the library for players. Its file stays where it is when a list is forgotten.",
+            "Una lista de inclusión para cada ocasión (con los niños, con amigos…): las listas se atienen a la que está en uso, y todas van a la biblioteca para reproductores. Al olvidar una, su archivo se queda donde está.",
+        ))
         val list = state.inclusionList
         Text(list ?: tr("No list: every track.", "Sin lista: todas las pistas."), fontWeight = FontWeight.Medium)
         if (list != null) {
@@ -459,7 +487,7 @@ private fun TrackRow(library: Library, t: StoredTrack, selected: Boolean, onDoub
     ) {
         val style = MaterialTheme.typography.bodyMedium
         val dim = MaterialTheme.colorScheme.onSurfaceVariant
-        Text(t.tags.title.ifBlank { File(t.path).nameWithoutExtension }, Modifier.weight(3f), style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text((if (t.path in library.damaged) "⚠ " else "") + t.tags.title.ifBlank { File(t.path).nameWithoutExtension }, Modifier.weight(3f), style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(t.tags.artist, Modifier.weight(2f), style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(t.tags.album, Modifier.weight(2f), style = style, maxLines = 1, overflow = TextOverflow.Ellipsis, color = dim)
         Text(t.tags.year?.toString().orEmpty(), Modifier.width(48.dp), style = style, color = dim)
@@ -468,5 +496,83 @@ private fun TrackRow(library: Library, t: StoredTrack, selected: Boolean, onDoub
         Text(t.features?.tempoBpm?.let { "%.0f".format(it) }.orEmpty(), Modifier.width(48.dp), style = style, color = dim)
         Text(t.lufs?.let { num(it.toDouble()) }.orEmpty(), Modifier.width(52.dp), style = style, color = dim)
         Text(if (t.durationMs > 0) duration(t.durationMs) else "", Modifier.width(64.dp), style = style, color = dim)
+    }
+}
+
+/** What is wrong with a damaged track, in words. */
+private fun damageText(f: com.sadurni.attaccaplg.library.Damage.Found): String = when (f.kind) {
+    com.sadurni.attaccaplg.library.Damage.BROKEN -> tr("${f.amount} broken frames (bursts of noise)", "${f.amount} tramas rotas (ráfagas de ruido)")
+    com.sadurni.attaccaplg.library.Damage.REPEATS -> tr("${num(f.amount / 1000.0)} s written twice (the music jumps back)", "${num(f.amount / 1000.0)} s escritos dos veces (la música salta atrás)")
+    else -> tr("It cannot be read", "No se puede leer")
+}
+
+/**
+ * The damaged tracks, as the phone finds them: a check of every MP3 (several at once), the list
+ * to repair, check again or forget each one, and whether lists leave them out.
+ */
+@Composable
+private fun DamagedSection(state: AppState, library: com.sadurni.attaccaplg.generate.Library) {
+    val unreadable = library.all.filter { it.error != null }
+    Section(tr("Damaged tracks", "Pistas dañadas")) {
+        Hint(tr(
+            "MP3s with broken frames inside the music (bursts of noise) or stretches written twice (the music jumps back), found by checking every file; files the scan could not read count too. A damaged MP3 can be repaired: written again without its broken or repeated pieces, the original kept beside it as .bk or deleted.",
+            "MP3 con tramas rotas dentro de la música (ráfagas de ruido) o tramos escritos dos veces (la música salta atrás), que se encuentran comprobando cada archivo; también cuentan los archivos que el escaneo no pudo leer. Un MP3 dañado se puede reparar: se escribe de nuevo sin sus trozos rotos o repetidos, y el original se guarda al lado como .bk o se borra.",
+        ))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val progress = state.damageCheck
+            if (progress != null) {
+                androidx.compose.material3.CircularProgressIndicator(Modifier.padding(2.dp), strokeWidth = 2.dp)
+                Text(tr("Checking: ${progress.first} / ${progress.second}", "Comprobando: ${progress.first} / ${progress.second}") +
+                    (state.damageRemainingMs?.let { "  ·  " + tr("about ${duration(it)} left", "quedan unos ${duration(it)}") } ?: ""))
+                TextButton(onClick = state::stopDamageCheck) { Text(tr("Stop", "Parar")) }
+            } else {
+                OutlinedButton(enabled = state.busy == null && state.musicRoot != null, onClick = { state.checkDamage() }) {
+                    Text(tr("Check new and changed tracks", "Comprobar las pistas nuevas y cambiadas"))
+                }
+                TextButton(enabled = state.busy == null && state.musicRoot != null, onClick = { state.checkDamage(all = true) }) {
+                    Text(tr("Check all again", "Volver a comprobar todas"))
+                }
+                Text(tr("Damaged tracks found: ${state.damaged.size + unreadable.size}", "Pistas dañadas encontradas: ${state.damaged.size + unreadable.size}"))
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.Checkbox(state.skipDamaged, { state.changeSkipDamaged(it) })
+            Text(tr("Leave damaged tracks out of the lists", "Dejar las pistas dañadas fuera de las listas"))
+        }
+        var repairing by remember { mutableStateOf<String?>(null) }
+        for ((path, found) in state.damaged.entries.sortedBy { it.key }.take(200)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text(path, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(damageText(found), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+                TextButton(onClick = { repairing = path }) { Text(tr("Repair", "Reparar")) }
+                TextButton(onClick = { state.recheckDamaged(path) }) { Text(tr("Check again", "Volver a comprobar")) }
+                TextButton(onClick = { state.forgetDamaged(path) }) { Text(tr("Forget", "Olvidar")) }
+            }
+        }
+        for (t in unreadable.take(50)) {
+            Column {
+                Text(t.path, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(tr("It cannot be read", "No se puede leer") + ": " + t.error, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        repairing?.let { path ->
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { repairing = null },
+                title = { Text(tr("Repair", "Reparar")) },
+                text = { Text(tr(
+                    "${File(path).name} is written again without its broken and repeated pieces. What should happen to the original file?",
+                    "${File(path).name} se escribe de nuevo sin sus trozos rotos y repetidos. ¿Qué hacemos con el archivo original?",
+                )) },
+                confirmButton = {
+                    Row {
+                        TextButton(onClick = { repairing = null; state.repairDamaged(path, true) }) { Text(tr("Keep it beside, ending in .bk", "Guardarlo al lado, acabado en .bk")) }
+                        TextButton(onClick = { repairing = null; state.repairDamaged(path, false) }) { Text(tr("Delete it", "Borrarlo")) }
+                    }
+                },
+                dismissButton = { TextButton(onClick = { repairing = null }) { Text(tr("Cancel", "Cancelar")) } },
+            )
+        }
     }
 }

@@ -152,6 +152,7 @@ private fun ProfileSection(settings: AppSettings) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         OutlinedButton(onClick = { dialog = "new" }) { Text(stringResource(R.string.profile_new)) }
+        OutlinedButton(onClick = { dialog = "template" }) { Text(stringResource(R.string.template_button)) }
         if (active.id != ProfilesState.DEFAULT_PROFILE_ID) {
             OutlinedButton(onClick = { dialog = "rename" }) { Text(stringResource(R.string.profile_rename)) }
             OutlinedButton(onClick = { store.deleteProfile(active.id) }) { Text(stringResource(R.string.profile_delete)) }
@@ -165,6 +166,20 @@ private fun ProfileSection(settings: AppSettings) {
             initial = deviceName.orEmpty(),
             onConfirm = { name ->
                 store.createProfile(name, active.settings)
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
+        // On a device: its own profile from the template; with no device known, the profile in use.
+        "template" -> TemplateDialog(
+            title = stringResource(R.string.template_button),
+            message = device?.takeIf { it.type != OutputType.SPEAKER }?.let { stringResource(R.string.template_for_device, it.name) }
+                ?: stringResource(R.string.template_for_profile, profileName(active)),
+            initial = com.sadurni.attacca.settings.SoundTemplate.suggestedFor(device?.type),
+            onApply = { template ->
+                val d = device
+                if (d != null && d.type != OutputType.SPEAKER) store.applyTemplate(template, d.name, d.key, null)
+                else store.applyTemplateToProfile(active.id, template)
                 dialog = null
             },
             onDismiss = { dialog = null },

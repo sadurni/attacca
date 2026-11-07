@@ -24,6 +24,7 @@
 <ul>
 <li>Temi con colori, caratteri, sfondi e icone propri e un layout di In riproduzione che disponi tu; una galleria da cui partire.</li>
 <li>Musica per artisti, album, generi, decenni, atmosfere e famiglie; cartelle; testi, segnalibri, timer di spegnimento, velocità, ripetizione A-B; statistiche di ascolto.</li>
+<li>Una breve guida per i primi passi, impostazioni con ricerca, modelli di suono per ogni tipo di dispositivo, e brani danneggiati individuati, segnalati e riparati.</li>
 <li>Android Auto, widget, backup di tutto, 23 lingue.</li>
 <li>Attacca O'rama: il brano in riproduzione come un paesaggio in movimento, disegnato dalla sua forma d'onda, dal suo umore e dal suo ritmo. Con qualche piccola sorpresa da scoprire.</li>
 </ul>

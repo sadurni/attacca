@@ -53,6 +53,10 @@ class LibraryDb(val file: File) : AutoCloseable {
                     head BLOB, tail BLOB, features BLOB, error TEXT)""",
             )
             s.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
+            // Tracks found damaged (path within the music folder), with the file's size and date then.
+            s.execute("CREATE TABLE IF NOT EXISTS damaged (path TEXT PRIMARY KEY, size INTEGER, mtime INTEGER, kind INTEGER, amount INTEGER)")
+            // The files already checked for damage (fine or not), with their size and date then.
+            s.execute("CREATE TABLE IF NOT EXISTS damage_checked (path TEXT PRIMARY KEY, size INTEGER, mtime INTEGER)")
             // Added later: older libraries get the columns (their tracks are measured again).
             val columns = s.executeQuery("PRAGMA table_info(tracks)").use { rs -> buildSet { while (rs.next()) add(rs.getString("name")) } }
             if ("waveform" !in columns) s.execute("ALTER TABLE tracks ADD COLUMN waveform BLOB")
@@ -86,6 +90,49 @@ class LibraryDb(val file: File) : AutoCloseable {
             st.setString(2, path)
             st.executeUpdate()
         }
+    }
+
+    /** The tracks found damaged: path → (size, mtime, kind, amount); see [com.sadurni.attaccaplg.library.Damage]. */
+    fun damaged(): Map<String, LongArray> = connection.createStatement().use { s ->
+        s.executeQuery("SELECT path, size, mtime, kind, amount FROM damaged").use { rs ->
+            buildMap { while (rs.next()) put(rs.getString(1), longArrayOf(rs.getLong(2), rs.getLong(3), rs.getLong(4), rs.getLong(5))) }
+        }
+    }
+
+    fun putDamaged(path: String, size: Long, mtime: Long, kind: Int, amount: Int) {
+        connection.prepareStatement("INSERT OR REPLACE INTO damaged VALUES (?, ?, ?, ?, ?)").use { st ->
+            st.setString(1, path); st.setLong(2, size); st.setLong(3, mtime); st.setInt(4, kind); st.setInt(5, amount)
+            st.executeUpdate()
+        }
+        connection.commit()
+    }
+
+    /** The files checked for damage: path → (size, mtime) when checked. */
+    fun damageChecked(): Map<String, LongArray> = connection.createStatement().use { s ->
+        s.executeQuery("SELECT path, size, mtime FROM damage_checked").use { rs ->
+            buildMap { while (rs.next()) put(rs.getString(1), longArrayOf(rs.getLong(2), rs.getLong(3))) }
+        }
+    }
+
+    fun putDamageChecked(path: String, size: Long, mtime: Long) {
+        connection.prepareStatement("INSERT OR REPLACE INTO damage_checked VALUES (?, ?, ?)").use { st ->
+            st.setString(1, path); st.setLong(2, size); st.setLong(3, mtime)
+            st.executeUpdate()
+        }
+        connection.commit()
+    }
+
+    fun clearDamageChecked() {
+        connection.createStatement().use { it.executeUpdate("DELETE FROM damage_checked") }
+        connection.commit()
+    }
+
+    fun forgetDamaged(path: String) {
+        connection.prepareStatement("DELETE FROM damaged WHERE path = ?").use { st ->
+            st.setString(1, path)
+            st.executeUpdate()
+        }
+        connection.commit()
     }
 
     fun setMeta(key: String, value: String) {

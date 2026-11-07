@@ -153,6 +153,7 @@ private class FilterForm {
 private fun FilterFields(form: FilterForm) {
     val chain by LocalContext.current.app.settings.chain.collectAsStateWithLifecycle()
     form.inclusion = remember(chain.inclusionList, chain.inclusionMode) { chain.inclusion() }
+    InclusionSetPicker()
     SwitchRow(stringResource(R.string.only_included), form.onlyIncluded && form.inclusion != null, { form.onlyIncluded = it }, enabled = form.inclusion != null)
     if (form.inclusion == null) {
         Hint(stringResource(R.string.only_included_none))

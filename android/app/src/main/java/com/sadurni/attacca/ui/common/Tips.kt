@@ -80,11 +80,12 @@ data class Tip(val text: Int, val anchor: String? = null)
 /** The tips of each screen, shown over it the first time it opens after installing a new build. */
 enum class TipsScreen(val tips: List<Tip>) {
     PLAYER(listOf(Tip(R.string.tip_player_1, "player.title"), Tip(R.string.tip_player_cover, "player.cover"), Tip(R.string.tip_cover_tap, "player.cover"), Tip(R.string.tip_mood_menu, "player.title"), Tip(R.string.tip_player_3, "player.navigator"), Tip(R.string.tip_player_crossfade), Tip(R.string.tip_quick_list), Tip(R.string.tip_long_press, "player.favorite"), Tip(R.string.tip_sound_long_press, "player.sound"), Tip(R.string.tip_player_boxes, "player.list"), Tip(R.string.tip_orama, "player.orama"))),
-    LISTS(listOf(Tip(R.string.tip_lists_tabs, "lists.tabs"), Tip(R.string.tip_lists_1, "lists.row"), Tip(R.string.tip_lists_2, "lists.handle"), Tip(R.string.tip_lists_listening), Tip(R.string.tip_lists_smart), Tip(R.string.tip_list_tools), Tip(R.string.tip_strip_icons), Tip(R.string.tip_random_list, "lists.random"), Tip(R.string.tip_more_lists, "lists.more"), Tip(R.string.tip_only_included))),
+    LISTS(listOf(Tip(R.string.tip_lists_tabs, "lists.tabs"), Tip(R.string.tip_lists_1, "lists.row"), Tip(R.string.tip_lists_2, "lists.handle"), Tip(R.string.tip_lists_listening), Tip(R.string.tip_lists_smart), Tip(R.string.tip_list_tools), Tip(R.string.tip_strip_icons), Tip(R.string.tip_random_list, "lists.random"), Tip(R.string.tip_more_lists, "lists.more"), Tip(R.string.tip_lists_sets, "lists.sets"), Tip(R.string.tip_only_included))),
     QUEUE(listOf(Tip(R.string.tip_queue_1, "queue.strip"), Tip(R.string.tip_queue_swipe, "queue.row"), Tip(R.string.tip_queue_undo, "queue.menu"))),
-    BROWSER(listOf(Tip(R.string.tip_browser_1, "browser.row"), Tip(R.string.tip_browser_2, "browser.rowMenu"), Tip(R.string.tip_browser_favorites, "browser.favorites"))),
+    BROWSER(listOf(Tip(R.string.tip_browser_1, "browser.row"), Tip(R.string.tip_browser_2, "browser.rowMenu"), Tip(R.string.tip_browser_favorites, "browser.favorites"), Tip(R.string.tip_browser_damaged))),
     MUSIC(listOf(Tip(R.string.tip_music_1, "music.row"), Tip(R.string.tip_music_2, "music.menu"), Tip(R.string.tip_music_3), Tip(R.string.tip_music_bridge))),
-    SOUND(listOf(Tip(R.string.tip_sound_1, "sound.profile"), Tip(R.string.tip_sound_2, "sound.replaygain"), Tip(R.string.tip_sound_virtual_bass), Tip(R.string.tip_sound_peq))),
+    SETTINGS(listOf(Tip(R.string.tip_settings_search), Tip(R.string.tip_settings_guide))),
+    SOUND(listOf(Tip(R.string.tip_sound_template, "sound.profile"), Tip(R.string.tip_sound_1, "sound.profile"), Tip(R.string.tip_sound_2, "sound.replaygain"), Tip(R.string.tip_sound_virtual_bass), Tip(R.string.tip_sound_peq))),
     DEVICES(listOf(Tip(R.string.tip_devices_1, "devices.first"))),
     THEME_EDITOR(
         listOf(

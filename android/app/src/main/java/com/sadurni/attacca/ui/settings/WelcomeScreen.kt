@@ -71,6 +71,12 @@ fun WelcomeScreen(onDone: () -> Unit) {
     val settings = context.app.settings
     val scope = rememberCoroutineScope()
     var restoring by remember { mutableStateOf(false) }
+    // After the music folder: the setup guide, from the analysis on.
+    var guide by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (guide) {
+        SetupGuide(start = SetupStep.ANALYSIS, onDone = onDone)
+        return
+    }
     val accent = LocalAccent.current
     val grayed = LocalAttaccaColors.current.textGrayed
 
@@ -85,7 +91,7 @@ fun WelcomeScreen(onDone: () -> Unit) {
         settings.musicFolder = path
         context.app.libraryScanner.scan(java.io.File(path))
         markWelcomeDone(context)
-        onDone()
+        guide = true
     }
     val pickBackup = rememberLauncherForActivityResult(OpenDocumentAt()) { uri ->
         uri ?: return@rememberLauncherForActivityResult

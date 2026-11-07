@@ -73,9 +73,18 @@ data class ChainSettings(
      * the tracks the inclusion list allows: the starting choice, which the dialogs can change.
      */
     val listsOnlyIncluded: Boolean = false,
+    /** Tracks found damaged stay out of the lists Attacca makes. */
+    val skipDamaged: Boolean = true,
     /** M3U8 list deciding which tracks may go into generated lists ("only included"). */
     val inclusionList: String? = null,
     val inclusionMode: com.sadurni.attacca.library.InclusionMode = com.sadurni.attacca.library.InclusionMode.ALLOW,
+    /**
+     * The inclusion lists kept by name (see [com.sadurni.attacca.library.InclusionSet]); the one
+     * in use ([activeSet]) is the one [inclusionList] and [inclusionMode] describe.
+     */
+    val inclusionSets: List<com.sadurni.attacca.library.InclusionSet> = emptyList(),
+    /** The set in use; null: none (everything may be used). */
+    val activeSet: String? = null,
     /** A random list asks the mood first (only with the screen on and the app in view). */
     val randomAskMood: Boolean = true,
     /** Mood of the last random list (null: any); used when it is not asked. */
@@ -236,7 +245,8 @@ class AppSettings(context: Context) {
     }
 
     private val _chain = MutableStateFlow(
-        ChainSettings(
+        // A single inclusion list from before sets existed becomes the first set.
+        InclusionSets.keepInStep(ChainSettings(
             autoAnalyze = prefs.getBoolean("chain_auto", ChainSettings().autoAnalyze),
             artistSpacing = prefs.getInt("chain_artist_spacing", ChainSettings().artistSpacing),
             edgeSeconds = prefs.getInt("chain_edge_seconds", ChainSettings().edgeSeconds),
@@ -246,21 +256,24 @@ class AppSettings(context: Context) {
             saveMadeLists = prefs.getBoolean("chain_save_made", ChainSettings().saveMadeLists),
             quickNotPlayedDays = prefs.getInt("chain_quick_not_played", 0).coerceIn(0, MAX_NOT_PLAYED_DAYS),
             listsOnlyIncluded = prefs.getBoolean("chain_only_included", false),
+            skipDamaged = prefs.getBoolean("chain_skip_damaged", true),
             inclusionList = prefs.getString("inclusion_list", null),
             inclusionMode = runCatching {
                 com.sadurni.attacca.library.InclusionMode.valueOf(prefs.getString("inclusion_mode", null)!!)
             }.getOrDefault(com.sadurni.attacca.library.InclusionMode.ALLOW),
+            inclusionSets = com.sadurni.attacca.library.InclusionSet.listFromJson(prefs.getString("inclusion_sets", null)),
+            activeSet = prefs.getString("inclusion_active", null),
             randomAskMood = prefs.getBoolean("random_ask_mood", ChainSettings().randomAskMood),
             randomMood = com.sadurni.attacca.chain.Mood.entries.firstOrNull { it.name == prefs.getString("random_mood", null) },
             randomShake = prefs.getBoolean("random_shake", ChainSettings().randomShake),
             shakeStrength = prefs.getInt("random_shake_strength", ChainSettings().shakeStrength).coerceIn(1, 3),
             shakeKind = ShakeKind.entries.firstOrNull { it.name == prefs.getString("random_shake_kind", null) } ?: ShakeKind.SIDEWAYS,
-        ),
+        )),
     )
     val chain: StateFlow<ChainSettings> = _chain.asStateFlow()
 
     fun updateChain(transform: (ChainSettings) -> ChainSettings) {
-        val updated = transform(_chain.value)
+        val updated = InclusionSets.keepInStep(transform(_chain.value))
         _chain.value = updated
         prefs.edit()
             .putBoolean("chain_auto", updated.autoAnalyze)
@@ -272,6 +285,9 @@ class AppSettings(context: Context) {
             .putBoolean("chain_save_made", updated.saveMadeLists)
             .putInt("chain_quick_not_played", updated.quickNotPlayedDays)
             .putBoolean("chain_only_included", updated.listsOnlyIncluded)
+            .putString("inclusion_sets", com.sadurni.attacca.library.InclusionSet.listToJson(updated.inclusionSets))
+            .putString("inclusion_active", updated.activeSet)
+            .putBoolean("chain_skip_damaged", updated.skipDamaged)
             .putString("inclusion_list", updated.inclusionList)
             .putString("inclusion_mode", updated.inclusionMode.name)
             .putBoolean("random_ask_mood", updated.randomAskMood)

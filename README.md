@@ -61,6 +61,40 @@ page and the Rockbox plugin builds. Attacca Web also runs straight from
 [sadurni.github.io/attacca](https://sadurni.github.io/attacca/). The Android app is on its way to
 F-Droid as well.
 
+## Getting started
+
+**On the phone**
+
+1. Install the APK from the latest release (your phone asks once to allow installing from the
+   browser or file manager you open it with).
+2. Open Attacca and choose the folder that holds your music. Allow access to all files: Attacca
+   plays your folders and playlists where they are.
+3. A short setup guide follows: let the analysis run in the background (fastest with the phone
+   charging), say how you listen most of the time (headphones, earbuds, car, speaker…) and how one
+   track should give way to the next. It is always at hand again in Settings → Setup guide.
+4. Play music right away: Music, Folders and Lists work from the start; chained lists, moods and
+   sound families get better as the analysis goes on.
+5. Make a chained list: open any list and chain it, or choose “Create list from this track” in a
+   track's menu for a list of the tracks closest to it.
+
+The defaults are made to sound right without touching anything. When you want more: Settings opens
+with the essentials and a search, Sound keeps a profile for each output (a template starts one in a
+tap), Devices says what each one does when it connects, and the **?** opens the help.
+
+**On the PC**
+
+1. Install Attacca Desktop (the `.msi` on Windows, the `.deb` or `.tar.gz` on Linux, the `.dmg` on
+   macOS) and choose your music folder: it is measured once, faster than on the phone.
+2. Export the library (`.attlib`) and import it on the phone (Settings → Backup → Import), so the
+   phone does not have to measure it again — or the other way round.
+3. For a Rockbox player, export the library for players (`.bpcr2`) and copy the plugin to it; the
+   web page reads the same file.
+
+## What's new
+
+The changes of each version, for every part, are in [CHANGELOG.md](CHANGELOG.md); the app shows
+them in About → What's new.
+
 ## Repository
 
 ```

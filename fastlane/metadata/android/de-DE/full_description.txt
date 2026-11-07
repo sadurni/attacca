@@ -24,6 +24,7 @@
 <ul>
 <li>Designs mit eigenen Farben, Schriften, Hintergründen, Symbolen und einem Läuft-gerade-Layout, das du selbst anordnest; eine Galerie zum Einstieg.</li>
 <li>Musik nach Interpreten, Alben, Genres, Jahrzehnten, Stimmungen und Familien; Ordner; Songtexte, Lesezeichen, Sleep-Timer, Wiedergabetempo, A-B-Wiederholung; Hörstatistiken.</li>
+<li>Eine kurze Einrichtungshilfe für die ersten Schritte, Einstellungen mit Suche, Klangvorlagen für jede Geräteart sowie beschädigte Titel, die erkannt, markiert und repariert werden.</li>
 <li>Android Auto, Widget, Sicherung von allem, 23 Sprachen.</li>
 <li>Attacca O'rama: der laufende Titel als bewegte Landschaft, gezeichnet aus seiner Wellenform, seiner Stimmung und seinem Takt. Mit ein paar kleinen Überraschungen zum Entdecken.</li>
 </ul>

@@ -108,6 +108,11 @@ class AttaccaApp : Application() {
         com.sadurni.attacca.settings.AutoBackup.load(this)
         bookmarks = Bookmarks(this)
         com.sadurni.attacca.library.TrackSort.db = com.sadurni.attacca.library.TagDb(this)
+        appScope.launch(Background.dispatcher) {
+            runCatching { com.sadurni.attacca.library.DamagedTracks.load() }
+            // Marks left by stricter rules are checked again.
+            runCatching { com.sadurni.attacca.library.DamageCheck.recheckMarked() }
+        }
         com.sadurni.attacca.library.M3uParser.musicFolder = settings.musicFolder?.let { java.io.File(it) }
         libraryScanner = com.sadurni.attacca.library.LibraryScanner(this, appScope)
         chainAnalyzer = com.sadurni.attacca.chain.ChainAnalyzer(
@@ -156,6 +161,11 @@ class AttaccaApp : Application() {
                 .distinctUntilChanged()
                 .collectLatest { key ->
                     val rule = profiles.state.value.rule(key) ?: return@collectLatest
+                    // The device's inclusion set (with whom the music is heard there).
+                    rule.inclusionSet?.let { set ->
+                        val id = set.takeIf { it != com.sadurni.attacca.settings.DeviceRule.EVERYTHING && settings.chain.value.inclusionSets.any { s -> s.id == it } }
+                        if (settings.chain.value.activeSet != id) com.sadurni.attacca.settings.InclusionSets.select(settings, id)
+                    }
                     fun apply() {
                         rule.volumePercent?.let { DeviceVolume.set(this@AttaccaApp, it) }
                         rule.notificationPercent?.let { DeviceVolume.set(this@AttaccaApp, it, android.media.AudioManager.STREAM_NOTIFICATION) }

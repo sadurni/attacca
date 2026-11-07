@@ -43,8 +43,28 @@ private val COVER_FILES = listOf("cover.jpg", "cover.jpeg", "cover.png")
  * The album cover of [track]'s folder: what it shows now, and a picture chosen from the files
  * on the phone, copied into the folder as cover.jpg (or cover.png), asking before replacing one.
  */
+/**
+ * Looks for the album's cover in the browser (Attacca itself has no internet access): the system's
+ * web search with the artist and album, else an image search page; the picture saved there is
+ * then chosen with "Choose a picture".
+ */
+fun searchCoverOnline(context: android.content.Context, artist: String, album: String) {
+    val query = listOf(artist, album, "cover").filter { it.isNotBlank() }.joinToString(" ")
+    val search = android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH).putExtra(android.app.SearchManager.QUERY, query)
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    val page = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://duckduckgo.com/?ia=images&iax=images&q=" + android.net.Uri.encode(query)))
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(search)
+    } catch (e: android.content.ActivityNotFoundException) {
+        runCatching { context.startActivity(page) }.onFailure {
+            Toast.makeText(context, R.string.cover_search_web_none, Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 @Composable
-fun AlbumCoverSection(track: File) {
+fun AlbumCoverSection(track: File, artist: String = "", album: String = "") {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val folder = track.parentFile ?: return
@@ -93,9 +113,13 @@ fun AlbumCoverSection(track: File) {
             OutlinedButton(onClick = {
                 pick.launch(arrayOf("image/jpeg", "image/png") to PickerMemory.get(context, PickerMemory.COVER_IMAGE))
             }) { Text(stringResource(R.string.cover_choose)) }
+            OutlinedButton(onClick = { searchCoverOnline(context, artist, album.ifBlank { folder.name }) }) {
+                Text(stringResource(R.string.cover_search_web))
+            }
         }
     }
     Hint(stringResource(R.string.cover_hint))
+    Hint(stringResource(R.string.cover_search_web_hint))
 
     pending?.let { uri ->
         AlertDialog(

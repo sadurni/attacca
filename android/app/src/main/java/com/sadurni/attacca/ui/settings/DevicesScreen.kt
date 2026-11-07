@@ -179,6 +179,7 @@ private fun DeviceCard(
         )
         ListSetting(rule, onUseCurrentList, onClearList, onAutoPlay, onFollow)
         VolumeSetting(rule, onVolume)
+        DeviceInclusionSetting(rule)
         OutlinedButton(onClick = onForget, modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(stringResource(R.string.device_forget))
         }
@@ -312,6 +313,38 @@ private fun BackgroundStartSetting() {
             }) { Text(stringResource(R.string.device_allow_overlay)) }
         }
     }
+}
+
+/** The inclusion set put in use when this device becomes the output (or left alone). */
+@Composable
+private fun DeviceInclusionSetting(rule: DeviceRule) {
+    val settings = LocalContext.current.app.settings
+    val chain by settings.chain.collectAsStateWithLifecycle()
+    if (chain.inclusionSets.isEmpty()) return
+    var open by remember { mutableStateOf(false) }
+    val leave = stringResource(R.string.device_inclusion_leave)
+    val everything = stringResource(R.string.inclusion_everything)
+    val current = when (rule.inclusionSet) {
+        null -> leave
+        DeviceRule.EVERYTHING -> everything
+        else -> com.sadurni.attacca.settings.InclusionSets.nameOf(chain, rule.inclusionSet) ?: leave
+    }
+    androidx.compose.foundation.layout.Box {
+        Row(Modifier.fillMaxWidth().clickable { open = true }.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.device_inclusion), fontSize = AttaccaType.body, modifier = Modifier.weight(1f))
+            Text(current, fontSize = AttaccaType.body, color = com.sadurni.attacca.ui.theme.LocalAccent.current)
+        }
+        androidx.compose.material3.DropdownMenu(open, { open = false }) {
+            val choices = listOf<Pair<String?, String>>(null to leave, DeviceRule.EVERYTHING to everything) + chain.inclusionSets.map { it.id to it.name }
+            for ((id, name) in choices) {
+                androidx.compose.material3.DropdownMenuItem(text = { Text(name) }, onClick = {
+                    settings.profiles.setInclusionSet(rule.key, id)
+                    open = false
+                })
+            }
+        }
+    }
+    Hint(stringResource(R.string.device_inclusion_hint))
 }
 
 /** Fixed media and notification volumes for a device: set each time it becomes the output. */

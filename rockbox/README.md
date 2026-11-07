@@ -21,7 +21,9 @@ on the player.
   song's, as tight as they can be while leaving 10 times the songs asked for (at least twice). They
   stay in **More filters**, to change by hand.
 - **Generate by filters**: mood, sound family, genre tag, artist, and the **more filters**: years,
-  BPM, energy and positivity (percent of the library), voice or instrumental, only included, and
+  BPM, energy and positivity (percent of the library), voice or instrumental, only included (with
+  a library that carries several inclusion lists: **Music**, which of them lists keep to, or
+  Everything), and
   song length (minutes from / to: 1 to 20 unless changed; "off" for no limit). Songs of unknown
   length always pass.
 - **Reorder current playlist**: chains the playlist loaded in Rockbox, starting with the current
@@ -44,6 +46,10 @@ on the player.
   Portuguese, French, Italian, German, Dutch, Swedish, Polish, Romanian, Russian, Ukrainian, Greek,
   Turkish, Japanese, Korean, Simplified and Traditional Chinese), following the Rockbox language
   (English for the others; the font must have the language's letters).
+
+- **Library**: any number of libraries can be kept on the player under their own names (anything
+  ending in `.bpcr2`, at the root or in `.rockbox`); this menu item chooses which one the plugin
+  uses, and it is remembered.
 
 ## Automatic crossfade
 
@@ -81,15 +87,40 @@ jumped from have been played almost whole, so they count as played. Seeking by h
 rewind) holds the jump until the song has played on steadily for 1.5 s, and a seek that lands more
 than 3 s past the jump leaves the end of that song to Rockbox's own crossfade.
 
+**Skips by hand** (next, previous, another song chosen, a new list) are your own: **Fade on
+skips** (off unless turned on) blends them with your own crossfade settings, else they cut cleanly.
+Rockbox keeps one set of crossfade values for every change, so the plugin leaves those for skips in
+place for most of each song and puts in the join it planned only near the song's end, just before
+Rockbox prepares it; after any change, by hand or not, the next join follows the plugin's settings
+again. With Fade on skips on (or Jump over long silences) Rockbox's crossfade is set to "Always";
+otherwise to "Automatic track change only" when it was off.
+
+**Keep albums whole** (on unless turned off) keeps the songs of an album from blending into each
+other, also **with the automatic crossfade off** and Rockbox's own crossfade on (for example on
+"Always"): when the next song is the next one of the same album and folder, or, for songs the
+library does not know, the next file of the same folder, it follows on without a blend; every other
+change keeps your own crossfade. Albums made to run on (live albums, songs that run into each
+other) then sound as they were made: shortly before such a change the plugin sets Rockbox's
+crossfade to "Manual track skip only", so the change uses Rockbox's own gapless playback (a
+crossfade of no length still blended the two songs on some players), and back to its usual mode
+before a change that blends (the theme's crossfade icon follows; the music never stops for it). Turned off, the automatic crossfade blends inside albums too.
+Like the automatic crossfade, it works from the background once the plugin has been opened and
+closed: after switching the player on, open the plugin once.
+
 **Each join is written down** in `attaccaplg-joins.txt`, beside the library file (Rockbox opens
 it as text): the time, the two songs, how they are joined and why (a crossfade, a song that fades
 out by itself and plays out whole, a loud ending kept with a short blend, the same album without
-a gap, or your own crossfade for a song that is not in the library), the fade-out and fade-in in
+a gap, the same folder in file order, or your own crossfade), the fade-out and fade-in in
 seconds and, with jumps, where the jump comes. Most joins are plain crossfades of the length set,
 so they sound alike; the file tells them apart. It starts again past 32 KB.
 
 Silence skipping as such is not available: Rockbox playlists have no per-track start and end
 points; the automatic crossfade hides the silences between songs instead.
+
+## What's new
+
+See [CHANGELOG.md](../CHANGELOG.md). In 1.1.0: **Keep albums whole**, also with the automatic
+crossfade off.
 
 ## Installation
 

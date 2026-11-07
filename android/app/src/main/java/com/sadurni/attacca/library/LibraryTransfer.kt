@@ -263,6 +263,11 @@ object LibraryTransfer {
         val collection = app.chainLists.collection() ?: return null
         val chain = app.settings.chain.value
         val inclusion = chain.inclusion()
+        // Every inclusion set goes with the library, for the player to choose from.
+        val sets = chain.inclusionSets.take(InclusionSet.MAX_FOR_PLAYERS)
+        val setFilters = sets.map { set ->
+            Inclusion.of(set.list, set.mode) ?: Inclusion(set.mode) { emptyList() }
+        }
         val all = collection.generator.candidates
         val inFolder = all.filter { LibraryExchange.relative(root.path, it.id) != null }
         if (inFolder.isEmpty()) return null
@@ -298,11 +303,12 @@ object LibraryTransfer {
                 tail = c.edges?.tail,
                 included = inclusion?.includes(c.id) ?: true,
                 ends = ends[c.id],
+                sets = setFilters.foldIndexed(0) { k, bits, f -> if (f.includes(c.id)) bits or (1 shl k) else bits },
             )
         }
         val temp = File(context.cacheDir, "export.${PlayerDbFormat.EXTENSION}").apply { delete() }
         try {
-            val written = PlayerDbFormat.write(tracks, classification, base, chain.artistSpacing, chain.edgeSeconds, temp)
+            val written = PlayerDbFormat.write(tracks, classification, base, chain.artistSpacing, chain.edgeSeconds, temp, sets.map { it.name })
             context.contentResolver.openOutputStream(uri, "wt")?.use { out -> temp.inputStream().use { it.copyTo(out) } } ?: return null
             return written
         } finally {

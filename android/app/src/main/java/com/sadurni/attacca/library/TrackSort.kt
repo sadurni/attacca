@@ -147,6 +147,8 @@ object TrackSort {
                 genre = get(MediaMetadataRetriever.METADATA_KEY_GENRE),
             )
         } catch (e: Exception) {
+            // A file whose tags and length cannot be read at all is damaged (or no music).
+            DamagedTracks.report(mediaId, DamagedTracks.Kind.UNREADABLE)
             SortTags(fileName, "", "", 0, 0, 0, 0)
         } finally {
             runCatching { retriever.release() }

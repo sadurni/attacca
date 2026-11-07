@@ -383,7 +383,7 @@ internal fun Scene.ourDogs() {
         val did = Scene.id(Scene.MATE, 900 + k)
         touchable(did, x, nearY(x) - s * 0.3f, s * 0.5f)
         val flip = bounce(poked(did), 800)
-        val foot = nearY(x) - (flip?.get(0) ?: 0f) * s * 0.9f
+        val foot = nearY(x) - (flip?.get(0) ?: 0f) * s * 0.9f - jumpLift(x) * 0.7f
         if (flip != null) out.turn(flip[1], x, foot - s * 0.2f)
         when (state) {
             // Waiting there: standing still, its tail going.

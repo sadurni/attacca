@@ -1,5 +1,9 @@
 package com.sadurni.attacca.ui.chain
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import com.sadurni.attacca.ui.theme.AttaccaType
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
@@ -61,13 +65,20 @@ fun InclusionDialog(path: String, onDismiss: () -> Unit) {
     }
     var chosen by remember { mutableStateOf(0) }
     var working by remember { mutableStateOf(false) }
-    val allow = chain.inclusionMode == InclusionMode.ALLOW
+    // Which inclusion list it goes to: the one in use unless another is chosen. With none in use
+    // (Everything) and lists kept, one has to be chosen (or made).
+    var target by remember { mutableStateOf(chain.activeSet) }
+    var naming by remember { mutableStateOf(false) }
+    val targetSet = chain.inclusionSets.firstOrNull { it.id == target }
+    val needsChoice = chain.inclusionSets.isNotEmpty() && targetSet == null
+    val allow = (targetSet?.mode ?: chain.inclusionMode) == InclusionMode.ALLOW
+    val hasList = if (targetSet != null) targetSet.list != null else chain.inclusionList != null
 
     fun apply(add: Boolean) {
         val (kind, value) = choices.getOrNull(chosen) ?: return
         working = true
         scope.launch {
-            val count = runCatching { app.inclusionStore.change(InclusionRules.Rule(true, kind, value), add) }.getOrNull()
+            val count = runCatching { app.inclusionStore.change(InclusionRules.Rule(true, kind, value), add, target) }.getOrNull()
             working = false
             Toast.makeText(
                 context,
@@ -78,11 +89,26 @@ fun InclusionDialog(path: String, onDismiss: () -> Unit) {
         }
     }
 
+    if (naming) {
+        com.sadurni.attacca.ui.settings.NameDialog(
+            title = stringResource(R.string.inclusion_set_new),
+            initial = "",
+            onConfirm = { name ->
+                target = com.sadurni.attacca.settings.InclusionSets.add(app.settings, name)
+                naming = false
+            },
+            onDismiss = { naming = false },
+        )
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (allow) R.string.inclusion_dialog_allow else R.string.inclusion_dialog_block)) },
         text = {
             Column {
+                if (chain.inclusionSets.isNotEmpty()) {
+                    TargetListPicker(targetSet?.name, onPick = { target = it }, onNew = { naming = true })
+                    if (needsChoice) Hint(stringResource(R.string.inclusion_choose_list))
+                }
                 for ((i, choice) in choices.withIndex()) {
                     val (kind, value) = choice
                     val label = when (kind) {
@@ -93,17 +119,45 @@ fun InclusionDialog(path: String, onDismiss: () -> Unit) {
                     }
                     RadioRow(label, chosen == i) { chosen = i }
                 }
-                if (chain.inclusionList == null) Hint(stringResource(R.string.inclusion_will_create))
+                if (!hasList && !needsChoice) Hint(stringResource(R.string.inclusion_will_create))
                 Text(stringResource(R.string.inclusion_dialog_hint), fontSize = AttaccaType.caption)
             }
         },
         confirmButton = {
-            TextButton(onClick = { apply(true) }, enabled = !working) { Text(stringResource(R.string.inclusion_add)) }
+            TextButton(onClick = { apply(true) }, enabled = !working && !needsChoice) { Text(stringResource(R.string.inclusion_add)) }
         },
         dismissButton = {
-            TextButton(onClick = { apply(false) }, enabled = !working && chain.inclusionList != null) {
+            TextButton(onClick = { apply(false) }, enabled = !working && !needsChoice && hasList) {
                 Text(stringResource(R.string.inclusion_remove))
             }
         },
     )
+}
+
+/** "List: <name ▾>": which inclusion list the dialog adds to, any of those kept or a new one. */
+@Composable
+private fun TargetListPicker(current: String?, onPick: (String) -> Unit, onNew: () -> Unit) {
+    val chain by LocalContext.current.app.settings.chain.collectAsStateWithLifecycle()
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.foundation.layout.Box {
+        androidx.compose.foundation.layout.Row(
+            androidx.compose.ui.Modifier.clickable { open = true }.padding(vertical = 6.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.inclusion_target_label))
+            Text(
+                current ?: stringResource(R.string.inclusion_choose),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                color = com.sadurni.attacca.ui.theme.LocalAccent.current,
+                modifier = androidx.compose.ui.Modifier.padding(start = 6.dp),
+            )
+            com.sadurni.attacca.ui.common.Icon(androidx.compose.material.icons.Icons.Rounded.ArrowDropDown, contentDescription = null, tint = com.sadurni.attacca.ui.theme.LocalAccent.current)
+        }
+        androidx.compose.material3.DropdownMenu(open, { open = false }) {
+            for (set in chain.inclusionSets) {
+                androidx.compose.material3.DropdownMenuItem(text = { Text(set.name) }, onClick = { onPick(set.id); open = false })
+            }
+            androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.inclusion_set_new) + "…") }, onClick = { onNew(); open = false })
+        }
+    }
 }

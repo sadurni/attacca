@@ -1,5 +1,6 @@
 package com.sadurni.attacca.ui.lists
 
+import androidx.compose.material.icons.rounded.Rule
 import kotlinx.coroutines.launch
 
 import com.sadurni.attacca.ui.theme.AttaccaType
@@ -263,6 +264,11 @@ fun ListsScreen(
                     if (!searching) query = ""
                 }) { Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.search)) }
                 val listBusy by viewModel.listBusy.collectAsStateWithLifecycle()
+                var sets by remember { mutableStateOf(false) }
+                IconButton(onClick = { sets = true }, modifier = Modifier.tipAnchor("lists.sets")) {
+                    Icon(androidx.compose.material.icons.Icons.Rounded.Rule, contentDescription = stringResource(R.string.inclusion_sets_title))
+                }
+                if (sets) com.sadurni.attacca.ui.chain.InclusionSetDialog { sets = false }
                 IconButton(
                     onClick = { viewModel.requestRandomList() },
                     enabled = !listBusy,

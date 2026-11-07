@@ -177,7 +177,8 @@ private fun PlayerSection(state: AppState) {
                 targets.map { t ->
                     t to runCatching {
                         t.file.parentFile?.mkdirs()
-                        com.sadurni.attaccaplg.export.PlayerDb.write(library, inclusion, t.base, state.lists.spacing, state.edgeSeconds, t.file)
+                        com.sadurni.attaccaplg.export.PlayerDb.write(library, inclusion, t.base, state.lists.spacing, state.edgeSeconds, t.file,
+                            com.sadurni.attaccaplg.generate.Inclusions.sets(state.db, library))
                     }
                 }
             }
@@ -192,8 +193,8 @@ private fun PlayerSection(state: AppState) {
     Section(tr("For Rockbox and the web generator", "Para Rockbox y el generador web")) {
         Hint(
             tr(
-                "The Rockbox plugin and the web generator make chained lists on their own from this file (attaccaplg.bpcr2), with the same rules. Copy it to the root of the player, or open it in the web generator. The inclusion list goes in it as it is now.",
-                "El plugin de Rockbox y el generador web hacen listas encadenadas por su cuenta a partir de este fichero (attaccaplg.bpcr2), con las mismas reglas. Cópialo a la raíz del reproductor, o ábrelo en el generador web. La lista de inclusión va dentro tal como está ahora.",
+                "The Rockbox plugin and the web generator make chained lists on their own from this file (attaccaplg.bpcr2, or any name ending in .bpcr2: the plugin lets you choose among them), with the same rules. Copy it to the root of the player, or open it in the web generator. Every inclusion list goes in it, to choose from there.",
+                "El plugin de Rockbox y el generador web hacen listas encadenadas por su cuenta a partir de este fichero (attaccaplg.bpcr2, o cualquier nombre acabado en .bpcr2: el plugin deja elegir entre ellos), con las mismas reglas. Cópialo a la raíz del reproductor, o ábrelo en el generador web. Van dentro todas las listas de inclusión, para elegir allí.",
             ),
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

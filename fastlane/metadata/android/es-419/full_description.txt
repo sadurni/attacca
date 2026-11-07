@@ -24,6 +24,7 @@
 <ul>
 <li>Temas con sus propios colores, fuentes, fondos, iconos y una pantalla de Reproduciendo que tú distribuyes; una galería para empezar.</li>
 <li>Música por artistas, álbumes, géneros, décadas, estados de ánimo y familias; carpetas; letras, marcadores, temporizador, velocidad, repetición A-B; estadísticas de escucha.</li>
+<li>Una guía breve para los primeros pasos, ajustes con búsqueda, plantillas de sonido para cada tipo de dispositivo, y pistas dañadas detectadas, marcadas y reparadas.</li>
 <li>Android Auto, widget, copia de seguridad de todo, 23 idiomas.</li>
 <li>Attacca O'rama: la canción que suena como un paisaje en movimiento, hecho de su forma de onda, su estado de ánimo y su ritmo. Con algunas pequeñas sorpresas por descubrir.</li>
 </ul>

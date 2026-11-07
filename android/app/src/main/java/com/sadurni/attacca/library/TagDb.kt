@@ -45,6 +45,9 @@ class TagDb(context: Context) : SQLiteOpenHelper(context, "tags.db", null, VERSI
         if (!db.isReadOnly) {
             db.execSQL("CREATE TABLE IF NOT EXISTS missing (path TEXT PRIMARY KEY)")
             db.execSQL("CREATE TABLE IF NOT EXISTS fixes (name TEXT PRIMARY KEY)")
+            // The files already checked for damage, with their size and date then (fine or not).
+            db.execSQL("CREATE TABLE IF NOT EXISTS damage_checked (path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS damaged (path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL, kind INTEGER NOT NULL, amount INTEGER NOT NULL, at INTEGER NOT NULL)")
             repairTextOnce(db)
             rereadYearsOnce(db)
         }
@@ -130,6 +133,62 @@ class TagDb(context: Context) : SQLiteOpenHelper(context, "tags.db", null, VERSI
         "SELECT path FROM tags WHERE album = ? COLLATE NOCASE AND (artist = ? COLLATE NOCASE OR album_artist = ? COLLATE NOCASE) AND $PRESENT",
         arrayOf(album, artist, artist),
     )
+
+    /** Whether the one-off fix [name] was done (see the fixes table). */
+    fun fixDone(name: String): Boolean =
+        readableDatabase.rawQuery("SELECT 1 FROM fixes WHERE name = ?", arrayOf(name)).use { it.moveToFirst() }
+
+    fun markFixDone(name: String) {
+        writableDatabase.execSQL("INSERT OR REPLACE INTO fixes (name) VALUES (?)", arrayOf(name))
+    }
+
+    /** The files checked for damage: path → (size, mtime) when checked. */
+    fun damageChecked(): Map<String, LongArray> {
+        val result = HashMap<String, LongArray>()
+        readableDatabase.rawQuery("SELECT path, size, mtime FROM damage_checked", null).use { c ->
+            while (c.moveToNext()) result[c.getString(0)] = longArrayOf(c.getLong(1), c.getLong(2))
+        }
+        return result
+    }
+
+    fun putDamageChecked(path: String, size: Long, mtime: Long) {
+        writableDatabase.insertWithOnConflict("damage_checked", null, ContentValues().apply {
+            put("path", path); put("size", size); put("mtime", mtime)
+        }, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    /** Forgets which files were checked (all are checked again). */
+    fun clearDamageChecked() {
+        writableDatabase.delete("damage_checked", null, null)
+    }
+
+    /** The damaged tracks found so far: path → (size, mtime, kind, amount, when). */
+    fun damaged(): Map<String, LongArray> {
+        val result = HashMap<String, LongArray>()
+        readableDatabase.rawQuery("SELECT path, size, mtime, kind, amount, at FROM damaged", null).use { c ->
+            while (c.moveToNext()) result[c.getString(0)] = longArrayOf(c.getLong(1), c.getLong(2), c.getLong(3), c.getLong(4), c.getLong(5))
+        }
+        return result
+    }
+
+    fun putDamaged(path: String, size: Long, mtime: Long, kind: Int, amount: Int, at: Long) {
+        writableDatabase.insertWithOnConflict("damaged", null, ContentValues().apply {
+            put("path", path); put("size", size); put("mtime", mtime); put("kind", kind); put("amount", amount); put("at", at)
+        }, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun forgetDamaged(path: String) {
+        writableDatabase.delete("damaged", "path = ?", arrayOf(path))
+    }
+
+    /** How many tracks the scans know under [folder] (with its subfolders). */
+    fun countUnder(folder: String): Int {
+        val prefix = folder.trimEnd('/') + "/"
+        return readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM tags WHERE substr(path, 1, ?) = ? AND $PRESENT",
+            arrayOf(prefix.length.toString(), prefix),
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
 
     /** The library's figures for the files under [folder] (what the last scans left here). */
     fun stats(folder: String): LibraryStats {

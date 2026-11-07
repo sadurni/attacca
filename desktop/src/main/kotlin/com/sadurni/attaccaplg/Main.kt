@@ -278,7 +278,8 @@ private fun playerDb(options: Options) {
         val inclusion = db.meta("inclusion_list")?.takeIf { it.isNotBlank() }?.let(::File)?.takeIf { it.isFile }?.let {
             com.sadurni.attaccaplg.generate.Inclusions.inclusion(it, com.sadurni.attacca.library.InclusionMode.valueOf(db.meta("inclusion_mode") ?: "ALLOW"), library)
         }
-        val n = com.sadurni.attaccaplg.export.PlayerDb.write(library, inclusion, base, options.named["spacing"]?.toIntOrNull() ?: 4, db.edgeSeconds, file)
+        val n = com.sadurni.attaccaplg.export.PlayerDb.write(library, inclusion, base, options.named["spacing"]?.toIntOrNull() ?: 4, db.edgeSeconds, file,
+            com.sadurni.attaccaplg.generate.Inclusions.sets(db, library))
         println("$n tracks written to ${file.absolutePath} (${file.length() / 1024} KB)")
     }
 }

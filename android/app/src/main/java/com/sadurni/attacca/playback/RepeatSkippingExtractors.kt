@@ -53,7 +53,7 @@ class RepeatSkippingExtractor(private val delegate: Extractor, private val file:
     override fun init(output: ExtractorOutput) {
         delegate.init(object : ExtractorOutput {
             override fun track(id: Int, type: Int): TrackOutput =
-                RepeatSkippingTrackOutput(output.track(id, type)).also { this@RepeatSkippingExtractor.output = it }
+                RepeatSkippingTrackOutput(output.track(id, type), file).also { this@RepeatSkippingExtractor.output = it }
 
             override fun endTracks() = output.endTracks()
 
@@ -78,9 +78,24 @@ class RepeatSkippingExtractor(private val delegate: Extractor, private val file:
     override fun getUnderlyingImplementation(): Extractor = delegate.underlyingImplementation
 }
 
+/** Left out while playing from which a file counts as damaged (µs). */
+private const val NOTICE_US = 300_000L
+
 @OptIn(UnstableApi::class)
-private class RepeatSkippingTrackOutput(private val delegate: TrackOutput) : TrackOutput {
+private class RepeatSkippingTrackOutput(private val delegate: TrackOutput, private val file: java.io.File? = null) : TrackOutput {
     private val repeats = FrameRepeats()
+
+    /** What was left out up to the last seek, and whether this file was already told damaged. */
+    private var baselineUs = 0L
+    private var reported = false
+
+    /** Something more was left out than before the last seek: the file is damaged (once per file read). */
+    private fun noticeDamage() {
+        // A frame or two left out (often at the very end) is no damage anyone hears.
+        if (reported || file == null || repeats.droppedUs - baselineUs < NOTICE_US) return
+        reported = true
+        com.sadurni.attacca.library.DamagedTracks.report(file.absolutePath, com.sadurni.attacca.library.DamagedTracks.Kind.BAD_FRAMES)
+    }
     private val send: (ByteArray, Long, Int) -> Unit = { bytes, timeUs, flags -> forward(bytes, timeUs, flags, bytes.size, 0, null) }
 
     /** The sample being written. */
@@ -143,6 +158,7 @@ private class RepeatSkippingTrackOutput(private val delegate: TrackOutput) : Tra
         if (firstHeader == 0 && FrameRepeats.frameSize(header) > 0) firstHeader = header
         // The frame before this one was followed by garbage the reader skipped: broken.
         held?.let { repeats.take(it, heldTimeUs, heldFlags, send, heldBroken || skippedBefore) }
+        noticeDamage()
         held = bytes
         heldTimeUs = timeUs
         heldFlags = flags
@@ -160,6 +176,12 @@ private class RepeatSkippingTrackOutput(private val delegate: TrackOutput) : Tra
     /** After a seek; [droppedBefore] was left out before the place reached. */
     fun reset(droppedBefore: Long) {
         repeats.reset(droppedBefore)
+        baselineUs = droppedBefore
+        // Left out before the place reached: known damaged.
+        if (droppedBefore >= NOTICE_US && !reported && file != null) {
+            reported = true
+            com.sadurni.attacca.library.DamagedTracks.report(file.absolutePath, com.sadurni.attacca.library.DamagedTracks.Kind.BAD_FRAMES)
+        }
         sampleSize = 0
         held = null
         lastEnd = -1L

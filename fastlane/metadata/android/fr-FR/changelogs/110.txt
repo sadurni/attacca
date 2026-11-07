@@ -1,0 +1,6 @@
+• Guide pour les premiers pas ; Paramètres avec recherche et l'essentiel.
+• Modèles de son par type d'appareil, proposés quand un nouveau joue.
+• Plusieurs listes d’inclusion, une par occasion, changées d'un geste (aussi par appareil et sur baladeurs).
+• Pistes endommagées : détectées, marquées ⚠ / △, exclues des listes ; les MP3 abîmés sont réparables.
+• Pochette d'un album cherchée sur le web d'après ses tags.
+• O'rama : ponts plats, gares avec obstacles à sauter, couleurs plus vives.

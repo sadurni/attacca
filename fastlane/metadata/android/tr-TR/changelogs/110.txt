@@ -1,0 +1,6 @@
+• İlk adımlar için kurulum rehberi; Ayarlar arama ve temel seçeneklerle.
+• Cihaz türüne göre ses şablonları, yeni bir cihazda çalınca önerilir.
+• Her durum için bir tane olmak üzere birden çok dahil etme listesi, tek dokunuşla değişir (cihaza göre ve oynatıcılarda da).
+• Hasarlı parçalar: bulunur, ⚠ / △ ile işaretlenir, listelere alınmaz; hasarlı MP3'ler onarılabilir.
+• Etiketlerden albüm kapağını web'de arama.
+• O'rama: düz köprüler, atlanacak şeyler olan istasyonlar, canlı renkler.

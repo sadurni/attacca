@@ -24,6 +24,7 @@
 <ul>
 <li>Gaiak, beren koloreekin, letra-tipoekin, atzeko planoekin, ikonoekin eta zuk antolatzen duzun Orain erreproduzitzen diseinuarekin; galeria bat hasteko.</li>
 <li>Musika artisten, albumen, generoen, hamarkaden, aldarteen eta familien arabera; karpetak; letrak, laster-markak, itzaltze-tenporizadorea, abiadura, A-B errepikapena; entzuteko estatistikak.</li>
+<li>Lehen urratsetarako gida labur bat, bilaketa duten ezarpenak, gailu mota bakoitzerako soinu-txantiloiak, eta pista hondatuak aurkitu, markatu eta konponduak.</li>
 <li>Android Auto, widgeta, guztiaren babeskopia, 23 hizkuntza.</li>
 <li>Attacca O'rama: jotzen ari den abestia paisaia mugikor gisa, bere uhin-formatik, aldartetik eta erritmotik sortua. Aurkitzeko sorpresa txiki batzuekin.</li>
 </ul>

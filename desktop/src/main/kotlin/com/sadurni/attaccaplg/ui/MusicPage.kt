@@ -53,7 +53,7 @@ enum class MusicView { ALBUMS, ARTISTS, GENRES, DECADES, MOODS, FAVORITES }
 /** One album: the tracks of a folder with the same album tag, in disc and track order. */
 class AlbumEntry(val key: String, val title: String, val artist: String, val year: Int?, val tracks: List<StoredTrack>)
 
-private fun albumsOf(library: Library): List<AlbumEntry> =
+fun albumsOf(library: Library): List<AlbumEntry> =
     library.all.groupBy { File(it.path).parent.orEmpty() + "|" + it.tags.album }
         .map { (key, tracks) ->
             val sorted = tracks.sortedWith(compareBy<StoredTrack>({ it.tags.disc ?: 1 }, { it.tags.track ?: 9999 }, { it.path }))
@@ -177,7 +177,7 @@ private fun AlbumGrid(state: AppState, albums: List<AlbumEntry>, onOpen: (AlbumE
 
 /** The full path of a library track (for covers). */
 private var musicRootForCovers: File? = null
-private fun albumFile(t: StoredTrack): String? = musicRootForCovers?.let { File(it, t.path).path }
+fun albumFile(t: StoredTrack): String? = musicRootForCovers?.let { File(it, t.path).path }
 
 @Composable
 private fun AlbumDetail(state: AppState, album: AlbumEntry, onBack: () -> Unit) {
@@ -191,6 +191,9 @@ private fun AlbumDetail(state: AppState, album: AlbumEntry, onBack: () -> Unit) 
                 Text(tr("${album.tracks.size} tracks", "${album.tracks.size} pistas") + "  ·  " + duration(album.tracks.sumOf { it.durationMs }),
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 PlayButtons(state, album.tracks)
+                var search by remember { mutableStateOf(false) }
+                TextButton(onClick = { search = true }) { Text(tr("Search for a cover online…", "Buscar una portada en internet…")) }
+                if (search) CoverDialog(album) { search = false }
             }
         }
         Spacer(Modifier.height(12.dp))

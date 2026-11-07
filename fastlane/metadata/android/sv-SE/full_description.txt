@@ -24,6 +24,7 @@
 <ul>
 <li>Teman med egna färger, typsnitt, bakgrunder och ikoner samt en Spelas nu-layout som du ordnar själv; ett galleri att utgå från.</li>
 <li>Musik per artist, album, genre, årtionde, stämning och familj; mappar; låttexter, bokmärken, insomningstimer, hastighet, A-B-repetition; lyssningsstatistik.</li>
+<li>En kort guide för de första stegen, inställningar med sökning, ljudmallar för varje sorts enhet, och skadade spår som hittas, märks och repareras.</li>
 <li>Android Auto, en widget för startskärmen, säkerhetskopia av allt, 23 språk.</li>
 <li>Attacca O'rama: låten som spelas som ett landskap i rörelse, ritat ur dess vågform, stämning och takt. Med några små överraskningar att upptäcka.</li>
 </ul>

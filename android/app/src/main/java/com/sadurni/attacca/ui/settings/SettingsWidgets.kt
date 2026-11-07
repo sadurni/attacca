@@ -240,6 +240,8 @@ fun <T : Enum<T>> CategoryScreen(
     page: @Composable ColumnScope.(T) -> Unit,
 ) {
     var current by rememberSaveable { mutableStateOf(initialPage?.name) }
+    // The menu keeps its place while a page is open: back returns to where it was.
+    val menuScroll = rememberScrollState()
     val shown = current?.let { name -> pages.firstOrNull { it.name == name } }
     BackHandler(enabled = shown != null) { current = null }
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
@@ -255,7 +257,7 @@ fun <T : Enum<T>> CategoryScreen(
             },
             label = "settings page",
         ) { target ->
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxSize().verticalScroll(if (target == null) menuScroll else rememberScrollState())) {
                 if (target == null) {
                     menu { current = it.name }
                 } else {

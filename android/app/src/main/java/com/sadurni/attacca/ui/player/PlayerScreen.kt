@@ -934,6 +934,8 @@ private fun TrackMenu(
     modifier: Modifier,
 ) {
     var open by remember { mutableStateOf(false) }
+    var sets by remember { mutableStateOf(false) }
+    if (sets) com.sadurni.attacca.ui.chain.InclusionSetDialog { sets = false }
     val ab by viewModel.abRepeat.collectAsStateWithLifecycle()
     val speed by viewModel.speed.collectAsStateWithLifecycle()
     Box(modifier) {
@@ -976,6 +978,11 @@ private fun TrackMenu(
             DropdownMenuItem(text = { Text(com.sadurni.attacca.ui.browser.inclusionMenuLabel()) }, onClick = {
                 open = false
                 viewModel.nowPlaying.value.mediaId?.let(viewModel::requestInclusion)
+            })
+            // Which inclusion set lists keep to now (with whom the music is heard).
+            DropdownMenuItem(text = { Text(stringResource(R.string.inclusion_set_menu, com.sadurni.attacca.ui.chain.activeSetName())) }, onClick = {
+                open = false
+                sets = true
             })
             DropdownMenuItem(text = { Text(stringResource(R.string.list_settings)) }, onClick = {
                 open = false

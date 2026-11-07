@@ -94,11 +94,14 @@ class InclusionStore(private val settings: AppSettings, private val scope: Corou
      * rewrites the list. Without a list set, one is created in the app's folder. Returns how many
      * tracks the list has now.
      */
-    suspend fun change(target: Rule, add: Boolean): Int = changeAll(listOf(target), add)
+    suspend fun change(target: Rule, add: Boolean, set: String? = settings.chain.value.activeSet): Int = changeAll(listOf(target), add, set)
 
-    /** [change] for several targets at once (one rewrite of the list). */
-    suspend fun changeAll(targets: List<Rule>, add: Boolean): Int = edit {
-        val list = ensureList()
+    /**
+     * [change] for several targets at once (one rewrite of the list), in the inclusion set [set]
+     * (the one in use unless said otherwise; it stays in use as it was).
+     */
+    suspend fun changeAll(targets: List<Rule>, add: Boolean, set: String? = settings.chain.value.activeSet): Int = edit {
+        val list = ensureList(set)
         save(list, InclusionRules.changeAll(currentRules(list), targets, add, ::compute))
     }
 
@@ -168,13 +171,59 @@ class InclusionStore(private val settings: AppSettings, private val scope: Corou
     fun hasRules(): Boolean =
         settings.chain.value.inclusionList?.let { InclusionRules.rulesFileOf(File(it)).isFile } == true
 
-    private fun ensureList(): File {
+    private fun ensureList(setId: String? = settings.chain.value.activeSet): File {
+        val chain0 = settings.chain.value
+        val set = chain0.inclusionSets.firstOrNull { it.id == setId }
+        if (set != null && set.id != chain0.activeSet) {
+            set.list?.let { return File(it) }
+            val file = newListFile(set.name)
+            com.sadurni.attacca.settings.InclusionSets.setList(settings, set.id, file.absolutePath)
+            return file
+        }
         settings.chain.value.inclusionList?.let { return File(it) }
         val folder = File(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Attacca"), "Inclusion")
         folder.mkdirs()
-        val list = File(folder, "Inclusion.m3u8")
+        // Named after the set in use, so each set has a file of its own.
+        val chain = settings.chain.value
+        val name = com.sadurni.attacca.settings.InclusionSets.nameOf(chain, chain.activeSet)
+            ?.replace(Regex("[\\/:*?\"<>|]"), "_")?.trim()?.ifBlank { null } ?: "Inclusion"
+        var list = File(folder, "$name.m3u8")
+        var n = 2
+        while (list.exists()) list = File(folder, "$name ${n++}.m3u8")
         settings.updateChain { it.copy(inclusionList = list.absolutePath) }
         return list
+    }
+
+    /**
+     * A copy of the inclusion set [id] named [name] (its list and its rules copied to files of
+     * its own, the same mode), put in use to be changed. Returns the new set's id.
+     */
+    suspend fun duplicate(id: String, name: String): String? = mutex.withLock {
+        withContext(Background.dispatcher) {
+            val chain = settings.chain.value
+            val set = chain.inclusionSets.firstOrNull { it.id == id } ?: return@withContext null
+            val newId = com.sadurni.attacca.settings.InclusionSets.add(settings, name)
+            val newName = com.sadurni.attacca.settings.InclusionSets.nameOf(settings.chain.value, newId) ?: name
+            set.list?.let(::File)?.takeIf { it.isFile }?.let { list ->
+                val copy = newListFile(newName)
+                list.copyTo(copy)
+                InclusionRules.rulesFileOf(list).takeIf { it.isFile }?.copyTo(InclusionRules.rulesFileOf(copy), overwrite = true)
+                com.sadurni.attacca.settings.InclusionSets.setList(settings, newId, copy.absolutePath)
+            }
+            settings.updateChain { c -> c.copy(inclusionSets = c.inclusionSets.map { if (it.id == newId) it.copy(mode = set.mode) else it }) }
+            newId
+        }
+    }.also { newId -> if (newId != null) { com.sadurni.attacca.settings.InclusionSets.select(settings, newId); reload() } }
+
+    /** A list file of its own for the set [name], in Music/Attacca/Inclusion. */
+    private fun newListFile(name: String): File {
+        val folder = File(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Attacca"), "Inclusion")
+        folder.mkdirs()
+        val base = name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim().ifBlank { "Inclusion" }
+        var file = File(folder, "$base.m3u8")
+        var n = 2
+        while (file.exists()) file = File(folder, "$base ${n++}.m3u8")
+        return file
     }
 
     private fun compute(rules: List<Rule>): List<String> =

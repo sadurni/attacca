@@ -138,7 +138,7 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         val folder = app.settings.musicFolder?.let(::File)
         if (folder == null && extras.isEmpty()) return@withContext null
         if (extras.isNotEmpty()) app.chainAnalyzer.profilesFor(extras)
-        val key = "${folder?.absolutePath}|${app.chainAnalyzer.last.value?.finishedAt}|${app.settings.chain.value.edgeSeconds}|${com.sadurni.attacca.library.IgnoredPaths.version}|${com.sadurni.attacca.library.MoodCorrections.version.value}"
+        val key = "${folder?.absolutePath}|${app.chainAnalyzer.last.value?.finishedAt}|${app.settings.chain.value.edgeSeconds}|${com.sadurni.attacca.library.IgnoredPaths.version}|${com.sadurni.attacca.library.MoodCorrections.version.value}|${if (app.settings.chain.value.skipDamaged) com.sadurni.attacca.library.DamagedTracks.version else -1}"
         // The collection of the music folder serves any seed already in it; only a seed outside it
         // (or analysed just now) needs one of its own.
         cached?.let { (k, c) -> if (k == key && extras.all { c.generator.indexOf(it) >= 0 }) return@withContext c }
@@ -152,7 +152,10 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         // The sound profiles are read only when the classification kept from last time does not serve.
         val profiles = app.chainAnalyzer.knownProfiles(ids, withSounds = false)
         TrackSort.warm(ids)
+        val skipDamaged = app.settings.chain.value.skipDamaged
         val candidates = ids.mapNotNull { id ->
+            // Damaged tracks stay out (unless one is the track a list is made from).
+            if (skipDamaged && id !in extras && com.sadurni.attacca.library.DamagedTracks.isDamaged(id)) return@mapNotNull null
             val features = profiles.features[id] ?: return@mapNotNull null
             val tags = TrackSort.tags(id)
             Candidate(id, tags.artist, tags.genre, tags.year, features, profiles.edges[id], tags.durationMs)

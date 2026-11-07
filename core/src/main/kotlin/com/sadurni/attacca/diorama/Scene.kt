@@ -25,7 +25,7 @@ internal class Scene(
     /** Where the picture ends: the land lies in [h], the sky and the weather go down to here. */
     val bottom: Float = h,
 ) {
-    val p = look.palette
+    val p = look.palette.vivid()
     val unit = min(w, h)
     val travellerX = w * 0.3f
 
@@ -53,7 +53,84 @@ internal class Scene(
     val nearBase = h * 0.93f
     val nearAmp = h * 0.15f
 
-    fun nearY(x: Float) = nearBase - heightAt(x, 1f, 28f) * nearAmp
+    /**
+     * The near ground follows the music: in the open (fields, paths, sand…) as closely as it
+     * always did; roads are smoothed, and bridges and stations level. Where the way is smoothed or
+     * level, the music's rises stand on it as things the traveller jumps over ([wayObstacles],
+     * [jumpLift]): nobody floats over bumps that are not there.
+     */
+    fun nearY(x: Float) = nearBase - nearShown(x) * nearAmp
+
+    /** The music's detail at [x], as the ground used to show it (0 … 1). */
+    fun nearRaw(x: Float) = heightAt(x, 1f, 28f)
+
+    private val roadWorld get() = lane.look.world == World.CITY || lane.look.world == World.NEON
+
+    /** The ground's height at [x] (0 … 1): the music smoothed, level over bridges and stations. */
+    fun nearShown(x: Float): Float {
+        val smooth = if (roadWorld) lane.height(msAt(x, 1f), max(msPerPx * 28.0, ROAD_SMOOTH_MS)) else nearRaw(x)
+        val f = flats
+        var k = 0
+        while (k < f.size) {
+            val r0 = f[k]; val a = f[k + 1]; val b = f[k + 2]; val r1 = f[k + 3]
+            if (x > r0 && x < r1) {
+                val t = when {
+                    x < a -> ease((x - r0) / (a - r0))
+                    x > b -> ease((r1 - x) / (r1 - b))
+                    else -> 1f
+                }
+                return smooth + (f[k + 4] - smooth) * t
+            }
+            k += FLAT_FIELDS
+        }
+        return smooth
+    }
+
+    private fun ease(u: Float) = u * u * (3f - 2f * u)
+
+    /** How far the music rises above the ground shown at [x], in pixels. */
+    fun hurdle(x: Float) = max(0f, nearRaw(x) - nearShown(x)) * nearAmp
+
+    /** Where the way stays level this frame: [ramp start, start, end, ramp end, height, kind] each. */
+    var flats = FloatArray(0)
+
+    /** Whether [x] is on a level stretch, and of which kind (see [flatSpans]); -1: none. */
+    fun flatKindAt(x: Float): Int {
+        var k = 0
+        while (k < flats.size) {
+            if (x >= flats[k + 1] && x <= flats[k + 2]) return flats[k + 5].toInt()
+            k += FLAT_FIELDS
+        }
+        return -1
+    }
+
+    /**
+     * How high whoever goes along the ground at [x] is lifted to clear what rises there: the
+     * things standing on a level way or a road; nothing elsewhere, where the ground itself rises.
+     */
+    fun jumpLift(x: Float): Float {
+        val ts = min(h * 0.11f, w * 0.12f)
+        var best = 0f
+        if (roadWorld || flatKindAt(x) >= 0 || flatKindAt(x - ts) >= 0 || flatKindAt(x + ts) >= 0) {
+            wayObstacleSlots { _, ox, height ->
+                val d = (x - ox) / (ts * 0.95f)
+                if (d > -1f && d < 1f) best = max(best, height * 1.05f * (1f - d * d))
+            }
+        }
+        return best
+    }
+
+    /** The things standing on a level way or a road: their slot, place and height (px). */
+    inline fun wayObstacleSlots(each: (Int, Float, Float) -> Unit) {
+        val ts = min(h * 0.11f, w * 0.12f)
+        val road = lane.look.world == World.CITY || lane.look.world == World.NEON
+        slots(1f, ts * 1.7f) { i, x0, x1 ->
+            val x = (x0 + x1) / 2f
+            if (!road && flatKindAt(x) < 0) return@slots
+            val height = min(hurdle(x) * 1.5f, ts * 0.5f)
+            if (height >= ts * 0.18f) each(i, x, height)
+        }
+    }
     fun midY(x: Float) = midBase - heightAt(x, ZOOM_MID, 22f) * midAmp
     fun farY(x: Float) = farBase - heightAt(x, ZOOM_FAR, 30f) * farAmp
 
@@ -268,6 +345,8 @@ internal class Scene(
         lane = l
         msPerPx = msPerPxOf(l.look)
         posMs = l.posMs
+        flats = FloatArray(0)
+        flats = flatSpans()
     }
 
     fun bolt() {
@@ -291,6 +370,7 @@ internal class Scene(
         }
         landmarksBack()
         finish()
+        wayObstacles()
         groundVisitor(song.world)
         crowd(song)
         traveller(song)
@@ -346,6 +426,10 @@ internal class Scene(
 
     private fun lighthouse(cx: Float, ground: Float, s: Float) {
         val body = Colors.lighter(p.far, 0.55f)
+        // Its rock, darker than the far land, down into it: it never seems to float.
+        out.polygon(Colors.darker(p.far, 0.35f))
+        out.point(cx - s * 0.42f, ground + s * 0.35f); out.point(cx - s * 0.3f, ground - s * 0.02f); out.point(cx - s * 0.12f, ground - s * 0.06f)
+        out.point(cx + s * 0.16f, ground - s * 0.05f); out.point(cx + s * 0.34f, ground + s * 0.02f); out.point(cx + s * 0.46f, ground + s * 0.35f)
         out.polygon(body)
         out.point(cx - s * 0.16f, ground); out.point(cx - s * 0.1f, ground - s); out.point(cx + s * 0.1f, ground - s); out.point(cx + s * 0.16f, ground)
         out.rect(Colors.mix(p.accent, 0xFFD03030.toInt(), 0.5f), cx - s * 0.135f, ground - s * 0.55f, cx + s * 0.135f, ground - s * 0.4f)
@@ -922,6 +1006,10 @@ internal class Scene(
 
     companion object {
         const val ZOOM_MID = 2.5f
+
+        /** Music over which a road is smoothed (ms). */
+        const val ROAD_SMOOTH_MS = 4_000.0
+        const val FLAT_FIELDS = 6
         const val ZOOM_FAR = 6f
 
         /** Ids of what can be touched (the rest are made from a kind and a place). */

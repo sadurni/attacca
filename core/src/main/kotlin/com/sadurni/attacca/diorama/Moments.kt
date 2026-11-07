@@ -179,9 +179,207 @@ internal fun Scene.landmarksFront() = landmarks { kind, i, a, b ->
         Landmark.BASE -> moonBase(a, b)
         Landmark.ROCKET -> rocket((a + b) / 2f)
         Landmark.WHEEL -> wheelLegs((a + b) / 2f)
+        Landmark.STATION -> stationFront(a, b)
         else -> {}
     }
 }
+
+/** The kinds of level stretch ([Scene.flatKindAt]). */
+internal const val FLAT_BRIDGE = 0
+internal const val FLAT_STATION = 1
+
+/**
+ * Where the way has to stay level: over a bridge, and along a station with its train's track.
+ * Each as [Scene.flats] holds it, at the smoothed ground's mean height there, with a short slope
+ * up or down at each end.
+ */
+internal fun Scene.flatSpans(): FloatArray {
+    val list = ArrayList<Float>()
+    landmarks { kind, _, a, b ->
+        val span = when (kind) {
+            Landmark.BRIDGE -> floatArrayOf(a, b, FLAT_BRIDGE.toFloat())
+            Landmark.STATION -> floatArrayOf(a - trainRun, b + trainRun, FLAT_STATION.toFloat())
+            else -> null
+        }
+        if (span != null) {
+            var sum = 0f
+            for (k in 0..8) sum += nearShown(span[0] + (span[1] - span[0]) * k / 8f)
+            val ramp = unit * 0.14f
+            list += listOf(span[0] - ramp, span[0], span[1], span[1] + ramp, sum / 9f, span[2])
+        }
+    }
+    return list.toFloatArray()
+}
+
+/**
+ * What stands on a level way or a road where the music rises: crates, barrels, benches, logs and
+ * rocks on a bridge or a platform, ramps and cones on a road. The traveller jumps them.
+ */
+internal fun Scene.wayObstacles() {
+    val ts = travellerSize
+    val world = lane.look.world
+    wayObstacleSlots { i, x, height ->
+        val y = nearY(x)
+        val pick = hash(i, 721)
+        val flat = flatKindAt(x)
+        when {
+            flat == FLAT_STATION -> if (pick < 0.5f) suitcases(x, y, height, i) else bench(x, y, height)
+            flat < 0 && (world == World.CITY || world == World.NEON) -> if (pick < 0.55f) ramp(x, y, height, world == World.NEON) else cones(x, y, height, i)
+            flat == FLAT_BRIDGE && (world == World.CITY || world == World.NEON) -> if (pick < 0.5f) crates(x, y, height, i) else bench(x, y, height)
+            world == World.CASTLE -> if (pick < 0.5f) barrels(x, y, height, i) else bricks(x, y, height, i)
+            pick < 0.3f -> crates(x, y, height, i)
+            pick < 0.55f -> barrels(x, y, height, i)
+            pick < 0.75f -> logs(x, y, height)
+            else -> rocks(x, y, height, i)
+        }
+    }
+}
+
+/** Crates stacked as high as [height], the top one a little askew. */
+private fun Scene.crates(x: Float, y: Float, height: Float, seed: Int) {
+    val wood = Colors.mix(0xFFB08850.toInt(), p.near, 0.25f)
+    val n = max(1, (height / (travellerSize * 0.28f)).toInt().coerceAtMost(3))
+    val c = height / n
+    for (k in 0 until n) {
+        val off = (hash(seed + k, 722) - 0.5f) * c * 0.3f
+        val x0 = x - c * 0.55f + off
+        val y1 = y - k * c
+        out.rect(Colors.darker(wood, 0.35f), x0, y1 - c, x0 + c * 1.1f, y1)
+        out.rect(wood, x0 + c * 0.08f, y1 - c * 0.92f, x0 + c * 1.02f, y1 - c * 0.08f)
+        out.line(Colors.darker(wood, 0.35f), c * 0.08f, x0 + c * 0.1f, y1 - c * 0.1f, x0 + c, y1 - c * 0.9f)
+    }
+}
+
+/** Barrels, one or a stack of three, as high as [height]. */
+private fun Scene.barrels(x: Float, y: Float, height: Float, seed: Int) {
+    val wood = Colors.mix(0xFF8A5A30.toInt(), p.near, 0.2f)
+    val hoop = 0xFF4A4A50.toInt()
+    fun barrel(cx: Float, by: Float, bh: Float) {
+        val bw = bh * 0.72f
+        out.rect(wood, cx - bw / 2f, by - bh, cx + bw / 2f, by)
+        out.rect(Colors.lighter(wood, 0.15f), cx - bw * 0.15f, by - bh, cx + bw * 0.1f, by)
+        for (t in floatArrayOf(0.18f, 0.82f)) out.line(hoop, bh * 0.06f, cx - bw / 2f, by - bh * t, cx + bw / 2f, by - bh * t)
+    }
+    if (height > travellerSize * 0.45f && hash(seed, 723) < 0.6f) {
+        val bh = height / 2f
+        barrel(x - bh * 0.4f, y, bh); barrel(x + bh * 0.4f, y, bh); barrel(x, y - bh, bh)
+    } else {
+        barrel(x, y, height)
+    }
+}
+
+/** Logs piled crosswise, ends towards us. */
+private fun Scene.logs(x: Float, y: Float, height: Float) {
+    val bark = Colors.mix(0xFF6E4A2A.toInt(), p.near, 0.2f)
+    val ring = 0xFFD8B47A.toInt()
+    val r = height / 3.4f
+    val rows = intArrayOf(3, 2, 1)
+    for ((row, n) in rows.withIndex()) {
+        for (k in 0 until n) {
+            val cx = x + (k - (n - 1) / 2f) * r * 2f
+            val cy = y - r - row * r * 1.7f
+            out.circle(bark, cx, cy, r)
+            out.circle(ring, cx, cy, r * 0.72f)
+            out.ring(Colors.darker(ring, 0.25f), cx, cy, r * 0.4f, r * 0.08f)
+        }
+    }
+}
+
+/** A heap of rocks. */
+private fun Scene.rocks(x: Float, y: Float, height: Float, seed: Int) {
+    val stone = Colors.mix(0xFF8A8A84.toInt(), p.near, 0.35f)
+    out.polygon(Colors.darker(stone, 0.15f))
+    out.point(x - height * 0.9f, y + 2f); out.point(x - height * 0.7f, y - height * 0.5f); out.point(x - height * 0.2f, y - height)
+    out.point(x + height * (0.25f + 0.2f * hash(seed, 724)), y - height * 0.85f); out.point(x + height * 0.8f, y - height * 0.35f); out.point(x + height * 0.95f, y + 2f)
+    out.polygon(Colors.lighter(stone, 0.12f))
+    out.point(x - height * 0.45f, y - height * 0.55f); out.point(x - height * 0.18f, y - height * 0.92f); out.point(x + height * 0.15f, y - height * 0.7f)
+}
+
+/** Bricks stacked in courses, as for a wall being built. */
+private fun Scene.bricks(x: Float, y: Float, height: Float, seed: Int) {
+    val brick = Colors.mix(0xFFA0503A.toInt(), p.near, 0.25f)
+    val bh = travellerSize * 0.09f
+    val courses = max(1, (height / bh).toInt())
+    for (c in 0 until courses) {
+        val n = 3 - c * 3 / max(courses, 1)
+        val bw = bh * 2.1f
+        val off = if (c % 2 == 0) 0f else bw * 0.5f
+        for (k in 0 until max(1, n)) {
+            val x0 = x - bw * 1.5f + off + k * bw
+            out.rect(Colors.darker(brick, 0.3f), x0, y - (c + 1) * bh, x0 + bw, y - c * bh)
+            out.rect(if (hash(seed + c * 5 + k, 725) < 0.5f) brick else Colors.lighter(brick, 0.1f), x0 + bh * 0.08f, y - (c + 1) * bh + bh * 0.1f, x0 + bw - bh * 0.08f, y - c * bh - bh * 0.1f)
+        }
+    }
+}
+
+/** A bench, with a bag left on it when it stands high. */
+private fun Scene.bench(x: Float, y: Float, height: Float) {
+    val wood = Colors.mix(0xFF9A6A3A.toInt(), p.near, 0.2f)
+    val iron = 0xFF3A3A40.toInt()
+    val seat = y - height * 0.6f
+    val half = height * 0.9f
+    out.line(iron, height * 0.07f, x - half * 0.8f, y, x - half * 0.8f, seat)
+    out.line(iron, height * 0.07f, x + half * 0.8f, y, x + half * 0.8f, seat)
+    out.rect(wood, x - half, seat - height * 0.1f, x + half, seat)
+    out.rect(wood, x - half, y - height, x + half, y - height * 0.86f)
+    out.line(iron, height * 0.05f, x - half * 0.8f, seat, x - half * 0.8f, y - height * 0.86f)
+    out.line(iron, height * 0.05f, x + half * 0.8f, seat, x + half * 0.8f, y - height * 0.86f)
+}
+
+/** Suitcases left on the platform, stacked. */
+private fun Scene.suitcases(x: Float, y: Float, height: Float, seed: Int) {
+    val n = if (height > travellerSize * 0.4f) 2 else 1
+    val c = height / n
+    for (k in 0 until n) {
+        val col = Colors.mix(if (hash(seed + k, 726) < 0.5f) 0xFF4A6A9A.toInt() else 0xFF9A4A4A.toInt(), p.accent, 0.15f)
+        val bw = c * (1.5f - k * 0.25f)
+        val y1 = y - k * c
+        out.rect(col, x - bw / 2f, y1 - c, x + bw / 2f, y1)
+        out.rect(Colors.darker(col, 0.3f), x - bw / 2f, y1 - c * 0.55f, x + bw / 2f, y1 - c * 0.45f)
+        out.line(Colors.darker(col, 0.4f), c * 0.08f, x - c * 0.2f, y1 - c, x - c * 0.2f, y1 - c * 1.18f)
+        out.line(Colors.darker(col, 0.4f), c * 0.08f, x - c * 0.2f, y1 - c * 1.18f, x + c * 0.2f, y1 - c * 1.18f)
+        out.line(Colors.darker(col, 0.4f), c * 0.08f, x + c * 0.2f, y1 - c * 1.18f, x + c * 0.2f, y1 - c)
+    }
+}
+
+/** A ramp on the road, rising the way the traveller goes. */
+private fun Scene.ramp(x: Float, y: Float, height: Float, neon: Boolean) {
+    val len = height * 2.4f
+    val face = if (neon) Colors.mix(p.accent, 0xFF202030.toInt(), 0.5f) else Colors.mix(0xFF8A7A60.toInt(), p.near, 0.3f)
+    out.polygon(face)
+    out.point(x - len * 0.75f, y + 1f); out.point(x + len * 0.25f, y - height); out.point(x + len * 0.25f, y + 1f)
+    // Yellow and black stripes on its high end.
+    val stripe = if (neon) p.accent else 0xFFE8C840.toInt()
+    out.rect(Colors.darker(face, 0.3f), x + len * 0.25f - height * 0.08f, y - height, x + len * 0.25f, y)
+    for (k in 0 until 3) out.line(stripe, height * 0.06f, x + len * 0.25f - height * 0.04f, y - height * (0.15f + k * 0.3f), x + len * 0.25f - height * 0.04f, y - height * (0.28f + k * 0.3f))
+    out.line(Colors.lighter(face, 0.25f), height * 0.05f, x - len * 0.75f, y, x + len * 0.25f, y - height)
+}
+
+/** Traffic cones, a row or a barrier on two of them. */
+private fun Scene.cones(x: Float, y: Float, height: Float, seed: Int) {
+    val orange = 0xFFF07A2A.toInt()
+    fun cone(cx: Float, ch: Float) {
+        out.polygon(orange)
+        out.point(cx - ch * 0.32f, y); out.point(cx - ch * 0.07f, y - ch); out.point(cx + ch * 0.07f, y - ch); out.point(cx + ch * 0.32f, y)
+        out.rect(0xFFF4F4F4.toInt(), cx - ch * 0.2f, y - ch * 0.55f, cx + ch * 0.2f, y - ch * 0.4f)
+        out.rect(Colors.darker(orange, 0.3f), cx - ch * 0.4f, y - ch * 0.06f, cx + ch * 0.4f, y)
+    }
+    if (hash(seed, 727) < 0.5f) {
+        val ch = min(height, travellerSize * 0.4f)
+        for (k in -1..1) cone(x + k * ch * 0.8f, ch)
+    } else {
+        // A striped barrier on two cones.
+        val ch = height * 0.75f
+        cone(x - height * 0.7f, ch); cone(x + height * 0.7f, ch)
+        out.rect(0xFFF4F4F4.toInt(), x - height, y - height, x + height, y - height * 0.78f)
+        for (k in 0 until 4) {
+            val sx = x - height + k * height * 0.5f
+            out.polygon(0xFFD03030.toInt())
+            out.point(sx, y - height * 0.78f); out.point(sx + height * 0.18f, y - height); out.point(sx + height * 0.32f, y - height); out.point(sx + height * 0.14f, y - height * 0.78f)
+        }
+    }
+}
+
 
 /**
  * The tunnel the traveller at [x] is in, as its two mouths (x), or null. Torches hang just inside
@@ -373,52 +571,72 @@ private fun Scene.church(x: Float, ground: Float, s: Float) {
     out.circle(0xFFD9B44A.toInt(), x + s * 0.475f + swing, ground - s * 1.25f, s * 0.07f)
 }
 
-/** A platform with a train going through. */
+/** How far the train's track runs beyond the platform on each side. */
+private val Scene.trainRun get() = h * 0.46f
+
+/**
+ * A station, in depth as the villages are: the track and the train beyond the platform (higher
+ * on the screen, a little smaller: farther), the platform the traveller walks along, its roof
+ * on posts at the back; the posts and the platform's edge on this side stand in front of the
+ * traveller ([stationFront]).
+ */
 private fun Scene.station(a: Float, b: Float) {
+    val ts = travellerSize
     val ground = footNear((a + b) / 2f, (b - a) / 2f)
     val grey = Colors.mix(p.mid, 0xFF9A9A9A.toInt(), 0.4f)
-    // The track, as long as the train's way.
-    val car = h * 0.1f
+    val car = h * 0.085f
     val cars = 4
     val trainLen = cars * car * 1.05f + car * 0.4f
-    val from = a - trainLen
-    val to = b + trainLen
-    val rail = ground - h * 0.02f
-    // A strip of ballast; where the land falls away, pillars hold the track up.
+    val from = a - trainRun
+    val to = b + trainRun
+    // The track: on the far side of the platform.
+    val rail = ground - ts * 0.42f
     val ballast = Colors.darker(Colors.mix(p.near, 0xFF7A6A58.toInt(), 0.4f), 0.2f)
-    var px = from + h * 0.02f
-    while (px < to) {
-        val g = nearY(px)
-        if (g > rail + h * 0.012f) out.rect(ballast, px - h * 0.006f, rail, px + h * 0.006f, g + 2f)
-        px += h * 0.09f
-    }
     out.rect(ballast, from, rail + h * 0.002f, to, rail + h * 0.012f)
     var sx = from
     while (sx < to) {
-        out.rect(0xFF5A4636.toInt(), sx, rail - h * 0.002f, sx + h * 0.012f, rail + h * 0.006f)
-        sx += h * 0.03f
+        out.rect(0xFF5A4636.toInt(), sx, rail - h * 0.002f, sx + h * 0.01f, rail + h * 0.005f)
+        sx += h * 0.026f
     }
-    out.line(0xFF9AA0A8.toInt(), h * 0.004f, from, rail - h * 0.002f, to, rail - h * 0.002f)
+    out.line(0xFF9AA0A8.toInt(), h * 0.0035f, from, rail - h * 0.002f, to, rail - h * 0.002f)
     // The train runs along it, from one end to the other.
     val tx = from + ((now * h * 0.0006f) % (to - from - trainLen + car * 0.4f).coerceAtLeast(1f))
     val body = Colors.mix(p.accent, 0xFFC03A2E.toInt(), 0.4f)
     for (k in 0 until cars) {
         val x0 = tx + k * car * 1.05f
-        out.rect(body, x0, rail - h * 0.06f, x0 + car, rail - h * 0.008f)
-        for (wdw in 0 until 3) out.rect(Colors.lighter(p.skyBottom, 0.3f), x0 + car * (0.1f + wdw * 0.3f), rail - h * 0.05f, x0 + car * (0.3f + wdw * 0.3f), rail - h * 0.032f)
-        for (wx in floatArrayOf(x0 + car * 0.2f, x0 + car * 0.8f)) out.circle(0xFF2A2A30.toInt(), wx, rail - h * 0.006f, h * 0.006f)
+        out.rect(body, x0, rail - car * 0.6f, x0 + car, rail - car * 0.08f)
+        for (wdw in 0 until 3) out.rect(Colors.lighter(p.skyBottom, 0.3f), x0 + car * (0.1f + wdw * 0.3f), rail - car * 0.5f, x0 + car * (0.3f + wdw * 0.3f), rail - car * 0.32f)
+        for (wx in floatArrayOf(x0 + car * 0.2f, x0 + car * 0.8f)) out.circle(0xFF2A2A30.toInt(), wx, rail - car * 0.06f, car * 0.06f)
     }
     out.polygon(body)
     val nose = tx + cars * car * 1.05f
-    out.point(nose, rail - h * 0.06f); out.point(nose + car * 0.4f, rail - h * 0.02f); out.point(nose + car * 0.4f, rail - h * 0.008f); out.point(nose, rail - h * 0.008f)
-    // Platform (in front of the track) and roof.
-    out.rect(grey, a, ground - h * 0.012f, b, ground + h * 0.012f)
+    out.point(nose, rail - car * 0.6f); out.point(nose + car * 0.4f, rail - car * 0.2f); out.point(nose + car * 0.4f, rail - car * 0.08f); out.point(nose, rail - car * 0.08f)
+    // The platform's floor, from the track's edge to the way.
+    out.rect(grey, a, rail + h * 0.012f, b, ground + h * 0.004f)
+    out.rect(Colors.lighter(grey, 0.25f), a, rail + h * 0.012f, b, rail + h * 0.018f)
+    // The roof on its back posts.
+    val roof = ground - ts * 1.75f
     for (k in 0..4) {
         val px = a + (b - a) * k / 4f
-        out.line(Colors.darker(grey, 0.3f), h * 0.006f, px, ground - h * 0.02f, px, ground - h * 0.13f)
+        out.line(Colors.darker(grey, 0.35f), h * 0.005f, px, rail + h * 0.012f, px, roof)
     }
     out.polygon(Colors.darker(grey, 0.2f))
-    out.point(a - h * 0.02f, ground - h * 0.13f); out.point(b + h * 0.02f, ground - h * 0.13f); out.point(b, ground - h * 0.155f); out.point(a, ground - h * 0.155f)
+    out.point(a - h * 0.02f, roof); out.point(b + h * 0.02f, roof); out.point(b, roof - h * 0.025f); out.point(a, roof - h * 0.025f)
+}
+
+/** The station's near side: the platform's edge and its front posts, in front of the traveller. */
+private fun Scene.stationFront(a: Float, b: Float) {
+    val ts = travellerSize
+    val ground = footNear((a + b) / 2f, (b - a) / 2f)
+    val grey = Colors.mix(p.mid, 0xFF9A9A9A.toInt(), 0.4f)
+    out.rect(Colors.darker(grey, 0.15f), a, ground, b, ground + h * 0.02f)
+    out.rect(0xFFE8C840.toInt(), a, ground + h * 0.002f, b, ground + h * 0.006f)
+    val roof = ground - ts * 1.75f
+    for (k in 0..2) {
+        val px = a + (b - a) * (k + 0.5f) / 3f
+        out.line(Colors.darker(grey, 0.2f), h * 0.007f, px, ground + h * 0.02f, px, roof + ts * 0.15f)
+    }
+    out.rect(Colors.darker(grey, 0.1f), a - h * 0.02f, roof + ts * 0.1f, b + h * 0.02f, roof + ts * 0.16f)
 }
 
 /**
