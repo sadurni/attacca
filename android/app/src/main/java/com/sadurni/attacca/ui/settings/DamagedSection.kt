@@ -1,6 +1,7 @@
 package com.sadurni.attacca.ui.settings
 
 import android.widget.Toast
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -121,16 +122,33 @@ private fun DamagedListDialog(folder: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val all by DamagedTracks.all.collectAsStateWithLifecycle()
-    val list = remember(all, folder) { DamagedTracks.under(folder) }
+    val every = remember(all, folder) { DamagedTracks.under(folder) }
+    var query by remember { mutableStateOf("") }
+    // Each word of the search in the file's path (folder and name: artist, album, title).
+    val list = remember(every, query) {
+        val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (words.isEmpty()) every else every.filter { (path, _) -> val p = path.removePrefix(folder).lowercase(); words.all { it in p } }
+    }
     var repairing by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.damaged_title)) },
         text = {
-            if (list.isEmpty()) {
+            if (every.isEmpty()) {
                 Text(stringResource(R.string.damaged_none))
-            } else {
+            } else Column {
+                if (every.size > 3) {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.search)) },
+                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Search, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    )
+                }
+                if (list.isEmpty()) Text(stringResource(R.string.search_nothing))
                 LazyColumn(Modifier.heightIn(max = 460.dp)) {
                     items(list, key = { it.first }) { (path, damage) ->
                         val file = File(path)
@@ -163,28 +181,5 @@ private fun DamagedListDialog(folder: String, onDismiss: () -> Unit) {
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
     )
-    repairing?.let { path ->
-        // Repairing writes the file again: the original is kept beside it (".bk") or deleted.
-        AlertDialog(
-            onDismissRequest = { repairing = null },
-            title = { Text(stringResource(R.string.damaged_repair)) },
-            text = { Text(stringResource(R.string.damaged_repair_ask, File(path).name)) },
-            confirmButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    for (keep in listOf(true, false)) {
-                        TextButton(onClick = {
-                            repairing = null
-                            busy = true
-                            scope.launch {
-                                val ok = withContext(com.sadurni.attacca.Background.dispatcher) { runCatching { DamageCheck.repairMp3(File(path), keep) }.getOrDefault(false) }
-                                busy = false
-                                Toast.makeText(context, if (ok) R.string.damaged_repaired else R.string.damaged_repair_failed, Toast.LENGTH_LONG).show()
-                            }
-                        }) { Text(stringResource(if (keep) R.string.damaged_keep_copy else R.string.damaged_delete_original)) }
-                    }
-                    TextButton(onClick = { repairing = null }) { Text(stringResource(R.string.cancel)) }
-                }
-            },
-        )
-    }
+    repairing?.let { path -> com.sadurni.attacca.ui.common.RepairDialog(listOf(path)) { repairing = null } }
 }

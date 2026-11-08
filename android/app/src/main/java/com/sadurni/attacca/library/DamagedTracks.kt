@@ -46,6 +46,9 @@ object DamagedTracks {
     /** How much of a folder's music is damaged. */
     enum class FolderMark { NONE, PART, ALL }
 
+    /** Files just written again by a repair (the player reads them again). */
+    val repaired = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 64)
+
     private val _all = MutableStateFlow<Map<String, Damage>>(emptyMap())
     val all: StateFlow<Map<String, Damage>> = _all.asStateFlow()
 

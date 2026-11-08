@@ -29,7 +29,7 @@ plays them so one song flows into the next.
 - 🎨 **Make it yours.** Themes with their own colours, fonts, backgrounds and icons, and a Now
   playing screen you lay out piece by piece; a gallery of themes to start from.
 - 🔒 **Private by design.** No internet permission, no account, no ads, no tracking. Free and
-  open source, in 23 languages.
+  open source, in 32 languages.
 - 💻 **Not only on the phone.** Attacca Desktop (Windows, Linux, macOS), a web page and a plugin
   for Rockbox players chain your music the same way and share what was measured.
 

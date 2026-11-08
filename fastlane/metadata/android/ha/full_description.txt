@@ -1,0 +1,34 @@
+<p><i>“Sake gano tarin kiɗanka: ji shi ta sabbin hanyoyi, da mafi kyawun sauti.”</i></p>
+
+<p><b>Kiɗanka, ana kunna shi kamar wani ya saurari kowace waƙa tukuna.</b> Jeri inda kowace waƙa ke gudana zuwa ta gaba, cikakken sarrafa sauti, O'rama don kallon waƙa a matsayin shimfiɗar ƙasa mai motsi, da jigogin da kake tsarawa da kanka. Kyauta, buɗaɗɗen tushe kuma na sirri.</p>
+
+<p>Attacca tana kunna kiɗan da ke wayarka — manyan fayiloli da jerin waƙoƙi — kuma tana sauraron sa da kanta: ana nazarin ƙarshen kowace waƙa, sautinta da yanayinta a waya, don ƙarshen wata waƙa ya kai zuwa farkon ta gaba. Ba a aika komai ko'ina: manhajar ba ta da damar yanar gizo.</p>
+
+<p><b>Jeri masu gudana</b></p>
+<ul>
+<li>Sarƙe kowane jeri don kowace waƙa ta kai zuwa ta gaba; ana iya sarƙe kundaye duka ƙarshe zuwa farko.</li>
+<li>Jeri daga kowace waƙa: waƙoƙi mafi kusa a sauti, a sarƙe daga gare ta, da matatu (shekaru, sauri, kuzari, yanayi, murya, tsawo, abin da ba ka ji ba kwanan nan).</li>
+<li>Jeri na gaggawa da bazuwar, lanƙwasar kuzari, samfurin iyalan sautinka, gada daga wata waƙa zuwa wata, kundaye duka kamar ɗaya, jeri don wani lokaci.</li>
+<li>Yanayi da iyalan sauti da aka samo a cikin tarinka ta wata cibiyar gane sauti da ke gudana a waya.</li>
+<li>Jerin haɗawa (izini ko hani) ga kowane jeri da take yi; jeri masu wayo da aka yi daga sharuɗɗa; jeri marasa ƙarewa.</li>
+</ul>
+
+<p><b>Kunnawa da sauti</b></p>
+<ul>
+<li>Kunnawa babu tazara, haɗewar shuɗewa da za ta iya bin yadda kowace waƙa ke ƙarewa, yanke shiru, ReplayGain (da ƙarfin sauti da aka auna ga fayilolin da ba su da shi).</li>
+<li>Nata sarrafa sauti: daidaita sauti (mai hoto ko mai sigogi, gyaran belun kunne), ƙara bass da bass na kwaikwayo, faɗin sitiriyo, crossfeed, matsawa da mai iyakancewa na ƙoli na gaskiya; bayanin saiti ga kowace na'urar fitarwa.</li>
+<li>Na'urori: kowace fitarwa za ta iya ci gaba da nata jeri, saita ƙarar sautinta kuma ta fara kunnawa idan ta haɗu.</li>
+</ul>
+
+<p><b>Yadda kake so</b></p>
+<ul>
+<li>Jigogi da nasu launuka, haruffa, bango, gumaka da tsarin Ana kunnawa da kake shiryawa; ɗakin jigogi don farawa.</li>
+<li>Kiɗa bisa mawaƙa, kundaye, nau'o'i, shekaru goma-goma, yanayi da iyalai; manyan fayiloli; kalmomin waƙa, alamun wuri, agogon barci, gudu, maimaita A-B; ƙididdigar saurare.</li>
+<li>Gajeren jagoran saiti don matakan farko, saituna da nema, samfuran sauti ga kowane nau'in na'ura, da waƙoƙin da suka lalace ana samun su, yi musu alama kuma a gyara su.</li>
+<li>Android Auto, widget na allon gida, madadin komai, harsuna 32.</li>
+<li>Attacca O'rama: waƙar da ke kunne a matsayin shimfiɗar ƙasa mai motsi, an zana ta daga siffar sautinta, yanayinta da bugunta. Da wasu ƙananan abubuwan mamaki da za a nemo.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) tana nazari ta hanya ɗaya kuma tana raba laburare, kuma tana yin jeri don na'urorin kunnawa na Rockbox da a burauza.</p>
+
+<p>Dalilin izini: damar dukkan fayiloli, don kunna manyan fayilolinka da jerin waƙoƙi inda suke; nunawa a kan sauran manhajoji, babu inganta batir da na'urori na kusa, kawai don fara kunnawa idan na'urar Bluetooth ta haɗu yayin da mai kunnawa a rufe.</p>

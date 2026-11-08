@@ -861,6 +861,19 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     SwitchRow(stringResource(R.string.remaining_time), ui.showRemainingTime, { v ->
         settings.updateUi { it.copy(showRemainingTime = v) }
     })
+    SwitchRow(stringResource(R.string.over_lock_screen), ui.overLockScreen, { v ->
+        settings.updateUi { it.copy(overLockScreen = v) }
+    })
+    Hint(stringResource(R.string.over_lock_screen_hint))
+    Text(stringResource(R.string.lock_wallpaper), modifier = Modifier.padding(start = 16.dp, top = 12.dp))
+    for ((mode, label) in listOf(
+        com.sadurni.attacca.playback.LockWallpaper.Mode.OFF to R.string.lock_wallpaper_off,
+        com.sadurni.attacca.playback.LockWallpaper.Mode.COVER to R.string.lock_wallpaper_cover,
+        com.sadurni.attacca.playback.LockWallpaper.Mode.ORAMA to R.string.lock_wallpaper_orama,
+    )) {
+        RadioRow(stringResource(label), ui.lockWallpaper == mode) { settings.updateUi { it.copy(lockWallpaper = mode) } }
+    }
+    Hint(stringResource(R.string.lock_wallpaper_hint))
 
     // The "Now playing" widget, placed by the launcher when it supports pinning.
     val widgetContext = LocalContext.current
@@ -878,6 +891,17 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
             modifier = Modifier.padding(horizontal = 8.dp),
         ) { Text(stringResource(R.string.widget_add)) }
         Hint(stringResource(R.string.widget_description))
+        // Made big, the cover or O'rama's landscape.
+        Text(stringResource(R.string.widget_big), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+        for ((big, label) in listOf(
+            com.sadurni.attacca.playback.NowPlayingWidget.Big.COVER to R.string.widget_big_cover,
+            com.sadurni.attacca.playback.NowPlayingWidget.Big.ORAMA to R.string.widget_big_orama,
+        )) {
+            RadioRow(stringResource(label), ui.widgetBig == big) {
+                settings.updateUi { it.copy(widgetBig = big) }
+                com.sadurni.attacca.playback.NowPlayingWidget.setBig(widgetContext, big)
+            }
+        }
     }
 
     SectionTitle(stringResource(R.string.section_tips))

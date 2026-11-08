@@ -146,6 +146,13 @@ internal class Scene(
     /** How far into the track's peak moment (0 … 1). */
     var peak = 0f
 
+    /** The festive look on these days (null: none), and whether the Three Kings come. */
+    var festive: com.sadurni.attacca.festive.Festivity? = null
+    var kings = false
+
+    /** The new year's show going on, or null. */
+    var show: Celebration? = null
+
     /** Milliseconds since the last frame. */
     var dt = 0L
 
@@ -187,6 +194,7 @@ internal class Scene(
         birds()
         peakMoment()
         skyVisitor()
+        festiveSky()
     }
 
     private fun stars(night: Float) {
@@ -235,11 +243,14 @@ internal class Scene(
             recordSun(x, y, r * 1.25f)
             return
         }
-        out.circle(Colors.alpha(p.light, 0.12f * (1f - look.clouds * 0.6f)), x, y, r * 2.4f * glow)
-        out.circle(Colors.alpha(p.light, 0.22f * (1f - look.clouds * 0.6f)), x, y, r * 1.6f * glow)
-        out.circle(p.light, x, y, r)
-        if (kick > 0.05f) out.ring(Colors.alpha(p.light, 0.35f * kick), x, y, r * (1.3f + (1f - kick) * 1.6f), unit * 0.004f)
-        if (night > 0.5f) out.circle(Colors.alpha(Colors.mix(p.skyTop, p.skyBottom, 0.3f), (night - 0.5f) * 2f), x + r * 0.45f, y - r * 0.2f, r * 0.85f)
+        // The red moon of the peak takes its place in the sky: the usual one fades away meanwhile.
+        val shown = if (look.world == World.CASTLE) 1f - (peak * 3f).coerceIn(0f, 1f) else 1f
+        if (shown <= 0f) return
+        out.circle(Colors.alpha(p.light, 0.12f * shown * (1f - look.clouds * 0.6f)), x, y, r * 2.4f * glow)
+        out.circle(Colors.alpha(p.light, 0.22f * shown * (1f - look.clouds * 0.6f)), x, y, r * 1.6f * glow)
+        out.circle(Colors.alpha(p.light, shown), x, y, r)
+        if (kick > 0.05f) out.ring(Colors.alpha(p.light, 0.35f * kick * shown), x, y, r * (1.3f + (1f - kick) * 1.6f), unit * 0.004f)
+        if (night > 0.5f) out.circle(Colors.alpha(Colors.mix(p.skyTop, p.skyBottom, 0.3f), (night - 0.5f) * 2f * shown), x + r * 0.45f, y - r * 0.2f, r * 0.85f)
     }
 
     /** The sun as a record turning in the sky, the cover on its label, notes falling from it. */

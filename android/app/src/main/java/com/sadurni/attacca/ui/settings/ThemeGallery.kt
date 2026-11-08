@@ -56,7 +56,9 @@ fun ThemeGalleryScreen(viewModel: PlayerViewModel, onBack: () -> Unit, onEdit: (
     val ui by settings.ui.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val themes by produceState<List<ThemeSpec>?>(null) {
-        value = withContext(Dispatchers.IO) { runCatching { ThemeStore.gallery(context, BuildConfig.BUILD_TIME.toString()) }.getOrDefault(emptyList()) }
+        // On festive days their theme comes first (copied only then; afterwards it is gone from here).
+        val festive = com.sadurni.attacca.festive.FestiveState.period.value?.let { com.sadurni.attacca.festive.FestiveState.offeredTheme(it) }
+        value = listOfNotNull(festive) + withContext(Dispatchers.IO) { runCatching { ThemeStore.gallery(context, BuildConfig.BUILD_TIME.toString()) }.getOrDefault(emptyList()) }
             .sortedBy { themeName(context, it).lowercase() }
     }
     val systemDark = isSystemInDarkTheme()
@@ -65,7 +67,10 @@ fun ThemeGalleryScreen(viewModel: PlayerViewModel, onBack: () -> Unit, onEdit: (
         scope.launch {
             val copy = withContext(Dispatchers.IO) { ThemeStore.adopt(spec, themeName(context, spec)) }
             ThemeRuntime.version++
-            if (use) settings.updateUi { it.copy(themeId = copy.id) }
+            if (use) {
+                com.sadurni.attacca.festive.FestiveState.themeChangedByHand()
+                settings.updateUi { it.copy(themeId = copy.id) }
+            }
             Toast.makeText(context, added.format(copy.name), Toast.LENGTH_SHORT).show()
             if (edit) onEdit(copy.id)
         }

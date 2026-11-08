@@ -25,7 +25,7 @@
 <li>Teme cu culori, fonturi, fundaluri și pictograme proprii și o aranjare a ecranului În redare pe care o organizezi tu; o galerie de la care să pornești.</li>
 <li>Muzică după artiști, albume, genuri, decenii, stări de spirit și familii; dosare; versuri, marcaje, temporizator de oprire, viteză, repetare A-B; statistici de ascultare.</li>
 <li>Un ghid scurt pentru primii pași, setări cu căutare, șabloane de sunet pentru fiecare tip de dispozitiv și piese deteriorate depistate, marcate și reparate.</li>
-<li>Android Auto, widget pe ecranul principal, copie de rezervă a tuturor datelor, 23 de limbi.</li>
+<li>Android Auto, widget pe ecranul principal, copie de rezervă a tuturor datelor, 32 de limbi.</li>
 <li>Attacca O'rama: piesa care se aude ca un peisaj în mișcare, desenat din forma ei de undă, starea și ritmul ei. Cu câteva mici surprize de descoperit.</li>
 </ul>
 

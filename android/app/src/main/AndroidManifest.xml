@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- The lock screen's picture from the track playing (only when chosen in Settings). -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -285,6 +287,10 @@
             android:resource="@xml/automotive_app_desc" />
 
         <!-- "Play" from headphones / car with the app closed starts playback resumption. -->
+        <!-- The notice a few minutes before a new year's show. -->
+        <receiver
+            android:name=".festive.NewYearNotice"
+            android:exported="false" />
         <receiver
             android:name="androidx.media3.session.MediaButtonReceiver"
             android:exported="true">

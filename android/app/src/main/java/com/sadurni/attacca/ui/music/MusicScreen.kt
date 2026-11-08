@@ -703,7 +703,10 @@ private fun ArtistRow(artist: MusicArtist, a: MusicActions) {
     ) {
         artist.albums.firstOrNull()?.tracks?.firstOrNull()?.let { TrackThumbnail(it.path) }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(artist.name, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.sadurni.attacca.ui.common.GroupDamagedMark(remember(artist) { artist.tracks.map { it.path } })
+                Text(artist.name, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             Counts(artist.albums.size, artist.tracks.size, artist.durationMs)
         }
         Box {
@@ -745,6 +748,10 @@ private fun GroupMenu(expanded: Boolean, onDismiss: () -> Unit, name: String, pa
                 a.onAction(BrowserAction.Inclusion(File(first)))
             })
         }
+        DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair_all)) }, onClick = {
+            onDismiss()
+            a.onAction(BrowserAction.Repair(paths))
+        })
         if (folder != null) {
             DropdownMenuItem(text = { Text(stringResource(R.string.go_to_folder)) }, onClick = {
                 onDismiss()
@@ -800,7 +807,10 @@ private fun AlbumCell(album: MusicAlbum, a: MusicActions) {
             Cover(album, Modifier.fillMaxWidth().aspectRatio(1f))
             GroupMenu(menuOpen, { menuOpen = false }, album.title, album.tracks.map { it.path }, a, folder = album.folder)
         }
-        Text(album.title, fontSize = AttaccaType.secondary, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+        Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            com.sadurni.attacca.ui.common.GroupDamagedMark(remember(album) { album.tracks.map { it.path } })
+            Text(album.title, fontSize = AttaccaType.secondary, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         Text(
             listOfNotNull(albumArtistLabel(album), album.year.takeIf { it > 0 }?.toString()).joinToString(" · "),
             fontSize = AttaccaType.caption,
@@ -835,7 +845,10 @@ private fun AlbumRow(album: MusicAlbum, a: MusicActions) {
     ) {
         album.tracks.firstOrNull()?.let { TrackThumbnail(it.path, size = 52.dp) }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(album.title, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.sadurni.attacca.ui.common.GroupDamagedMark(remember(album) { album.tracks.map { it.path } })
+                Text(album.title, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             Counts(
                 null,
                 album.tracks.size,
@@ -1044,6 +1057,12 @@ private fun MusicTrackRow(t: MusicTrack, number: Int, a: MusicActions, numbered:
                             menuOpen = false
                             a.onAction(BrowserAction.Inclusion(File(t.path)))
                         })
+                        if (t.path.endsWith(".mp3", ignoreCase = true)) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair)) }, onClick = {
+                                menuOpen = false
+                                a.onAction(BrowserAction.Repair(listOf(t.path)))
+                            })
+                        }
                         DropdownMenuItem(text = { Text(stringResource(R.string.go_to_folder)) }, onClick = {
                             menuOpen = false
                             a.onGoToFolder(t.path)

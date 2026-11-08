@@ -43,7 +43,7 @@ plays them so one song flows into the next.
 - 🎨 **Make it yours.** Themes with their own colours, fonts, backgrounds and icons, and a Now
   playing screen you lay out piece by piece; a gallery of themes to start from.
 - 🔒 **Private by design.** No internet permission, no account, no ads, no tracking. Free and
-  open source, in 23 languages.
+  open source, in 32 languages.
 - 💻 **Not only on the phone.** [Attacca Desktop](../desktop) (Windows, Linux, macOS), a
   [web page](../web) and a [plugin for Rockbox players](../rockbox) chain your music the same way
   and share what was measured.
@@ -118,11 +118,16 @@ plays them so one song flows into the next.
   frames, files the player stops on) or with Settings → Library → *Check new and changed tracks*
   (each file read through once, several at once, with the time left in a notification: broken
   frames, stretches written twice, files cut short or unreadable; a check stopped halfway goes on
-  later with what is left, and *Check all again* checks every track once more). They are counted in the statistics, marked ⚠ in Folders and Music (△ for a folder
-  with some inside) and left out of the lists Attacca makes unless that is turned off. A damaged
-  MP3 can be repaired: written again without its broken and repeated frames (the encoder's
-  information frame made to match), the original kept beside it as `.bk` (not taken for music) or
-  deleted, as chosen.
+  later with what is left, and *Check all again* checks every track once more; their list has a
+  search). They are counted in the statistics, marked ⚠ in Folders, Music, the lists and the title
+  box of Now playing (△ for a folder, album, artist or list with some inside) and left out of the
+  lists Attacca makes unless that is turned off. A damaged MP3 can be repaired — from that list or
+  the ⋮ menu of a track, a folder (all the damaged ones in it), an album, an artist or a list:
+  written again without its broken and repeated frames (a stretch with bits gone wrong all through
+  it is left out whole, and the frame after each cut that kept part of its sound in what was cut
+  plays silent: a short jump instead of noise; the encoder's information frame made to match),
+  the original kept beside it as `.bk` (not taken for music; a later repair starts again from it)
+  or deleted, as chosen. A track repaired while it plays is read again from where it was.
 - **Other sounds**: a notification or another app sounding briefly lowers the volume, pauses the
   music or is ignored, as chosen; after a call the music can come back by itself.
 - **Track information** screen: pictures first, then file, audio format (codec, bit rate, sample
@@ -417,9 +422,19 @@ plays them so one song flows into the next.
   lists played lately and the music folder, browsable down to each track; a list or folder plays
   from where it was left, a track plays its list from it. Previous / next album (or group of the
   list), favorite and close buttons (optional).
-- **Home-screen widget**: cover, title, artist and previous / play-pause / next, in one row or two
-  (larger cover); its buttons also resume playback with the app closed. Settings → Appearance can
-  place it.
+- **Home-screen widget**, changing as it is resized: the cover and play / pause; one row with
+  title, artist, the time going on and previous / play-pause / next; two rows with a large cover,
+  the album, what comes next and the list; tall and narrow, the cover big on top and more below as
+  it grows; and, bigger, the cover large or a still of the track's O'rama landscape (renewed as it
+  plays), as chosen in Settings → Appearance. A heart adds the track to Favorites. It takes the
+  theme's colours; its buttons also work with the app closed. Settings → Appearance can place it.
+- **Lock screen** (Settings → Appearance): its picture can follow the track playing — its cover
+  on a dark copy of itself with the title, or a still of its O'rama landscape — set again with each
+  track (turned off, the lock screen takes the home screen's picture); and Attacca can show over
+  the lock screen while music plays, when it was open as the screen went off.
+- **Folders with covers**: each folder (its picture, or its first track's) and track shows its
+  cover, and a button shows a folder as a grid of covers, like the albums in Music (the first
+  level, the music folder itself, keeps its own choice).
 
 ### Interface
 - **First steps**: after choosing the music folder, a short **setup guide** goes through the
@@ -517,16 +532,18 @@ plays them so one song flows into the next.
   grow as speech bubbles out of the part of the screen they talk about, lit up over the dimmed
   screen, the first time each screen opens after installing a new version (they can be turned
   off, or shown again, in Settings → Appearance).
-- 23 languages, chosen in the app apart from the phone's — also from the flag at the top of the
+- 32 languages (Arabic right to left), chosen in the app apart from the phone's — also from the flag at the top of the
   side menu (Catalan, Basque and Galician with their own flags, drawn by the app), whose list
   names every language in itself and in English, so the way back is always readable.
 
 ## What's new
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
-new). In 1.1.0: the setup guide and the reorganised Settings, sound templates per device, damaged
-tracks (found, marked, repaired), covers searched on the web, and a smoother O'rama with level
-bridges, stations and roads.
+new). In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes
+(the largest with O'rama's landscape), damaged tracks marked and repaired from more places with
+better repairs, the inclusion list in use at the top of Lists, folders with covers (also as a
+grid), the lock screen's picture from the track playing, and nine more languages (Hindi,
+Kannada, Arabic, Tamazight, Kabyle, Swahili, Hausa, Yoruba, Amharic).
 
 ## Sound processing
 

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Now playing, square-ish (2×2, 3×2…): the cover fills it all, the title and the controls on a dark box over it. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_scene_background"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/widget_scene"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_widget_note" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="6dp"
+        android:background="@drawable/widget_panel"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="2dp">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center_horizontal"
+            android:maxLines="1"
+            android:text="@string/app_name"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center_horizontal"
+            android:maxLines="1"
+            android:textColor="#D9FFFFFF"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/widget_previous"
+                android:layout_width="32dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/action_previous"
+                android:src="@drawable/ic_widget_previous" />
+
+            <ImageButton
+                android:id="@+id/widget_play"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginHorizontal="2dp"
+                android:background="@drawable/widget_play_background"
+                android:contentDescription="@string/action_play"
+                android:src="@drawable/ic_widget_play" />
+
+            <ImageButton
+                android:id="@+id/widget_next"
+                android:layout_width="32dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/action_next"
+                android:src="@drawable/ic_widget_next" />
+
+            <ImageButton
+                android:id="@+id/widget_favorite"
+                android:layout_width="30dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/action_favorite"
+                android:src="@drawable/ic_widget_heart" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

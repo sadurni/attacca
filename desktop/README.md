@@ -121,9 +121,12 @@ all those connected, without choosing anything.
   the album and artist searched for.
 - **Damaged tracks** (Library): every MP3 checked, several at once, for broken frames inside the
   music (bursts of noise) or stretches written twice (the music jumps back) — the same check as
-  the phone's; files the scan could not read count too. They are marked ⚠ in Tracks, left out of
-  lists unless that is turned off, and a damaged MP3 can be repaired: written again without its
-  broken or repeated pieces, the original kept beside it as `.bk` (not taken for music) or deleted.
+  the phone's; files the scan could not read count too. They are marked ⚠ in Tracks, listed with a
+  search, left out of lists unless that is turned off, and a damaged MP3 can be repaired (also from
+  the right-click menu of a track, an album or a kept list): written again without its broken or
+  repeated pieces, a stretch with bits gone wrong all through it left out whole, the original kept
+  beside it as `.bk` (not taken for music; a later repair starts again from it) or deleted. A
+  track repaired while it plays is read again from where it was.
 - **Library**: the music folder, scanning (progress, stop), what was measured, the moods and sound
   families of the collection (click one for a list of it), which tracks lists may use.
 - **Tracks**: the whole library, searchable and sortable; start a list from any track.

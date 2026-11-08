@@ -25,7 +25,7 @@
 <li>Kendi renkleri, yazı tipleri, arka planları, simgeleri olan temalar ve sizin düzenlediğiniz bir Şimdi çalıyor düzeni; başlamak için bir galeri.</li>
 <li>Sanatçılara, albümlere, türlere, on yıllara, ruh hallerine ve ailelere göre müzik; klasörler; şarkı sözleri, yer imleri, uyku zamanlayıcısı, hız, A-B tekrarı; dinleme istatistikleri.</li>
 <li>İlk adımlar için kısa bir kurulum rehberi, aranabilir ayarlar, her cihaz türü için ses şablonları ve bulunan, işaretlenen ve onarılan hasarlı parçalar.</li>
-<li>Android Auto, ana ekran widget'ı, her şeyin yedeği, 23 dil.</li>
+<li>Android Auto, ana ekran widget'ı, her şeyin yedeği, 32 dil.</li>
 <li>Attacca O'rama: çalan şarkı, dalga biçiminden, ruh hâlinden ve ritminden çizilen hareketli bir manzara olarak. Keşfedilecek birkaç küçük sürprizle.</li>
 </ul>
 

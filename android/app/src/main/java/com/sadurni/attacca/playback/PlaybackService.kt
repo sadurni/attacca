@@ -43,6 +43,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -105,6 +108,16 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
+        // The lock screen's picture follows its setting: set from the track playing, or given back.
+        scope.launch {
+            app.settings.ui.map { it.lockWallpaper }.distinctUntilChanged().drop(1).collect { mode ->
+                if (mode == LockWallpaper.Mode.OFF) {
+                    kotlinx.coroutines.withContext(com.sadurni.attacca.Background.dispatcher) { LockWallpaper.clear(this@PlaybackService) }
+                } else {
+                    updateWidget()
+                }
+            }
+        }
         // No library scan here: the system also creates this service by itself (at boot, for the
         // resume card, when a device connects) and then freezes the process, which left the scan's
         // notification stuck. It starts with the app or once something plays.
@@ -158,7 +171,8 @@ class PlaybackService : MediaLibraryService() {
                 // Playing keeps the service in the foreground, so a scan can run without being frozen.
                 if (isPlaying) app.scheduleStartupScan()
                 if (isPlaying) app.backUpIfDue()
-                NowPlayingWidget.updatePlaying(this@PlaybackService, isPlaying)
+                NowPlayingWidget.updatePlaying(this@PlaybackService, isPlaying, player.currentPosition)
+                updateWidgetScene(isPlaying)
                 if (isPlaying) closedByUser = false
                 handler.removeCallbacks(periodicSave)
                 if (isPlaying) handler.postDelayed(periodicSave, SAVE_INTERVAL_MS) else saveQueue()
@@ -170,6 +184,11 @@ class PlaybackService : MediaLibraryService() {
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: androidx.media3.common.MediaMetadata) = updateWidget()
+
+            override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+                // A seek: the widget's time counts on from the new place.
+                if (reason == Player.DISCONTINUITY_REASON_SEEK) NowPlayingWidget.updatePlaying(this@PlaybackService, player.isPlaying, player.currentPosition)
+            }
 
             override fun onTimelineChanged(timeline: androidx.media3.common.Timeline, reason: Int) {
                 if (reason != Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) return
@@ -341,19 +360,73 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** The home-screen widget: the playing track's title, artist and cover. */
+    /** The home-screen widget: the playing track's title, artist, album, cover, what comes next, the list and the time. */
     private fun updateWidget() {
         val item = player.currentMediaItem ?: return
         val metadata = player.mediaMetadata
         val title = MediaItems.displayTitle(item, metadata)
-        val subtitle = listOfNotNull(metadata.artist, metadata.albumTitle).map { it.toString() }.filter { it.isNotEmpty() }.joinToString(" · ")
-        val playing = player.isPlaying
+        val nextIndex = player.nextMediaItemIndex
+        val next = if (nextIndex != androidx.media3.common.C.INDEX_UNSET && nextIndex != player.currentMediaItemIndex) {
+            player.getMediaItemAt(nextIndex).let { MediaItems.displayTitle(it, it.mediaMetadata) }
+        } else {
+            null
+        }
+        val info = NowPlayingWidget.Info(
+            title = title,
+            artist = metadata.artist?.toString(),
+            album = metadata.albumTitle?.toString(),
+            next = next,
+            list = app.currentListName.value.ifBlank { null },
+            playing = player.isPlaying,
+            positionMs = player.currentPosition,
+            durationMs = player.duration.takeIf { it > 0 } ?: 0L,
+            mediaId = item.mediaId,
+            favorite = favorite,
+        )
         val data = metadata.artworkData
         val file = metadata.artworkUri?.takeIf { it.scheme == "file" }?.path?.let { java.io.File(it) }
         scope.launch(com.sadurni.attacca.Background.dispatcher) {
             val art = com.sadurni.attacca.ui.theme.ArtworkLoader.decode(data, file, maxSize = WIDGET_ART_PX)
-            NowPlayingWidget.update(this@PlaybackService, title, subtitle, playing, art)
+            widgetArt = art
+            NowPlayingWidget.update(this@PlaybackService, info, art)
+            renderWidgetScene()
+            // The lock screen's picture from this track, when chosen.
+            val lockMode = app.settings.ui.value.lockWallpaper
+            if (lockMode != LockWallpaper.Mode.OFF) {
+                LockWallpaper.apply(this@PlaybackService, lockMode, item.mediaId, title, info.artist, info.album, info.positionMs, art)
+            }
         }
+    }
+
+    /** The playing track's cover as the widget has it (also painted in the landscape). */
+    @Volatile private var widgetArt: android.graphics.Bitmap? = null
+
+    private var sceneJob: kotlinx.coroutines.Job? = null
+
+    /** While playing, a new still of the landscape for the large widget now and then (only with such a widget placed). */
+    private fun updateWidgetScene(playing: Boolean) {
+        sceneJob?.cancel()
+        if (!playing) return
+        sceneJob = scope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(WIDGET_SCENE_MS)
+                renderWidgetScene()
+            }
+        }
+    }
+
+    private suspend fun renderWidgetScene() {
+        if (!NowPlayingWidget.wantsScene(this)) return
+        val (id, position) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+            (player.currentMediaItem?.mediaId to player.currentPosition)
+        }
+        if (id == null || id.contains("://")) return
+        val metadata = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { player.mediaMetadata }
+        val (w, h) = NowPlayingWidget.sceneSize(this)
+        val still = kotlinx.coroutines.withContext(com.sadurni.attacca.Background.dispatcher) {
+            OramaStill.render(this@PlaybackService, id, metadata.title?.toString(), metadata.artist?.toString(), metadata.albumTitle?.toString(), null, position, widgetArt, w, h)
+        }
+        if (still != null) NowPlayingWidget.updateScene(this, still)
     }
 
     /** Listens for a shake only while music plays and shaking is on. */
@@ -627,12 +700,16 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             val isFavorite = mediaId != null &&
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    com.sadurni.attacca.library.UserLists.contains(com.sadurni.attacca.library.UserLists.favorites, mediaId)
+                    // Lists keep full paths (/sdcard read as /storage/emulated/0).
+                    com.sadurni.attacca.library.UserLists.contains(com.sadurni.attacca.library.UserLists.favorites, mediaId) ||
+                        com.sadurni.attacca.library.UserLists.contains(com.sadurni.attacca.library.UserLists.favorites, runCatching { java.io.File(mediaId).canonicalPath }.getOrDefault(mediaId))
                 }
             if (isFavorite != favorite || mediaId == player.currentMediaItem?.mediaId) {
                 favorite = isFavorite
                 updateMediaButtons()
             }
+            // The widget's heart too.
+            if (mediaId == player.currentMediaItem?.mediaId) NowPlayingWidget.setFavorite(this@PlaybackService, isFavorite)
         }
     }
 
@@ -644,6 +721,7 @@ class PlaybackService : MediaLibraryService() {
         scope.launch(kotlinx.coroutines.Dispatchers.IO) {
             if (wasFavorite) {
                 com.sadurni.attacca.library.UserLists.remove(com.sadurni.attacca.library.UserLists.favorites, item.mediaId)
+                com.sadurni.attacca.library.UserLists.remove(com.sadurni.attacca.library.UserLists.favorites, runCatching { java.io.File(item.mediaId).canonicalPath }.getOrDefault(item.mediaId))
             } else {
                 com.sadurni.attacca.library.UserLists.append(com.sadurni.attacca.library.UserLists.favorites, listOf(item))
             }
@@ -860,7 +938,10 @@ class PlaybackService : MediaLibraryService() {
 
     internal companion object {
         const val SAVE_INTERVAL_MS = 10_000L
-        const val WIDGET_ART_PX = 300
+        const val WIDGET_ART_PX = 400
+
+        /** How often the large widget's landscape is drawn again while playing. */
+        const val WIDGET_SCENE_MS = 20_000L
         const val END_OF_LIST_MARGIN_MS = 3_000L
 
         /** Errors of the file itself (reading, its container, its decoder), skipped over. */

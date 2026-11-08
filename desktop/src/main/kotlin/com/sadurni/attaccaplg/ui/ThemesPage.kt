@@ -95,7 +95,7 @@ private fun ThemeList(state: AppState, selected: Theme, onSelect: (String) -> Un
         val own = Themes.own()
         val groups = listOf(
             tr("Yours", "Tuyos") to own,
-            tr("The phone's gallery", "Galería del teléfono") to Themes.gallery,
+            tr("The phone's gallery", "Galería del teléfono") to listOfNotNull(FestiveDesk.offered()) + Themes.gallery,
             tr("Built in", "Incluidos") to Themes.builtIns,
         )
         val list = rememberLazyListState()
@@ -146,7 +146,7 @@ private fun ThemeEditor(state: AppState, theme: Theme, onSelect: (String) -> Uni
     @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
     androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val inUse = state.theme == theme.id
-        OutlinedButton(enabled = !inUse, onClick = { state.theme = theme.id; state.prefs["theme"] = theme.id }) {
+        OutlinedButton(enabled = !inUse, onClick = { FestiveDesk.themeChangedByHand(); state.theme = theme.id; state.prefs["theme"] = theme.id }) {
             Text(if (inUse) tr("In use", "En uso") else tr("Use it here", "Usarlo aquí"))
         }
         OutlinedButton(onClick = {

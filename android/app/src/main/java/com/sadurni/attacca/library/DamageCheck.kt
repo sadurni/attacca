@@ -172,6 +172,6 @@ object DamageCheck {
      * True when done.
      */
     fun repairMp3(file: File, keepOriginal: Boolean): Boolean =
-        com.sadurni.attacca.playback.Mp3Damage.repairFile(file, keepOriginal).also { if (it) DamagedTracks.forget(file.absolutePath) }
+        (com.sadurni.attacca.playback.Mp3Damage.repairFile(file, keepOriginal) != null).also { if (it) DamagedTracks.forget(file.absolutePath) }
 
 }

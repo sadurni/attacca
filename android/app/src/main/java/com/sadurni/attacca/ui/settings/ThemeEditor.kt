@@ -164,8 +164,10 @@ fun ThemesSection(settings: AppSettings, onEdit: (String) -> Unit, onGallery: ()
                 RadioRow(name, selected) {
                     if (spec.builtIn) {
                         val mode = ThemeMode.valueOf(spec.id.removePrefix(ThemeSpec.BUILTIN).uppercase())
+                        com.sadurni.attacca.festive.FestiveState.themeChangedByHand()
                         settings.updateUi { it.copy(themeId = null, themeMode = mode) }
                     } else {
+                        com.sadurni.attacca.festive.FestiveState.themeChangedByHand()
                         settings.updateUi { it.copy(themeId = spec.id) }
                     }
                 }
@@ -388,7 +390,10 @@ fun ThemeEditorScreen(
             spec = written
             saved = written
             ThemeRuntime.version++
-            if (use) settings.updateUi { it.copy(themeId = written.id) }
+            if (use) {
+                com.sadurni.attacca.festive.FestiveState.themeChangedByHand()
+                settings.updateUi { it.copy(themeId = written.id) }
+            }
             android.widget.Toast.makeText(context, savedMessage, android.widget.Toast.LENGTH_SHORT).show()
         }
     }

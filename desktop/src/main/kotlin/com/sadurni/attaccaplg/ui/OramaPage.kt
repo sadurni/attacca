@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -162,6 +164,15 @@ fun OramaPage(state: AppState) {
                 )
             }
             val next = nextItem?.let { n -> n.waveform?.let { SongWave(it, n.durationMs, n.soundStartMs ?: 0, n.soundEndMs ?: n.durationMs) } }
+            val period = FestiveDesk.period
+            diorama.festive(if (FestiveDesk.on) period?.festivity else null, period?.kings == true)
+            diorama.celebrate(
+                FestiveDesk.show?.let { s ->
+                    com.sadurni.attacca.diorama.Celebration(
+                        s.newYear, java.time.Duration.between(s.startedAt, java.time.LocalDateTime.now()).toMillis(), GreetingDots.of(FestiveDesk.greeting(s)),
+                    )
+                },
+            )
             diorama.show(song, next, now, nextItem?.title, nextPlace, nextLook)
             val heard = p.heardLevels(raw)
             canvasHeight = size.height
@@ -206,6 +217,20 @@ fun OramaPage(state: AppState) {
                 ) {
                     IconButton(onClick = { used(); state.oramaFull = true }) {
                         Icon(PlayerIcons.Fullscreen, tr("Whole screen (F11)", "Pantalla completa (F11)"), tint = Color.White)
+                    }
+                    // Only on festive days: their look on or off.
+                    FestiveDesk.period?.let { period ->
+                        val name = FestiveDesk.name(period.festivity)
+                        TextButton(onClick = { used(); FestiveDesk.toggle() }) {
+                            Text(
+                                "🎉",
+                                color = if (FestiveDesk.on) Color.White else Color.White.copy(alpha = 0.4f),
+                                modifier = Modifier.semantics {
+                                    contentDescription = if (FestiveDesk.on) tr("Turn off the look of {0}", "Quitar el aspecto de {0}").replace("{0}", name)
+                                    else tr("Turn on the look of {0}", "Poner el aspecto de {0}").replace("{0}", name)
+                                },
+                            )
+                        }
                     }
                     TextButton(
                         onClick = {

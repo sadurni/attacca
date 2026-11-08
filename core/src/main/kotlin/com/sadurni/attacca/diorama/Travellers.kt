@@ -260,7 +260,7 @@ private fun Scene.figureColor(inTunnel: Boolean): Int {
 }
 
 /** The far side's limbs: a shade towards the middle, so the two legs and arms read apart. */
-private fun farShade(color: Int) = if (luma(color) > 0.5f) Colors.darker(color, 0.22f) else Colors.lighter(color, 0.22f)
+internal fun farShade(color: Int) = if (luma(color) > 0.5f) Colors.darker(color, 0.22f) else Colors.lighter(color, 0.22f)
 
 /**
  * The joint between two bones [l1] and [l2] long reaching from [ax], [ay] to [bx], [by]: on the
@@ -709,6 +709,7 @@ private fun Scene.head(x: Float, y: Float, r: Float, color: Int) {
             out.circle(trim, x - r * 0.08f, y + r * 0.08f, r * 0.45f)
         }
     }
+    if (festiveHat) santaHat(x, y, r)
 }
 
 /** Music time of one group's run (a moment of the track where others join the traveller). */

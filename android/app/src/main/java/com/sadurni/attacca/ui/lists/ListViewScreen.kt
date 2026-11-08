@@ -349,6 +349,10 @@ fun ListViewScreen(
                             menuOpen = false
                             list?.let { addTo(UserLists.favorites, it.indices.toList()) }
                         })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair_all)) }, onClick = {
+                            menuOpen = false
+                            list?.let { all -> viewModel.requestRepair(all.map { it.mediaId }) }
+                        })
                     }
                 }
             }

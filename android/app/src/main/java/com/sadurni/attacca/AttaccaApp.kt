@@ -88,6 +88,8 @@ class AttaccaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.sadurni.attacca.festive.FestiveState.init(this)
+        com.sadurni.attacca.festive.NewYearNotice.schedule(this)
         // Why it closed, when nobody closed it: for the user to send (Music/Attacca/attacca-exits.txt).
         ExitLog.watchFailures(this)
         // The sound network's mood classes, read from its weights when moods are first needed.
@@ -96,6 +98,8 @@ class AttaccaApp : Application() {
         // Before anything opens the settings or the databases.
         com.sadurni.attacca.settings.Backup.applyPending(this)
         settings = AppSettings(this)
+        // What the big widget shows, as chosen (kept with the widget, which draws itself without the app).
+        com.sadurni.attacca.playback.NowPlayingWidget.setBig(this, settings.ui.value.widgetBig)
         // Before the playback service creates its session, which reads this.
         com.sadurni.attacca.playback.setResumptionEnabled(this, settings.playback.value.resumeWhenClosed)
         val profiles = settings.profiles

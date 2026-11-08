@@ -1,0 +1,6 @@
+• Lista utworzona z odtwarzanego utworu gra go dalej, bez zaczynania od nowa.
+• Nowy widżet w każdym rozmiarze, z sercem; po powiększeniu okładka lub krajobraz O'rama.
+• Uszkodzone utwory: wyszukiwanie, więcej znaków, Napraw w kolejnych menu; lepsze naprawy.
+• Używana lista włączeń na górze sekcji Listy; foldery z okładkami, także jako siatka.
+• Ekran blokady: obraz z odtwarzanego utworu i Attacca na nim podczas odtwarzania.
+• 9 nowych języków: hindi, kannada, arabski, tamazight, kabylski, suahili, hausa, joruba, amharski.

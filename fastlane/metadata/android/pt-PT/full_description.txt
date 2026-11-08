@@ -25,7 +25,7 @@
 <li>Temas com cores, tipos de letra, fundos e ícones próprios e um esquema de A reproduzir que organizas tu; uma galeria para começar.</li>
 <li>Música por artistas, álbuns, géneros, décadas, ambientes e famílias; pastas; letras, marcadores, temporizador de suspensão, velocidade, repetição A-B; estatísticas de audição.</li>
 <li>Um guia curto para os primeiros passos, definições com pesquisa, modelos de som para cada tipo de dispositivo, e faixas danificadas detetadas, marcadas e reparadas.</li>
-<li>Android Auto, widget no ecrã principal, cópia de segurança de tudo, 23 idiomas.</li>
+<li>Android Auto, widget no ecrã principal, cópia de segurança de tudo, 32 idiomas.</li>
 <li>Attacca O'rama: a música que está a tocar como uma paisagem em movimento, feita da sua forma de onda, do seu estado de espírito e do seu ritmo. Com algumas pequenas surpresas por descobrir.</li>
 </ul>
 

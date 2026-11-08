@@ -101,6 +101,9 @@ private fun trackItems(state: AppState, t: StoredTrack, playing: Boolean = true)
         items += ContextMenuItem(tr("Bridge from this track…", "Camino desde esta pista…")) { bridge(state, from = t.path) }
         items += ContextMenuItem(tr("Bridge to this track…", "Camino hasta esta pista…")) { bridge(state, to = t.path) }
     }
+    if (t.path.endsWith(".mp3", ignoreCase = true)) {
+        items += ContextMenuItem(tr("Repair", "Reparar")) { state.askRepair(listOf(t.path)) }
+    }
     items += ContextMenuItem(tr("Information", "Información")) { state.info = t }
     items += ContextMenuItem(tr("Open its folder", "Abrir su carpeta")) { full(state, t)?.let { File(it).parentFile?.let(Dialogs::show) } }
     return items
@@ -127,15 +130,52 @@ private fun groupItems(state: AppState, tracks: List<StoredTrack>): List<Context
         ContextMenuItem(tr("Add to the queue", "Añadir a la cola")) { p.enqueue(paths, next = false) },
         ContextMenuItem(tr("Add to a list…", "Añadir a una lista…")) { state.addToList = tracks.mapNotNull { full(state, it) } },
         ContextMenuItem(tr("Open its folder", "Abrir su carpeta")) { tracks.firstOrNull()?.let { full(state, it) }?.let { File(it).parentFile?.let(Dialogs::show) } },
+        ContextMenuItem(tr("Repair damaged tracks", "Reparar las pistas dañadas")) { state.askRepair(paths) },
     )
 }
 
 // ---------- Dialogs ----------
 
+/** What becomes of the originals of the tracks to repair: kept beside as .bk, or deleted. */
+@Composable
+fun RepairDialog(state: AppState, paths: List<String>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Repair", "Reparar")) },
+        text = {
+            Text(
+                if (paths.size == 1) tr(
+                    "${File(paths[0]).name} is written again without its broken and repeated pieces. What should happen to the original file?",
+                    "${File(paths[0]).name} se escribe de nuevo sin sus trozos rotos y repetidos. ¿Qué hacemos con el archivo original?",
+                ) else tr(
+                    "${paths.size} damaged tracks are written again without their broken and repeated pieces. What should happen to the original files?",
+                    "Se escriben de nuevo ${paths.size} pistas dañadas sin sus trozos rotos y repetidos. ¿Qué hacemos con los archivos originales?",
+                ),
+            )
+        },
+        confirmButton = {
+            Row {
+                TextButton(onClick = { onDismiss(); state.repairMany(paths, true) }) { Text(tr("Keep it beside, ending in .bk", "Guardarlo al lado, acabado en .bk")) }
+                TextButton(onClick = { onDismiss(); state.repairMany(paths, false) }) { Text(tr("Delete it", "Borrarlo")) }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancel", "Cancelar")) } },
+    )
+}
+
 /** The dialogs the menus open (a name, a list to add to, a track's information). */
 @Composable
 fun MenuDialogs(state: AppState) {
     state.askName?.let { request -> NameDialog(request) { state.askName = null } }
+    state.repairAsk?.let { paths -> RepairDialog(state, paths) { state.repairAsk = null } }
+    state.repairing?.let { (done, total) ->
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(tr("Repair", "Reparar")) },
+            text = { Text(tr("Repairing: $done / $total", "Reparando: $done / $total")) },
+            confirmButton = {},
+        )
+    }
     state.addToList?.let { paths -> AddToListDialog(state, paths) { state.addToList = null } }
     state.info?.let { t -> state.library?.let { TrackInfoDialog(it, t) { state.info = null } } }
 }

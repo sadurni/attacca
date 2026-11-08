@@ -80,6 +80,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -228,13 +229,30 @@ class MainActivity : AppCompatActivity() {
             // The user's theme when one is chosen, else White / Dark / Black (or the phone's choice).
             val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
             val themeVersion = com.sadurni.attacca.ui.theme.ThemeRuntime.version
-            val chosen = androidx.compose.runtime.remember(ui.themeId, ui.themeMode, systemDark, themeVersion) {
-                com.sadurni.attacca.settings.ThemeStore.find(ui.themeId) ?: when (ui.themeMode) {
+            // Festive days: their theme instead of the usual one, while on.
+            val festiveOn by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
+            val festivePeriod by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
+            val chosen = androidx.compose.runtime.remember(ui.themeId, ui.themeMode, systemDark, themeVersion, festiveOn, festivePeriod) {
+                com.sadurni.attacca.festive.FestiveState.theme() ?: com.sadurni.attacca.settings.ThemeStore.find(ui.themeId) ?: when (ui.themeMode) {
                     com.sadurni.attacca.settings.ThemeMode.WHITE -> com.sadurni.attacca.settings.ThemeSpec.WHITE
                     com.sadurni.attacca.settings.ThemeMode.DARK -> com.sadurni.attacca.settings.ThemeSpec.DARK
                     com.sadurni.attacca.settings.ThemeMode.BLACK -> com.sadurni.attacca.settings.ThemeSpec.BLACK
                     com.sadurni.attacca.settings.ThemeMode.SYSTEM -> com.sadurni.attacca.settings.ThemeSpec.SYSTEM
                     com.sadurni.attacca.settings.ThemeMode.SYSTEM_DARK -> com.sadurni.attacca.settings.ThemeSpec.SYSTEM_DARK
+                }
+            }
+            // Each new day (and back to the app) the festive days are worked out again; at midnight
+            // of a new year, wherever the app is, O'rama opens for the show.
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                while (true) {
+                    com.sadurni.attacca.festive.FestiveState.refresh()
+                    if (com.sadurni.attacca.festive.FestiveState.checkShow() != null && !viewModel.oramaShown) {
+                        viewModel.oramaShown = true
+                        viewModel.oramaRequest.value = true
+                    }
+                    val next = com.sadurni.attacca.festive.FestiveState.nextShow()
+                    val untilShow = next?.let { java.time.Duration.between(java.time.LocalDateTime.now(), it).toMillis() } ?: Long.MAX_VALUE
+                    kotlinx.coroutines.delay(untilShow.coerceIn(500L, 30_000L))
                 }
             }
             // Built-in themes follow the "accent from the cover" switch; the user's themes say it themselves
@@ -264,6 +282,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             AttaccaTheme(spec = spec, artworkAccent = artworkAccent) {
+                // The home-screen widget in the theme's colours.
+                val widgetColors = LocalAttaccaColors.current
+                val widgetAccent = com.sadurni.attacca.ui.theme.LocalAccent.current
+                androidx.compose.runtime.LaunchedEffect(widgetColors, widgetAccent) {
+                    val accent = widgetAccent.toArgb()
+                    val onAccent = if (androidx.core.graphics.ColorUtils.calculateLuminance(accent) > 0.5) 0xFF202124.toInt() else 0xFFFFFFFF.toInt()
+                    com.sadurni.attacca.playback.NowPlayingWidget.setColors(
+                        this@MainActivity,
+                        widgetColors.surface.copy(alpha = 0.94f).toArgb(),
+                        widgetColors.text.toArgb(),
+                        widgetColors.textGrayed.toArgb(),
+                        accent,
+                        onAccent,
+                    )
+                }
                 Box(Modifier.fillMaxSize().background(LocalAttaccaColors.current.background)) {
                     // First start: the music folder or a backup, before anything else.
                     var welcome by remember { mutableStateOf(com.sadurni.attacca.ui.settings.needsWelcome(this@MainActivity)) }
@@ -377,6 +410,11 @@ class MainActivity : AppCompatActivity() {
             // With the screen off the phone slows down and the folder's analysis takes far longer.
             (chain.keepScreenOn && (scanning != null || analysing != null))
         val view = androidx.compose.ui.platform.LocalView.current
+        // Over the lock screen while music plays (when chosen): waking the phone shows Attacca as it was.
+        val overLock = ui.overLockScreen && nowPlaying.isPlaying
+        androidx.compose.runtime.LaunchedEffect(overLock) {
+            setShowWhenLocked(overLock)
+        }
         androidx.compose.runtime.DisposableEffect(keepScreenOn) {
             view.keepScreenOn = keepScreenOn
             onDispose { view.keepScreenOn = false }
@@ -551,6 +589,7 @@ class MainActivity : AppCompatActivity() {
                                         }
                                         is BrowserAction.Bridge -> viewModel.requestBridge(action.from, action.to)
                                         is BrowserAction.Inclusion -> viewModel.requestInclusion(action.file.absolutePath)
+                                        is BrowserAction.Repair -> viewModel.requestRepair(action.paths)
                                     }
                                 },
                             ) }
@@ -634,6 +673,10 @@ class MainActivity : AppCompatActivity() {
                 val inclusion by viewModel.inclusionRequest.collectAsStateWithLifecycle()
                 inclusion?.let { path ->
                     com.sadurni.attacca.ui.chain.InclusionDialog(path, onDismiss = { viewModel.inclusionRequest.value = null })
+                }
+                val repair by viewModel.repairRequest.collectAsStateWithLifecycle()
+                repair?.let { paths ->
+                    com.sadurni.attacca.ui.common.RepairDialog(paths, onDismiss = { viewModel.repairRequest.value = null })
                 }
                 com.sadurni.attacca.ui.settings.EffectAppsWarning()
                 val seed by viewModel.seedRequest.collectAsStateWithLifecycle()
@@ -969,6 +1012,7 @@ class MainActivity : AppCompatActivity() {
                 is BrowserAction.QuickList -> viewModel.quickSeedList(action.file.absolutePath)
                 is BrowserAction.Bridge -> viewModel.requestBridge(action.from, action.to)
                 is BrowserAction.Inclusion -> viewModel.requestInclusion(action.file.absolutePath)
+                is BrowserAction.Repair -> viewModel.requestRepair(action.paths)
                 is BrowserAction.AddToList -> {
                     val items = withContext(Dispatchers.IO) { ListLoader.loadFiles(action.files) }
                     viewModel.addItemsToList(action.list, items) { count ->

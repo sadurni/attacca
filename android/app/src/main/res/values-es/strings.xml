@@ -809,15 +809,15 @@
     <string name="help_lists_body">• Mis listas son las que has guardado; Generadas tiene las listas hechas por estado de ánimo y familia; Listas abiertas son las listas abiertas desde otras carpetas o apps.\n• El botón de guardar guarda la lista que suena como una de las tuyas, en el mismo tema y posición.\n• Mantén pulsada una lista para seleccionarla; selecciona un grupo entero con su casilla. Con listas seleccionadas puedes borrarlas, y con una lista guardada seleccionada, renombrarla: sus ajustes, su punto de reanudación y sus dispositivos siguen al nombre nuevo.\n• Arrastra el asa de la derecha para poner las listas de un grupo en tu propio orden.\n• La carpeta de listas abre un explorador en la carpeta donde otras apps guardan listas M3U8.\n• En una lista guardada, los botones bajo su título la cambian sin reproducirla: encadenar, encadenar por álbumes, mezclar álbumes, agrupar, ordenar, ajustes y herramientas. Una lista que no es tuya se guarda como una nueva tuya. Ajustes → Encadenado puede guardar cada lista hecha desde un tema, y las generadas, al empezar a sonar.</string>
     <string name="help_queue_title">Lista actual</string>
     <string name="help_browser_title">Carpetas</string>
-    <string name="help_browser_body">• Toca una carpeta para abrirla y un archivo para reproducir su carpeta desde él; Atrás sube una carpeta.\n• «Reproducir carpeta» arriba reproduce la carpeta, con o sin sus subcarpetas.\n• Mantén pulsado para seleccionar archivos; luego reprodúcelos, añádelos a la lista actual o a cualquier lista.\n• El ⋮ de cada fila ofrece crear una lista a partir del tema y la lista de inclusión.\n• El explorador de música y el de listas recuerdan cada uno dónde los dejaste.</string>
+    <string name="help_browser_body">• Toca una carpeta para abrirla y un archivo para reproducir su carpeta desde él; Atrás sube una carpeta.\n• «Reproducir carpeta» arriba reproduce la carpeta, con o sin sus subcarpetas.\n• Mantén pulsado para seleccionar archivos; luego reprodúcelos, añádelos a la lista actual o a cualquier lista.\n• El ⋮ de cada fila ofrece crear una lista a partir del tema y la lista de inclusión.\n• El explorador de música y el de listas recuerdan cada uno dónde los dejaste.\n• Las carpetas y los temas muestran sus portadas (la imagen de la carpeta, o la de su primer tema); el botón de cuadrícula de arriba muestra una carpeta como portadas, como los álbumes en Música (el primer nivel, la propia carpeta de música, conserva su propia elección).</string>
     <string name="help_sound_title">Sonido</string>
     <string name="help_sound_body">• Attacca procesa el sonido por sí misma, en este orden: ReplayGain y preamplificador, crossfade, ecualizador de 10 bandas, graves dinámicos, anchura estéreo y balance, crossfeed o altavoces virtuales, compresor y limitador.\n• Cada salida (altavoz, auriculares, cada dispositivo Bluetooth…) tiene su propio perfil de sonido, que cambia solo.\n• El crossfade y el salto de silencios se ajustan en Ajustes y se pueden cambiar por lista; los álbumes pueden seguir sin pausas.\n• Para que el teléfono u otras apps no añadan su propio ecualizador encima, mira Ajustes → Coche y segundo plano → Efectos de sonido del teléfono.</string>
     <string name="help_devices_title">Dispositivos</string>
     <string name="help_devices_body">• Cada salida vista aparece con su perfil, un volumen fijo si lo quieres y una lista que continuar.\n• Un dispositivo puede seguir la última lista que sonó en él y empezar a sonar al conectarse, incluso con el reproductor cerrado (necesita el permiso de dispositivos cercanos, abrir la app desde segundo plano y sin optimización de batería; los botones de ahí los piden).</string>
     <string name="help_chain_title">Encadenado y listas generadas</string>
-    <string name="help_chain_body">• El encadenado compara cómo acaba cada tema con cómo empiezan los demás: tempo, timbre, actividad, tonalidad y notas. Los temas se analizan una vez, en segundo plano, al encadenar una lista o para toda la carpeta de música (Ajustes → Encadenado).\n• Con el análisis cada tema recibe un estado de ánimo (enérgico, alegre, tranquilo, melancólico, tenso) y una familia de sonido: temas que suenan parecido, encontrados en tu colección por una red de reconocimiento de sonido que Attacca ejecuta en el propio móvil. Lo mismo dice qué temas se parecen más a uno.\n• Listas → Generadas hace una lista encadenada por estado de ánimo y familia. «Crear lista a partir de este tema» hace una lista con los temas más parecidos, encadenada desde él.\n• Filtros: artista, género, años, tempo, duración del tema (de 1 a 20 minutos si no se cambia), energía, estado de ánimo y voz; 150 temas por lista si no se cambia. «Ajustar los filtros a la pista» los pone alrededor del tema, tan ceñidos como se pueda dejando diez veces los temas pedidos.\n• Analizar toda la carpeta es mucho más rápido con la pantalla encendida: Ajustes → Encadenado → «Mantener la pantalla encendida al analizar».</string>
+    <string name="help_chain_body">• El encadenado compara cómo acaba cada tema con cómo empiezan los demás: tempo, timbre, actividad, tonalidad y notas. Los temas se analizan una vez, en segundo plano, al encadenar una lista o para toda la carpeta de música (Ajustes → Encadenado).\n• Con el análisis cada tema recibe un estado de ánimo (enérgico, alegre, tranquilo, melancólico, tenso) y una familia de sonido: temas que suenan parecido, encontrados en tu colección por una red de reconocimiento de sonido que Attacca ejecuta en el propio móvil. Lo mismo dice qué temas se parecen más a uno.\n• Listas → Generadas hace una lista encadenada por estado de ánimo y familia. «Crear lista a partir de este tema» hace una lista con los temas más parecidos, encadenada desde él; hecha desde el tema que suena, ese tema sigue donde está, sin volver a empezar.\n• Filtros: artista, género, años, tempo, duración del tema (de 1 a 20 minutos si no se cambia), energía, estado de ánimo y voz; 150 temas por lista si no se cambia. «Ajustar los filtros a la pista» los pone alrededor del tema, tan ceñidos como se pueda dejando diez veces los temas pedidos.\n• Analizar toda la carpeta es mucho más rápido con la pantalla encendida: Ajustes → Encadenado → «Mantener la pantalla encendida al analizar».</string>
     <string name="help_inclusion_title">Lista de inclusión</string>
-    <string name="help_inclusion_body">• Una lista M3U8 que funciona como lista blanca o negra para las listas generadas y para «Dejar solo los incluidos».\n• Añade o quita temas, álbumes, artistas y carpetas desde sus menús; las reglas se guardan en un archivo de texto junto a la lista, así los archivos nuevos de esas carpetas, álbumes o artistas entran tras cada exploración.\n• Una «!» naranja marca un tema que queda fuera (también junto al título en Reproduciendo); «◐» marca una carpeta con parte de su música fuera.\n• Ajustes → Lista de inclusión muestra las reglas y la lista que resulta.\n• Attacca Desktop en el PC puede usar la misma lista o su archivo de reglas.</string>
+    <string name="help_inclusion_body">• Una lista M3U8 que funciona como lista blanca o negra para las listas generadas y para «Dejar solo los incluidos».\n• Añade o quita temas, álbumes, artistas y carpetas desde sus menús; las reglas se guardan en un archivo de texto junto a la lista, así los archivos nuevos de esas carpetas, álbumes o artistas entran tras cada exploración.\n• Una «!» naranja marca un tema que queda fuera (también junto al título en Reproduciendo); «◐» marca una carpeta con parte de su música fuera.\n• Ajustes → Lista de inclusión muestra las reglas y la lista que resulta.\n• Attacca Desktop en el PC puede usar la misma lista o su archivo de reglas.\n• Con varias listas de inclusión, la que se usa aparece arriba en Listas: tócala para cambiarla.</string>
     <string name="help_performance_title">Reproducción fluida</string>
     <string name="help_performance_body">• Con la pantalla apagada el teléfono ahorra energía, y el audio puede atascarse con efectos exigentes. El buffer de audio en Automático crece un segundo tras cada corte, hasta 5 s; los cortes detectados se cuentan en Ajustes → Coche y segundo plano.\n• «Menos despertares» deja descansar al reproductor hasta que el buffer necesita más audio: menos batería y menos cortes.\n• Los trabajos largos (explorar, analizar) van a prioridad baja y muestran su progreso en una notificación.</string>
     <string name="help_settings_title">Ajustes y copia de seguridad</string>
@@ -827,7 +827,7 @@
     <string name="help_playback_title">Reproducción</string>
     <string name="help_themes_title">Aspecto: temas</string>
     <string name="help_car_title">Android Auto y widget</string>
-    <string name="help_car_body">• En el coche, Android Auto permite recorrer la lista actual, tus listas, las generadas y las recientes, y la carpeta de música. Los botones de álbum y de favorito se añaden en Ajustes → Coche y segundo plano.\n• El widget de la pantalla de inicio muestra la portada, el título y los controles, y funciona con la app cerrada; añádelo desde Ajustes → Apariencia.</string>
+    <string name="help_car_body">• Pantalla de bloqueo (Ajustes → Apariencia): su imagen puede seguir al tema que suena (su portada, o el paisaje de O\'rama), y Attacca puede mostrarse sobre ella mientras suena música.\n• En el coche, Android Auto permite recorrer la lista actual, tus listas, las generadas y las recientes, y la carpeta de música. Los botones de álbum y de favorito se añaden en Ajustes → Coche y segundo plano.\n• El widget de la pantalla de inicio cambia al cambiarle el tamaño: la portada y reproducir; una fila con el tiempo; dos filas con el álbum, lo que viene después y la lista; alto y estrecho, la portada grande arriba y más debajo según crece; y, más grande, la portada en grande o el paisaje de O\'rama, según se elija en Ajustes → Apariencia. El corazón añade el tema a Favoritos. Toma los colores del tema visual y funciona con la app cerrada; añádelo desde Ajustes → Apariencia.</string>
 
     <!-- Tips over the screens -->
     <string name="tip_counter">Consejo %1$d de %2$d</string>
@@ -904,7 +904,8 @@
     <string name="rg_measured_hint">Los archivos sin etiquetas de ReplayGain se miden (EBU R128) antes de sonar y reciben su propia ganancia de tema y de álbum; esta ganancia solo se aplica hasta entonces.</string>
     <string name="info_loudness">Sonoridad (medida)</string>
     <string name="work_library_title">Preparando la carpeta de música</string>
-    <string name="widget_description">Carátula, título y controles de reproducción</string>
+    <string name="widget_description">Portada, título, lo que viene después y los controles; más grande, el paisaje de O\'rama</string>
+    <string name="widget_next">Siguiente: %1$s</string>
     <string name="widget_section">Widget de la pantalla de inicio</string>
     <string name="widget_add">Añadir el widget a la pantalla de inicio</string>
     <string name="section_album_shuffle">Aleatorio por álbumes</string>
@@ -1537,7 +1538,7 @@
     <string name="damaged_count">Pistas dañadas encontradas: %1$d</string>
     <string name="damaged_show">Ver las pistas dañadas</string>
     <string name="damaged_skip">Dejar las pistas dañadas fuera de las listas que hace Attacca</string>
-    <string name="damaged_hint">Las pistas dañadas también se detectan al escanear la biblioteca y al reproducirse. Se marcan con ⚠ en Carpetas y Música; una carpeta con alguna dentro, con △. Los MP3 dañados se pueden reparar: se escriben de nuevo sin sus trozos rotos o repetidos.</string>
+    <string name="damaged_hint">Las pistas dañadas también se detectan al escanear la biblioteca y al reproducirse. Se marcan con ⚠ en Carpetas, Música, las listas y el recuadro del título de Reproduciendo; una carpeta, álbum, artista o lista con alguna, con △. Los MP3 dañados se pueden reparar, también desde el menú de una pista, una carpeta (todas las dañadas que tenga), un álbum, un artista o una lista: se escriben de nuevo sin sus trozos rotos o repetidos, y una pista que suena se vuelve a leer desde donde iba. En un tramo con fallos de principio a fin se deja fuera el tramo entero, para un salto corto en vez de ruido; cuando se pierde mucho, sería mejor una copia nueva del archivo.</string>
     <string name="damaged_unreadable">No se puede leer</string>
     <string name="damaged_broken">%1$d tramas rotas (ráfagas de ruido)</string>
     <string name="damaged_repeats">%1$s s escritos dos veces (la música salta hacia atrás)</string>
@@ -1555,6 +1556,14 @@
     <string name="damaged_delete_original">Borrarlo</string>
     <string name="damaged_repaired">Reparada</string>
     <string name="damaged_repair_failed">No se pudo reparar</string>
+    <string name="damaged_repair_all">Reparar pistas dañadas</string>
+    <string name="damaged_repair_ask_many">%1$d pistas dañadas se escriben de nuevo sin sus trozos rotos y repetidos. ¿Qué hacer con los archivos originales?</string>
+    <string name="damaged_repair_none">Aquí no hay pistas MP3 dañadas que reparar</string>
+    <string name="damaged_nothing">No se ha encontrado ningún daño: nada que reparar</string>
+    <string name="damaged_repairing">Reparando: %1$d / %2$d</string>
+    <string name="damaged_repaired_lost">Reparada: %1$s s de sonido dañado dejados fuera</string>
+    <string name="damaged_repaired_many">%1$d reparadas, %2$d no se pudieron; %3$s s de sonido dañado dejados fuera</string>
+    <string name="damaged_much_lost">Hay tanto dañado que sería mejor una copia nueva del archivo.</string>
     <string name="cover_search_web">Buscar en la web</string>
     <string name="cover_search_web_hint">Buscar en la web abre el navegador con el artista y el álbum para encontrar la portada: guarda allí la imagen y luego elígela aquí con Elegir una imagen.</string>
     <string name="cover_search_web_none">No hay navegador con el que buscar</string>
@@ -1591,4 +1600,32 @@
     <string name="damaged_checking">Comprobando daños: %1$d / %2$d</string>
     <string name="damaged_check_new_hint">Solo se comprueban las pistas nunca comprobadas o cambiadas desde entonces: una comprobación detenida a medias sigue desde donde estaba. Volver a comprobar todo sirve solo para comprobar cada pista una vez más.</string>
     <string name="damaged_check_all_confirm">Se vuelven a comprobar todas las pistas de la carpeta de música, también las ya comprobadas. Puede tardar un rato con una colección grande.</string>
+    <string name="festive_christmas">Navidad</string>
+    <string name="festive_diwali">Diwali</string>
+    <string name="festive_eid">Eid</string>
+    <string name="festive_lunar">Año Nuevo lunar</string>
+    <string name="festive_shogatsu">Días de Año Nuevo</string>
+    <string name="festive_turn_off">Desactivar el aspecto de %1$s</string>
+    <string name="festive_turn_on">Activar el aspecto de %1$s</string>
+    <string name="newyear_greeting">¡Feliz Año Nuevo %1$s!</string>
+    <string name="newyear_greeting_lunar">¡Feliz Año Nuevo lunar %1$s!</string>
+    <string name="newyear_greeting_hijri">¡Feliz Año Nuevo de la Hégira %1$s!</string>
+    <string name="newyear_greeting_yennayer">¡Feliz Yennayer %1$s!</string>
+    <string name="newyear_greeting_enkutatash">¡Feliz Enkutatash %1$s!</string>
+    <string name="newyear_greeting_vikram">¡Feliz Año Nuevo %1$s!</string>
+    <string name="newyear_notice_channel">Año Nuevo</string>
+    <string name="newyear_notice_title">Algo grande a medianoche</string>
+    <string name="newyear_notice_text">En unos minutos empieza el año nuevo: deja Attacca abierto en la pantalla para ver qué pasa en O\'rama.</string>
+    <string name="browser_as_grid">Mostrar como portadas</string>
+    <string name="browser_as_list">Mostrar como lista</string>
+    <string name="widget_big">Al hacerlo grande, el widget muestra</string>
+    <string name="widget_big_cover">La portada, en grande</string>
+    <string name="widget_big_orama">El paisaje de O\'rama</string>
+    <string name="lock_wallpaper">Imagen de la pantalla de bloqueo</string>
+    <string name="lock_wallpaper_off">Como está</string>
+    <string name="lock_wallpaper_cover">La portada del tema que suena</string>
+    <string name="lock_wallpaper_orama">El paisaje de O\'rama</string>
+    <string name="lock_wallpaper_hint">Se pone de nuevo con cada tema. Al volver a Como está, la pantalla de bloqueo toma la imagen de la pantalla de inicio (la que tenía antes no se puede recuperar).</string>
+    <string name="over_lock_screen">Mostrar sobre la pantalla de bloqueo al reproducir</string>
+    <string name="over_lock_screen_hint">Si Attacca está abierto (Reproduciendo, O\'rama…) cuando se apaga la pantalla, al despertar el móvil se muestra sobre la pantalla de bloqueo mientras suena música; para todo lo demás el móvil sigue bloqueado.</string>
 </resources>

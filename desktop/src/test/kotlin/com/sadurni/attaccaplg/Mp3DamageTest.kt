@@ -13,6 +13,7 @@ class Mp3DamageTest {
     private fun frame(seed: Int): ByteArray {
         val f = Random(seed).nextBytes(626)
         f[0] = 0xff.toByte(); f[1] = 0xfb.toByte(); f[2] = 0xb0.toByte(); f[3] = 0x44
+        for (i in 4 until 36) f[i] = 0 // side information an encoder could write: no reservoir, no sound bits but the gain
         var pos = 9 + 3 + 8
         repeat(4) {
             for (b in 0 until 8) {
@@ -54,15 +55,15 @@ class Mp3DamageTest {
         val parts = ArrayList<ByteArray>()
         for ((i, f) in music.withIndex()) {
             parts += f
-            if (i in setOf(15, 30, 45, 60)) parts += garbage(200)
+            if (i in setOf(10, 40, 70)) parts += garbage(200)
         }
         val damaged = join(parts)
         val found = Mp3Damage.check(damaged)
         assertTrue(found is Mp3Damage.Damage.Broken && found.frames >= Mp3Damage.MIN_BROKEN)
         val fixed = Mp3Damage.repaired(damaged)!!
         assertNull(Mp3Damage.check(fixed))
-        // The four frames followed by garbage go; the rest stays.
-        assertEquals(76 * 626, fixed.size)
+        // The three frames followed by garbage go, with the margin on each side; the rest stays.
+        assertEquals((80 - 3 * (1 + 2 * Mp3Damage.MARGIN)) * 626, fixed.size)
     }
 
     @Test

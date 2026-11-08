@@ -83,6 +83,34 @@ fun main(args: Array<String>) {
             shot(File(out, "tour-$name-${"%02d".format(k)}.png"), 960, 480, d, k * 15_000L + 4_000L, startMs = 100_000L + k * 977L)
         }
     }
+    // The festive looks (some days a year) and the new year's shows at midnight.
+    for (f in com.sadurni.attacca.festive.Festivity.entries) {
+        for (kings in if (f == com.sadurni.attacca.festive.Festivity.CHRISTMAS) listOf(false, true) else listOf(false)) {
+            for ((world, at) in listOf("meadow" to 20_000L, "city" to 47_000L)) {
+                val d = Diorama()
+                d.festive(f, kings)
+                d.show(Diorama.Song("fest-$world", Looks.of(looks.getValue(world)), SongWave(wave, 240_000, 2_000, 236_000)), SongWave(nextWave, 200_000, 1_000, 199_000), 0)
+                // The sleigh, dragon and cranes cross the sky at the start of their cycles.
+                shot(File(out, "festive-${f.name.lowercase()}${if (kings) "-kings" else ""}-$world.png"), 1280, 640, d, at, startMs = 3_000L, warm = 150)
+            }
+        }
+    }
+    val greetings = linkedMapOf(
+        com.sadurni.attacca.festive.NewYear.GREGORIAN to "¡Feliz año nuevo 2027!",
+        com.sadurni.attacca.festive.NewYear.LUNAR to "新年快乐 🐐",
+        com.sadurni.attacca.festive.NewYear.HIJRI to "عام هجري سعيد 1449",
+        com.sadurni.attacca.festive.NewYear.YENNAYER to "ⴰⵙⴳⴳⵯⴰⵙ ⴰⵎⴰⵢⵏⵓ 2977",
+        com.sadurni.attacca.festive.NewYear.ENKUTATASH to "መልካም አዲስ ዓመት 2019",
+        com.sadurni.attacca.festive.NewYear.VIKRAM to "नव वर्ष की शुभकामनाएँ 2083",
+    )
+    for ((kind, text) in greetings) {
+        for ((k, elapsed) in listOf(6_000L, 40_000L).withIndex()) {
+            val d = Diorama()
+            d.celebrate(com.sadurni.attacca.diorama.Celebration(kind, elapsed, GreetingDots.of(text)))
+            d.show(Diorama.Song("show", Looks.of(looks.getValue("city")), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+            shot(File(out, "newyear-${kind.name.lowercase()}-$k.png"), 1280, 640, d, 30_000L, startMs = 9_000L + k * 700L, warm = 100)
+        }
+    }
     // The end of a meadow track, the gate into each next world: ahead, then going through.
     val len = 234_000L
     for (next in listOf("castle", "meadow", "city", "neon", "coast", "ice", "space", "none")) {

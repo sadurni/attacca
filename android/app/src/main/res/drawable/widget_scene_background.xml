@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The rounded frame of the landscape widget (the landscape is cut to it). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FF101216" />
+    <corners android:radius="24dp" />
+</shape>

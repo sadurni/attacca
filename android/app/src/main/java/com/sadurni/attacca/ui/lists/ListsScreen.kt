@@ -190,6 +190,13 @@ fun ListsScreen(
         includedFavorites = withContext(Dispatchers.IO) { syncIncludedFavorites(app) }
     }
 
+    // Another inclusion list put in use (the picker above, Now playing's menu…): Favorites with only
+    // the included tracks made again for it, or gone with Everything.
+    val chainNow by app.settings.chain.collectAsStateWithLifecycle()
+    LaunchedEffect(chainNow.inclusionList, chainNow.inclusionMode) {
+        includedFavorites = withContext(Dispatchers.IO) { syncIncludedFavorites(app) }
+    }
+
     fun filesOf(group: ListGroup) = when (group) {
         ListGroup.MINE -> userLists
         ListGroup.GENERATED -> generated
@@ -292,6 +299,8 @@ fun ListsScreen(
                 query = ""
             })
         }
+        // The inclusion set the lists keep to, in sight and changed with a tap (nothing without sets).
+        if (selection == null) com.sadurni.attacca.ui.chain.InclusionSetPicker()
         // Order by dragging is only meaningful on the whole group.
         val canReorder = query.isBlank() && selection == null
         val mine = userLists.filter { matchesQuery(query, it.nameWithoutExtension) }
@@ -336,6 +345,7 @@ fun ListsScreen(
                 tipTarget = index == 0,
                 title = file.nameWithoutExtension,
                 subtitle = subtitle,
+                listFile = file,
                 selected = selection?.contains(group to file.absolutePath),
                 dragging = dragging,
                 onClick = {
@@ -627,6 +637,8 @@ private fun SelectableListRow(
     modifier: Modifier = Modifier,
     tipTarget: Boolean = false,
     dragging: Boolean = false,
+    /** The list's file, for the damaged-track mark. */
+    listFile: java.io.File? = null,
 ) {
     val accent = LocalAccent.current
     val colors = LocalAttaccaColors.current
@@ -654,7 +666,18 @@ private fun SelectableListRow(
             modifier = Modifier.size(24.dp),
         )
         Column(Modifier.weight(1f).padding(start = 16.dp)) {
-            Text(title, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (listFile != null) {
+                    val damaged by com.sadurni.attacca.library.DamagedTracks.all.collectAsStateWithLifecycle()
+                    val paths by androidx.compose.runtime.produceState(emptyList<String>(), listFile, damaged.isEmpty()) {
+                        if (damaged.isNotEmpty()) value = kotlinx.coroutines.withContext(com.sadurni.attacca.Background.dispatcher) {
+                            runCatching { com.sadurni.attacca.library.M3uParser.parse(listFile).map { it.location } }.getOrDefault(emptyList())
+                        }
+                    }
+                    com.sadurni.attacca.ui.common.GroupDamagedMark(paths)
+                }
+                Text(title, fontSize = AttaccaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (subtitle != null) {
                 Text(subtitle, fontSize = AttaccaType.caption, color = colors.textGrayed, maxLines = 1, overflow = TextOverflow.StartEllipsis)
             }

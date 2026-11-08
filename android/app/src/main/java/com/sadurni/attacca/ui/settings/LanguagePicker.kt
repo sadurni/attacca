@@ -50,6 +50,7 @@ import java.util.Locale
 private val LANGUAGE_TAGS = listOf(
     "en", "es", "es-419", "ca", "eu", "gl", "pt", "pt-BR", "fr", "it", "de", "nl", "sv", "pl", "ro",
     "el", "ru", "uk", "tr", "ja", "ko", "zh-CN", "zh-TW",
+    "hi", "kn", "ar", "zgh", "kab", "sw", "ha", "yo", "am",
 )
 
 /** An emoji flag for each language where one fits; Catalan, Basque and Galician are drawn (see [RegionFlag]). */
@@ -57,6 +58,15 @@ private val FLAGS = mapOf(
     "en" to "🇬🇧", "es" to "🇪🇸", "es-419" to "🌎", "pt" to "🇵🇹", "pt-BR" to "🇧🇷", "fr" to "🇫🇷",
     "it" to "🇮🇹", "de" to "🇩🇪", "nl" to "🇳🇱", "sv" to "🇸🇪", "pl" to "🇵🇱", "ro" to "🇷🇴", "el" to "🇬🇷",
     "ru" to "🇷🇺", "uk" to "🇺🇦", "tr" to "🇹🇷", "ja" to "🇯🇵", "ko" to "🇰🇷", "zh-CN" to "🇨🇳", "zh-TW" to "🇹🇼",
+    "hi" to "🇮🇳", "kn" to "🇮🇳", "ar" to "🌍", "zgh" to "🇲🇦", "kab" to "🇩🇿", "sw" to "🌍", "ha" to "🇳🇬", "yo" to "🇳🇬", "am" to "🇪🇹",
+)
+
+/** Names the phone may not know, in the language itself and in English. */
+private val OWN_NAMES = mapOf(
+    "zgh" to ("ⵜⴰⵎⴰⵣⵉⵖⵜ" to "Tamazight (Tifinagh)"),
+    "kab" to ("Taqbaylit" to "Kabyle"),
+    "ha" to ("Hausa" to "Hausa"),
+    "yo" to ("Èdè Yorùbá" to "Yoruba"),
 )
 
 /** The language chosen in the app ("" for the phone's), matched to one of the app's languages. */
@@ -75,6 +85,7 @@ private fun setLanguage(tag: String) {
 
 /** The language's name in itself and in English (readable whatever the current script). */
 private fun names(tag: String): Pair<String, String> {
+    OWN_NAMES[tag]?.let { return it }
     val locale = Locale.forLanguageTag(tag)
     return locale.getDisplayName(locale).replaceFirstChar { it.titlecase(locale) } to locale.getDisplayName(Locale.ENGLISH)
 }

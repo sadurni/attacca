@@ -2,6 +2,7 @@ package com.sadurni.attacca.ui.orama
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -199,6 +200,15 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         }
     }
     val diorama = remember { Diorama() }
+    // Festive days and the new year's show.
+    val festiveOn by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
+    val festivePeriod by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
+    val newYear by com.sadurni.attacca.festive.FestiveState.show.collectAsStateWithLifecycle()
+    val greetingDots by produceState<FloatArray?>(null, newYear) {
+        value = newYear?.let { s ->
+            withContext(Dispatchers.Default) { com.sadurni.attacca.festive.GreetingDots.of(com.sadurni.attacca.festive.FestiveState.greeting(s)) }
+        }
+    }
     val list = remember { DrawList() }
     val path = remember { Path() }
     val raw = remember { FloatArray(3) }
@@ -230,6 +240,14 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                     now.album?.takeIf { a -> a.isNotBlank() } ?: now.title, now.artist,
                 )
             }
+            diorama.festive(if (festiveOn) festivePeriod?.festivity else null, festivePeriod?.kings == true)
+            diorama.celebrate(
+                newYear?.let { s ->
+                    com.sadurni.attacca.diorama.Celebration(
+                        s.newYear, java.time.Duration.between(s.startedAt, java.time.LocalDateTime.now()).toMillis(), greetingDots,
+                    )
+                },
+            )
             diorama.show(song, nextAnalysis?.let(::waveOf), t, now.nextTitle, nextPlace, nextLook)
             val heard = app.dspEngine.heardLevels(raw)
             canvasHeight = size.height
@@ -277,6 +295,16 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                         }
                         IconButton(onClick = { used(); onFull(true) }) {
                             Icon(Icons.Rounded.Fullscreen, stringResource(R.string.orama_full_screen), tint = Color.White)
+                        }
+                        // Only on festive days: their look on or off.
+                        festivePeriod?.let { period ->
+                            IconButton(onClick = { used(); com.sadurni.attacca.festive.FestiveState.toggle() }) {
+                                Icon(
+                                    androidx.compose.material.icons.Icons.Rounded.Celebration,
+                                    stringResource(if (festiveOn) R.string.festive_turn_off else R.string.festive_turn_on, stringResource(com.sadurni.attacca.festive.FestiveState.nameOf(period.festivity))),
+                                    tint = if (festiveOn) Color.White else Color.White.copy(alpha = 0.4f),
+                                )
+                            }
                         }
                         TextButton(
                             onClick = {
@@ -520,7 +548,7 @@ private fun moodLineOf(context: android.content.Context, mediaId: String?): Stri
 }
 
 /** What is known of [mediaId] (measures, mood, family) and its cover's colours, as a look. */
-private fun lookOf(context: android.content.Context, mediaId: String?, cover: Bitmap?): SongLook {
+internal fun lookOf(context: android.content.Context, mediaId: String?, cover: Bitmap?): SongLook {
     val accent = cover?.let { runCatching { ArtworkLoader.accentFrom(it, darkBackground = true)?.toArgb() }.getOrNull() }
     if (mediaId == null) return Diorama.NEUTRAL
     val app = context.app

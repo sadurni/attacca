@@ -344,6 +344,21 @@ class Diorama {
      * raw live levels [raw] (level, low, high) or null, [nowMs] a steady clock. [lift] raises the
      * land that much over the bottom (to keep it clear of what floats there); the sky goes on below.
      */
+    private var festivity: com.sadurni.attacca.festive.Festivity? = null
+    private var kingsDays = false
+    private var celebration: Celebration? = null
+
+    /** The festive look of these days ([f], null: none; [kings]: the Three Kings come), as the app decides it. */
+    fun festive(f: com.sadurni.attacca.festive.Festivity?, kings: Boolean = false) {
+        festivity = f
+        kingsDays = kings
+    }
+
+    /** The new year's show going on (null: none). */
+    fun celebrate(c: Celebration?) {
+        celebration = c
+    }
+
     fun draw(out: DrawList, w: Float, h: Float, positionMs: Long, playing: Boolean, raw: FloatArray?, nowMs: Long, lift: Float = 0f) {
         out.clear()
         if (w <= 0f || h <= 0f) return
@@ -382,6 +397,9 @@ class Diorama {
 
         moves.clearHits()
         val scene = Scene(out, w, (h - lift.coerceIn(0f, h * 0.4f)), look, nowMs, playing, live, moves, driftMs, h)
+        scene.festive = festivity
+        scene.kings = kingsDays
+        scene.show = celebration
         val lane = Lane(cur, song?.wave, previous?.wave, nextWave, shownMs, originMs, song?.peakMs ?: -1.0, nextTitle, nextPlace, nextWorld(), song?.title, song?.artist)
         scene.react(lane)
         scene.sky()
@@ -393,6 +411,8 @@ class Diorama {
             scene.land(lane, 1f)
         }
         scene.weather()
+        scene.festiveFront()
+        scene.celebration()
 
         // The camera comes closer in the track's quiet parts, opens up in loud ones and at its peak,
         // and shakes a little on strong low beats.

@@ -1,0 +1,34 @@
+<p><i>“Ales af-d tagrumma-k n uẓawan: sel-as s yiberdan imaynuten, s yimesli yifen.”</i></p>
+
+<p><b>Aẓawan-ik, yettwaurar am akken yella win yesla i yal tizlit d tazwara.</b> Tibdarin anda yal tizlit tettazzal ɣer tin i d-iteddun, asesfer ummid n yimesli, O'rama akken ad twaliḍ tizlit d tamnaḍt yettembiwilen, d yisental i tesselɣaḍ s yiman-ik. Baṭel, d aɣbalu yeldin, d uslig.</p>
+
+<p>Attacca yettwurar aẓawan yellan ɣef tiliɣri-k — ikaramen d tebdarin n urar — yessemẓay-as s timmad-is: tiggura n yal tizlit, imesli-ines d uḥulfu-ines ttwasleḍen ɣef tiliɣri, ihi taggara n tezlit tezmer ad tettawi ɣer tazwara n tin i d-iteddun. Ulac acu ara yettwaznen: asnas ur yesɛi ara anekcum ɣer Internet.</p>
+
+<p><b>Tibdarin yettazzalen</b></p>
+<ul>
+<li>Seddu yal tabdart akken yal tizlit ad tettawi ɣer tin i d-iteddun; ilbumen merra zemren ad ttwasedduyen seg taggara ɣer tazwara.</li>
+<li>Tabdart seg yal tizlit: tizlatin iqerben ugar s yimesli, ttwasedduyent seg-s, s yimsizdagen (iseggasen, tikli, tazmert, aḥulfu, taɣect, tanzagt, ayen ur tesliḍ ara melmi kan).</li>
+<li>Tibdarin tizribin d tigacurin, tizlagin n tezmert, amedya n twaculin-ik n yimesli, tiqenṭert seg tezlit ɣer tayeḍ, ilbumen merra am yiwen, tabdart i wakud yettwasbadun.</li>
+<li>Iḥulfa d tewaculin n yimesli yettwafen deg tegrumma-k s uẓeṭṭa n tikci n yimesli i yetteddun ɣef tiliɣri.</li>
+<li>Tabdart n usekcem (asireg neɣ asewḥel) i yal tabdart i yexdem; tibdarin tiḥerfiyin yettwaxedmen seg tewtilin; tibdarin war taggara.</li>
+</ul>
+
+<p><b>Urar d yimesli</b></p>
+<ul>
+<li>Urar war tilmawin, asefsi amyeddi i yezmren ad iḍfer amek tfukk yal tizlit, agzam n tsusmi, ReplayGain (d ubleɣ yettwaktalen i yifuyla war-s).</li>
+<li>Asesfer-is n yimesli: amseddi (udlif neɣ aɣewwaran, aseɣti n tewwennatin), bass amussan d uhlis, tehri n stereo, crossfeed, asaḥaṣ d umḥaddi n tqacuct tidet; amaɣnu i yal ibenk n tuffɣa.</li>
+<li>Ibenkan: yal tuffɣa tezmer ad tkemmel tabdart-is, ad tesbadu ableɣ-is, ad tebdu urar mi ara teqqen.</li>
+</ul>
+
+<p><b>Akken tebɣiḍ</b></p>
+<ul>
+<li>Isental s yini-nsen, tisefsiyin, igilalen, tignitin d tneɣruft n Itteddu tura i tesseddaseḍ; tamidelt seg ara tebduḍ.</li>
+<li>Aẓawan s yinaẓuren, ilbumen, tiwsatin, timerwin, iḥulfa d tewaculin; ikaramen; awalen, ticraḍ, amakud n yiḍes, arured, ales A-B; tidaddanin n usmeẓẓi.</li>
+<li>Amnir awezlan n usbadu i yisurifen imezwura, iɣewwaṛen s unadi, timudmin n yimesli i yal anaw n yibenk, d tezlatin yexsren yettwafen, yettwacerḍen, yettwaṣeggmen.</li>
+<li>Android Auto, awiǧit n ugdil agejdan, aḥraz n kullec, 32 n tutlayin.</li>
+<li>Attacca O'rama: tizlit itteddun d tamnaḍt yettembiwilen, yettwasunɣen seg talɣa n tmewjt-is, aḥulfu-ines d unqar-is. S kra n tɣawsiwin timecṭuḥin ara k-yesswehmen ara tafeḍ.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) yesleḍ s yiwet n tarrayt, yebḍa tamkarḍit, yesnulfuy-d tibdarin i yimeɣriyen Rockbox d deg yiminig.</p>
+
+<p>Ayɣer tisirag: anekcum ɣer yifuyla akk, akken ad urareɣ ikaramen d tebdarin-ik anda llan; abeqqeḍ nnig yisnasen nniḍen, war aseggem n tbatrit d yibenkan iqerben, kan akken ad yebdu urar mi ara yeqqen yibenk Bluetooth s uɣerbaz yemdel.</p>

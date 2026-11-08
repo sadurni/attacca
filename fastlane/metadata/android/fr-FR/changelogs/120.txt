@@ -1,0 +1,6 @@
+• Une liste créée depuis le morceau en cours continue avec lui, sans recommencer.
+• Widget pour toutes les tailles, avec un cœur ; en grand, la pochette ou le paysage d'O'rama.
+• Pistes endommagées : recherche, marques à plus d'endroits, Réparer dans plus de menus.
+• La liste d'inclusion utilisée en haut de Listes ; dossiers avec pochettes, aussi en grille.
+• Écran de verrouillage : son image tirée du morceau en cours, et Attacca par-dessus en lecture.
+• Neuf langues de plus : hindi, kannada, arabe, tamazight, kabyle, swahili, haoussa, yoruba, amharique.

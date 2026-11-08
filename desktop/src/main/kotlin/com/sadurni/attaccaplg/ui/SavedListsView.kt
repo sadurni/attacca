@@ -99,6 +99,7 @@ private fun SavedRow(state: AppState, e: SavedLists.Entry, onDelete: () -> Unit)
         ContextMenuItem(tr("Rename…", "Renombrar…")) { rename() },
         ContextMenuItem(tr("Delete…", "Borrar…")) { onDelete() },
         ContextMenuItem(tr("Open its folder", "Abrir su carpeta")) { Dialogs.show(e.file.parentFile) },
+        ContextMenuItem(tr("Repair damaged tracks", "Reparar las pistas dañadas")) { state.askRepair(e.paths) },
     )
     ContextMenuArea(items = { menu }) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {

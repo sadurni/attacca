@@ -42,6 +42,12 @@ data class UiSettings(
     val showTips: Boolean = true,
     /** The user's theme in use (see [ThemeStore]), or null for [themeMode]'s built-in one. */
     val themeId: String? = null,
+    /** While music plays, Attacca (Now playing, O'rama…) shows over the lock screen when it was open as the screen went off. */
+    val overLockScreen: Boolean = false,
+    /** The lock screen's picture from the track playing (its cover, or O'rama's landscape), or left alone. */
+    val lockWallpaper: com.sadurni.attacca.playback.LockWallpaper.Mode = com.sadurni.attacca.playback.LockWallpaper.Mode.OFF,
+    /** What the home-screen widget shows when made big: the cover or O'rama's landscape. */
+    val widgetBig: com.sadurni.attacca.playback.NowPlayingWidget.Big = com.sadurni.attacca.playback.NowPlayingWidget.Big.ORAMA,
 )
 
 /** Ordering lists so each track leads into the next (see [com.sadurni.attacca.chain.ChainEngine]). */
@@ -390,6 +396,9 @@ class AppSettings(context: Context) {
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
+            overLockScreen = prefs.getBoolean("over_lock_screen", d.overLockScreen),
+            lockWallpaper = prefs.getEnum("lock_wallpaper", d.lockWallpaper),
+            widgetBig = prefs.getEnum("widget_big", d.widgetBig),
         )
     }
 
@@ -404,6 +413,9 @@ class AppSettings(context: Context) {
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)
+            .putBoolean("over_lock_screen", s.overLockScreen)
+            .putString("lock_wallpaper", s.lockWallpaper.name)
+            .putString("widget_big", s.widgetBig.name)
             .apply()
     }
 

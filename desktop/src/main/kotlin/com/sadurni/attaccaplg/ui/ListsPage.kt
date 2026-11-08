@@ -396,7 +396,7 @@ private fun ResultsPanel(state: AppState, library: Library) {
                 // The list open below (or the first one), straight to the player.
                 OutlinedButton(onClick = {
                     val made = form.made.firstOrNull { it.playlist.name == form.expanded } ?: form.made.first()
-                    state.player.playPaths(made.playlist.paths)
+                    state.player.playPaths(made.playlist.paths, continueCurrent = true)
                 }) { Text(tr("Play", "Reproducir")) }
                 Button(enabled = state.busy == null, onClick = {
                     state.run(tr("Saving", "Guardando")) {

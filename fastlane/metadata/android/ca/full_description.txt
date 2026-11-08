@@ -25,7 +25,7 @@
 <li>Temes amb els seus propis colors, tipus de lletra, fons, icones i una pantalla de S'està reproduint que tu distribueixes; una galeria per començar.</li>
 <li>Música per artistes, àlbums, gèneres, dècades, estats d'ànim i famílies; carpetes; lletres, marcadors, temporitzador d'apagada, velocitat, repetició A-B; estadístiques d'escolta.</li>
 <li>Una guia breu per als primers passos, ajustos amb cerca, plantilles de so per a cada tipus de dispositiu, i pistes danyades detectades, marcades i reparades.</li>
-<li>Android Auto, widget, còpia de seguretat de tot, 23 idiomes.</li>
+<li>Android Auto, widget, còpia de seguretat de tot, 32 idiomes.</li>
 <li>Attacca O'rama: la cançó que sona com un paisatge en moviment, fet de la seva forma d'ona, el seu estat d'ànim i el seu ritme. Amb algunes petites sorpreses per descobrir.</li>
 </ul>
 

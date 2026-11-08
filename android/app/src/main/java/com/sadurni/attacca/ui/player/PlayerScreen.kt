@@ -192,6 +192,14 @@ fun PlayerScreen(
 ) {
     // Kept when the screen turns (O'rama is shown upright and wide).
     var dialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<PlayerDialog?>(null) }
+    // The new year's show: O'rama opens by itself.
+    val oramaAsked by viewModel.oramaRequest.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(oramaAsked) {
+        if (oramaAsked) {
+            dialog = PlayerDialog.ORAMA
+            viewModel.oramaRequest.value = false
+        }
+    }
     // The cover over the whole screen (a tap on it, by default), for this file.
     var coverShown by remember { mutableStateOf<String?>(null) }
     coverShown?.let { id -> CoverViewer(id, onDismiss = { coverShown = null }) }
@@ -979,6 +987,12 @@ private fun TrackMenu(
                 open = false
                 viewModel.nowPlaying.value.mediaId?.let(viewModel::requestInclusion)
             })
+            if (viewModel.nowPlaying.value.mediaId?.let { !it.contains("://") && it.endsWith(".mp3", ignoreCase = true) } == true) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair)) }, onClick = {
+                    open = false
+                    viewModel.nowPlaying.value.mediaId?.let { viewModel.requestRepair(listOf(it)) }
+                })
+            }
             // Which inclusion set lists keep to now (with whom the music is heard).
             DropdownMenuItem(text = { Text(stringResource(R.string.inclusion_set_menu, com.sadurni.attacca.ui.chain.activeSetName())) }, onClick = {
                 open = false
@@ -1109,7 +1123,12 @@ private fun BoxLines(
             LineKind.TITLE -> TitleLine(
                 Icons.Rounded.MusicNote,
                 stringResource(R.string.tag_title),
-                mark = { localFile?.let { com.sadurni.attacca.ui.common.ExcludedMark(it, Modifier.padding(start = 2.dp)) } },
+                mark = {
+                    localFile?.let {
+                        com.sadurni.attacca.ui.common.DamagedMark(it, Modifier.padding(start = 2.dp))
+                        com.sadurni.attacca.ui.common.ExcludedMark(it, Modifier.padding(start = 2.dp))
+                    }
+                },
             ) { modifier ->
                 Text(
                     text = now.title,

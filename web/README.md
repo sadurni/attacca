@@ -19,7 +19,8 @@ install and nothing sent anywhere: the file is read in the browser.
   paths of the music folder given (the one exported by default; Windows or Unix style).
 - In the languages of Attacca (English, Spanish, Catalan, Galician, Basque, Portuguese, Brazilian
   Portuguese, French, Italian, German, Dutch, Swedish, Polish, Romanian, Russian, Ukrainian, Greek,
-  Turkish, Japanese, Korean, Simplified and Traditional Chinese), the browser's at first.
+  Turkish, Japanese, Korean, Simplified and Traditional Chinese, Hindi, Kannada, Arabic, Tamazight,
+  Kabyle, Swahili, Hausa, Yoruba and Amharic), the browser's at first.
 
 The scoring is the Rockbox plugin's (integers): both give the same lists from the same file.
 

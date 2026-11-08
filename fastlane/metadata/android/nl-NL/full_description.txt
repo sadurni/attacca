@@ -25,7 +25,7 @@
 <li>Thema's met eigen kleuren, lettertypen, achtergronden, pictogrammen en een Nu speelt-indeling die je zelf opmaakt; een galerij om mee te beginnen.</li>
 <li>Muziek per artiest, album, genre, decennium, stemming en familie; mappen; songteksten, bladwijzers, slaaptimer, afspeelsnelheid, A-B-herhaling; luisterstatistieken.</li>
 <li>Een korte installatiegids voor de eerste stappen, instellingen met zoekfunctie, geluidssjablonen voor elk soort apparaat, en beschadigde nummers die worden gevonden, gemarkeerd en hersteld.</li>
-<li>Android Auto, widget, back-up van alles, 23 talen.</li>
+<li>Android Auto, widget, back-up van alles, 32 talen.</li>
 <li>Attacca O'rama: het nummer dat speelt als een bewegend landschap, getekend uit zijn golfvorm, stemming en ritme. Met een paar kleine verrassingen om te ontdekken.</li>
 </ul>
 

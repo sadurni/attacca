@@ -224,6 +224,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             pendingPlay?.invoke()
             pendingPlay = null
         }, ContextCompat.getMainExecutor(context))
+        // A repaired file is read again where it plays.
+        viewModelScope.launch { com.sadurni.attacca.library.DamagedTracks.repaired.collect { reloadFile(it) } }
     }
 
     override fun onCleared() {
@@ -239,17 +241,67 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         items: List<MediaItem>,
         startIndex: Int = 0,
         startPositionMs: Long = 0L,
+        /** A list made from the playing track: when it starts on that track, the track goes on where it is. */
+        continueCurrent: Boolean = false,
     ) {
         if (items.isEmpty()) return
         val c = controller ?: run {
-            pendingPlay = { playItems(listName, source, items, startIndex, startPositionMs) }
+            pendingPlay = { playItems(listName, source, items, startIndex, startPositionMs, continueCurrent) }
             return
         }
         if (source == null) app.ungroupUnsavedList()
         app.setCurrentList(listName, source)
-        c.setMediaItems(items, startIndex.coerceIn(0, items.lastIndex), startPositionMs)
+        val start = startIndex.coerceIn(0, items.lastIndex)
+        val now = c.currentMediaItemIndex
+        if (continueCurrent && c.mediaItemCount > 0 && now in 0 until c.mediaItemCount &&
+            c.getMediaItemAt(now).mediaId == items[start].mediaId
+        ) {
+            // The playing track stays as it is (no new start, no gap): the list is put around it.
+            if (now + 1 < c.mediaItemCount) c.removeMediaItems(now + 1, c.mediaItemCount)
+            if (now > 0) c.removeMediaItems(0, now)
+            if (start > 0) c.addMediaItems(0, items.subList(0, start))
+            if (start + 1 < items.size) c.addMediaItems(items.subList(start + 1, items.size))
+            if (!c.isPlaying) c.play()
+            return
+        }
+        c.setMediaItems(items, start, startPositionMs)
         c.prepare()
         c.play()
+    }
+
+    /** O'rama asked to open wherever the app is (the new year's show). */
+    val oramaRequest = MutableStateFlow(false)
+
+    /** The show of this new year already opened O'rama (not again if closed). */
+    var oramaShown = false
+
+    /** Tracks, folders or a list whose damaged tracks to repair; shown as a dialog ([com.sadurni.attacca.ui.common.RepairDialog]). */
+    val repairRequest = MutableStateFlow<List<String>?>(null)
+
+    fun requestRepair(paths: List<String>) {
+        val local = paths.filter { !it.contains("://") }
+        if (local.isNotEmpty()) repairRequest.value = local
+    }
+
+    /**
+     * [path] was written again (repaired): where it is in the playing list it is read again, the
+     * playing one from where it was, so the old sound held in memory is not heard any more.
+     */
+    fun reloadFile(path: String) {
+        val c = controller ?: return
+        val fresh = com.sadurni.attacca.library.MediaItems.fromFiles(listOf(java.io.File(path))).firstOrNull() ?: return
+        for (i in c.mediaItemCount - 1 downTo 0) {
+            if (c.getMediaItemAt(i).mediaId != path) continue
+            if (i == c.currentMediaItemIndex) {
+                val position = c.currentPosition
+                c.addMediaItem(i + 1, fresh)
+                c.seekTo(i + 1, position)
+                c.removeMediaItem(i)
+            } else {
+                c.removeMediaItem(i)
+                c.addMediaItem(i, fresh)
+            }
+        }
     }
 
     /** Track or folder to add to or take out of the inclusion list; shown as a dialog. */
@@ -445,7 +497,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val items = withContext(Dispatchers.IO) { com.sadurni.attacca.library.MediaItems.fromFiles(ids.map { java.io.File(it) }) }
                 val saved = if (items.isNotEmpty() && app.settings.chain.value.saveMadeLists) saveMade(name, items) else null
-                if (saved != null) playItems(saved.name, saved, items) else playItems(name, null, items)
+                if (saved != null) playItems(saved.name, saved, items, continueCurrent = true) else playItems(name, null, items, continueCurrent = true)
                 onPlayed(saved?.name ?: name)
             } finally {
                 startingList.value = false

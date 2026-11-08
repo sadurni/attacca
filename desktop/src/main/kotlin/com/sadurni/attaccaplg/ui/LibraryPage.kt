@@ -540,7 +540,17 @@ private fun DamagedSection(state: AppState, library: com.sadurni.attaccaplg.gene
             Text(tr("Leave damaged tracks out of the lists", "Dejar las pistas dañadas fuera de las listas"))
         }
         var repairing by remember { mutableStateOf<String?>(null) }
-        for ((path, found) in state.damaged.entries.sortedBy { it.key }.take(200)) {
+        var query by remember { mutableStateOf("") }
+        if (state.damaged.size > 3) {
+            androidx.compose.material3.OutlinedTextField(
+                query, { query = it },
+                singleLine = true,
+                placeholder = { Text(tr("Search", "Buscar")) },
+                modifier = Modifier.width(420.dp),
+            )
+        }
+        val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        for ((path, found) in state.damaged.entries.filter { e -> words.all { it in e.key.lowercase() } }.sortedBy { it.key }.take(200)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text(path, maxLines = 1, overflow = TextOverflow.Ellipsis)

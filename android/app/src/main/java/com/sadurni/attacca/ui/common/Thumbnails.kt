@@ -116,6 +116,28 @@ object Thumbnails {
         if (bitmap.width <= size * 2) bitmap else Bitmap.createScaledBitmap(bitmap, size, size, true)
 }
 
+/** The first track found in [folder] (or in its first subfolders), whose cover stands for it; cached. */
+private val folderTracks = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+private fun firstTrack(folder: java.io.File, depth: Int = 0): String? {
+    folderTracks[folder.path]?.let { return it.ifEmpty { null } }
+    val children = folder.listFiles()?.sortedBy { it.name.lowercase() }.orEmpty()
+    val found = children.firstOrNull { it.isFile && com.sadurni.attacca.library.AudioFiles.isAudio(it) }?.path
+        ?: if (depth < 2) children.asSequence().filter { it.isDirectory && !it.name.startsWith(".") }.take(6).firstNotNullOfOrNull { firstTrack(it, depth + 1) } else null
+    folderTracks[folder.path] = found.orEmpty()
+    return found
+}
+
+/** A folder's cover (its picture, or that of the first track inside), [fallback] while there is none. */
+@Composable
+fun FolderThumbnail(folder: java.io.File, size: Dp = 44.dp, fallback: @Composable () -> Unit) {
+    val track by produceState<String?>(initialValue = folderTracks[folder.path]?.ifEmpty { null }, folder.path) {
+        value = withContext(Dispatchers.IO) { runCatching { firstTrack(folder) }.getOrNull() }
+    }
+    val path = track
+    if (path != null) TrackThumbnail(path, size) else fallback()
+}
+
 /** A list-row thumbnail with a note icon while loading or when there is no artwork. */
 @Composable
 fun TrackThumbnail(mediaId: String, size: Dp = 44.dp) {

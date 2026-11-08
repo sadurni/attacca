@@ -181,14 +181,76 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
         reload()
     }
 
-    /** Repairs the MP3 [path] (the original kept beside it as .bk, or deleted); it is measured again by the next scan. */
-    fun repairDamaged(path: String, keepOriginal: Boolean) {
+    /** Repairs the MP3 [path] (the original kept beside it as .bk, or deleted). */
+    fun repairDamaged(path: String, keepOriginal: Boolean) = repairMany(listOf(path), keepOriginal)
+
+    /** Tracks (paths in the music folder) whose repair was asked for: the dialog asks what becomes of the originals. */
+    var repairAsk by mutableStateOf<List<String>?>(null)
+
+    /** A repair being done: done so far and how many. */
+    var repairing by mutableStateOf<Pair<Int, Int>?>(null)
+
+    /**
+     * Asks to repair the MP3s among [paths] (in the music folder) that a repair helps: one asked
+     * for by itself when it is damaged, was repaired before (from its .bk) or a check finds damage;
+     * of several, the damaged ones.
+     */
+    fun askRepair(given: List<String>) {
+        val root = db.musicRoot ?: return
+        // Paths of a list are whole: taken in the music folder.
+        val base = File(root.toString()).path.trimEnd(File.separatorChar) + File.separator
+        val paths = given.mapNotNull { p ->
+            val f = File(p)
+            if (!f.isAbsolute) p else f.path.takeIf { it.startsWith(base) }?.removePrefix(base)?.replace(File.separatorChar, '/')
+        }
+        scope.launch {
+            val targets = withContext(Dispatchers.IO) {
+                val mp3 = paths.filter { it.endsWith(".mp3", ignoreCase = true) }
+                val single = mp3.singleOrNull()
+                if (paths.size == 1 && single != null) {
+                    val file = File(root, single)
+                    val found = single in damaged || File(file.path + ".bk").isFile ||
+                        runCatching { com.sadurni.attaccaplg.library.Damage.check(file) }.getOrNull() != null
+                    listOfNotNull(single.takeIf { found })
+                } else {
+                    mp3.filter { it in damaged }
+                }
+            }
+            if (targets.isEmpty()) {
+                message = if (paths.size == 1) tr("No damage found: nothing to repair", "No se ha encontrado ningún daño: nada que reparar")
+                else tr("No damaged MP3 tracks to repair here", "Aquí no hay pistas MP3 dañadas que reparar")
+            } else {
+                repairAsk = targets
+            }
+        }
+    }
+
+    /** Repairs [paths] one by one; each one playing is read again from where it was. */
+    fun repairMany(paths: List<String>, keepOriginal: Boolean) {
         val root = db.musicRoot ?: return
         scope.launch {
-            val ok = withContext(Dispatchers.IO) { runCatching { com.sadurni.attacca.playback.Mp3Damage.repairFile(File(root, path), keepOriginal) }.getOrDefault(false) }
-            if (ok) synchronized(db) { db.forgetDamaged(path) }
-            message = if (ok) tr("Repaired: scan the library to measure it again.", "Reparada: escanea la biblioteca para medirla de nuevo.")
-            else tr("It could not be repaired", "No se ha podido reparar")
+            var done = 0
+            var lostMs = 0
+            var muchLost = false
+            for ((k, path) in paths.withIndex()) {
+                repairing = k to paths.size
+                val file = File(root, path)
+                val result = withContext(Dispatchers.IO) { runCatching { com.sadurni.attacca.playback.Mp3Damage.repairFile(file, keepOriginal) }.getOrNull() }
+                if (result != null) {
+                    done++
+                    lostMs += result.cutMs
+                    muchLost = muchLost || result.muchLost
+                    synchronized(db) { db.forgetDamaged(path) }
+                    player.reloadFile(file.path)
+                }
+            }
+            repairing = null
+            val lost = "%.1f".format(lostMs / 1000f)
+            message = when {
+                done == 0 -> tr("It could not be repaired", "No se ha podido reparar")
+                paths.size == 1 -> tr("Repaired: $lost s of damaged sound left out", "Reparada: se han quitado $lost s de sonido dañado")
+                else -> tr("${done} repaired, ${paths.size - done} could not be; $lost s of damaged sound left out", "${done} reparadas, ${paths.size - done} no se han podido; se han quitado $lost s de sonido dañado")
+            } + if (muchLost) "  " + tr("So much is damaged that a new copy of the file would be better.", "Hay tanto dañado que sería mejor conseguir otra copia del archivo.") else ""
             reload()
         }
     }
@@ -203,6 +265,32 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
 
     init {
         reload()
+        // Each day the festive days are worked out again; at midnight of a new year O'rama opens for the show.
+        scope.launch {
+            var shown = false
+            var noticed: java.time.LocalDateTime? = null
+            while (true) {
+                FestiveDesk.refresh()
+                // A few minutes before: something big is coming.
+                val coming = FestiveDesk.nextShow()
+                if (coming != null && coming != noticed && java.time.Duration.between(java.time.LocalDateTime.now(), coming).toMinutes() < 10) {
+                    noticed = coming
+                    message = tr(
+                        "In a few minutes the new year begins: leave Attacca open to see what happens in O'rama.",
+                        "En unos minutos empieza el año nuevo: deja Attacca abierto para ver lo que pasa en O'rama.",
+                    )
+                }
+                if (FestiveDesk.checkShow() != null) {
+                    if (!shown) page = Page.ORAMA
+                    shown = true
+                } else {
+                    shown = false
+                }
+                val next = FestiveDesk.nextShow()
+                val until = next?.let { java.time.Duration.between(java.time.LocalDateTime.now(), it).toMillis() } ?: Long.MAX_VALUE
+                kotlinx.coroutines.delay(until.coerceIn(500L, 30_000L))
+            }
+        }
     }
 
     /** Runs [work] off the window's thread, one at a time; failures become a message. */

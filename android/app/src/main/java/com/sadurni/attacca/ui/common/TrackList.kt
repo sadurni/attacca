@@ -226,6 +226,27 @@ fun FolderDamagedMark(path: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The same mark for a group of tracks (an album, an artist, a list): "⚠" when all of [paths] are
+ * damaged, "△" when some are.
+ */
+@Composable
+fun GroupDamagedMark(paths: List<String>, modifier: Modifier = Modifier) {
+    val all by com.sadurni.attacca.library.DamagedTracks.all.collectAsStateWithLifecycle()
+    if (all.isEmpty() || paths.isEmpty()) return
+    val damaged = androidx.compose.runtime.remember(all, paths) { paths.count { it in all } }
+    if (damaged == 0) return
+    val whole = damaged == paths.size
+    val description = stringResource(if (whole) R.string.damaged_mark_all else R.string.damaged_mark_part)
+    Text(
+        if (whole) "⚠" else "△",
+        color = DamagedColor,
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = modifier.padding(end = 4.dp).semantics { contentDescription = description },
+    )
+}
+
 /** The legend of the marks above: each symbol in its colour, then what it means. */
 @Composable
 fun ExcludedLegend() {

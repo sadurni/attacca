@@ -1,0 +1,34 @@
+<p><i>“Gundua upya mkusanyiko wako wa muziki: usikie kwa njia mpya, kwa sauti bora zaidi.”</i></p>
+
+<p><b>Muziki wako mwenyewe, unaochezwa kana kwamba mtu alisikiliza kila wimbo kwanza.</b> Orodha ambapo kila wimbo hutiririka kuingia unaofuata, mnyororo kamili wa sauti, O'rama kutazama wimbo kama mandhari inayosonga, na mandhari unazounda mwenyewe. Bure, chanzo huria na faragha.</p>
+
+<p>Attacca hucheza muziki ulio kwenye simu yako — folda na orodha za nyimbo — na huusikiliza yenyewe: ncha za kila wimbo, sauti yake na hisia yake huchambuliwa kwenye simu, ili mwisho wa wimbo mmoja uweze kuongoza kwenye mwanzo wa unaofuata. Hakuna kinachotumwa popote: programu haina ufikiaji wa Intaneti.</p>
+
+<p><b>Orodha zinazotiririka</b></p>
+<ul>
+<li>Fuatanisha orodha yoyote ili kila wimbo uongoze kwenye unaofuata; albamu nzima zinaweza kufuatanishwa mwisho kwa mwanzo.</li>
+<li>Orodha kutoka wimbo wowote: nyimbo zilizo karibu zaidi kwa sauti, zimefuatanishwa kuanzia huo, pamoja na vichujio (miaka, tempo, nguvu, hisia, sauti ya kuimba, urefu, usichosikia karibuni).</li>
+<li>Orodha za haraka na za nasibu, mikunjo ya nguvu, sampuli za familia zako za sauti, daraja kutoka wimbo mmoja hadi mwingine, albamu nzima kama moja, orodha kwa muda uliowekwa.</li>
+<li>Hisia na familia za sauti zinazopatikana katika mkusanyiko wako mwenyewe na mtandao wa kutambua sauti unaoendeshwa kwenye simu.</li>
+<li>Orodha ya ujumuishaji (kuruhusu au kuzuia) kwa kila orodha inayounda; orodha mahiri zinazoundwa kutoka masharti; orodha zisizo na mwisho.</li>
+</ul>
+
+<p><b>Uchezaji na sauti</b></p>
+<ul>
+<li>Uchezaji bila mapengo, crossfade inayoweza kufuata jinsi kila wimbo unavyoisha, kukata ukimya, ReplayGain (na ukubwa wa sauti hupimwa kwa faili zisizo nayo).</li>
+<li>Uchakataji wake wa sauti: kisawazishi (cha kigrafu au kiparametriki, marekebisho ya vipokea sauti), besi inayobadilika na besi pepe, upana wa stereo, crossfeed, compressor na limiter ya kilele halisi; wasifu kwa kila kifaa cha toleo.</li>
+<li>Vifaa: kila toleo linaweza kuendeleza orodha yake, kuweka sauti yake na kuanza kucheza linapounganishwa.</li>
+</ul>
+
+<p><b>Kwa njia yako</b></p>
+<ul>
+<li>Mandhari zenye rangi, fonti, mandharinyuma, aikoni zake na mpangilio wa Inacheza sasa unaoupanga wewe; ghala la kuanzia.</li>
+<li>Muziki kwa wasanii, albamu, aina, miongo, hisia na familia; folda; maneno ya wimbo, alamisho, kipima muda cha kulala, kasi, kurudia A-B; takwimu za usikilizaji.</li>
+<li>Mwongozo mfupi wa kuweka kwa hatua za kwanza, mipangilio yenye utafutaji, violezo vya sauti kwa kila aina ya kifaa, na nyimbo zilizoharibika hupatikana, huwekwa alama na kurekebishwa.</li>
+<li>Android Auto, wijeti ya skrini ya nyumbani, nakala rudufu ya kila kitu, lugha 32.</li>
+<li>Attacca O'rama: wimbo unaocheza kama mandhari inayosonga, iliyochorwa kutoka umbo lake la wimbi, hisia na mdundo. Pamoja na mambo machache ya kushangaza ya kutafuta.</li>
+</ul>
+
+<p>Attacca Desktop (Windows, Linux, macOS) huchambua kwa njia ileile na hushiriki maktaba, na huunda orodha kwa vicheza vya Rockbox na kwenye kivinjari.</p>
+
+<p>Kwa nini ruhusa: ufikiaji wa faili zote, kucheza folda na orodha zako za nyimbo mahali zilipo; kuonyesha juu ya programu nyingine, bila uboreshaji wa betri na vifaa vilivyo karibu, tu ili kuanza kucheza kifaa cha Bluetooth kinapounganishwa kicheza kikiwa kimefungwa.</p>

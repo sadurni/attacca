@@ -3,6 +3,49 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.2.0
+
+### Attacca (Android)
+
+- **A list from the track playing goes on with it.** Create list from this track, the quick list
+  and the other lists made from the playing track keep that track where it is: the new list is
+  put around it, without starting it again.
+- **New widget**, changing as it is resized: the cover and play; one row with the time going on;
+  two rows with the album, what comes next and the list; tall and narrow, the cover big on top and
+  more below as it grows; and, bigger, the cover large or a still of the track's O'rama landscape
+  (renewed as it plays), as chosen in Settings → Appearance. A heart adds the track to Favorites.
+  It takes the colours of the theme in use.
+- **Damaged tracks**: a search in their list; marked ⚠ also in the title box of Now playing, in
+  Music and in the lists (△ for an album, artist, folder or list with some of them); Repair in the
+  ⋮ menus of the title, a file in Folders, a track in Music and the playing list, and Repair
+  damaged tracks for a folder (all the damaged ones in it), an album, an artist or a list. A track
+  repaired while it plays or waits in the list is read again, from where it was.
+- **Better repairs.** In a stretch with bits gone wrong all through it (not only in the frames
+  that break), the whole stretch is left out, and the frame after each cut that kept part of its
+  sound in what was cut plays silent: a short jump instead of bursts of noise. A file repaired
+  before is repaired again from its `.bk`. When much is lost, it says a new copy would be better.
+- **The inclusion list in use**, at the top of Lists: tap it to change it.
+- **Folders with covers**: each folder and track shows its cover, and a button shows a folder as a
+  grid of covers, like the albums in Music; the first level (the music folder) keeps its own choice.
+- **Lock screen** (Settings → Appearance): its picture can follow the track playing (its cover with
+  the title, or the landscape of O'rama), and Attacca can show over it while music plays when it
+  was open as the screen went off.
+- **O'rama**: when the red moon comes, the usual moon gives way.
+- **Nine more languages**: Hindi, Kannada, Arabic (right to left), Tamazight (Tifinagh), Kabyle,
+  Swahili, Hausa, Yoruba and Amharic.
+
+### Attacca Desktop
+
+- The same better repairs; Repair in the right-click menu of a track, Repair damaged tracks for an
+  album, a group and a kept list; a search in the damaged tracks; a repaired track playing is read
+  again from where it was.
+- A list made from the track playing goes on with it.
+- Nine more languages (Arabic right to left), and the red moon of O'rama as on the phone.
+
+### Attacca Web
+
+- Nine more languages.
+
 ## 1.1.0
 
 ### Attacca (Android)

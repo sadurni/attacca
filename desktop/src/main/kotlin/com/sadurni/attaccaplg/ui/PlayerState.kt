@@ -173,6 +173,15 @@ class PlayerState(private val prefs: Prefs, private val library: () -> Library?)
         }
     }
 
+    /** [path] was written again (repaired): when it plays, it is read again from where it was. */
+    fun reloadFile(path: String) {
+        val item = current ?: return
+        if (File(item.path).path != File(path).path) return
+        val wasPlaying = playing
+        engine.play(queue, index, positionMs)
+        if (!wasPlaying) engine.toggle()
+    }
+
     fun play(items: List<PlayItem>, start: Int = 0, positionMs: Long = 0, source: File? = null) {
         this.source = source
         unshuffled = null
@@ -214,11 +223,13 @@ class PlayerState(private val prefs: Prefs, private val library: () -> Library?)
     }
 
     /** Plays library tracks by their paths within the music folder. */
-    fun playPaths(paths: List<String>, start: Int = 0) {
+    fun playPaths(paths: List<String>, start: Int = 0, continueCurrent: Boolean = false) {
         val items = itemsOf(paths)
         if (items.isEmpty()) return
-        val first = paths.getOrNull(start)?.let { p -> items.indexOfFirst { it.path.endsWith(p.replace('/', File.separatorChar)) } } ?: 0
-        play(items, first.coerceAtLeast(0))
+        val first = (paths.getOrNull(start)?.let { p -> items.indexOfFirst { it.path.endsWith(p.replace('/', File.separatorChar)) } } ?: 0).coerceAtLeast(0)
+        // A list made from the playing track: when it starts on it, the track goes on where it is.
+        val keep = continueCurrent && playing && current?.path == items[first].path && !shuffle
+        play(items, first, if (keep) positionMs else 0L)
     }
 
     /** Adds library tracks at the end of the queue, or right after the playing one. */

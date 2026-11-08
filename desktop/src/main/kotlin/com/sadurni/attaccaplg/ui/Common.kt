@@ -49,6 +49,8 @@ object Lang {
         "de" to "Deutsch", "nl" to "Nederlands", "sv" to "Svenska", "pl" to "Polski", "ro" to "Română",
         "ru" to "Русский", "uk" to "Українська", "el" to "Ελληνικά", "tr" to "Türkçe", "ja" to "日本語",
         "ko" to "한국어", "zh-CN" to "简体中文", "zh-TW" to "繁體中文",
+        "hi" to "हिन्दी", "kn" to "ಕನ್ನಡ", "ar" to "العربية", "zgh" to "ⵜⴰⵎⴰⵣⵉⵖⵜ", "kab" to "Taqbaylit",
+        "sw" to "Kiswahili", "ha" to "Hausa", "yo" to "Èdè Yorùbá", "am" to "አማርኛ",
     )
 
     var code by mutableStateOf(system())

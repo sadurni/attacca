@@ -95,6 +95,7 @@ object Themes {
     /** The theme [id] names ("system", "white", "gallery:Aurora", "file:C:\…\Mine.json"…); the system's when unknown. */
     fun of(id: String): Theme {
         val legacy = if (id == "light") "white" else id
+        if (legacy.startsWith(com.sadurni.attacca.festive.Festive.THEME_PREFIX)) FestiveDesk.offered()?.let { return it }
         builtIns.firstOrNull { it.id == legacy }?.let { return it }
         gallery.firstOrNull { it.id == legacy }?.let { return it }
         if (legacy.startsWith("file:")) {
@@ -282,7 +283,7 @@ object Themes {
 @Composable
 fun AppTheme(themeId: String, coverPath: String? = null, coverAccent: Boolean = true, content: @Composable () -> Unit) {
     Themes.revision // follows edits of the theme in use
-    val theme = Themes.of(themeId)
+    val theme = Themes.of(FestiveDesk.effective(themeId))
     var palette = theme.palette(isSystemInDarkTheme())
     val cover = if (coverAccent && theme.coverAccent) coverOf(coverPath, 64) else null
     val accent = remember(cover, palette.dark) { cover?.let { CoverAccent.of(it, palette.dark) } }
@@ -291,7 +292,13 @@ fun AppTheme(themeId: String, coverPath: String? = null, coverAccent: Boolean = 
     val menus = if (palette.dark) androidx.compose.foundation.DarkDefaultContextMenuRepresentation
     else androidx.compose.foundation.LightDefaultContextMenuRepresentation
     MaterialTheme(colorScheme = Themes.scheme(palette)) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.LocalContextMenuRepresentation provides menus, content = content)
+        // Arabic reads from right to left: the whole window turns around.
+        val direction = if (Lang.code == "ar") androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.foundation.LocalContextMenuRepresentation provides menus,
+            androidx.compose.ui.platform.LocalLayoutDirection provides direction,
+            content = content,
+        )
     }
 }
 
@@ -302,7 +309,7 @@ fun AppTheme(themeId: String, coverPath: String? = null, coverAccent: Boolean = 
 @Composable
 fun ThemeBackground(themeId: String, page: Page) {
     Themes.revision
-    val theme = Themes.of(themeId)
+    val theme = Themes.of(FestiveDesk.effective(themeId))
     val section = when (page) {
         Page.PLAYING -> "PLAYER"
         Page.MUSIC -> "FOLDERS"
@@ -397,6 +404,7 @@ object CoverAccent {
 @Composable
 fun ThemeChoice(state: AppState) {
     fun choose(id: String) {
+        FestiveDesk.themeChangedByHand()
         state.theme = id
         state.prefs["theme"] = id
     }

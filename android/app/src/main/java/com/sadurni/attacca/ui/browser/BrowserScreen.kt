@@ -27,6 +27,9 @@ import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
@@ -108,6 +111,9 @@ sealed interface BrowserAction {
     /** Added to or taken out of the inclusion list (the file, its album, artist or folder). */
     data class Inclusion(val file: File) : BrowserAction
 
+    /** The damaged MP3s among these tracks or folders repaired (see [com.sadurni.attacca.ui.common.RepairDialog]). */
+    data class Repair(val paths: List<String>) : BrowserAction
+
     /** These tracks as a new list named [name], from the one at [start]. */
     /** [byAlbums]: several whole albums one after another, shown grouped by album. */
     data class PlayTracks(val name: String, val files: List<File>, val start: Int, val chain: Boolean = false, val byAlbums: Boolean = false) : BrowserAction
@@ -138,6 +144,13 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
     var found by remember { mutableStateOf<List<File>?>(null) }
     var addToList by remember { mutableStateOf<List<File>?>(null) }
     val listState = rememberLazyListState()
+    // Folders shown as a grid of covers (as Music's albums) or as the list: one choice for the
+    // first level (the music folder itself, e.g. its artists) and another for the folders inside.
+    val gridPrefs = remember { context.getSharedPreferences("browser", android.content.Context.MODE_PRIVATE) }
+    var gridTop by remember { mutableStateOf(gridPrefs.getBoolean("grid_top", gridPrefs.getBoolean("grid", false))) }
+    var gridInside by remember { mutableStateOf(gridPrefs.getBoolean("grid", false)) }
+    val topLevel = folder?.absolutePath?.let { path -> settings.musicFolder?.trimEnd('/') == path.trimEnd('/') } == true
+    val grid = if (topLevel) gridTop else gridInside
     // Favorite folders, under the storages at the top.
     var favorites by remember { mutableStateOf(com.sadurni.attacca.library.FavoriteFolders.all(context)) }
     val favoriteFiles = favorites.map(::File).filter { it.isDirectory }
@@ -304,6 +317,23 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                         searching = !searching
                         if (!searching) query = ""
                     }) { Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.search)) }
+                    // Covers in a grid, or the list.
+                    if (folder != null) {
+                        IconButton(onClick = {
+                            if (topLevel) {
+                                gridTop = !gridTop
+                                gridPrefs.edit().putBoolean("grid_top", gridTop).apply()
+                            } else {
+                                gridInside = !gridInside
+                                gridPrefs.edit().putBoolean("grid", gridInside).apply()
+                            }
+                        }) {
+                            Icon(
+                                if (grid) Icons.AutoMirrored.Rounded.ViewList else Icons.Rounded.GridView,
+                                contentDescription = stringResource(if (grid) R.string.browser_as_list else R.string.browser_as_grid),
+                            )
+                        }
+                    }
                     // Favorite folders from any folder (music opens inside its own folder, far from the storages).
                     var favoritesOpen by remember { mutableStateOf(false) }
                     Box {
@@ -365,6 +395,10 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                                     menuOpen = false
                                     onAction(BrowserAction.Inclusion(current))
                                 },
+                                onRepair = {
+                                    menuOpen = false
+                                    onAction(BrowserAction.Repair(listOf(current.absolutePath)))
+                                },
                                 favorite = favorites.contains(current.absolutePath),
                                 onFavorite = {
                                     menuOpen = false
@@ -403,6 +437,64 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                     stringResource(if (query.isBlank()) R.string.browser_empty else R.string.search_nothing),
                     color = LocalAttaccaColors.current.textGrayed,
                 )
+            }
+            return@Column
+        }
+        if (grid && !isRoot) {
+            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(118.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            ) {
+                // Folders as covers; files (the tracks of an album) as the list, across the whole width.
+                items(
+                    shown.size,
+                    key = { shown[it].absolutePath },
+                    span = { androidx.compose.foundation.lazy.grid.GridItemSpan(if (shown[it].isDirectory) 1 else maxLineSpan) },
+                ) { index ->
+                    val file = shown[index]
+                    val inSelection = selection
+                    val isSelected = inSelection?.any { it.absolutePath == file.absolutePath }
+                    if (!file.isDirectory) {
+                        BrowserRow(
+                            file = file,
+                            isRoot = false,
+                            subtitle = null,
+                            selected = isSelected,
+                            highlighted = file.absolutePath == reveal?.absolutePath,
+                            onClick = {
+                                when {
+                                    inSelection != null -> toggle(file)
+                                    AudioFiles.isPlaylist(file) -> onAction(BrowserAction.OpenPlaylist(file))
+                                    else -> onAction(BrowserAction.PlayFolder(file.parentFile!!, file, recursive = false))
+                                }
+                            },
+                            onLongClick = { toggle(file) },
+                            onAction = onAction,
+                        )
+                        return@items
+                    }
+                    BrowserCell(
+                        file = file,
+                        selected = isSelected,
+                        highlighted = file.absolutePath == reveal?.absolutePath,
+                        onClick = {
+                            when {
+                                inSelection != null -> toggle(file)
+                                file.isDirectory -> {
+                                    folder = file
+                                    searching = false
+                                    query = ""
+                                }
+                                AudioFiles.isPlaylist(file) -> onAction(BrowserAction.OpenPlaylist(file))
+                                else -> onAction(BrowserAction.PlayFolder(file.parentFile!!, file, recursive = false))
+                            }
+                        },
+                        onLongClick = { toggle(file) },
+                    )
+                }
             }
             return@Column
         }
@@ -475,6 +567,53 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
     }
 }
 
+/** A folder or file as a cover in the grid: the picture, its marks and name below; a tap opens or plays it, a long press selects. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun BrowserCell(file: File, selected: Boolean?, highlighted: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+    val accent = LocalAccent.current
+    val colors = LocalAttaccaColors.current
+    Column(Modifier.rowMark(selected = selected == true, marked = highlighted).combinedClickable(onClick = onClick, onLongClick = onLongClick)) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
+            val fallback: @Composable () -> Unit = {
+                Box(Modifier.fillMaxSize().background(colors.surface, com.sadurni.attacca.ui.theme.AttaccaShapes.small), contentAlignment = Alignment.Center) {
+                    com.sadurni.attacca.ui.theme.ThemedIcon(
+                        when {
+                            file.isDirectory -> Icons.Rounded.Folder
+                            AudioFiles.isPlaylist(file) -> Icons.AutoMirrored.Rounded.QueueMusic
+                            else -> Icons.Rounded.MusicNote
+                        },
+                        contentDescription = null, tint = colors.textGrayed, modifier = Modifier.size(40.dp),
+                    )
+                }
+            }
+            when {
+                file.isDirectory -> com.sadurni.attacca.ui.common.FolderThumbnail(file, maxWidth, fallback)
+                AudioFiles.isAudio(file) -> com.sadurni.attacca.ui.common.TrackThumbnail(file.absolutePath, maxWidth)
+                else -> fallback()
+            }
+            if (selected != null) {
+                Icon(
+                    if (selected) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = if (selected) accent else androidx.compose.ui.graphics.Color.White,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(26.dp),
+                )
+            }
+        }
+        Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (file.isDirectory) {
+                com.sadurni.attacca.ui.common.FolderDamagedMark(file.absolutePath)
+                com.sadurni.attacca.ui.common.FolderExcludedMark(file.absolutePath)
+            } else if (AudioFiles.isAudio(file)) {
+                com.sadurni.attacca.ui.common.DamagedMark(file.absolutePath)
+                com.sadurni.attacca.ui.common.ExcludedMark(file.absolutePath)
+            }
+            Text(file.name, fontSize = AttaccaType.secondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BrowserRow(
@@ -518,13 +657,24 @@ private fun BrowserRow(
             AudioFiles.isPlaylist(file) -> Icons.AutoMirrored.Rounded.QueueMusic
             else -> Icons.Rounded.MusicNote
         }
-        com.sadurni.attacca.ui.theme.ThemedIcon(
-            icon,
-            contentDescription = null,
-            tint = if (selected == true) accent else colors.textGrayed,
-            modifier = Modifier.size(24.dp),
-        )
-        Column(Modifier.weight(1f).padding(start = 16.dp, top = 8.dp, bottom = 8.dp)) {
+        val plainIcon: @Composable () -> Unit = {
+            Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+                com.sadurni.attacca.ui.theme.ThemedIcon(
+                    icon,
+                    contentDescription = null,
+                    tint = if (selected == true) accent else colors.textGrayed,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        // The cover of a folder (its picture or its first track's) or a track; icons while selecting.
+        when {
+            selected != null || (isRoot && subtitle == null) -> plainIcon()
+            file.isDirectory -> com.sadurni.attacca.ui.common.FolderThumbnail(file, 44.dp, plainIcon)
+            AudioFiles.isAudio(file) -> com.sadurni.attacca.ui.common.TrackThumbnail(file.absolutePath, 44.dp)
+            else -> plainIcon()
+        }
+        Column(Modifier.weight(1f).padding(start = 12.dp, top = 8.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (file.isDirectory) {
                     if (!(isRoot && subtitle == null)) {
@@ -570,6 +720,10 @@ private fun BrowserRow(
                             menuOpen = false
                             onAction(BrowserAction.Inclusion(file))
                         },
+                        onRepair = {
+                            menuOpen = false
+                            onAction(BrowserAction.Repair(listOf(file.absolutePath)))
+                        },
                         favorite = favorite,
                         onFavorite = {
                             menuOpen = false
@@ -609,6 +763,12 @@ private fun BrowserRow(
                                 menuOpen = false
                                 onAction(BrowserAction.Inclusion(file))
                             })
+                            if (file.extension.equals("mp3", ignoreCase = true)) {
+                                DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair)) }, onClick = {
+                                    menuOpen = false
+                                    onAction(BrowserAction.Repair(listOf(file.absolutePath)))
+                                })
+                            }
                             DropdownMenuItem(text = { Text(stringResource(if (ignored) R.string.ignored_stop else R.string.ignored_start)) }, onClick = {
                                 menuOpen = false
                                 toggleIgnored()
@@ -628,6 +788,7 @@ private fun FolderMenu(
     onPlay: (recursive: Boolean) -> Unit,
     onAddToQueue: () -> Unit,
     onInclusion: () -> Unit,
+    onRepair: () -> Unit,
     favorite: Boolean,
     onFavorite: () -> Unit,
     ignored: Boolean = false,
@@ -638,6 +799,7 @@ private fun FolderMenu(
         DropdownMenuItem(text = { Text(stringResource(R.string.browser_play_folder_recursive)) }, onClick = { onPlay(true) })
         DropdownMenuItem(text = { Text(stringResource(R.string.add_to_queue)) }, onClick = onAddToQueue)
         DropdownMenuItem(text = { Text(inclusionMenuLabel()) }, onClick = onInclusion)
+        DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair_all)) }, onClick = onRepair)
         DropdownMenuItem(
             text = { Text(stringResource(if (favorite) R.string.favorite_folder_remove else R.string.favorite_folder_add)) },
             onClick = onFavorite,

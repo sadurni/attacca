@@ -151,7 +151,7 @@ private inline fun Scene.landmarks(each: (Landmark, Int, Float, Float) -> Unit) 
     }
 }
 
-private val Scene.travellerSize get() = min(h * 0.11f, w * 0.12f)
+internal val Scene.travellerSize get() = min(h * 0.11f, w * 0.12f)
 
 /** The places' parts behind the traveller. */
 internal fun Scene.landmarksBack() = landmarks { kind, i, a, b ->

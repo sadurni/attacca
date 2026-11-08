@@ -539,6 +539,12 @@ fun QueueScreen(viewModel: PlayerViewModel, onBack: () -> Unit, onEditTags: (Str
                                             rowMenu = false
                                             viewModel.requestInclusion(entry.mediaId)
                                         })
+                                        if (entry.mediaId.endsWith(".mp3", ignoreCase = true)) {
+                                            DropdownMenuItem(text = { Text(stringResource(R.string.damaged_repair)) }, onClick = {
+                                                rowMenu = false
+                                                viewModel.requestRepair(listOf(entry.mediaId))
+                                            })
+                                        }
                                         DropdownMenuItem(text = { Text(stringResource(R.string.seed_list_title)) }, onClick = {
                                             rowMenu = false
                                             viewModel.requestSeedList(entry.mediaId)

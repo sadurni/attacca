@@ -811,15 +811,15 @@
     <string name="help_lists_body">• My lists are the lists you saved; Generated holds the lists made by mood and family; Opened lists are playlists opened from other folders or apps.\n• The save button stores the playing list as one of yours, at the same track and position.\n• Long press a list to select it; select a whole group with its checkbox. With lists selected you can delete them, and with one saved list selected, rename it: its settings, resume point and devices follow the new name.\n• Drag the handle on the right to put the lists of a group in your own order.\n• The lists folder opens a browser on the folder where other apps save M3U8 lists.\n• In a saved list, the buttons under its title change it without playing it: chain, chain by albums, mix albums, group, sort, settings and tools. A list that is not yours is saved as a new one of yours. Settings → Chaining can keep every list made from a track, and the generated ones, as they start playing.</string>
     <string name="help_queue_title">Current list</string>
     <string name="help_browser_title">Folders</string>
-    <string name="help_browser_body">• Tap a folder to open it and a file to play its folder from there; Back goes up a folder.\n• “Play folder” at the top plays the folder, with or without its subfolders.\n• Long press to select files; then play them, add them to the current list or to any list.\n• The ⋮ of each row offers create a list from the track and the inclusion list.\n• The music browser and the lists browser each remember where you left them.</string>
+    <string name="help_browser_body">• Tap a folder to open it and a file to play its folder from there; Back goes up a folder.\n• “Play folder” at the top plays the folder, with or without its subfolders.\n• Long press to select files; then play them, add them to the current list or to any list.\n• The ⋮ of each row offers create a list from the track and the inclusion list.\n• The music browser and the lists browser each remember where you left them.\n• Folders and tracks show their covers (a folder\'s picture, or that of its first track); the grid button at the top shows a folder as covers, like the albums in Music (the first level, the music folder itself, keeps its own choice).</string>
     <string name="help_sound_title">Sound</string>
     <string name="help_sound_body">• Attacca processes the sound itself, in this order: ReplayGain and preamp, crossfade, 10-band equalizer, bass boost, stereo width and balance, crossfeed or virtual speakers, compressor and limiter.\n• Each output (speaker, headphones, each Bluetooth device…) has its own sound profile, switched automatically.\n• Crossfade and silence trimming are set in Settings and can be changed per list; albums can stay gapless.\n• To keep the phone or other apps from adding their own equalizer on top, see Settings → Car and background → Sound effects of the phone.</string>
     <string name="help_devices_title">Devices</string>
     <string name="help_devices_body">• Every output seen is listed with its profile, a fixed volume if you want one and a list to continue.\n• A device can follow the last list played on it and start playing when it connects, even with the player closed (it needs the nearby devices permission, opening the app from the background and no battery optimization; the buttons there ask for them).</string>
     <string name="help_chain_title">Chaining and generated lists</string>
-    <string name="help_chain_body">• Chaining compares how each track ends with how the others start: tempo, timbre, activity, key and notes. Tracks are analysed once, in the background, when you chain a list or for the whole music folder (Settings → Chaining).\n• From the analysis each track gets a mood (energetic, cheerful, calm, melancholic, tense) and a sound family: tracks that sound alike, found in your collection by a sound recognition network Attacca runs on the phone itself. The same tells which tracks are closest to a track.\n• Lists → Generated makes one chained list per mood and family. “Create list from this track” makes a list of the closest tracks, chained from it.\n• Filters: artist, genre, years, tempo, track length (1 to 20 minutes unless changed), energy, mood and voice; 150 tracks per list unless changed. “Fit the filters to the track” sets them around the track, as tight as they can be while leaving ten times the tracks asked for.\n• Analysing the whole folder is much faster with the screen on: Settings → Chaining → “Keep the screen on while analysing”.</string>
+    <string name="help_chain_body">• Chaining compares how each track ends with how the others start: tempo, timbre, activity, key and notes. Tracks are analysed once, in the background, when you chain a list or for the whole music folder (Settings → Chaining).\n• From the analysis each track gets a mood (energetic, cheerful, calm, melancholic, tense) and a sound family: tracks that sound alike, found in your collection by a sound recognition network Attacca runs on the phone itself. The same tells which tracks are closest to a track.\n• Lists → Generated makes one chained list per mood and family. “Create list from this track” makes a list of the closest tracks, chained from it; made from the track playing, that track goes on where it is, without starting again.\n• Filters: artist, genre, years, tempo, track length (1 to 20 minutes unless changed), energy, mood and voice; 150 tracks per list unless changed. “Fit the filters to the track” sets them around the track, as tight as they can be while leaving ten times the tracks asked for.\n• Analysing the whole folder is much faster with the screen on: Settings → Chaining → “Keep the screen on while analysing”.</string>
     <string name="help_inclusion_title">Inclusion list</string>
-    <string name="help_inclusion_body">• An M3U8 list that works as an allow list or a block list for the generated lists and for “Keep only included”.\n• Add or take out tracks, albums, artists and folders from their menus; the rules are kept in a text file next to the list, so new files in those folders, albums or artists join after each scan.\n• An orange “!” marks a track left out (also next to the title in Now playing); “◐” marks a folder with part of its music left out.\n• Settings → Inclusion list shows the rules and the resulting list.\n• Attacca Desktop on the PC can use the same list or its rules file.</string>
+    <string name="help_inclusion_body">• An M3U8 list that works as an allow list or a block list for the generated lists and for “Keep only included”.\n• Add or take out tracks, albums, artists and folders from their menus; the rules are kept in a text file next to the list, so new files in those folders, albums or artists join after each scan.\n• An orange “!” marks a track left out (also next to the title in Now playing); “◐” marks a folder with part of its music left out.\n• Settings → Inclusion list shows the rules and the resulting list.\n• Attacca Desktop on the PC can use the same list or its rules file.\n• With several inclusion lists, the one in use is shown at the top of Lists: tap it to change it.</string>
     <string name="help_performance_title">Smooth playback</string>
     <string name="help_performance_body">• With the screen off the phone saves energy, and the audio can stall with demanding effects. The audio buffer set to Automatic grows by a second after each dropout, up to 5 s; the dropouts detected are counted in Settings → Car and background.\n• “Fewer wake-ups” lets the player rest until the buffer needs more audio: less battery and fewer dropouts.\n• Long jobs (scanning, analysing) run at low priority and show their progress in a notification.</string>
     <string name="help_settings_title">Settings and backup</string>
@@ -829,7 +829,7 @@
     <string name="help_playback_title">Playback</string>
     <string name="help_themes_title">Themes</string>
     <string name="help_car_title">Android Auto and widget</string>
-    <string name="help_car_body">• In the car, Android Auto browses the current list, your lists, the generated and recent ones, and the music folder. Album and favorite buttons can be added in Settings → Car and background.\n• The home-screen widget shows the cover, the title and the controls, and works with the app closed; add it from Settings → Appearance.</string>
+    <string name="help_car_body">• Lock screen (Settings → Appearance): its picture can follow the track playing (its cover, or the landscape of O\'rama), and Attacca can show over it while music plays.\n• In the car, Android Auto browses the current list, your lists, the generated and recent ones, and the music folder. Album and favorite buttons can be added in Settings → Car and background.\n• The home-screen widget changes as it is resized: the cover and play; one row with the time; two rows with the album, what comes next and the list; tall and narrow, the cover big on top and more below as it grows; and, bigger, the cover large or the landscape of O\'rama, as chosen in Settings → Appearance. The heart adds the track to Favorites. It takes the theme\'s colours and works with the app closed; add it from Settings → Appearance.</string>
 
     <!-- Tips over the screens -->
     <string name="tip_counter">Tip %1$d of %2$d</string>
@@ -906,7 +906,8 @@
     <string name="rg_measured_hint">Files without ReplayGain tags are measured (EBU R128) before they play and get their own track and album gain; this gain applies only until then.</string>
     <string name="info_loudness">Loudness (measured)</string>
     <string name="work_library_title">Preparing the music folder</string>
-    <string name="widget_description">Cover, title and playback controls</string>
+    <string name="widget_description">Cover, title, what comes next and the controls; made bigger, the landscape of O\'rama</string>
+    <string name="widget_next">Next: %1$s</string>
     <string name="widget_section">Home-screen widget</string>
     <string name="widget_add">Add the widget to the home screen</string>
     <string name="section_album_shuffle">Album shuffle</string>
@@ -1541,7 +1542,7 @@
     <string name="damaged_count">Damaged tracks found: %1$d</string>
     <string name="damaged_show">Show the damaged tracks</string>
     <string name="damaged_skip">Leave damaged tracks out of the lists Attacca makes</string>
-    <string name="damaged_hint">Damaged tracks are also found as the library is scanned and as they play. They are marked ⚠ in Folders and Music; a folder with some of them inside, △. Damaged MP3s can be repaired: they are written again without their broken or repeated pieces.</string>
+    <string name="damaged_hint">Damaged tracks are also found as the library is scanned and as they play. They are marked ⚠ in Folders, Music, the lists and the title box of Now playing; a folder, album, artist or list with some of them, △. Damaged MP3s can be repaired, also from the menu of a track, a folder (all the damaged ones in it), an album, an artist or a list: they are written again without their broken or repeated pieces, and a track playing is read again from where it was. In a stretch with bits gone wrong all through it, the whole stretch is left out, for a short jump instead of noise; when much is lost, a new copy of the file would be better.</string>
     <string name="damaged_unreadable">It cannot be read</string>
     <string name="damaged_broken">%1$d broken frames (bursts of noise)</string>
     <string name="damaged_repeats">%1$s s written twice (the music jumps back)</string>
@@ -1559,6 +1560,14 @@
     <string name="damaged_delete_original">Delete it</string>
     <string name="damaged_repaired">Repaired</string>
     <string name="damaged_repair_failed">It could not be repaired</string>
+    <string name="damaged_repair_all">Repair damaged tracks</string>
+    <string name="damaged_repair_ask_many">%1$d damaged tracks are written again without their broken and repeated pieces. What should happen to the original files?</string>
+    <string name="damaged_repair_none">No damaged MP3 tracks to repair here</string>
+    <string name="damaged_nothing">No damage found: nothing to repair</string>
+    <string name="damaged_repairing">Repairing: %1$d / %2$d</string>
+    <string name="damaged_repaired_lost">Repaired: %1$s s of damaged sound left out</string>
+    <string name="damaged_repaired_many">%1$d repaired, %2$d could not be; %3$s s of damaged sound left out</string>
+    <string name="damaged_much_lost">So much is damaged that a new copy of the file would be better.</string>
     <string name="cover_search_web">Search the web</string>
     <string name="cover_search_web_hint">Search the web opens your browser with the artist and the album, to find the cover: save the picture there, then choose it here with Choose a picture.</string>
     <string name="cover_search_web_none">No browser to search with</string>
@@ -1595,4 +1604,32 @@
     <string name="damaged_checking">Checking for damage: %1$d / %2$d</string>
     <string name="damaged_check_new_hint">Only the tracks never checked, or changed since, are checked: a check stopped halfway goes on from where it was. Check all again only to check every track once more.</string>
     <string name="damaged_check_all_confirm">Every track of the music folder is checked again, also those already checked. It can take a while with a big collection.</string>
+    <string name="festive_christmas">Christmas</string>
+    <string name="festive_diwali">Diwali</string>
+    <string name="festive_eid">Eid</string>
+    <string name="festive_lunar">Lunar New Year</string>
+    <string name="festive_shogatsu">New Year\'s days</string>
+    <string name="festive_turn_off">Turn off the look of %1$s</string>
+    <string name="festive_turn_on">Turn on the look of %1$s</string>
+    <string name="newyear_greeting">Happy New Year %1$s!</string>
+    <string name="newyear_greeting_lunar">Happy Lunar New Year %1$s!</string>
+    <string name="newyear_greeting_hijri">Happy Hijri New Year %1$s!</string>
+    <string name="newyear_greeting_yennayer">Happy Yennayer %1$s!</string>
+    <string name="newyear_greeting_enkutatash">Happy Enkutatash %1$s!</string>
+    <string name="newyear_greeting_vikram">Happy New Year %1$s!</string>
+    <string name="newyear_notice_channel">New Year</string>
+    <string name="newyear_notice_title">Something big at midnight</string>
+    <string name="newyear_notice_text">In a few minutes the new year begins: leave Attacca open on the screen to see what happens in O\'rama.</string>
+    <string name="browser_as_grid">Show as covers</string>
+    <string name="browser_as_list">Show as a list</string>
+    <string name="widget_big">Made big, the widget shows</string>
+    <string name="widget_big_cover">The cover, large</string>
+    <string name="widget_big_orama">The landscape of O\'rama</string>
+    <string name="lock_wallpaper">Lock screen picture</string>
+    <string name="lock_wallpaper_off">As it is</string>
+    <string name="lock_wallpaper_cover">The cover of the track playing</string>
+    <string name="lock_wallpaper_orama">The landscape of O\'rama</string>
+    <string name="lock_wallpaper_hint">Set again with each track. Back to As it is, the lock screen takes the home screen\'s picture (the one it had before cannot be read back).</string>
+    <string name="over_lock_screen">Show over the lock screen while playing</string>
+    <string name="over_lock_screen_hint">When Attacca is open (Now playing, O\'rama…) as the screen goes off, waking the phone shows it over the lock screen while music plays; for anything else the phone stays locked.</string>
 </resources>
