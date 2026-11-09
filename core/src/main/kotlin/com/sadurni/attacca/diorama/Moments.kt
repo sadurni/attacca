@@ -555,6 +555,8 @@ private fun Scene.village(a: Float, b: Float, seed: Int, row: Int = 0) {
         val sink = s * 0.04f + if (row == 1) ts * 0.3f else 0f
         if (row <= 0 && k == n / 2) church(x, ground + sink, s * 1.15f)
         else house(x, ground + sink, s, false, Scene.id(Scene.VILLAGE_HOUSE, seed * 16 + k * 2 + (row + 1)))
+        // The back row stands behind the way the traveller goes along: the ground in front covers its foot.
+        if (row == -1) groundStrip(x - s * 0.75f, x + s * 0.75f)
     }
 }
 

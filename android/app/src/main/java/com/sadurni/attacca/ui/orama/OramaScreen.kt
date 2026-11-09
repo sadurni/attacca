@@ -71,6 +71,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -118,6 +120,87 @@ import java.io.File
  * with a small floating player whose bar is the map of this track and the next. Upright or wide;
  * with the whole screen button, the landscape alone (a tap brings the rest back).
  */
+/**
+ * O'rama in a strip, for Now playing in place of the waveform: the same landscape at the track's
+ * pace, as wide as the screen and low, with nothing over it. A tap anywhere opens the whole O'rama.
+ */
+@Composable
+fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Unit) {
+    val context = LocalContext.current
+    val app = context.app
+    val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
+    val position by viewModel.positionMs.collectAsStateWithLifecycle()
+    val queue by viewModel.queue.collectAsStateWithLifecycle()
+    val analyses by app.analysisResults.collectAsStateWithLifecycle()
+    val cover by viewModel.cover.collectAsStateWithLifecycle()
+    val id = now.mediaId
+    val nextId = when {
+        queue.isEmpty() || id == null -> null
+        now.repeatMode == Player.REPEAT_MODE_ONE -> id
+        now.index + 1 in queue.indices -> queue[now.index + 1].mediaId
+        now.repeatMode == Player.REPEAT_MODE_ALL -> queue.first().mediaId
+        else -> null
+    }
+    val coverBitmap = cover.bitmap.takeIf { cover.mediaId == id }
+    val look by produceState<SongLook?>(null, id, coverBitmap) {
+        value = withContext(Dispatchers.IO) { lookOf(context, id, coverBitmap) }
+    }
+    val nextLook by produceState<SongLook?>(null, nextId) {
+        value = withContext(Dispatchers.IO) { nextId?.let { lookOf(context, it, null) } }
+    }
+    val coverImage by produceState<ImageBitmap?>(null, coverBitmap) {
+        value = coverBitmap?.let { b -> withContext(Dispatchers.Default) { runCatching { Bitmap.createScaledBitmap(b, 160, 160, true).asImageBitmap() }.getOrNull() } }
+    }
+    val festiveOn by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
+    val festivePeriod by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
+    // 30 frames a second is plenty for a strip.
+    var frame by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            withFrameNanos { t ->
+                if (t - last >= 28_000_000L) {
+                    frame = t
+                    last = t
+                }
+            }
+        }
+    }
+    val diorama = remember { Diorama() }
+    val list = remember { DrawList() }
+    val path = remember { Path() }
+    val raw = remember { FloatArray(3) }
+    val measurer = rememberTextMeasurer()
+    val analysis = id?.let { analyses[it] }
+    val nextAnalysis = nextId?.let { analyses[it] }
+    val clipEnd = now.clipEndMs ?: analysis?.durationMs ?: now.durationMs
+    // The landscape is drawn taller than the strip (a strip's own height would make the traveller
+    // and the way tiny) and its lower part shown: the way, the traveller and some sky.
+    var offset by remember { mutableFloatStateOf(0f) }
+    Canvas(
+        modifier.clipToBounds().pointerInput(Unit) {
+            // A tap anywhere opens the whole O'rama.
+            detectTapGestures { onOpen() }
+        },
+    ) {
+        frame
+        val t = System.nanoTime() / 1_000_000L
+        val song = id?.let {
+            Diorama.Song(
+                it, look ?: Diorama.NEUTRAL, analysis?.let { a -> SongWave(a.waveform, a.durationMs, now.clipStartMs, clipEnd) },
+                now.album?.takeIf { a -> a.isNotBlank() } ?: now.title, now.artist,
+            )
+        }
+        diorama.festive(if (festiveOn) festivePeriod?.festivity else null, festivePeriod?.kings == true)
+        diorama.show(song, nextAnalysis?.let(::waveOf), t, now.nextTitle, null, nextLook)
+        val heard = app.dspEngine.heardLevels(raw)
+        val tall = maxOf(size.height, size.width / 2.4f)
+        offset = (tall - size.height) * 0.7f
+        diorama.draw(list, size.width, tall, position, now.isPlaying, if (heard) raw else null, t, stripTop = offset, stripHeight = size.height)
+        translate(top = -offset) { paint(list, path, coverImage, measurer) }
+    }
+}
+
 @Composable
 fun OramaScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenQueue: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -260,11 +343,26 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                 // On a box like the small player's, so they read on any sky.
                 Box(Modifier.weight(1f).padding(top = 4.dp, end = 8.dp)) {
                     if (id != null) {
-                        Column(Modifier.background(PANEL, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                            Text(now.title, style = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val by = listOfNotNull(now.artist?.takeIf { it.isNotBlank() }, now.album?.takeIf { it.isNotBlank() }).joinToString(" · ")
-                            if (by.isNotEmpty()) Text(by, style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = 14.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        // A tap on it goes back to Now playing.
+                        Row(
+                            Modifier.clip(RoundedCornerShape(16.dp)).background(PANEL).clickable(onClick = onDismiss)
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // The track's cover, small, beside its title.
+                            coverImage?.let {
+                                androidx.compose.foundation.Image(
+                                    it, contentDescription = null,
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    modifier = Modifier.padding(end = 10.dp).size(52.dp).clip(RoundedCornerShape(8.dp)),
+                                )
+                            }
+                            Column(Modifier.padding(end = 4.dp)) {
+                                Text(now.title, style = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                val by = listOfNotNull(now.artist?.takeIf { it.isNotBlank() }, now.album?.takeIf { it.isNotBlank() }).joinToString(" · ")
+                                if (by.isNotEmpty()) Text(by, style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = 14.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                            }
                         }
                     }
                 }

@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -61,6 +63,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
@@ -184,10 +187,25 @@ fun OramaPage(state: AppState) {
                 val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(1f, 2f), 6f)
                 // On a box like the small player's, so they read on any sky.
                 Box(Modifier.align(Alignment.TopStart).padding(20.dp).fillMaxWidth(0.7f)) {
-                Column(Modifier.background(PANEL, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 8.dp)) {
-                    Text(item.title, style = TextStyle(color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(listOf(item.artist, item.album).filter { it.isNotBlank() }.joinToString(" · "), style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 13.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                // A click on it goes to Now playing.
+                androidx.compose.foundation.layout.Row(
+                    Modifier.clip(RoundedCornerShape(16.dp)).background(PANEL).clickable { state.page = Page.PLAYING }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // The track's cover, small, beside its title.
+                    cover?.let {
+                        androidx.compose.foundation.Image(
+                            it, contentDescription = null,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.padding(end = 12.dp).size(60.dp).clip(RoundedCornerShape(8.dp)),
+                        )
+                    }
+                    Column(Modifier.padding(end = 4.dp)) {
+                        Text(item.title, style = TextStyle(color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(listOf(item.artist, item.album).filter { it.isNotBlank() }.joinToString(" · "), style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 13.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    }
                 }
                 }
             }
@@ -268,6 +286,77 @@ fun OramaPage(state: AppState) {
 
 /** Under the texts and buttons over the landscape: dark and see-through, like the small player. */
 private val PANEL = Color(0xFF15151A).copy(alpha = 0.55f)
+
+/**
+ * O'rama in a strip, for Now playing in place of the waveform: the same landscape at the track's
+ * pace, drawn taller than the strip and its lower part shown (the way, the traveller, some sky),
+ * so they keep their size. A click on nothing in the landscape opens the O'rama page.
+ */
+@Composable
+fun OramaStrip(state: AppState, modifier: Modifier) {
+    val p = state.player
+    val item = p.queue.getOrNull(p.index)
+    val nextItem = when {
+        p.index < 0 || p.queue.isEmpty() -> null
+        p.repeat == Repeat.ONE -> item
+        p.index + 1 in p.queue.indices -> p.queue[p.index + 1]
+        p.repeat == Repeat.ALL -> p.queue.first()
+        else -> null
+    }
+    val lib = state.library
+    val look by produceState<SongLook?>(null, item?.path, lib) {
+        value = withContext(Dispatchers.IO) { lookOf(lib, item) }
+    }
+    val nextLook by produceState<SongLook?>(null, nextItem?.path, lib) {
+        value = withContext(Dispatchers.IO) { nextItem?.let { lookOf(lib, it) } }
+    }
+    val cover by produceState<ImageBitmap?>(null, item?.path) {
+        value = withContext(Dispatchers.IO) { item?.let { runCatching { Covers.of(it.path, 160) }.getOrNull() } }
+    }
+    val diorama = remember { Diorama() }
+    val list = remember { DrawList() }
+    val path = remember { Path() }
+    val raw = remember { FloatArray(3) }
+    val measurer = rememberTextMeasurer()
+    var frame by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            withFrameNanos { t ->
+                if (t - last >= 30_000_000L) {
+                    frame = t
+                    last = t
+                }
+            }
+        }
+    }
+    val cutEnd = p.cutEndMs.takeIf { it > p.cutStartMs } ?: p.durationMs
+    var offset by remember { mutableFloatStateOf(0f) }
+    Canvas(
+        modifier.clipToBounds().pointerInput(Unit) {
+            // A click anywhere opens the O'rama page.
+            detectTapGestures { state.page = Page.ORAMA }
+        },
+    ) {
+        frame
+        val now = System.nanoTime() / 1_000_000L
+        val song = item?.let {
+            Diorama.Song(
+                it.path, look ?: Diorama.NEUTRAL, it.waveform?.let { w -> SongWave(w, it.durationMs, p.cutStartMs, cutEnd) },
+                it.album.ifBlank { it.title }, it.artist,
+            )
+        }
+        val next = nextItem?.let { n -> n.waveform?.let { SongWave(it, n.durationMs, n.soundStartMs ?: 0, n.soundEndMs ?: n.durationMs) } }
+        val period = FestiveDesk.period
+        diorama.festive(if (FestiveDesk.on) period?.festivity else null, period?.kings == true)
+        diorama.show(song, next, now, nextItem?.title, null, nextLook)
+        val heard = p.heardLevels(raw)
+        val tall = maxOf(size.height, size.width / 2.4f)
+        offset = (tall - size.height) * 0.7f
+        diorama.draw(list, size.width, tall, (p.positionMs - p.cutStartMs).coerceAtLeast(0), p.playing, if (heard) raw else null, now, stripTop = offset, stripHeight = size.height)
+        translate(top = -offset) { paint(list, path, cover, measurer) }
+    }
+}
 
 /**
  * The small player: the time, what comes next (a click opens the queue), previous, play / pause,

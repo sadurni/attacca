@@ -207,6 +207,32 @@ class DrawList {
         putPoint(x, y); put(height); put(angle + turnAngle)
     }
 
+    /**
+     * Moves the shapes [from] … [to] (indices) up or down: each y becomes [a] + y × [b] (sizes
+     * stay). For the sky of a strip, brought down into the part shown.
+     */
+    fun mapY(from: Int, to: Int, a: Float, b: Float) {
+        val c = coords
+        for (i in from until minOf(to, size)) {
+            val s = starts[i]
+            val n = counts[i]
+            when (kinds[i]) {
+                Kind.POLYGON, Kind.LINE -> {
+                    var k = 1
+                    while (k < n) {
+                        c[s + k] = a + c[s + k] * b
+                        k += 2
+                    }
+                }
+                Kind.RECT, Kind.GRADIENT -> {
+                    c[s + 1] = a + c[s + 1] * b
+                    c[s + 3] = a + c[s + 3] * b
+                }
+                else -> c[s + 1] = a + c[s + 1] * b
+            }
+        }
+    }
+
     /** The cover, [side] wide, centred on [x], [y] and turned by [angle] (plus the current turn). */
     fun cover(color: Int, x: Float, y: Float, side: Float, angle: Float = 0f) {
         shape(Kind.COVER, color)

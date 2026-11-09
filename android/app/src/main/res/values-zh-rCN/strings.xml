@@ -473,6 +473,9 @@
     <string name="waveform_top_half">上半部分</string>
     <string name="waveform_mirrored">镜像（正 / 负）</string>
     <string name="waveform_off">关闭（普通进度条）</string>
+    <string name="strip_show_orama">在此显示 O\'rama</string>
+    <string name="strip_show_wave">在此显示波形</string>
+    <string name="waveform_orama">O\'rama 风景（波形缩小显示在时间之间）</string>
     <string name="section_silence">跳过静音</string>
     <string name="silence_enabled">跳过曲目开头和结尾的静音</string>
     <string name="silence_hint">每个文件只在后台分析一次；曲目中间的静音绝不会被处理。</string>
@@ -793,7 +796,7 @@
     <string name="help_start_title">入门</string>
     <string name="help_start_body">• 在系统询问时允许访问文件：Attacca 直接从你的文件夹播放音乐和列表。首次使用时，欢迎界面会帮你选择音乐文件夹或恢复备份。\n• 在“设置 → 媒体库”中选择音乐文件夹并进行扫描：标签只读取一次并保存下来，因此大列表的排序和搜索都很快，导出的列表在其他设备上也仍然有效。\n• 从“文件夹”打开文件夹，从“列表”打开列表，或在其他应用中通过“打开方式”打开文件或播放列表。\n• 侧边菜单（在“正在播放”上向右滑动、点按那里的导航按钮，或点按主要页面中的 ☰）可进入应用的各个部分以及最近播放的列表。</string>
     <string name="help_player_title">正在播放</string>
-    <string name="help_player_body">• 点按显示标题、艺术家和专辑的区域，可查看文件的全部信息：图片、格式、分析和标签。其 ⋮ 菜单包含歌词、标签编辑器、转到文件夹、根据此曲目创建列表以及包含列表。\n• 列表框显示列表名称、在列表中的位置、曲目编号、年份和流派；点按它可打开当前列表。\n• 波形就是进度条。变暗的部分是被裁剪的静音或交叉淡化部分。点按时间可在已播放时间和剩余时间之间切换。\n• 在封面上滑动，或在靠近边缘处点按两次，可执行你在“设置 → 封面手势”中选择的操作。\n• 在屏幕上向左滑动打开当前列表，向右滑动打开侧边菜单。\n• 书签按钮：点按保存当前位置，长按打开书签。其他按钮：睡眠定时、收藏、声音、歌词、速度、A-B 循环……\n• “正在播放”显示哪些内容以及显示在哪里，取决于主题（参见“主题”）。</string>
+    <string name="help_player_body">• 点按显示标题、艺术家和专辑的区域，可查看文件的全部信息：图片、格式、分析和标签。其 ⋮ 菜单包含歌词、标签编辑器、转到文件夹、根据此曲目创建列表以及包含列表。\n• 列表框显示列表名称、在列表中的位置、曲目编号、年份和流派；点按它可打开当前列表。\n• 波形就是进度条。变暗的部分是被裁剪的静音或交叉淡化部分。点按时间可在已播放时间和剩余时间之间切换。 “设置 → 外观”或其角落的小圆按钮可在该处显示一条 O\'rama（点按会打开完整的 O\'rama），此时波形缩小显示在两个时间之间；点按条上的按钮可恢复波形。\n• 在封面上滑动，或在靠近边缘处点按两次，可执行你在“设置 → 封面手势”中选择的操作。\n• 在屏幕上向左滑动打开当前列表，向右滑动打开侧边菜单。\n• 书签按钮：点按保存当前位置，长按打开书签。其他按钮：睡眠定时、收藏、声音、歌词、速度、A-B 循环……\n• “正在播放”显示哪些内容以及显示在哪里，取决于主题（参见“主题”）。</string>
     <string name="help_player_cover">• 长按封面可打开其手势设置。</string>
     <string name="help_lists_title">列表</string>
     <string name="help_lists_body">• “我的列表”是你保存的列表；“自动生成”包含按情绪和类别生成的列表；“已打开的列表”是从其他文件夹或应用打开的播放列表。\n• 保存按钮会将正在播放的列表连同当前曲目和位置保存为你的列表。\n• 长按列表即可选择；勾选分组的复选框可选择整个分组。选中列表后可以删除；选中一个已保存的列表时还可以重命名：其设置、续播位置和设备关联都会随新名称保留。\n• 拖动右侧的手柄，按你的顺序排列分组中的列表。\n• 列表文件夹会在浏览器中打开其他应用保存 M3U8 列表的文件夹。\n• 在已保存的列表中，标题下方的按钮可以在不播放的情况下修改它：衔接、按专辑衔接、混排专辑、分组、排序、设置和工具。不属于你的列表会另存为你的新列表。设置 → 衔接 可以在开始播放时保存每个从曲目生成的列表和自动生成的列表。</string>
@@ -1609,7 +1612,7 @@
     <string name="newyear_greeting_vikram">新年快乐 %1$s！</string>
     <string name="newyear_notice_channel">新年</string>
     <string name="newyear_notice_title">午夜将有大事发生</string>
-    <string name="newyear_notice_text">再过几分钟新年就要开始了：让 Attacca 在屏幕上保持打开，看看 O\'rama 中会发生什么。</string>
+    <string name="newyear_notice_text">今晚午夜新年开始，O\'rama 中会发生一件大事：届时请让 Attacca 在屏幕上保持打开。</string>
     <string name="browser_as_grid">以封面显示</string>
     <string name="browser_as_list">以列表显示</string>
     <string name="widget_big">放大后微件显示</string>

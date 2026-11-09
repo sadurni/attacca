@@ -359,7 +359,7 @@ class Diorama {
         celebration = c
     }
 
-    fun draw(out: DrawList, w: Float, h: Float, positionMs: Long, playing: Boolean, raw: FloatArray?, nowMs: Long, lift: Float = 0f) {
+    fun draw(out: DrawList, w: Float, h: Float, positionMs: Long, playing: Boolean, raw: FloatArray?, nowMs: Long, lift: Float = 0f, stripTop: Float = 0f, stripHeight: Float = 0f) {
         out.clear()
         if (w <= 0f || h <= 0f) return
         val dt = if (lastDrawMs == Long.MIN_VALUE) 0L else (nowMs - lastDrawMs).coerceIn(0, 250)
@@ -396,7 +396,7 @@ class Diorama {
         val look = if (old != null && t < 1f) Looks.mix(old.look, cur, smooth(t)) else cur
 
         moves.clearHits()
-        val scene = Scene(out, w, (h - lift.coerceIn(0f, h * 0.4f)), look, nowMs, playing, live, moves, driftMs, h)
+        val scene = Scene(out, w, (h - lift.coerceIn(0f, h * 0.4f)), look, nowMs, playing, live, moves, driftMs, h, stripTop, stripHeight)
         scene.festive = festivity
         scene.kings = kingsDays
         scene.show = celebration
@@ -417,7 +417,8 @@ class Diorama {
         // The camera comes closer in the track's quiet parts, opens up in loud ones and at its peak,
         // and shakes a little on strong low beats.
         val here = song?.wave?.let { it.shape(it.startMs + shownMs, 8000.0) } ?: 0.5f
-        val target = 1f + 0.16f * (1f - here) * (1f - scene.peak)
+        // (In a strip it stays where it is: coming closer would push what is shown out of it.)
+        val target = if (stripTop > 0f) 1f else 1f + 0.16f * (1f - here) * (1f - scene.peak)
         zoom += (target - zoom) * (1f - exp(-dt / 2500f))
         val shake = exp(-(nowMs - live.onsetAtMs).coerceAtLeast(0) / 110f) * live.low * (if (cur.energy > 0.35f) 1f else 0.3f)
         val unit = min(w, h)

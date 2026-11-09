@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.sadurni.attaccaplg"
-version = "1.2.0"
+version = "1.2.1"
 
 kotlin {
     jvmToolchain(17)

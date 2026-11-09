@@ -455,6 +455,8 @@
 "Shapes and text": "形と文字",
 "Shortcuts in the window: Ctrl+Space play / pause, Ctrl+→ / ← next / previous, Ctrl+↑ / ↓ volume. The mini player is in the player bar and the tray icon's menu.": "ウィンドウ内のショートカット: Ctrl+Space 再生 / 一時停止、Ctrl+→ / ← 次 / 前、Ctrl+↑ / ↓ 音量。ミニプレーヤーはプレーヤーバーとトレイアイコンのメニューにあります。",
 "Show": "表示",
+"Show O'rama here": "ここに O'rama を表示",
+"Show the waveform here": "ここに波形を表示",
 "Show the window": "ウィンドウを表示",
 "Shown on the right and kept in Kept lists; Save also writes them in the folder above, for other players.": "右側に表示され、「保存したリスト」に保持されます。「保存」すると、他のプレーヤー用に上のフォルダにも書き出します。",
 "Shuffle": "シャッフル",

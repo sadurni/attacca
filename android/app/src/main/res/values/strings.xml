@@ -477,6 +477,9 @@
     <string name="waveform_top_half">Top half</string>
     <string name="waveform_mirrored">Mirrored (positive / negative)</string>
     <string name="waveform_off">Off (plain seek bar)</string>
+    <string name="strip_show_orama">Show O\'rama here</string>
+    <string name="strip_show_wave">Show the waveform here</string>
+    <string name="waveform_orama">The landscape of O\'rama (the waveform small between the times)</string>
     <string name="section_silence">Silence skipping</string>
     <string name="silence_enabled">Skip silence at track start and end</string>
     <string name="silence_hint">Each file is analyzed once in the background; silences in the middle of a track are never touched.</string>
@@ -805,7 +808,7 @@
     <string name="help_start_title">Getting started</string>
     <string name="help_start_body">• Allow access to your files when asked: Attacca plays music and lists straight from your folders. The first time, a welcome screen helps you choose the music folder or restore a backup.\n• Choose your music folder in Settings → Library and let it scan: tags are read once and kept, so sorting and searching big lists is fast, and exported lists stay valid on other devices.\n• Open a folder from Folders, a list from Lists, or a file or playlist from another app with “Open with”.\n• The side menu (swipe right on Now playing, the navigator button there, or ☰ in the main sections) leads to every part of the app and to the lists you played last.</string>
     <string name="help_player_title">Now playing</string>
-    <string name="help_player_body">• Tap the box with the title, artist and album to see everything about the file: pictures, format, analysis and tags. Its ⋮ menu has lyrics, the tag editor, go to folder, create a list from the track and the inclusion list.\n• The list box shows the list’s name, the position in it, track number, year and genre; tap it for the current list.\n• The waveform is the seek bar. Dimmed parts are trimmed silence or the crossfade. Tap the time to switch between elapsed and remaining.\n• Swipe across the cover or double tap near one of its edges for the actions you choose in Settings → Gestures on the cover.\n• Swipe left on the screen to open the current list, right for the side menu.\n• Bookmark button: a tap saves the position, a long press opens your bookmarks. Other buttons: sleep timer, favorite, sound, lyrics, speed, A-B repeat…\n• What Now playing shows, and where, depends on the theme (see Themes).</string>
+    <string name="help_player_body">• Tap the box with the title, artist and album to see everything about the file: pictures, format, analysis and tags. Its ⋮ menu has lyrics, the tag editor, go to folder, create a list from the track and the inclusion list.\n• The list box shows the list’s name, the position in it, track number, year and genre; tap it for the current list.\n• The waveform is the seek bar. Dimmed parts are trimmed silence or the crossfade. Tap the time to switch between elapsed and remaining. Settings → Appearance, or the small round button in its corner, can show a strip of O\'rama in its place (a tap opens the whole O\'rama), the waveform then small between the times; the button on the strip brings the waveform back.\n• Swipe across the cover or double tap near one of its edges for the actions you choose in Settings → Gestures on the cover.\n• Swipe left on the screen to open the current list, right for the side menu.\n• Bookmark button: a tap saves the position, a long press opens your bookmarks. Other buttons: sleep timer, favorite, sound, lyrics, speed, A-B repeat…\n• What Now playing shows, and where, depends on the theme (see Themes).</string>
     <string name="help_player_cover">• Long press the cover to open the settings of its gestures.</string>
     <string name="help_lists_title">Lists</string>
     <string name="help_lists_body">• My lists are the lists you saved; Generated holds the lists made by mood and family; Opened lists are playlists opened from other folders or apps.\n• The save button stores the playing list as one of yours, at the same track and position.\n• Long press a list to select it; select a whole group with its checkbox. With lists selected you can delete them, and with one saved list selected, rename it: its settings, resume point and devices follow the new name.\n• Drag the handle on the right to put the lists of a group in your own order.\n• The lists folder opens a browser on the folder where other apps save M3U8 lists.\n• In a saved list, the buttons under its title change it without playing it: chain, chain by albums, mix albums, group, sort, settings and tools. A list that is not yours is saved as a new one of yours. Settings → Chaining can keep every list made from a track, and the generated ones, as they start playing.</string>
@@ -1619,7 +1622,7 @@
     <string name="newyear_greeting_vikram">Happy New Year %1$s!</string>
     <string name="newyear_notice_channel">New Year</string>
     <string name="newyear_notice_title">Something big at midnight</string>
-    <string name="newyear_notice_text">In a few minutes the new year begins: leave Attacca open on the screen to see what happens in O\'rama.</string>
+    <string name="newyear_notice_text">Tonight at midnight the new year begins and something big happens in O\'rama: have Attacca open on the screen then.</string>
     <string name="browser_as_grid">Show as covers</string>
     <string name="browser_as_list">Show as a list</string>
     <string name="widget_big">Made big, the widget shows</string>

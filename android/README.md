@@ -102,7 +102,9 @@ plays them so one song flows into the next.
   albums are respected.
 - **Waveform** of the whole track as the seek bar (top half or mirrored), with trimmed and
   crossfaded parts shown dimmed; the position follows what the audio output plays, so it never
-  steps back.
+  steps back. Or, in its place, a strip of O'rama made to fit (a tap opens the whole O'rama), the
+  waveform then small between the times; a small button in the corner of either changes from one
+  to the other.
 - When a folder played from Folders ends, playback can go on with the next folder (in Folders
   order) or a random one of the music folder. When a list ends, Now playing is left empty.
 - **Go to the end** (track menu, cover gesture, a button): to the last seconds of the track (10 s
@@ -539,7 +541,8 @@ plays them so one song flows into the next.
 ## What's new
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
-new). In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes
+new). In 1.2.1: O'rama can take the waveform's place in Now playing, and O'rama shows the cover by
+the title. In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes
 (the largest with O'rama's landscape), damaged tracks marked and repaired from more places with
 better repairs, the inclusion list in use at the top of Lists, folders with covers (also as a
 grid), the lock screen's picture from the track playing, and nine more languages (Hindi,

@@ -473,6 +473,9 @@
     <string name="waveform_top_half">上半部</string>
     <string name="waveform_mirrored">鏡像（正 / 負）</string>
     <string name="waveform_off">關閉（一般進度列）</string>
+    <string name="strip_show_orama">在此顯示 O\'rama</string>
+    <string name="strip_show_wave">在此顯示波形</string>
+    <string name="waveform_orama">O\'rama 風景（波形縮小顯示在時間之間）</string>
     <string name="section_silence">略過靜音</string>
     <string name="silence_enabled">略過曲目開頭和結尾的靜音</string>
     <string name="silence_hint">每個檔案只會在背景分析一次；曲目中間的靜音絕不會被更動。</string>
@@ -793,7 +796,7 @@
     <string name="help_start_title">開始使用</string>
     <string name="help_start_body">• 系統詢問時，請允許存取你的檔案：Attacca 直接從你的資料夾播放音樂和清單。第一次使用時，歡迎畫面會協助你選擇音樂資料夾或還原備份。\n• 在「設定 → 媒體庫」中選擇音樂資料夾並進行掃描：標籤只讀取一次並保存下來，因此大型清單的排序和搜尋都很快，匯出的清單在其他裝置上也依然有效。\n• 從「資料夾」開啟資料夾，從「清單」開啟清單，或在其他應用程式中透過「開啟方式」開啟檔案或播放清單。\n• 側邊選單（在「正在播放」上向右滑動、輕觸那裡的導覽按鈕，或輕觸主要頁面中的 ☰）可前往應用程式的各個部分，以及最近播放的清單。</string>
     <string name="help_player_title">正在播放</string>
-    <string name="help_player_body">• 輕觸顯示標題、演出者和專輯的區塊，即可查看檔案的所有資訊：圖片、格式、分析和標籤。其 ⋮ 選單包含歌詞、標籤編輯器、前往資料夾、根據這首曲目建立清單，以及包含清單。\n• 清單框顯示清單名稱、在清單中的位置、曲目編號、年份和曲風；輕觸它可開啟目前清單。\n• 波形就是進度列。變暗的部分是被修剪的靜音或交叉淡化的部分。輕觸時間可在已播放時間和剩餘時間之間切換。\n• 在封面上滑動，或在靠近邊緣處輕觸兩下，即可執行你在「設定 → 封面手勢」中選擇的動作。\n• 在畫面上向左滑動開啟目前清單，向右滑動開啟側邊選單。\n• 書籤按鈕：輕觸可儲存目前位置，長按可開啟書籤。其他按鈕：睡眠計時器、我的最愛、聲音、歌詞、速度、A-B 重複……\n• 「正在播放」顯示哪些內容以及顯示在哪裡，取決於主題（請參閱「主題」）。</string>
+    <string name="help_player_body">• 輕觸顯示標題、演出者和專輯的區塊，即可查看檔案的所有資訊：圖片、格式、分析和標籤。其 ⋮ 選單包含歌詞、標籤編輯器、前往資料夾、根據這首曲目建立清單，以及包含清單。\n• 清單框顯示清單名稱、在清單中的位置、曲目編號、年份和曲風；輕觸它可開啟目前清單。\n• 波形就是進度列。變暗的部分是被修剪的靜音或交叉淡化的部分。輕觸時間可在已播放時間和剩餘時間之間切換。 「設定 → 外觀」或其角落的小圓形按鈕可在該處顯示一條 O\'rama（輕觸會開啟完整的 O\'rama），此時波形會縮小顯示在兩個時間之間；輕觸條上的按鈕即可恢復波形。\n• 在封面上滑動，或在靠近邊緣處輕觸兩下，即可執行你在「設定 → 封面手勢」中選擇的動作。\n• 在畫面上向左滑動開啟目前清單，向右滑動開啟側邊選單。\n• 書籤按鈕：輕觸可儲存目前位置，長按可開啟書籤。其他按鈕：睡眠計時器、我的最愛、聲音、歌詞、速度、A-B 重複……\n• 「正在播放」顯示哪些內容以及顯示在哪裡，取決於主題（請參閱「主題」）。</string>
     <string name="help_player_cover">• 長按封面可開啟其手勢設定。</string>
     <string name="help_lists_title">清單</string>
     <string name="help_lists_body">• 「我的清單」是你儲存的清單；「自動產生」包含依情緒和類別產生的清單；「已開啟的清單」是從其他資料夾或應用程式開啟的播放清單。\n• 儲存按鈕會將正在播放的清單連同目前的曲目和位置儲存為你的清單。\n• 長按清單即可選取；勾選群組的核取方塊可選取整個群組。選取清單後可以刪除；選取一個已儲存的清單時還可以重新命名：其設定、續播位置和裝置關聯都會隨新名稱保留。\n• 拖曳右側的控點，依你想要的順序排列群組中的清單。\n• 清單資料夾會在瀏覽器中開啟其他應用程式儲存 M3U8 清單的資料夾。\n• 在已儲存的清單中，標題下方的按鈕可以在不播放的情況下修改它：銜接、依專輯銜接、混排專輯、分組、排序、設定和工具。不屬於你的清單會另存為你的新清單。設定 → 銜接 可以在開始播放時儲存每個從曲目產生的清單和自動產生的清單。</string>
@@ -1609,7 +1612,7 @@
     <string name="newyear_greeting_vikram">新年快樂 %1$s！</string>
     <string name="newyear_notice_channel">新年</string>
     <string name="newyear_notice_title">午夜將有大事發生</string>
-    <string name="newyear_notice_text">再過幾分鐘新年就要開始了：讓 Attacca 在螢幕上保持開啟，看看 O\'rama 中會發生什麼。</string>
+    <string name="newyear_notice_text">今晚午夜新年開始，O\'rama 中會發生一件大事：屆時請讓 Attacca 在螢幕上保持開啟。</string>
     <string name="browser_as_grid">以封面顯示</string>
     <string name="browser_as_list">以清單顯示</string>
     <string name="widget_big">放大後小工具顯示</string>

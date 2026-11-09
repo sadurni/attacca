@@ -37,6 +37,8 @@ data class UiSettings(
     val coverBehindScreens: Boolean = false,
     val showRemainingTime: Boolean = true,
     val waveformMode: WaveformMode = WaveformMode.TOP_HALF,
+    /** A strip of O'rama in the waveform's place in Now playing, the waveform (as [waveformMode] says) then small between the times. */
+    val oramaStrip: Boolean = false,
     val keepScreenOn: KeepScreenOn = KeepScreenOn.OFF,
     /** Tips over each screen the first time it opens after installing a new version. */
     val showTips: Boolean = true,
@@ -393,6 +395,7 @@ class AppSettings(context: Context) {
             coverBehindScreens = prefs.getBoolean("cover_screens", d.coverBehindScreens),
             showRemainingTime = prefs.getBoolean("remaining", d.showRemainingTime),
             waveformMode = prefs.getEnum("waveform", d.waveformMode),
+            oramaStrip = prefs.getBoolean("orama_strip", d.oramaStrip),
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
@@ -410,6 +413,7 @@ class AppSettings(context: Context) {
             .putBoolean("cover_screens", s.coverBehindScreens)
             .putBoolean("remaining", s.showRemainingTime)
             .putString("waveform", s.waveformMode.name)
+            .putBoolean("orama_strip", s.oramaStrip)
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)

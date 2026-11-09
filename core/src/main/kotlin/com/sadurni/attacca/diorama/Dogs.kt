@@ -330,6 +330,9 @@ internal fun Scene.ourDogs() {
     // Upright there is little room behind the traveller: the ones behind close up, as a pack,
     // so the last one still shows.
     val behind = ((travellerX - s * 0.45f) / (s * 3.2f)).coerceIn(0.55f, 1f)
+    // Drawn from the one furthest ahead to the last: each one over the one in front of it, so
+    // no face is hidden behind another's back.
+    val drawn = ArrayList<Pair<Float, () -> Unit>>()
     for ((k, dog) in Dog.entries.withIndex()) {
         val spot = when (dog) {
             Dog.GALGO -> travellerX + s * 1.6f
@@ -380,20 +383,27 @@ internal fun Scene.ourDogs() {
         // The rabbit reaches it: off after it.
         if (chases && moves.dogState[k] == DogState.WITH && rabbitX > x - s * 0.3f) moves.dogState[k] = DogState.CHASING
         val state = moves.dogState[k]
-        val did = Scene.id(Scene.MATE, 900 + k)
-        touchable(did, x, nearY(x) - s * 0.3f, s * 0.5f)
-        val flip = bounce(poked(did), 800)
-        val foot = nearY(x) - (flip?.get(0) ?: 0f) * s * 0.9f - jumpLift(x) * 0.7f
-        if (flip != null) out.turn(flip[1], x, foot - s * 0.2f)
-        when (state) {
-            // Waiting there: standing still, its tail going.
-            DogState.COMING -> dog(dog, x, foot, s, 1f, 0.25f + 0.04f * sin(now / 700.0 + k).toFloat(), run = false)
-            DogState.LEAVING, DogState.CHASING -> dog(dog, x, foot, s, 1f, ((now + k * 97L) % 380) / 380f, run = true)
-            // Paused, they wait: shifting a little where they stand.
-            else -> dog(dog, x, foot, s, 1f, if (!playing) 0.25f + 0.05f * sin(now / 650.0 + k * 1.7).toFloat() else if (run) ((now + k * 97L) % 420) / 420f else (beat * 2f + k * 0.25f) % 1f, run)
-        }
-        out.straight()
+        drawn += x to { drawDog(k, dog, x, state, s, run) }
     }
+    drawn.sortByDescending { it.first }
+    for ((_, draw) in drawn) draw()
+}
+
+/** One of the pack at [x] in its [state] (see [ourDogs]). */
+private fun Scene.drawDog(k: Int, dog: Dog, x: Float, state: Int, s: Float, run: Boolean) {
+    val did = Scene.id(Scene.MATE, 900 + k)
+    touchable(did, x, nearY(x) - s * 0.3f, s * 0.5f)
+    val flip = bounce(poked(did), 800)
+    val foot = nearY(x) - (flip?.get(0) ?: 0f) * s * 0.9f - jumpLift(x) * 0.7f
+    if (flip != null) out.turn(flip[1], x, foot - s * 0.2f)
+    when (state) {
+        // Waiting there: standing still, its tail going.
+        DogState.COMING -> dog(dog, x, foot, s, 1f, 0.25f + 0.04f * sin(now / 700.0 + k).toFloat(), run = false)
+        DogState.LEAVING, DogState.CHASING -> dog(dog, x, foot, s, 1f, ((now + k * 97L) % 380) / 380f, run = true)
+        // Paused, they wait: shifting a little where they stand.
+        else -> dog(dog, x, foot, s, 1f, if (!playing) 0.25f + 0.05f * sin(now / 650.0 + k * 1.7).toFloat() else if (run) ((now + k * 97L) % 420) / 420f else (beat * 2f + k * 0.25f) % 1f, run)
+    }
+    out.straight()
 }
 
 /** Whether one of the four is with the traveller (or about to be) now. */
@@ -462,7 +472,16 @@ internal fun Scene.sittingDog(dog: Dog, x: Float, ground: Float, s: Float, dir: 
         out.circle(Colors.alpha(0xFFDDEEFF.toInt(), 0.22f), cx, hy, r)
         out.ring(Colors.alpha(0xFFFFFFFF.toInt(), 0.75f), cx, hy, r, r * 0.07f)
         out.circle(Colors.alpha(0xFFFFFFFF.toInt(), 0.6f), cx - dir * r * 0.45f, hy - r * 0.5f, r * 0.13f)
-        out.rect(0xFFB8BCC8.toInt(), cx - r * 0.55f, hy + r * 0.85f, cx + r * 0.55f, hy + r * 1.05f)
+        // The collar where the neck goes into the glass, across the neck.
+        val nx = chestX - cx
+        val ny = chestY + t * 0.1f - hy
+        val len0 = kotlin.math.sqrt(nx * nx + ny * ny).coerceAtLeast(1e-3f)
+        val ux = nx / len0
+        val uy = ny / len0
+        val px = cx + ux * r
+        val py = hy + uy * r
+        val half = t * 0.48f
+        out.line(0xFFB8BCC8.toInt(), r * 0.2f, px - uy * half, py + ux * half, px + uy * half, py - ux * half)
     }
 }
 

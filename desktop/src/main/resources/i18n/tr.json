@@ -455,6 +455,8 @@
 "Shapes and text": "Şekiller ve metin",
 "Shortcuts in the window: Ctrl+Space play / pause, Ctrl+→ / ← next / previous, Ctrl+↑ / ↓ volume. The mini player is in the player bar and the tray icon's menu.": "Penceredeki kısayollar: Ctrl+Boşluk çal / duraklat, Ctrl+→ / ← sonraki / önceki, Ctrl+↑ / ↓ ses. Mini oynatıcı, oynatıcı çubuğunda ve tepsi simgesinin menüsündedir.",
 "Show": "Göster",
+"Show O'rama here": "O'rama'yı burada göster",
+"Show the waveform here": "Dalga biçimini burada göster",
 "Show the window": "Pencereyi göster",
 "Shown on the right and kept in Kept lists; Save also writes them in the folder above, for other players.": "Sağda gösterilir ve Saklanan listeler'de tutulur; Kaydet bunları diğer oynatıcılar için yukarıdaki klasöre de yazar.",
 "Shuffle": "Karışık",

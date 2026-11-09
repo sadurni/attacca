@@ -257,6 +257,9 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
 
     val lists = ListsForm(prefs)
 
+    /** Goes up when Now playing's waveform / O'rama choice changes (it is kept in [prefs]). */
+    var playingStrip by mutableStateOf(0)
+
     /** The mini player window is open. */
     var mini by mutableStateOf(false)
 

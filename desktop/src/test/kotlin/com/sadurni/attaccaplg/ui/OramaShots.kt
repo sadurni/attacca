@@ -83,6 +83,25 @@ fun main(args: Array<String>) {
             shot(File(out, "tour-$name-${"%02d".format(k)}.png"), 960, 480, d, k * 15_000L + 4_000L, startMs = 100_000L + k * 977L)
         }
     }
+    // A strip of O'rama as Now playing shows it in place of the waveform (wide and low).
+    for (name in listOf("meadow", "city", "castle", "coast", "ice", "space")) {
+        val d = Diorama()
+        d.show(Diorama.Song("strip-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+        // Drawn taller than the strip (as the app does) and the lower part shown: the way, the traveller and some sky.
+        shot(File(out, "strip-$name.png"), 1008, 420, d, 47_000L, startMs = 3_000L, warm = 150, stripTop = 98f, stripHeight = 280f)
+    }
+    // The meadow in a strip at loud and quiet moments (the ground high and low).
+    for ((k, at) in listOf(20_000L, 70_000L, 120_000L, 180_000L).withIndex()) {
+        val d = Diorama()
+        d.show(Diorama.Song("strip-way", Looks.of(looks.getValue("meadow")), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+        shot(File(out, "strip-way-$k.png"), 1008, 420, d, at, startMs = 3_000L, warm = 150, stripTop = 98f, stripHeight = 280f)
+    }
+    // The ship in a strip, at a few moments (it rises and falls with the music).
+    for ((k, at) in listOf(12_000L, 60_000L, 100_000L, 150_000L).withIndex()) {
+        val d = Diorama()
+        d.show(Diorama.Song("strip-ship", Looks.of(looks.getValue("space")), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+        shot(File(out, "strip-ship-$k.png"), 1008, 420, d, at, startMs = 3_000L, warm = 150, stripTop = 98f, stripHeight = 280f)
+    }
     // The festive looks (some days a year) and the new year's shows at midnight.
     for (f in com.sadurni.attacca.festive.Festivity.entries) {
         for (kings in if (f == com.sadurni.attacca.festive.Festivity.CHRISTMAS) listOf(false, true) else listOf(false)) {
@@ -376,7 +395,7 @@ private fun songShape(r: Random): FloatArray = FloatArray(512) { i ->
 /** The start of the names of the shots to make; null: all. */
 private var only: String? = null
 
-private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, startMs: Long = 0, warm: Int = 120) {
+private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, startMs: Long = 0, warm: Int = 120, stripTop: Float = 0f, stripHeight: Float = 0f) {
     if (only?.let { prefix -> prefix.split(',').none { file.name.startsWith(it) } } == true) return
     val list = DrawList()
     val raw = FloatArray(3)
@@ -386,7 +405,7 @@ private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, start
         raw[0] = 0.2f + (if (beat) 0.2f else 0f)
         raw[1] = if (beat) 0.25f else 0.05f
         raw[2] = 0.02f + 0.01f * sin(t / 50.0).toFloat()
-        d.draw(list, w.toFloat(), h.toFloat(), positionMs + k * 16L, true, raw, t)
+        d.draw(list, w.toFloat(), h.toFloat(), positionMs + k * 16L, true, raw, t, stripTop = stripTop, stripHeight = stripHeight)
     }
     val path = Path()
     val scene = ImageComposeScene(w, h, Density(1f)) {

@@ -29,6 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -70,7 +74,49 @@ fun NowPlayingHeader(state: AppState) {
                     style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Spacer(Modifier.height(10.dp))
-            Waveform(item.waveform, p.positionMs, p.durationMs, Modifier.fillMaxWidth().height(72.dp), p.cutStartMs, p.cutEndMs, p.blendMs) { p.seek(it) }
+            // The waveform, or a strip of O'rama with the waveform small under it (right click to change).
+            val strip = state.prefs["playing_strip"] == "orama"
+            androidx.compose.foundation.ContextMenuArea(items = {
+                listOf(
+                    androidx.compose.foundation.ContextMenuItem(
+                        if (strip) tr("Show the waveform here", "Mostrar aquí la forma de onda") else tr("Show O'rama here", "Mostrar aquí O'rama"),
+                    ) { state.prefs["playing_strip"] = if (strip) "wave" else "orama"; state.playingStrip++ },
+                )
+            }) {
+                Column {
+                    state.playingStrip
+                    // The small round button in the corner: the landscape for O'rama, the bars for the waveform.
+                    val switch: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
+                        androidx.compose.foundation.layout.Box(
+                            Modifier.align(Alignment.TopEnd).padding(4.dp).size(28.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color.Black.copy(alpha = 0.35f))
+                                .clickable { state.prefs["playing_strip"] = if (strip) "wave" else "orama"; state.playingStrip++ },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                if (strip) PlayerIcons.GraphicEq else PlayerIcons.Landscape,
+                                if (strip) tr("Show the waveform here", "Mostrar aquí la forma de onda") else tr("Show O'rama here", "Mostrar aquí O'rama"),
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp),
+                            )
+                        }
+                    }
+                    if (strip) {
+                        androidx.compose.foundation.layout.Box {
+                            OramaStrip(state, Modifier.fillMaxWidth().aspectRatio(4.4f).clip(RoundedCornerShape(10.dp)))
+                            switch()
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Waveform(item.waveform, p.positionMs, p.durationMs, Modifier.fillMaxWidth().height(32.dp), p.cutStartMs, p.cutEndMs, p.blendMs) { p.seek(it) }
+                    } else {
+                        androidx.compose.foundation.layout.Box {
+                            Waveform(item.waveform, p.positionMs, p.durationMs, Modifier.fillMaxWidth().height(72.dp), p.cutStartMs, p.cutEndMs, p.blendMs) { p.seek(it) }
+                            switch()
+                        }
+                    }
+                }
+            }
         }
     }
 }

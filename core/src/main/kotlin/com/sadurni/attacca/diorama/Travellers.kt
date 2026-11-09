@@ -651,7 +651,14 @@ private fun Scene.icebergRider(x: Float, s: Float, color: Int) {
 
 private fun Scene.ship(x: Float, s: Float, dy: Float = 0f, tricks: Boolean = true) {
     val pz = if (tricks) pose() else Pose()
-    val y = h * 0.5f - heightAt(x, 1f, 40f) * h * 0.18f + sin(now / 900.0 + dy).toFloat() * s * 0.08f - pz.lift * s + dy
+    val free = h * 0.5f - heightAt(x, 1f, 40f) * h * 0.18f + sin(now / 900.0 + dy).toFloat() * s * 0.08f - pz.lift * s + dy
+    // In a strip (only its lower part shown) its ups and downs are kept within the part shown.
+    val y = if (stripTop > 0f) {
+        val shown = if (stripHeight > 0f) stripHeight else h - stripTop
+        (stripTop + shown * 0.45f + (free - h * 0.42f) * 0.5f).coerceIn(stripTop + s * 0.4f, stripTop + shown - s * 0.4f)
+    } else {
+        free
+    }
     turned(pz.angle, x, y) {
         val flame = s * (0.25f + live.level * 0.6f) * (0.85f + 0.15f * sin(now / 40.0).toFloat())
         out.polygon(Colors.alpha(p.accent, 0.9f))

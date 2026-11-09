@@ -455,6 +455,8 @@
 "Shapes and text": "形狀和文字",
 "Shortcuts in the window: Ctrl+Space play / pause, Ctrl+→ / ← next / previous, Ctrl+↑ / ↓ volume. The mini player is in the player bar and the tray icon's menu.": "視窗中的快速鍵：Ctrl+Space 播放 / 暫停，Ctrl+→ / ← 下一首 / 上一首，Ctrl+↑ / ↓ 音量。迷你播放器在播放列和系統匣圖示的選單中。",
 "Show": "顯示",
+"Show O'rama here": "在此顯示 O'rama",
+"Show the waveform here": "在此顯示波形",
 "Show the window": "顯示視窗",
 "Shown on the right and kept in Kept lists; Save also writes them in the folder above, for other players.": "顯示在右側並保存在「已儲存的清單」中；「儲存」還會將它們寫入上方的資料夾，供其他播放器使用。",
 "Shuffle": "隨機播放",

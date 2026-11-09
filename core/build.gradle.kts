@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.sadurni.attacca"
-version = "1.2.0"
+version = "1.2.1"
 
 /**
  * What the phone, the desktop app (and through their export files, the web page and the Rockbox

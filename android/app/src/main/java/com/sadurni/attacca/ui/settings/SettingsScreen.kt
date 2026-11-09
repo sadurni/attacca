@@ -943,6 +943,8 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
             settings.updateUi { it.copy(waveformMode = mode) }
         }
     }
+    // O'rama in the waveform's place; the waveform keeps its own look, small between the times.
+    SwitchRow(stringResource(R.string.waveform_orama), ui.oramaStrip, { on -> settings.updateUi { it.copy(oramaStrip = on) } })
 }
 
 /** Base folder of the music, which makes exported lists portable between devices. */

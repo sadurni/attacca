@@ -3,6 +3,25 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.2.1
+
+### Attacca (Android)
+
+- **O'rama in Now playing**: Settings → Appearance → Waveform can show a strip of O'rama in its
+  place, made to fit the strip, with the sun or moon in sight (a tap opens the whole O'rama); the
+  waveform, as chosen, goes small between the times and still moves through the track. A small
+  button in the corner of the waveform or the strip changes from one to the other.
+- **O'rama**: the cover, small, in the title's box; the four dogs in a pack each in front of the
+  one ahead, so no face hides behind another's back; the houses of a village behind the way stand
+  behind its ground; in space the ground stands apart from the hills behind it; the dogs' glass
+  helmets close round their necks.
+
+### Attacca Desktop
+
+- O'rama in Now playing in place of the waveform (the button in its corner, or a right click).
+- O'rama: the cover in the title's box (a click goes to Now playing), and the same changes to the
+  dogs, villages and space.
+
 ## 1.2.0
 
 ### Attacca (Android)

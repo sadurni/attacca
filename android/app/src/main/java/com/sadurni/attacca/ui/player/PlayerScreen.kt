@@ -488,7 +488,10 @@ private fun Part(block: PlayerBlock, parts: Parts, modifier: Modifier, nested: B
         BlockType.TITLE -> TrackCard(viewModel, parts.cardPager, handlers, block.lines, parts.values, compact, block.framed, block.image, block.cover)
         BlockType.LIST -> PlaylistBar(viewModel, block.lines, parts.values, handlers.onOpenQueue, handlers.onOpenLists, block.framed, block.image, block.cover)
         BlockType.BOX -> Container(block, parts, modifier, bounded)
-        BlockType.PROGRESS -> Progress(viewModel, parts.uiSettings, handlers.onToggleRemainingTime, seekBarHeight = if (compact || nested) 56.dp else 72.dp)
+        BlockType.PROGRESS -> Progress(
+            viewModel, parts.uiSettings, handlers.onToggleRemainingTime, seekBarHeight = if (compact || nested) 56.dp else 72.dp,
+            onOpenOrama = { handlers.openDialog(PlayerDialog.ORAMA) },
+        )
         BlockType.BUTTONS -> ButtonRow(viewModel, block.actions, handlers, block.icons)
         BlockType.TEXT -> InfoLine(block, parts.values)
         BlockType.SPACE -> Spacer(modifier.then(if (nested) Modifier.size(12.dp) else Modifier))
@@ -1263,6 +1266,7 @@ private fun Progress(
     uiSettings: UiSettings,
     onToggleRemainingTime: () -> Unit,
     seekBarHeight: androidx.compose.ui.unit.Dp,
+    onOpenOrama: () -> Unit = {},
 ) {
     val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
     val position by viewModel.positionMs.collectAsStateWithLifecycle()
@@ -1284,7 +1288,57 @@ private fun Progress(
     val thumb = if (colors.isDark) Color.White else colors.text
     val barModifier = Modifier.fillMaxWidth().height(seekBarHeight)
 
+    val strip = uiSettings.oramaStrip
     val wave = waveform.takeIf { uiSettings.waveformMode != WaveformMode.OFF }
+    if (strip) {
+        // A strip of O'rama, wide and low; the waveform goes small between the times below.
+        // Lower when the phone lies on its side, so the title above and the buttons below keep their room.
+        val wide = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        Box(Modifier.fillMaxWidth()) {
+            com.sadurni.attacca.ui.orama.OramaStrip(
+                viewModel,
+                Modifier.fillMaxWidth().aspectRatio(if (wide) 6f else 3.6f).clip(com.sadurni.attacca.ui.theme.AttaccaShapes.small),
+                onOpenOrama,
+            )
+            StripSwitch(toOrama = false, Modifier.align(Alignment.TopEnd))
+        }
+        val timeText = if (uiSettings.showRemainingTime && shownDuration > 0) "-" + formatTime(shownDuration - shownPosition) else formatTime(shownPosition)
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(timeText, fontSize = AttaccaType.title, modifier = Modifier.clickable(onClick = onToggleRemainingTime))
+            val small = Modifier.weight(1f).padding(horizontal = 10.dp).height(32.dp)
+            if (wave != null && wave.fileDurationMs > 0) {
+                val fileLength = wave.fileDurationMs.toFloat()
+                SeekBar(
+                    progress = (wave.clipStartMs + position) / fileLength,
+                    accent = accent,
+                    unplayed = colors.text,
+                    thumb = thumb,
+                    onSeek = { fraction ->
+                        val target = (fraction * fileLength).toLong() - wave.clipStartMs
+                        viewModel.seekTo(target.coerceIn(0L, duration.coerceAtLeast(0L)))
+                    },
+                    modifier = small,
+                    waveform = wave.waveform,
+                    mirrored = uiSettings.waveformMode == WaveformMode.MIRRORED,
+                    activeFrom = wave.clipStartMs / fileLength,
+                    activeTo = wave.clipEndMs / fileLength,
+                )
+            } else {
+                SeekBar(
+                    progress = if (duration > 0) position.toFloat() / duration else 0f,
+                    accent = accent,
+                    unplayed = colors.text,
+                    thumb = thumb,
+                    onSeek = { fraction -> viewModel.seekTo((fraction * duration).toLong()) },
+                    modifier = small,
+                )
+            }
+            if (ab.aMs != null) Text(if (ab.bMs != null) "A-B " else "A- ", fontSize = AttaccaType.body, fontWeight = FontWeight.Bold, color = accent)
+            Text(formatTime(shownDuration), fontSize = AttaccaType.title)
+        }
+        return
+    }
+    Box(Modifier.fillMaxWidth()) {
     if (wave != null && wave.fileDurationMs > 0) {
         // The waveform spans the whole file; the player's timeline is only the clip.
         val fileDuration = wave.fileDurationMs.toFloat()
@@ -1313,6 +1367,8 @@ private fun Progress(
             modifier = barModifier,
         )
     }
+        StripSwitch(toOrama = true, Modifier.align(Alignment.TopEnd))
+    }
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = if (uiSettings.showRemainingTime && shownDuration > 0) "-" + formatTime(shownDuration - shownPosition) else formatTime(shownPosition),
@@ -1325,6 +1381,30 @@ private fun Progress(
             Spacer(Modifier.weight(1f))
         }
         Text(formatTime(shownDuration), fontSize = AttaccaType.title)
+    }
+}
+
+/** The small round button in the corner of the waveform or the strip of O'rama: one for the other. */
+@Composable
+private fun StripSwitch(toOrama: Boolean, modifier: Modifier) {
+    val settings = androidx.compose.ui.platform.LocalContext.current.app.settings
+    val description = stringResource(if (toOrama) R.string.strip_show_orama else R.string.strip_show_wave)
+    Box(
+        modifier
+            .padding(4.dp)
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.35f))
+            .clickable { settings.updateUi { it.copy(oramaStrip = toOrama) } }
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (toOrama) Icons.Rounded.Landscape else Icons.Rounded.GraphicEq,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 

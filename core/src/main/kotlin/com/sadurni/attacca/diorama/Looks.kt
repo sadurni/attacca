@@ -61,7 +61,16 @@ class Palette(
             if (kotlin.math.abs(d) >= gap) return s
             return if (sky > 0.45f) Colors.darker(s, (gap - kotlin.math.abs(d)) * 1.6f) else Colors.lighter(s, (gap - kotlin.math.abs(d)) * 1.2f)
         }
-        return Palette(skyTop, skyBottom, stand(far, 0.15f), stand(mid, 0.22f), Colors.saturate(near, 1.15f), accent, light)
+        // Under a dark sky the ground stands apart from it too (in space, with the cover's colours, they could come out nearly alike).
+        val ground = Colors.saturate(near, 1.15f).let { g ->
+            val d = Colors.luma(g) - sky
+            if (kotlin.math.abs(d) >= 0.12f || sky > 0.45f) g else Colors.lighter(g, (0.12f - kotlin.math.abs(d)) * 1.8f)
+        }
+        val midStood = stand(mid, 0.22f)
+        // And from the hills just behind it (in space the ridge and the ground came out the same purple).
+        val apart = if (sky > 0.45f || kotlin.math.abs(Colors.luma(ground) - Colors.luma(midStood)) >= 0.08f) ground
+        else Colors.darker(ground, 0.3f)
+        return Palette(skyTop, skyBottom, stand(far, 0.15f), midStood, apart, accent, light)
     }
 
     fun mix(other: Palette, t: Float) = Palette(

@@ -24,6 +24,13 @@ internal class Scene(
     val driftMs: Double,
     /** Where the picture ends: the land lies in [h], the sky and the weather go down to here. */
     val bottom: Float = h,
+    /**
+     * Shown only from here down (a strip, as Now playing shows it): the far hills stay low and
+     * the sky's things (sun or moon, clouds, birds…) come down into the part shown.
+     */
+    val stripTop: Float = 0f,
+    /** How much is shown from [stripTop] down (0: all of it). */
+    val stripHeight: Float = 0f,
 ) {
     val p = look.palette.vivid()
     val unit = min(w, h)
@@ -47,10 +54,11 @@ internal class Scene(
 
     // Layers: where their foot is and how high the loudest music lifts them.
     val farBase = h * 0.62f
-    val farAmp = h * 0.36f
+    val farAmp = h * 0.36f * (if (stripTop > 0f) 0.4f else 1f)
     val midBase = h * 0.78f
     val midAmp = h * 0.27f
-    val nearBase = h * 0.93f
+    // In a strip the near ground stays higher, clear of the strip's bottom edge.
+    val nearBase = h * (if (stripTop > 0f) 0.86f else 0.93f)
     val nearAmp = h * 0.15f
 
     /**
@@ -186,6 +194,7 @@ internal class Scene(
 
     fun sky() {
         out.gradient(p.skyTop, p.skyBottom, 0f, 0f, w, bottom)
+        val skyFrom = out.size
         val night = look.night
         if (night > 0.05f) stars(night)
         if (look.world == World.ICE) aurora()
@@ -195,6 +204,8 @@ internal class Scene(
         peakMoment()
         skyVisitor()
         festiveSky()
+        // In a strip, what is in the sky is brought down (and closer together) into the part shown, above the low hills.
+        if (stripTop > 0f) out.mapY(skyFrom, out.size, stripTop, 0.4f)
     }
 
     private fun stars(night: Float) {
@@ -377,7 +388,13 @@ internal class Scene(
             World.MEADOW -> { farMountains(p.far, smooth = true, skyline = false); hillsWithTrees(); kites(); grass(); meadowThings() }
             World.COAST -> { farMountains(p.far, smooth = true, skyline = false); sea(); floatingAlbums(midBase - midAmp * 0.25f, ZOOM_MID); sand(); beachThings() }
             World.ICE -> { iceCliffs(); icebergs(); floatingAlbums(farBase + h * 0.07f, ZOOM_MID); coldSea() }
-            World.SPACE -> { planets(); ridge(); buriedAlbums(); moonGround(); spaceThings() }
+            World.SPACE -> {
+                val planetsFrom = out.size
+                planets()
+                // In a strip the planets come down with the sky.
+                if (stripTop > 0f) out.mapY(planetsFrom, out.size, stripTop, 0.4f)
+                ridge(); buriedAlbums(); moonGround(); spaceThings()
+            }
         }
         landmarksBack()
         finish()
@@ -799,6 +816,19 @@ internal class Scene(
     }
 
     // ---------- Near ----------
+
+    /** The near ground again over [x0] … [x1], in front of what stands behind it there (a house of the back row). */
+    internal fun groundStrip(x0: Float, x1: Float) {
+        out.polygon(p.near)
+        out.point(x0, bottom)
+        var x = x0
+        while (x < x1) {
+            out.point(x, nearY(x))
+            x += step
+        }
+        out.point(x1, nearY(x1))
+        out.point(x1, bottom)
+    }
 
     private fun ground(color: Int) {
         out.polygon(color)

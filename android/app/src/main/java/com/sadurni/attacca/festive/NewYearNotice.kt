@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 /**
- * A notice a few minutes before a new year's midnight: something big is about to happen in
+ * A notice in the morning (16 hours before) of a new year's midnight: something big will happen in
  * O'rama, so leave Attacca open on the screen. Set again for the next new year each time the app
  * starts and each time it is shown.
  */
@@ -22,6 +22,10 @@ class NewYearNotice : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         FestiveState.init(context)
+        // Told once for each new year.
+        intent.getStringExtra(EXTRA_SHOW)?.let { show ->
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_TOLD, show).apply()
+        }
         val manager = NotificationManagerCompat.from(context)
         manager.createNotificationChannel(
             NotificationChannelCompat.Builder(CHANNEL, NotificationManagerCompat.IMPORTANCE_DEFAULT)
@@ -43,24 +47,37 @@ class NewYearNotice : BroadcastReceiver() {
             .setTimeoutAfter(NOTICE_MINUTES * 60_000L + FestiveSHOW_MS)
             .build()
         runCatching { manager.notify(ID, notification) }
-        schedule(context, LocalDateTime.now().plusMinutes(NOTICE_MINUTES + 1))
+        schedule(context)
     }
 
     companion object {
         private const val CHANNEL = "new_year"
         private const val ID = 7301
+        private const val PREFS = "festive"
+        private const val KEY_TOLD = "new_year_told"
+        private const val EXTRA_SHOW = "show"
 
         /** How long before midnight the notice comes. */
-        const val NOTICE_MINUTES = 10L
+        const val NOTICE_MINUTES = 16 * 60L
         private const val FestiveSHOW_MS = Festive.SHOW_MINUTES * 60_000L
 
-        /** Sets the notice for the next new year after [from] (inexact by a few minutes, no special permission). */
+        /**
+         * Sets the notice for the next new year after [from] not told yet: [NOTICE_MINUTES] before
+         * its midnight, or in a minute when that time is past already (the app opened that day).
+         * Inexact by a few minutes, no special permission.
+         */
         fun schedule(context: Context, from: LocalDateTime = LocalDateTime.now()) {
-            val next = FestiveState.nextShow(from.plusMinutes(NOTICE_MINUTES)) ?: return
-            val at = next.minusMinutes(NOTICE_MINUTES).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            var show = FestiveState.nextShow(from) ?: return
+            val told = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_TOLD, null)
+            if (told == show.toString()) show = FestiveState.nextShow(show.plusMinutes(1)) ?: return
+            val zone = ZoneId.systemDefault()
+            val at = maxOf(
+                show.minusMinutes(NOTICE_MINUTES).atZone(zone).toInstant().toEpochMilli(),
+                System.currentTimeMillis() + 60_000L,
+            )
             val alarms = context.getSystemService(AlarmManager::class.java) ?: return
             val intent = PendingIntent.getBroadcast(
-                context, ID, Intent(context, NewYearNotice::class.java),
+                context, ID, Intent(context, NewYearNotice::class.java).putExtra(EXTRA_SHOW, show.toString()),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
             runCatching { alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, intent) }
