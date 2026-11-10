@@ -41,8 +41,19 @@ fun SoundPage(state: AppState) {
     val p = state.player
     val s = p.dsp
     fun set(change: (DspSettings) -> DspSettings) = p.updateDsp(change)
+    // The sound guide: every effect heard, step by step, for the output in use.
+    var guide by remember { mutableStateOf(false) }
+    if (guide) {
+        DeskSoundGuide(state) { guide = false }
+        return
+    }
     PageFrame(tr("Sound", "Sonido")) {
         ScrollColumn {
+            OutlinedButton(onClick = { guide = true }) { Text(tr("Tune the sound step by step", "Ajustar el sonido paso a paso")) }
+            Hint(tr(
+                "Hear each choice on your music and keep what sounds best on this output.",
+                "Oye cada opción con tu música y quédate con lo que mejor suene en esta salida.",
+            ))
             Hint(tr(
                 "For the output ${p.device ?: "of the system"} (Settings → Playback): each output keeps its own sound.",
                 "Para la salida ${p.device ?: "del sistema"} (Ajustes → Reproducción): cada salida guarda su propio sonido.",

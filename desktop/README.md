@@ -111,6 +111,10 @@ all those connected, without choosing anything.
   bass, stereo width, balance and channels (mono, swapped, karaoke…), crossfeed or virtual
   speakers for headphones, compressor and limiter; every change moves smoothly while playing.
   Each output (sound card, headphones…) keeps its own sound, as the phone's device profiles.
+  *Tune the sound step by step* is the phone's sound guide: each effect heard A/B/C on a stretch
+  of the library picked for it, a test of how deep the output plays, before against after.
+  Settings → *Fine tuning*: a check-up (tracks not analysed or without loudness, damaged tracks,
+  outputs without a sound of their own) and guides by ear for the transitions and the volume.
 - **Covers**: every album's cover at a glance, with those without one marked. *Find the missing
   covers* looks for them online in an open music database ([MusicBrainz](https://musicbrainz.org)
   and its [Cover Art Archive](https://coverartarchive.org)) by album and artist; clicking an album

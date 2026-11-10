@@ -1,0 +1,3 @@
+• Ses rehberi (Ses → Sesi adım adım ayarla): her efekt kendi müziğinizde A/B/C olarak dinlenir, her cihaz için.
+• Geçişler ve ses düzeyi için kulakla ayar rehberleri ve neyin daha iyi olabileceğine dair bir kontrol (Ayarlar).
+• Otomatik çapraz geçiş artık sesinin ortasında kesilen bir parçayı aniden durdurmuyor.

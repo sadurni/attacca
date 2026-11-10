@@ -29,6 +29,8 @@ fun TemplateDialog(
     onApply: (SoundTemplate) -> Unit,
     onDismiss: () -> Unit,
     dismissLabel: String = stringResource(R.string.cancel),
+    /** Opens the sound guide instead; null: no such button. */
+    onTune: (() -> Unit)? = null,
 ) {
     var selected by remember { mutableStateOf(initial) }
     AlertDialog(
@@ -41,7 +43,12 @@ fun TemplateDialog(
             }
         },
         confirmButton = { TextButton(onClick = { onApply(selected) }) { Text(stringResource(R.string.template_apply)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(dismissLabel) } },
+        dismissButton = {
+            androidx.compose.foundation.layout.Row {
+                if (onTune != null) TextButton(onClick = onTune) { Text(stringResource(R.string.guide_step_by_step)) }
+                TextButton(onClick = onDismiss) { Text(dismissLabel) }
+            }
+        },
     )
 }
 
@@ -52,6 +59,9 @@ fun TemplateDialog(
 @Composable
 fun NewDeviceTemplatePrompt() {
     val store = LocalContext.current.app.settings.profiles
+    // The guide stays open once the prompt has gone.
+    var guide by remember { mutableStateOf(false) }
+    if (guide) SoundGuide { guide = false }
     val device: OutputDevice = store.newDevice.collectAsStateWithLifecycle().value ?: return
     TemplateDialog(
         title = stringResource(R.string.template_new_device_title),
@@ -63,5 +73,9 @@ fun NewDeviceTemplatePrompt() {
         },
         onDismiss = store::dismissNewDevice,
         dismissLabel = stringResource(R.string.template_not_now),
+        onTune = {
+            store.dismissNewDevice()
+            guide = true
+        },
     )
 }

@@ -194,18 +194,24 @@ internal class Scene(
 
     fun sky() {
         out.gradient(p.skyTop, p.skyBottom, 0f, 0f, w, bottom)
+        // At the track's peak the sky darkens a little, so what happens in it stands out.
+        if (peak > 0f) out.rect(Colors.alpha(Colors.darker(p.skyTop, 0.55f), 0.28f * peak), 0f, 0f, w, bottom)
         val skyFrom = out.size
         val night = look.night
         if (night > 0.05f) stars(night)
         if (look.world == World.ICE) aurora()
+        // The sun, the moon and space's planets behind everything else in the sky.
+        if (look.world == World.SPACE) planets()
         sunOrMoon()
+        // The red moon of the peak is far away: behind the clouds.
+        if (look.world == World.CASTLE) peakMoment()
         clouds()
         birds()
-        peakMoment()
+        if (look.world != World.CASTLE) peakMoment()
         skyVisitor()
         festiveSky()
         // In a strip, what is in the sky is brought down (and closer together) into the part shown, above the low hills.
-        if (stripTop > 0f) out.mapY(skyFrom, out.size, stripTop, 0.4f)
+        if (stripTop > 0f) out.mapYWhole(skyFrom, out.size, stripTop, 0.4f)
     }
 
     private fun stars(night: Float) {
@@ -294,7 +300,9 @@ internal class Scene(
             val x = ((hash(i, 22) * span - now * speed * unit / 400f - (driftMs / 60.0).toFloat()) % span + span) % span - w * 0.3f
             val s = unit * (0.06f + 0.06f * hash(i, 24)) * (1f + look.storm * 0.6f)
             val y = h * (0.06f + 0.30f * hash(i, 23)) + sin(beat * 2 * PI + i).toFloat() * s * 0.06f * (0.3f + live.level)
-            val c = Colors.alpha(color, 0.82f)
+            // Whole: the sun or moon never shows through a cloud passing in front of it (the red
+            // moon's glow a little, while it is up).
+            val c = Colors.alpha(color, if (look.world == World.CASTLE && peak > 0f) 0.97f - 0.15f * peak else 0.97f)
             out.circle(c, x, y, s)
             out.circle(c, x + s * 0.9f, y + s * 0.15f, s * 0.8f)
             out.circle(c, x - s * 0.9f, y + s * 0.2f, s * 0.7f)
@@ -388,13 +396,8 @@ internal class Scene(
             World.MEADOW -> { farMountains(p.far, smooth = true, skyline = false); hillsWithTrees(); kites(); grass(); meadowThings() }
             World.COAST -> { farMountains(p.far, smooth = true, skyline = false); sea(); floatingAlbums(midBase - midAmp * 0.25f, ZOOM_MID); sand(); beachThings() }
             World.ICE -> { iceCliffs(); icebergs(); floatingAlbums(farBase + h * 0.07f, ZOOM_MID); coldSea() }
-            World.SPACE -> {
-                val planetsFrom = out.size
-                planets()
-                // In a strip the planets come down with the sky.
-                if (stripTop > 0f) out.mapY(planetsFrom, out.size, stripTop, 0.4f)
-                ridge(); buriedAlbums(); moonGround(); spaceThings()
-            }
+            // (Its planets are drawn with the sky, behind what flies by.)
+            World.SPACE -> { ridge(); buriedAlbums(); moonGround(); spaceThings() }
         }
         landmarksBack()
         finish()

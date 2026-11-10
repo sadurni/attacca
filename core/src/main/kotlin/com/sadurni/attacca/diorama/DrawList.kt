@@ -233,6 +233,77 @@ class DrawList {
         }
     }
 
+    /**
+     * As [mapY], but each thing drawn moves whole instead of being squashed: items drawn one after
+     * another that touch each other (a balloon's envelope, ropes and basket; a cloud's puffs) are one
+     * thing, and the whole of it moves to where its middle goes. Things are brought closer together
+     * as with [mapY]; none is pressed out of shape.
+     */
+    fun mapYWhole(from: Int, to: Int, a: Float, b: Float) {
+        val end = minOf(to, size)
+        var i = from
+        val box = FloatArray(4)
+        while (i < end) {
+            bounds(i, box)
+            var left = box[0]; var top = box[1]; var right = box[2]; var bottom = box[3]
+            var j = i + 1
+            while (j < end) {
+                bounds(j, box)
+                // Touching (within a little) what came before: the same thing.
+                val gap = maxOf(2f, (bottom - top) * 0.15f)
+                if (box[0] > right + gap || box[2] < left - gap || box[1] > bottom + gap || box[3] < top - gap) break
+                left = minOf(left, box[0]); top = minOf(top, box[1]); right = maxOf(right, box[2]); bottom = maxOf(bottom, box[3])
+                j++
+            }
+            val middle = (top + bottom) / 2
+            val dy = a + middle * b - middle
+            shiftY(i, j, dy)
+            i = j
+        }
+    }
+
+    /** Left, top, right, bottom of item [i] into [out]. */
+    private fun bounds(i: Int, out: FloatArray) {
+        val c = coords
+        val s = starts[i]
+        val n = counts[i]
+        when (kinds[i]) {
+            Kind.POLYGON, Kind.LINE -> {
+                var l = Float.MAX_VALUE; var t = Float.MAX_VALUE; var r = -Float.MAX_VALUE; var bt = -Float.MAX_VALUE
+                var k = 0
+                while (k + 1 < n) {
+                    l = minOf(l, c[s + k]); r = maxOf(r, c[s + k])
+                    t = minOf(t, c[s + k + 1]); bt = maxOf(bt, c[s + k + 1])
+                    k += 2
+                }
+                val half = widths[i] / 2
+                out[0] = l - half; out[1] = t - half; out[2] = r + half; out[3] = bt + half
+            }
+            Kind.RECT, Kind.GRADIENT -> { out[0] = c[s]; out[1] = c[s + 1]; out[2] = c[s + 2]; out[3] = c[s + 3] }
+            else -> {
+                val r = if (n >= 3) kotlin.math.abs(c[s + 2]) * (if (kinds[i] == Kind.COVER) 0.5f else 1f) else 0f
+                out[0] = c[s] - r; out[1] = c[s + 1] - r; out[2] = c[s] + r; out[3] = c[s + 1] + r
+            }
+        }
+    }
+
+    /** Every y of items [from] … [to) moved by [dy]. */
+    private fun shiftY(from: Int, to: Int, dy: Float) {
+        val c = coords
+        for (i in from until to) {
+            val s = starts[i]
+            val n = counts[i]
+            when (kinds[i]) {
+                Kind.POLYGON, Kind.LINE -> {
+                    var k = 1
+                    while (k < n) { c[s + k] += dy; k += 2 }
+                }
+                Kind.RECT, Kind.GRADIENT -> { c[s + 1] += dy; c[s + 3] += dy }
+                else -> c[s + 1] += dy
+            }
+        }
+    }
+
     /** The cover, [side] wide, centred on [x], [y] and turned by [angle] (plus the current turn). */
     fun cover(color: Int, x: Float, y: Float, side: Float, angle: Float = 0f) {
         shape(Kind.COVER, color)

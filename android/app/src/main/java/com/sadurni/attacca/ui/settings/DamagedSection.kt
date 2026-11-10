@@ -118,7 +118,7 @@ fun damageText(d: DamagedTracks.Damage): String = when (d.kind) {
 
 /** The damaged tracks under [folder], each with what is wrong and what can be done. */
 @Composable
-private fun DamagedListDialog(folder: String, onDismiss: () -> Unit) {
+internal fun DamagedListDialog(folder: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val all by DamagedTracks.all.collectAsStateWithLifecycle()

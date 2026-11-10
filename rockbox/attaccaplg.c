@@ -5172,7 +5172,3135 @@ static void other_menu(void)
     }
 }
 
-#define MAIN_ITEMS 20
+/* ======================= Fine tuning by ear ======================= */
+/* Attacca's guides on the player: Rockbox's own sound settings, the plugin's joins and Rockbox's
+   ReplayGain, each choice heard A/B/C on the library's songs (played by Rockbox, its settings
+   changed as they play) or on sounds the plugin makes itself (left and right, deep tones, a bass
+   line going down). The list playing before is put back afterwards. */
+
+#ifndef HOST_TEST
+
+enum {
+    G_MENU, G_SOUND, G_JOIN, G_LEVEL,
+    G_NEXT, G_SAVE, G_ANOTHER, G_ABOUT, G_SAVED, G_NO_SONGS, G_WAIT,
+    G_DEVICE, G_DEVICE_INTRO, G_HEADPHONES, G_EARBUDS, G_SPEAKER, G_CAR, G_HOME,
+    G_SIDES, G_SIDES_INTRO, G_STEREO, G_MONO, G_BALANCE,
+    G_REACH, G_REACH_INTRO, G_TONES, G_LINE, G_HEAR, G_NOT_HEAR, G_STOPPED, G_HEAR_ALL, G_AGAIN,
+    G_REACH_FMT, G_REACH_NONE,
+    G_BASS, G_BASS_INTRO, G_SAME, G_BASS_LITTLE, G_BASS_MORE, G_HARMONICS_LIGHT, G_HARMONICS,
+    G_TREBLE, G_TREBLE_INTRO, G_DARKER, G_BRIGHTER,
+    G_CROSSFEED, G_CROSSFEED_INTRO, G_XF_OFF, G_XF_LIGHT, G_XF_STRONG,
+    G_WIDTH, G_WIDTH_INTRO, G_NARROWER, G_WIDER,
+    G_LEVELS, G_LEVELS_INTRO, G_LEVELS_GENTLE, G_LEVELS_EVEN,
+    G_COMPARE, G_COMPARE_INTRO, G_BEFORE, G_AFTER,
+    G_BLEND, G_BLEND_INTRO, G_GAPLESS, G_AUTOMATIC, G_CROSSFADE_4, G_CROSSFADE_8,
+    G_SILENCE, G_SILENCE_INTRO, G_SILENCE_TRIM, G_SILENCE_KEEP,
+    G_ALBUM, G_ALBUM_INTRO, G_ALBUM_GAPLESS, G_ALBUM_BLEND,
+    G_BETWEEN, G_BETWEEN_INTRO, G_LEVEL_OFF, G_LEVEL_EVEN,
+    G_WITHIN, G_WITHIN_INTRO, G_LEVEL_ALBUM, G_LEVEL_TRACK,
+    G_OVERALL, G_OVERALL_INTRO, G_STANDARD, G_UP3, G_UP6,
+    G_NO_RG, G_NOW_FMT,
+    G_COUNT_
+};
+
+/* BEGIN generated guide texts */
+static const char *const guide_en[G_COUNT_] = {
+    "Fine tuning by ear", "Tune the sound step by step", "Tune the transitions by ear", "Even out the volume by ear",
+    "Next", "Save", "Another song", "What is this step?", "Saved", "No songs to use in the library", "Finding songs…",
+    "What is it?", "What the music comes out of now decides the steps and what each one suggests.",
+    "Headphones", "Earbuds", "Portable speaker", "Car", "Home stereo",
+    "Left and right",
+    "A soft sound goes left, centre and right. The centre one should sound right in the middle; if not, move the balance. With one earbud or a single speaker, both sides as one is better.",
+    "Stereo", "Both sides as one", "Balance",
+    "How deep does it go?",
+    "Deep notes play one after another. Say when you stop hearing them: below that the player gives no bass, and the next step offers what helps.",
+    "Tones", "Bass line", "I hear it", "I don't hear it", "Now I don't hear it", "I hear them all", "Again",
+    "It goes down to about %d Hz", "It plays hardly any deep bass",
+    "Bass", "The same music with more or less bass. Keep what sounds full without booming.",
+    "As it is", "A little more", "More", "Harmonics, light", "Harmonics",
+    "Treble", "Cymbals, breath and air: darker if it sounds harsh, brighter if it sounds dull.",
+    "Darker", "Brighter",
+    "In front of you",
+    "On headphones each side reaches one ear only. A little of each in the other ear puts the music in front of you, as from speakers.",
+    "Off", "Light", "Strong",
+    "Width", "How far apart the two sides sound: narrower if the speakers are far apart, wider if they are close together.",
+    "Narrower", "Wider",
+    "Quiet and loud", "Quiet parts brought closer to loud ones: a help with noise around (the car, the street), not needed in a quiet room.",
+    "A little even", "Even",
+    "Before and after", "All your choices together against the sound you had. Save to keep them; everything stays in Rockbox's sound settings.",
+    "Before", "After",
+    "From one song to the next", "Two different songs, the end of one and the start of the other.",
+    "One after the other", "Automatic blend", "Crossfade, 4 s", "Crossfade, 8 s",
+    "Silence at the end", "A song with a long silence at its end: jumped over, or played as recorded.",
+    "Leave the silence out", "Keep it",
+    "Albums", "Two songs in a row of one album, played in order.",
+    "Album without gaps", "Blended as the rest",
+    "Loud and quiet songs", "A loud song and a quiet one, one after the other: as the files are, or brought to one level by their ReplayGain tags.",
+    "As the files are", "Evened out",
+    "Within an album", "A quiet and a loud song of one album: the album as recorded, or every song at one level.",
+    "Album as recorded", "Each song the same",
+    "Overall level", "How loud everything plays once evened out.",
+    "Standard", "A little louder", "Louder",
+    "These files have no ReplayGain tags: Rockbox can only even out songs that have them.",
+    "Now: %s",
+};
+static const char *const guide_ca[G_COUNT_] = {
+    "Ajust fi d'oïda",
+    "Ajusta el so pas a pas",
+    "Ajusta les transicions d'oïda",
+    "Iguala el volum d'oïda",
+    "Següent",
+    "Desa",
+    "Una altra cançó",
+    "Què és aquest pas?",
+    "Desat",
+    "No hi ha cançons per fer servir a la biblioteca",
+    "Cercant cançons…",
+    "Què és?",
+    "Per on surt ara la música decideix els passos i el que suggereix cadascun.",
+    "Auriculars de diadema",
+    "Auriculars de botó",
+    "Altaveu portàtil",
+    "Cotxe",
+    "Equip de música",
+    "Esquerra i dreta",
+    "Un so suau passa per l'esquerra, el centre i la dreta. El del centre ha de sonar just al mig; si no, mou el balanç. Amb un sol auricular o un únic altaveu, és millor els dos costats en un.",
+    "Estèreo",
+    "Els dos costats en un",
+    "Balanç",
+    "Fins on arriben els greus?",
+    "Sonen notes greus una rere l'altra. Digues quan les deixes de sentir: per sota, el reproductor no fa greus, i el pas següent ofereix el que ajuda.",
+    "Tons",
+    "Línia de baix",
+    "Ho sento",
+    "No ho sento",
+    "Ara no ho sento",
+    "Els sento tots",
+    "Un altre cop",
+    "Arriba fins a uns %d Hz",
+    "Gairebé no fa greus profunds",
+    "Greus",
+    "La mateixa música amb més o menys greus. Queda't amb el que soni ple sense retrunyir.",
+    "Tal com és",
+    "Una mica més",
+    "Més",
+    "Harmònics, suau",
+    "Harmònics",
+    "Aguts",
+    "Plats, respiració i aire: més fosc si sona aspre, més brillant si sona apagat.",
+    "Més fosc",
+    "Més brillant",
+    "Davant teu",
+    "Amb auriculars cada costat arriba a una sola orella. Una mica de cadascun a l'altra orella posa la música davant teu, com des d'altaveus.",
+    "Desactivat",
+    "Lleuger",
+    "Fort",
+    "Amplada",
+    "Com se separen els dos costats: més estret si els altaveus són lluny l'un de l'altre, més ample si són a prop.",
+    "Més estret",
+    "Més ample",
+    "Suau i fort",
+    "Les parts suaus més a prop de les fortes: ajuda amb soroll al voltant (el cotxe, el carrer); en una sala tranquil·la no cal.",
+    "Una mica igualat",
+    "Igualat",
+    "Abans i després",
+    "Totes les teves opcions juntes davant del so que tenies. Desa per conservar-les; tot queda als ajustos de so de Rockbox.",
+    "Abans",
+    "Després",
+    "D'una cançó a la següent",
+    "Dues cançons diferents, el final d'una i el començament de l'altra.",
+    "Una darrere l'altra",
+    "Fusió automàtica",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Silenci al final",
+    "Una cançó amb un silenci llarg al final: saltat, o tal com es va gravar.",
+    "Treu el silenci",
+    "Deixa'l",
+    "Àlbums",
+    "Dues cançons seguides d'un àlbum, en ordre.",
+    "Àlbum sense pauses",
+    "Fusionat com la resta",
+    "Cançons fortes i fluixes",
+    "Una cançó forta i una de fluixa, una darrere l'altra: tal com són els fitxers, o portades a un mateix nivell per les seves etiquetes ReplayGain.",
+    "Tal com són els fitxers",
+    "Igualades",
+    "Dins d'un àlbum",
+    "Una cançó fluixa i una de forta d'un àlbum: l'àlbum tal com es va gravar, o cada cançó al mateix nivell.",
+    "Àlbum tal com es va gravar",
+    "Totes iguals",
+    "Nivell general",
+    "Com de fort sona tot un cop igualat.",
+    "Estàndard",
+    "Una mica més fort",
+    "Més fort",
+    "Aquests fitxers no tenen etiquetes ReplayGain: Rockbox només pot igualar les cançons que en tenen.",
+    "Ara: %s",
+};
+static const char *const guide_de[G_COUNT_] = {
+    "Feinschliff nach Gehör",
+    "Klang Schritt für Schritt abstimmen",
+    "Übergänge nach Gehör abstimmen",
+    "Lautstärke nach Gehör angleichen",
+    "Weiter",
+    "Speichern",
+    "Anderer Titel",
+    "Was ist dieser Schritt?",
+    "Gespeichert",
+    "Keine verwendbaren Titel in der Bibliothek",
+    "Suche Titel…",
+    "Was ist es?",
+    "Woraus die Musik gerade kommt, bestimmt die Schritte und was jeder empfiehlt.",
+    "Kopfhörer",
+    "In-Ear-Kopfhörer",
+    "Tragbarer Lautsprecher",
+    "Auto",
+    "Stereoanlage",
+    "Links und rechts",
+    "Ein sanfter Ton kommt links, in der Mitte und rechts. Der mittlere sollte genau in der Mitte klingen; wenn nicht, verschieb die Balance. Mit nur einem Ohrhörer oder einem einzelnen Lautsprecher sind beide Seiten als eine besser.",
+    "Stereo",
+    "Beide Seiten als eine",
+    "Balance",
+    "Wie tief geht es?",
+    "Tiefe Töne erklingen nacheinander. Sag, wann du sie nicht mehr hörst: Darunter spielt der Player keinen Bass, und der nächste Schritt bietet an, was hilft.",
+    "Töne",
+    "Basslinie",
+    "Ich höre es",
+    "Ich höre es nicht",
+    "Jetzt höre ich es nicht",
+    "Ich höre alle",
+    "Nochmal",
+    "Es geht bis etwa %d Hz hinunter",
+    "Es spielt kaum tiefen Bass",
+    "Bass",
+    "Dieselbe Musik mit mehr oder weniger Bass. Behalte, was voll klingt, ohne zu dröhnen.",
+    "Wie es ist",
+    "Etwas mehr",
+    "Mehr",
+    "Obertöne, leicht",
+    "Obertöne",
+    "Höhen",
+    "Becken, Atem und Luft: dunkler, wenn es scharf klingt, heller, wenn es dumpf klingt.",
+    "Dunkler",
+    "Heller",
+    "Vor dir",
+    "Mit Kopfhörern erreicht jede Seite nur ein Ohr. Ein wenig von jeder im anderen Ohr holt die Musik vor dich, wie aus Lautsprechern.",
+    "Aus",
+    "Leicht",
+    "Stark",
+    "Breite",
+    "Wie weit die beiden Seiten auseinander klingen: schmaler, wenn die Lautsprecher weit auseinander stehen, breiter, wenn sie nah beieinander sind.",
+    "Schmaler",
+    "Breiter",
+    "Leise und laut",
+    "Leise Stellen näher an laute gerückt: hilft bei Lärm ringsum (Auto, Straße), in einem ruhigen Raum nicht nötig.",
+    "Etwas ausgeglichen",
+    "Ausgeglichen",
+    "Vorher und nachher",
+    "Alle deine Wahlen zusammen gegen den Klang, den du hattest. Speichere, um sie zu behalten; alles bleibt in den Klangeinstellungen von Rockbox.",
+    "Vorher",
+    "Nachher",
+    "Von einem Song zum nächsten",
+    "Zwei verschiedene Songs, das Ende des einen und der Anfang des anderen.",
+    "Einer nach dem anderen",
+    "Automatischer Übergang",
+    "Überblendung, 4 s",
+    "Überblendung, 8 s",
+    "Stille am Ende",
+    "Ein Song mit langer Stille am Ende: übersprungen oder wie aufgenommen gespielt.",
+    "Stille weglassen",
+    "Behalten",
+    "Alben",
+    "Zwei aufeinanderfolgende Songs eines Albums, in Reihenfolge gespielt.",
+    "Album ohne Lücken",
+    "Überblendet wie der Rest",
+    "Laute und leise Songs",
+    "Ein lauter Song und ein leiser nacheinander: wie die Dateien sind oder durch ihre ReplayGain-Tags auf einen Pegel gebracht.",
+    "Wie die Dateien sind",
+    "Angeglichen",
+    "Innerhalb eines Albums",
+    "Ein leiser und ein lauter Song eines Albums: das Album wie aufgenommen oder jeder Song auf einem Pegel.",
+    "Album wie aufgenommen",
+    "Jeder Song gleich",
+    "Gesamtpegel",
+    "Wie laut alles nach dem Angleichen spielt.",
+    "Standard",
+    "Etwas lauter",
+    "Lauter",
+    "Diese Dateien haben keine ReplayGain-Tags: Rockbox kann nur Songs angleichen, die sie haben.",
+    "Jetzt: %s",
+};
+static const char *const guide_el[G_COUNT_] = {
+    "Λεπτή ρύθμιση με το αυτί",
+    "Ρύθμιση του ήχου βήμα βήμα",
+    "Ρύθμιση των μεταβάσεων με το αυτί",
+    "Εξίσωση της έντασης με το αυτί",
+    "Επόμενο",
+    "Αποθήκευση",
+    "Άλλο τραγούδι",
+    "Τι είναι αυτό το βήμα;",
+    "Αποθηκεύτηκε",
+    "Κανένα τραγούδι για χρήση στη βιβλιοθήκη",
+    "Αναζήτηση τραγουδιών…",
+    "Τι είναι;",
+    "Το πού βγαίνει τώρα η μουσική καθορίζει τα βήματα και τι προτείνει το καθένα.",
+    "Ακουστικά κεφαλής",
+    "Ακουστικά ψείρες",
+    "Φορητό ηχείο",
+    "Αυτοκίνητο",
+    "Στερεοφωνικό σπιτιού",
+    "Αριστερά και δεξιά",
+    "Ένας απαλός ήχος πηγαίνει αριστερά, στο κέντρο και δεξιά. Ο κεντρικός πρέπει να ακούγεται ακριβώς στη μέση· αν όχι, μετακινήστε την ισορροπία. Με ένα μόνο ακουστικό ή ένα μόνο ηχείο, είναι καλύτερα οι δύο πλευρές ως μία.",
+    "Στέρεο",
+    "Οι δύο πλευρές ως μία",
+    "Ισορροπία",
+    "Πόσο βαθιά φτάνει;",
+    "Βαθιές νότες παίζουν η μία μετά την άλλη. Πείτε πότε σταματάτε να τις ακούτε: από εκεί και κάτω η συσκευή δεν δίνει μπάσα, και το επόμενο βήμα προτείνει ό,τι βοηθά.",
+    "Τόνοι",
+    "Γραμμή μπάσου",
+    "Το ακούω",
+    "Δεν το ακούω",
+    "Τώρα δεν το ακούω",
+    "Τα ακούω όλα",
+    "Ξανά",
+    "Φτάνει περίπου ως τα %d Hz",
+    "Δεν παίζει σχεδόν καθόλου βαθιά μπάσα",
+    "Μπάσα",
+    "Η ίδια μουσική με περισσότερα ή λιγότερα μπάσα. Κρατήστε ό,τι ακούγεται γεμάτο χωρίς να μπουμπουνίζει.",
+    "Όπως είναι",
+    "Λίγο περισσότερα",
+    "Περισσότερα",
+    "Αρμονικές, ελαφριά",
+    "Αρμονικές",
+    "Πρίμα",
+    "Κύμβαλα, ανάσα και αέρας: πιο σκοτεινό αν ακούγεται τραχύ, πιο φωτεινό αν ακούγεται θαμπό.",
+    "Πιο σκοτεινό",
+    "Πιο φωτεινό",
+    "Μπροστά σας",
+    "Στα ακουστικά κάθε πλευρά φτάνει μόνο σε ένα αυτί. Λίγο από την καθεμία στο άλλο αυτί φέρνει τη μουσική μπροστά σας, όπως από ηχεία.",
+    "Ανενεργό",
+    "Ελαφρύ",
+    "Έντονο",
+    "Εύρος",
+    "Πόσο απέχουν μεταξύ τους οι δύο πλευρές: πιο στενό αν τα ηχεία είναι μακριά, πιο φαρδύ αν είναι κοντά.",
+    "Πιο στενό",
+    "Πιο φαρδύ",
+    "Σιγανά και δυνατά",
+    "Τα σιγανά μέρη πιο κοντά στα δυνατά: βοηθά με θόρυβο γύρω (αυτοκίνητο, δρόμος), δεν χρειάζεται σε ήσυχο δωμάτιο.",
+    "Λίγο πιο ομοιόμορφο",
+    "Ομοιόμορφο",
+    "Πριν και μετά",
+    "Όλες οι επιλογές σας μαζί απέναντι στον ήχο που είχατε. Αποθηκεύστε για να τις κρατήσετε· όλα μένουν στις ρυθμίσεις ήχου του Rockbox.",
+    "Πριν",
+    "Μετά",
+    "Από το ένα τραγούδι στο επόμενο",
+    "Δύο διαφορετικά τραγούδια, το τέλος του ενός και η αρχή του άλλου.",
+    "Το ένα μετά το άλλο",
+    "Αυτόματη ανάμιξη",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Σιωπή στο τέλος",
+    "Ένα τραγούδι με μεγάλη σιωπή στο τέλος του: παραλείπεται ή παίζει όπως ηχογραφήθηκε.",
+    "Παράλειψη της σιωπής",
+    "Να μείνει",
+    "Άλμπουμ",
+    "Δύο συνεχόμενα τραγούδια ενός άλμπουμ, με τη σειρά.",
+    "Άλμπουμ χωρίς κενά",
+    "Ανάμιξη όπως τα άλλα",
+    "Δυνατά και σιγανά τραγούδια",
+    "Ένα δυνατό και ένα σιγανό τραγούδι, το ένα μετά το άλλο: όπως είναι τα αρχεία ή φερμένα σε ένα επίπεδο από τις ετικέτες ReplayGain τους.",
+    "Όπως είναι τα αρχεία",
+    "Εξισωμένα",
+    "Μέσα σε ένα άλμπουμ",
+    "Ένα σιγανό και ένα δυνατό τραγούδι ενός άλμπουμ: το άλμπουμ όπως ηχογραφήθηκε ή κάθε τραγούδι στο ίδιο επίπεδο.",
+    "Άλμπουμ όπως ηχογραφήθηκε",
+    "Κάθε τραγούδι ίδιο",
+    "Συνολική ένταση",
+    "Πόσο δυνατά παίζουν όλα μετά την εξίσωση.",
+    "Κανονική",
+    "Λίγο πιο δυνατά",
+    "Πιο δυνατά",
+    "Αυτά τα αρχεία δεν έχουν ετικέτες ReplayGain: το Rockbox εξισώνει μόνο τραγούδια που τις έχουν.",
+    "Τώρα: %s",
+};
+static const char *const guide_es[G_COUNT_] = {
+    "Ajuste fino de oído",
+    "Ajustar el sonido paso a paso",
+    "Ajustar las transiciones de oído",
+    "Igualar el volumen de oído",
+    "Siguiente",
+    "Guardar",
+    "Otra canción",
+    "¿Qué es este paso?",
+    "Guardado",
+    "No hay canciones que usar en la biblioteca",
+    "Buscando canciones…",
+    "¿Qué es?",
+    "Por dónde sale ahora la música decide los pasos y lo que sugiere cada uno.",
+    "Auriculares de diadema",
+    "Auriculares de botón",
+    "Altavoz portátil",
+    "Coche",
+    "Equipo de música",
+    "Izquierda y derecha",
+    "Un sonido suave pasa por la izquierda, el centro y la derecha. El del centro debe sonar justo en medio; si no, mueve el balance. Con un solo auricular o un único altavoz, es mejor los dos lados en uno.",
+    "Estéreo",
+    "Los dos lados en uno",
+    "Balance",
+    "¿Hasta dónde llegan sus graves?",
+    "Suenan notas graves una tras otra. Di cuándo dejas de oírlas: por debajo el reproductor no da graves, y el paso siguiente ofrece lo que ayuda.",
+    "Tonos",
+    "Línea de bajo",
+    "Lo oigo",
+    "No lo oigo",
+    "Ahora no lo oigo",
+    "Los oigo todos",
+    "Otra vez",
+    "Llega hasta unos %d Hz",
+    "Casi no da graves profundos",
+    "Graves",
+    "La misma música con más o menos graves. Quédate con lo que suene lleno sin retumbar.",
+    "Tal cual",
+    "Un poco más",
+    "Más",
+    "Armónicos, suave",
+    "Armónicos",
+    "Agudos",
+    "Platillos, respiración y aire: más oscuro si suena áspero, más brillante si suena apagado.",
+    "Más oscuro",
+    "Más brillante",
+    "Delante de ti",
+    "Con auriculares cada lado llega a un solo oído. Un poco de cada uno en el otro oído pone la música delante de ti, como desde altavoces.",
+    "Desactivado",
+    "Ligero",
+    "Fuerte",
+    "Amplitud",
+    "Cuánto se separan los dos lados: más estrecho si los altavoces están lejos uno del otro, más amplio si están juntos.",
+    "Más estrecho",
+    "Más amplio",
+    "Suave y fuerte",
+    "Las partes suaves más cerca de las fuertes: ayuda con ruido alrededor (el coche, la calle); en una sala tranquila no hace falta.",
+    "Un poco igualado",
+    "Igualado",
+    "Antes y después",
+    "Todas tus elecciones juntas frente al sonido que tenías. Guarda para conservarlas; todo queda en los ajustes de sonido de Rockbox.",
+    "Antes",
+    "Después",
+    "De una canción a la siguiente",
+    "Dos canciones distintas, el final de una y el principio de la otra.",
+    "Una tras otra",
+    "Fundido automático",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Silencio al final",
+    "Una canción con un silencio largo al final: saltado, o como se grabó.",
+    "Quitar el silencio",
+    "Dejarlo",
+    "Álbumes",
+    "Dos canciones seguidas de un álbum, en orden.",
+    "Álbum sin pausas",
+    "Fundido como el resto",
+    "Canciones fuertes y suaves",
+    "Una canción fuerte y otra suave, una tras otra: como están los archivos, o llevadas a un mismo nivel por sus etiquetas ReplayGain.",
+    "Como están los archivos",
+    "Igualadas",
+    "Dentro de un álbum",
+    "Una canción suave y otra fuerte de un álbum: el álbum como se grabó, o cada canción al mismo nivel.",
+    "Álbum como se grabó",
+    "Todas iguales",
+    "Nivel general",
+    "Lo fuerte que suena todo una vez igualado.",
+    "Estándar",
+    "Un poco más fuerte",
+    "Más fuerte",
+    "Estos archivos no tienen etiquetas ReplayGain: Rockbox solo puede igualar las canciones que las tienen.",
+    "Ahora: %s",
+};
+static const char *const guide_eu[G_COUNT_] = {
+    "Doitze fina belarriz",
+    "Doitu soinua urratsez urrats",
+    "Doitu trantsizioak belarriz",
+    "Berdindu bolumena belarriz",
+    "Hurrengoa",
+    "Gorde",
+    "Beste abesti bat",
+    "Zer da urrats hau?",
+    "Gordeta",
+    "Liburutegian ez dago erabiltzeko abestirik",
+    "Abestiak bilatzen…",
+    "Zer da?",
+    "Musika orain nondik ateratzen den, horrek erabakitzen ditu urratsak eta bakoitzak zer iradokitzen duen.",
+    "Buruko entzungailuak",
+    "Belarri barneko entzungailuak",
+    "Bozgorailu eramangarria",
+    "Autoa",
+    "Etxeko musika-ekipoa",
+    "Ezkerra eta eskuina",
+    "Soinu leun bat ezkerretik, erditik eta eskuinetik pasatzen da. Erdikoak erdi-erdian entzun behar du; bestela, mugitu balantzea. Aurikular bakarrarekin edo bozgorailu bakarrarekin, hobe da bi aldeak bat eginda.",
+    "Estereoa",
+    "Bi aldeak bat eginda",
+    "Balantzea",
+    "Noraino iristen dira baxuak?",
+    "Nota sakonak bata bestearen atzetik jotzen dira. Esan noiz uzten diezun entzuteari: hortik behera erreproduzigailuak ez du baxurik jotzen, eta hurrengo urratsak laguntzen duena eskaintzen du.",
+    "Tonuak",
+    "Baxu-lerroa",
+    "Entzuten dut",
+    "Ez dut entzuten",
+    "Orain ez dut entzuten",
+    "Denak entzuten ditut",
+    "Berriro",
+    "%d Hz ingururaino jaisten da",
+    "Ia ez du baxu sakonik jotzen",
+    "Baxuak",
+    "Musika bera, baxu gehiago edo gutxiagorekin. Gorde dunbadarik gabe betea entzuten dena.",
+    "Dagoen bezala",
+    "Pixka bat gehiago",
+    "Gehiago",
+    "Harmonikoak, arin",
+    "Harmonikoak",
+    "Altuak",
+    "Zinbalak, arnasa eta airea: ilunagoa latz entzuten bada, distiratsuagoa motel entzuten bada.",
+    "Ilunagoa",
+    "Distiratsuagoa",
+    "Zure aurrean",
+    "Entzungailuekin alde bakoitza belarri batera bakarrik iristen da. Bakoitzetik pixka bat beste belarrian jarrita, musika zure aurrean entzuten da, bozgorailuetatik bezala.",
+    "Desaktibatuta",
+    "Arina",
+    "Indartsua",
+    "Zabalera",
+    "Bi aldeak zenbat bereizten diren: estuagoa bozgorailuak urrun badaude, zabalagoa elkarrengandik gertu badaude.",
+    "Estuagoa",
+    "Zabalagoa",
+    "Leuna eta ozena",
+    "Zati leunak ozenetara hurbilduta: laguntza inguruan zarata dagoenean (autoa, kalea); gela lasai batean ez da behar.",
+    "Pixka bat berdinduta",
+    "Berdinduta",
+    "Lehen eta orain",
+    "Zure aukera guztiak batera, lehen zenuen soinuaren aldean. Gorde mantentzeko; dena Rockbox-en soinu-ezarpenetan geratzen da.",
+    "Lehen",
+    "Orain",
+    "Abesti batetik hurrengora",
+    "Bi abesti desberdin, baten amaiera eta bestearen hasiera.",
+    "Bata bestearen atzetik",
+    "Nahasketa automatikoa",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Isilunea amaieran",
+    "Amaieran isilune luzea duen abesti bat: saltatuta, edo grabatu zen bezala.",
+    "Kendu isilunea",
+    "Utzi",
+    "Albumak",
+    "Album bateko bi abesti jarraian, ordenan.",
+    "Albuma etenik gabe",
+    "Gainerakoak bezala nahastuta",
+    "Abesti ozenak eta apalak",
+    "Abesti ozen bat eta apal bat, bata bestearen atzetik: fitxategiak diren bezala, edo maila berera ekarrita beren ReplayGain etiketen bidez.",
+    "Fitxategiak diren bezala",
+    "Berdinduta",
+    "Album baten barruan",
+    "Album bateko abesti apal bat eta ozen bat: albuma grabatu zen bezala, edo abesti bakoitza maila berean.",
+    "Albuma grabatu zen bezala",
+    "Abesti guztiak berdin",
+    "Maila orokorra",
+    "Zenbateko ozentasunarekin entzuten den dena, berdindu ondoren.",
+    "Estandarra",
+    "Pixka bat ozenago",
+    "Ozenago",
+    "Fitxategi hauek ez dute ReplayGain etiketarik: Rockbox-ek etiketak dituzten abestiak soilik berdindu ditzake.",
+    "Orain: %s",
+};
+static const char *const guide_fr[G_COUNT_] = {
+    "Réglage fin à l’oreille",
+    "Régler le son pas à pas",
+    "Régler les transitions à l’oreille",
+    "Égaliser le volume à l’oreille",
+    "Suivant",
+    "Enregistrer",
+    "Un autre morceau",
+    "À quoi sert cette étape ?",
+    "Enregistré",
+    "Aucun morceau utilisable dans la bibliothèque",
+    "Recherche de morceaux…",
+    "Qu’est-ce que c’est ?",
+    "Ce par quoi sort la musique en ce moment décide des étapes et de ce que chacune suggère.",
+    "Casque",
+    "Écouteurs intra-auriculaires",
+    "Enceinte portable",
+    "Voiture",
+    "Chaîne hi-fi",
+    "Gauche et droite",
+    "Un son doux passe à gauche, au centre et à droite. Celui du centre doit sonner pile au milieu ; sinon, réglez la balance. Avec une seule oreillette ou une seule enceinte, mieux vaut les deux côtés en un.",
+    "Stéréo",
+    "Les deux côtés en un",
+    "Balance",
+    "Jusqu’où descend-il ?",
+    "Des notes graves jouent l’une après l’autre. Dites quand vous ne les entendez plus : en dessous, le baladeur ne rend pas de basses, et l’étape suivante propose ce qui aide.",
+    "Tons",
+    "Ligne de basse",
+    "Je l’entends",
+    "Je ne l’entends pas",
+    "Je ne l’entends plus",
+    "Je les entends tous",
+    "Recommencer",
+    "Il descend jusqu’à environ %d Hz",
+    "Il ne rend presque pas de basses profondes",
+    "Basses",
+    "La même musique avec plus ou moins de basses. Gardez ce qui sonne plein sans gronder.",
+    "Tel quel",
+    "Un peu plus",
+    "Plus",
+    "Harmoniques, léger",
+    "Harmoniques",
+    "Aigus",
+    "Cymbales, souffle et air : plus sombre si c’est agressif, plus brillant si c’est terne.",
+    "Plus sombre",
+    "Plus brillant",
+    "Devant vous",
+    "Au casque, chaque côté n’atteint qu’une oreille. Un peu de chacun dans l’autre oreille place la musique devant vous, comme avec des enceintes.",
+    "Désactivé",
+    "Léger",
+    "Marqué",
+    "Largeur",
+    "L’écart entre les deux côtés : plus étroit si les enceintes sont éloignées, plus large si elles sont proches l’une de l’autre.",
+    "Plus étroit",
+    "Plus large",
+    "Doux et fort",
+    "Les passages calmes rapprochés des forts : utile avec du bruit autour (la voiture, la rue), inutile dans une pièce calme.",
+    "Un peu égalisé",
+    "Égalisé",
+    "Avant et après",
+    "Tous vos choix ensemble face au son que vous aviez. Enregistrez pour les garder ; tout reste dans les réglages du son de Rockbox.",
+    "Avant",
+    "Après",
+    "D’un morceau au suivant",
+    "Deux morceaux différents, la fin de l’un et le début de l’autre.",
+    "L’un après l’autre",
+    "Mélange automatique",
+    "Fondu enchaîné, 4 s",
+    "Fondu enchaîné, 8 s",
+    "Silence à la fin",
+    "Un morceau avec un long silence à la fin : sauté, ou joué tel qu’enregistré.",
+    "Retirer le silence",
+    "Le garder",
+    "Albums",
+    "Deux morceaux à la suite d’un même album, dans l’ordre.",
+    "Album sans blanc",
+    "Mélangé comme le reste",
+    "Morceaux forts et faibles",
+    "Un morceau fort et un faible, l’un après l’autre : tels que sont les fichiers, ou ramenés à un même niveau par leurs tags ReplayGain.",
+    "Tels que sont les fichiers",
+    "Égalisés",
+    "Dans un album",
+    "Un morceau faible et un fort d’un même album : l’album tel qu’enregistré, ou chaque morceau au même niveau.",
+    "Album tel qu’enregistré",
+    "Tous pareils",
+    "Niveau général",
+    "Le volume de l’ensemble une fois égalisé.",
+    "Standard",
+    "Un peu plus fort",
+    "Plus fort",
+    "Ces fichiers n’ont pas de tags ReplayGain : Rockbox ne peut égaliser que les morceaux qui en ont.",
+    "Maintenant : %s",
+};
+static const char *const guide_gl[G_COUNT_] = {
+    "Axuste fino de oído",
+    "Axustar o son paso a paso",
+    "Axustar as transicións de oído",
+    "Igualar o volume de oído",
+    "Seguinte",
+    "Gardar",
+    "Outra canción",
+    "Que é este paso?",
+    "Gardado",
+    "Non hai cancións que usar na biblioteca",
+    "Buscando cancións…",
+    "Que é?",
+    "Por onde sae agora a música decide os pasos e o que suxire cada un.",
+    "Auriculares de diadema",
+    "Auriculares de botón",
+    "Altofalante portátil",
+    "Coche",
+    "Equipo de música",
+    "Esquerda e dereita",
+    "Un son suave pasa pola esquerda, o centro e a dereita. O do centro debe soar xusto no medio; se non, move o balance. Cun só auricular ou un único altofalante, é mellor os dous lados nun.",
+    "Estéreo",
+    "Os dous lados nun",
+    "Balance",
+    "Ata onde chegan os graves?",
+    "Soan notas graves unha tras outra. Di cando deixas de oílas: por debaixo, o reprodutor non dá graves, e o paso seguinte ofrece o que axuda.",
+    "Tons",
+    "Liña de baixo",
+    "Óioo",
+    "Non o oio",
+    "Agora non o oio",
+    "Óioos todos",
+    "Outra vez",
+    "Chega ata uns %d Hz",
+    "Case non dá graves profundos",
+    "Graves",
+    "A mesma música con máis ou menos graves. Quédate co que soe cheo sen retumbar.",
+    "Tal como é",
+    "Un pouco máis",
+    "Máis",
+    "Harmónicos, suave",
+    "Harmónicos",
+    "Agudos",
+    "Pratos, respiración e aire: máis escuro se soa áspero, máis brillante se soa apagado.",
+    "Máis escuro",
+    "Máis brillante",
+    "Diante de ti",
+    "Con auriculares cada lado chega a un só oído. Un pouco de cada un no outro oído pon a música diante de ti, como desde altofalantes.",
+    "Desactivado",
+    "Lixeiro",
+    "Forte",
+    "Amplitude",
+    "Canto se separan os dous lados: máis estreito se os altofalantes están lonxe un do outro, máis amplo se están xuntos.",
+    "Máis estreito",
+    "Máis amplo",
+    "Suave e forte",
+    "As partes suaves máis preto das fortes: axuda con ruído arredor (o coche, a rúa); nunha sala tranquila non fai falta.",
+    "Un pouco igualado",
+    "Igualado",
+    "Antes e despois",
+    "Todas as túas escollas xuntas fronte ao son que tiñas. Garda para conservalas; todo queda nos axustes de son de Rockbox.",
+    "Antes",
+    "Despois",
+    "Dunha canción á seguinte",
+    "Dúas cancións distintas, o final dunha e o comezo da outra.",
+    "Unha tras outra",
+    "Fundido automático",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Silencio ao final",
+    "Unha canción cun silencio longo ao final: saltado, ou como se gravou.",
+    "Quitar o silencio",
+    "Deixalo",
+    "Álbums",
+    "Dúas cancións seguidas dun álbum, en orde.",
+    "Álbum sen pausas",
+    "Fundido coma o resto",
+    "Cancións fortes e suaves",
+    "Unha canción forte e outra suave, unha tras outra: como están os ficheiros, ou levadas a un mesmo nivel polas súas etiquetas ReplayGain.",
+    "Como están os ficheiros",
+    "Igualadas",
+    "Dentro dun álbum",
+    "Unha canción suave e outra forte dun álbum: o álbum como se gravou, ou cada canción ao mesmo nivel.",
+    "Álbum como se gravou",
+    "Todas iguais",
+    "Nivel xeral",
+    "Canto de forte soa todo unha vez igualado.",
+    "Estándar",
+    "Un pouco máis forte",
+    "Máis forte",
+    "Estes ficheiros non teñen etiquetas ReplayGain: Rockbox só pode igualar as cancións que as teñen.",
+    "Agora: %s",
+};
+static const char *const guide_it[G_COUNT_] = {
+    "Rifinitura a orecchio",
+    "Regola il suono passo dopo passo",
+    "Regola i passaggi a orecchio",
+    "Uniforma il volume a orecchio",
+    "Avanti",
+    "Salva",
+    "Un altro brano",
+    "Che cos’è questo passo?",
+    "Salvato",
+    "Nessun brano da usare nella libreria",
+    "Cerco brani…",
+    "Che cos’è?",
+    "Ciò da cui esce ora la musica decide i passi e cosa consiglia ciascuno.",
+    "Cuffie",
+    "Auricolari",
+    "Cassa portatile",
+    "Auto",
+    "Impianto stereo",
+    "Sinistra e destra",
+    "Un suono morbido va a sinistra, al centro e a destra. Quello al centro deve sentirsi proprio nel mezzo; se no, sposta il bilanciamento. Con un solo auricolare o una sola cassa, è meglio entrambi i lati come uno.",
+    "Stereo",
+    "Entrambi i lati come uno",
+    "Bilanciamento",
+    "Fin dove scende?",
+    "Note profonde suonano una dopo l’altra. Di’ quando smetti di sentirle: sotto quel punto il lettore non riproduce bassi, e il passo successivo propone ciò che aiuta.",
+    "Toni",
+    "Linea di basso",
+    "Lo sento",
+    "Non lo sento",
+    "Ora non lo sento",
+    "Li sento tutti",
+    "Ancora",
+    "Scende fino a circa %d Hz",
+    "Non riproduce quasi nessun basso profondo",
+    "Bassi",
+    "La stessa musica con più o meno bassi. Tieni ciò che suona pieno senza rimbombare.",
+    "Così com’è",
+    "Un po’ di più",
+    "Di più",
+    "Armoniche, leggere",
+    "Armoniche",
+    "Alti",
+    "Piatti, respiro e aria: più scuro se suona aspro, più brillante se suona spento.",
+    "Più scuro",
+    "Più brillante",
+    "Davanti a te",
+    "In cuffia ogni lato arriva a un solo orecchio. Un po’ di ciascuno nell’altro orecchio porta la musica davanti a te, come dalle casse.",
+    "Spento",
+    "Leggero",
+    "Marcato",
+    "Ampiezza",
+    "Quanto lontani suonano i due lati: più stretto se le casse sono lontane, più ampio se sono vicine.",
+    "Più stretto",
+    "Più ampio",
+    "Piano e forte",
+    "Le parti piano avvicinate a quelle forti: un aiuto con il rumore intorno (l’auto, la strada), non serve in una stanza silenziosa.",
+    "Un po’ uniforme",
+    "Uniforme",
+    "Prima e dopo",
+    "Tutte le tue scelte insieme contro il suono che avevi. Salva per tenerle; tutto resta nelle impostazioni del suono di Rockbox.",
+    "Prima",
+    "Dopo",
+    "Da una canzone all’altra",
+    "Due canzoni diverse, la fine di una e l’inizio dell’altra.",
+    "Uno dopo l’altro",
+    "Fusione automatica",
+    "Dissolvenza, 4 s",
+    "Dissolvenza, 8 s",
+    "Silenzio alla fine",
+    "Una canzone con un lungo silenzio alla fine: saltato, o suonato com’è registrato.",
+    "Togli il silenzio",
+    "Tienilo",
+    "Album",
+    "Due canzoni di fila dello stesso album, suonate in ordine.",
+    "Album senza pause",
+    "Fusi come gli altri",
+    "Canzoni forti e piano",
+    "Una canzone forte e una piano, una dopo l’altra: come sono i file, o portate a un unico livello dai loro tag ReplayGain.",
+    "Come sono i file",
+    "Uniformato",
+    "Dentro un album",
+    "Una canzone piano e una forte dello stesso album: l’album com’è registrato, o ogni canzone allo stesso livello.",
+    "Album com’è registrato",
+    "Ogni canzone uguale",
+    "Livello generale",
+    "Quanto forte suona tutto una volta uniformato.",
+    "Standard",
+    "Un po’ più forte",
+    "Più forte",
+    "Questi file non hanno tag ReplayGain: Rockbox può uniformare solo le canzoni che li hanno.",
+    "Ora: %s",
+};
+static const char *const guide_ja[G_COUNT_] = {
+    "耳で細かく調整",
+    "サウンドを順に調整",
+    "曲のつなぎを耳で調整",
+    "音量のばらつきを耳でそろえる",
+    "次へ",
+    "保存",
+    "別の曲",
+    "このステップについて",
+    "保存しました",
+    "ライブラリに使える曲がありません",
+    "曲を探しています…",
+    "出力先は？",
+    "いま音楽がどこから出ているかで、ステップとそれぞれのおすすめが決まります。",
+    "ヘッドホン",
+    "イヤホン",
+    "ポータブルスピーカー",
+    "車",
+    "ホームステレオ",
+    "左と右",
+    "やわらかい音が左、中央、右と移ります。中央の音はちょうど真ん中に聞こえるはずです。そうでなければバランスを動かしてください。イヤホン片耳や単体のスピーカーなら、左右をひとつにするほうが向いています。",
+    "ステレオ",
+    "左右をひとつに",
+    "バランス",
+    "どこまで低く出る？",
+    "低い音が一つずつ鳴ります。聞こえなくなったら教えてください。それより下はプレーヤーが低音を出せないので、次のステップで役立つものをおすすめします。",
+    "トーン",
+    "ベースライン",
+    "聞こえる",
+    "聞こえない",
+    "聞こえなくなった",
+    "全部聞こえる",
+    "もう一度",
+    "約 %d Hz まで出ます",
+    "深い低音はほとんど出ません",
+    "低音",
+    "同じ音楽を低音多め・少なめで。ぼわつかずに厚みのあるものを選んでください。",
+    "そのまま",
+    "少し多め",
+    "多め",
+    "倍音、軽め",
+    "倍音",
+    "高音",
+    "シンバル、息づかい、空気感。耳に刺さるならダークに、こもって聞こえるならブライトに。",
+    "ダーク",
+    "ブライト",
+    "目の前に",
+    "ヘッドホンでは左右の音がそれぞれ片耳にしか届きません。反対の耳に少しずつ混ぜると、スピーカーのように音楽が目の前に来ます。",
+    "オフ",
+    "弱",
+    "強",
+    "幅",
+    "左右がどれだけ離れて聞こえるか。スピーカーが離れているなら狭く、近いなら広く。",
+    "狭く",
+    "広く",
+    "小さい音と大きい音",
+    "小さい部分を大きい部分に近づけます。周りが騒がしいとき（車、街なか）に役立ち、静かな部屋では不要です。",
+    "少しそろえる",
+    "そろえる",
+    "前と後",
+    "選んだものすべてを合わせて、元の音と比べます。保存すると残ります。すべて Rockbox のサウンド設定に入ります。",
+    "前",
+    "後",
+    "曲から次の曲へ",
+    "2 つの違う曲の、1 曲目の終わりと 2 曲目の始まり。",
+    "1 曲ずつ続けて",
+    "自動ミックス",
+    "クロスフェード、4 s",
+    "クロスフェード、8 s",
+    "終わりの無音",
+    "終わりに長い無音がある曲：飛ばすか、録音どおり再生するか。",
+    "無音を省く",
+    "残す",
+    "アルバム",
+    "同じアルバムの連続する 2 曲を順番に。",
+    "アルバムは途切れなく",
+    "ほかと同じくミックス",
+    "大きい曲と小さい曲",
+    "大きい曲と小さい曲を続けて：ファイルのまま、または ReplayGain タグで 1 つのレベルにそろえて。",
+    "ファイルのまま",
+    "そろえる",
+    "アルバムの中で",
+    "同じアルバムの小さい曲と大きい曲：アルバムを録音どおり、またはすべての曲を同じレベルで。",
+    "アルバムは録音どおり",
+    "すべての曲を同じに",
+    "全体の音量",
+    "そろえたあとの全体の再生音量。",
+    "標準",
+    "少し大きく",
+    "大きく",
+    "これらのファイルには ReplayGain タグがありません：Rockbox はタグのある曲しかそろえられません。",
+    "現在: %s",
+};
+static const char *const guide_ko[G_COUNT_] = {
+    "귀로 세밀하게 맞추기",
+    "사운드를 단계별로 맞추기",
+    "곡 전환을 귀로 맞추기",
+    "볼륨을 귀로 고르게 맞추기",
+    "다음",
+    "저장",
+    "다른 곡",
+    "이 단계는 무엇인가요?",
+    "저장했어요",
+    "라이브러리에 쓸 수 있는 곡이 없어요",
+    "곡을 찾는 중…",
+    "무엇으로 듣나요?",
+    "지금 음악이 어디서 나오는지에 따라 단계와 각 단계의 추천이 정해져요.",
+    "헤드폰",
+    "이어폰",
+    "휴대용 스피커",
+    "자동차",
+    "홈 스테레오",
+    "왼쪽과 오른쪽",
+    "부드러운 소리가 왼쪽, 가운데, 오른쪽으로 가요. 가운데 소리는 정확히 중앙에서 들려야 해요. 아니라면 밸런스를 옮기세요. 이어폰 한쪽이나 스피커 하나라면 양쪽을 하나로 합치는 게 더 좋아요.",
+    "스테레오",
+    "양쪽을 하나로",
+    "밸런스",
+    "얼마나 낮게 내려가나요?",
+    "낮은 음이 하나씩 차례로 나와요. 안 들리기 시작하면 알려 주세요. 그 아래로는 플레이어가 저음을 내지 못하니, 다음 단계에서 도움이 되는 것을 추천해요.",
+    "톤",
+    "베이스 라인",
+    "들려요",
+    "안 들려요",
+    "이제 안 들려요",
+    "다 들려요",
+    "다시",
+    "약 %d Hz까지 내려가요",
+    "깊은 저음은 거의 나오지 않아요",
+    "저음",
+    "같은 음악을 저음을 더 많이 또는 적게 해서 들어요. 웅웅거리지 않으면서 꽉 차게 들리는 것을 고르세요.",
+    "그대로",
+    "조금 더",
+    "더",
+    "배음, 약하게",
+    "배음",
+    "고음",
+    "심벌, 숨소리, 공기감: 거칠게 들리면 더 어둡게, 답답하게 들리면 더 밝게.",
+    "더 어둡게",
+    "더 밝게",
+    "내 앞에서",
+    "헤드폰에서는 각 쪽 소리가 한쪽 귀에만 닿아요. 반대쪽 귀에 조금씩 섞으면 스피커처럼 음악이 내 앞에 놓여요.",
+    "끄기",
+    "약하게",
+    "강하게",
+    "폭",
+    "양쪽이 얼마나 떨어져 들리는지: 스피커가 멀리 떨어져 있으면 더 좁게, 가까이 붙어 있으면 더 넓게.",
+    "더 좁게",
+    "더 넓게",
+    "작은 소리와 큰 소리",
+    "작은 부분을 큰 부분에 가깝게 해요. 주변이 시끄러울 때(차 안, 거리) 도움이 되고, 조용한 방에서는 필요 없어요.",
+    "조금 고르게",
+    "고르게",
+    "전과 후",
+    "고른 것을 모두 합쳐 원래 소리와 비교해요. 저장하면 유지돼요. 모두 Rockbox의 사운드 설정에 남아요.",
+    "전",
+    "후",
+    "한 곡에서 다음 곡으로",
+    "서로 다른 두 곡, 한 곡의 끝과 다른 곡의 시작.",
+    "차례로 하나씩",
+    "자동 블렌드",
+    "크로스페이드, 4 s",
+    "크로스페이드, 8 s",
+    "끝부분의 무음",
+    "끝에 긴 무음이 있는 곡: 건너뛰거나, 녹음된 그대로 재생하거나.",
+    "무음 빼기",
+    "그대로 두기",
+    "앨범",
+    "한 앨범의 연속된 두 곡을 순서대로.",
+    "앨범은 끊김 없이",
+    "다른 곡처럼 블렌드",
+    "큰 곡과 작은 곡",
+    "큰 곡과 작은 곡을 차례로: 파일 그대로, 또는 ReplayGain 태그로 한 레벨에 맞춰서.",
+    "파일 그대로",
+    "고르게",
+    "앨범 안에서",
+    "한 앨범의 작은 곡과 큰 곡: 앨범을 녹음된 그대로, 또는 모든 곡을 한 레벨로.",
+    "앨범은 녹음된 그대로",
+    "모든 곡을 똑같이",
+    "전체 레벨",
+    "고르게 맞춘 뒤 전체 재생 크기.",
+    "표준",
+    "조금 더 크게",
+    "더 크게",
+    "이 파일들에는 ReplayGain 태그가 없어요: Rockbox는 태그가 있는 곡만 고르게 맞출 수 있어요.",
+    "지금: %s",
+};
+static const char *const guide_nl[G_COUNT_] = {
+    "Fijnafstemming op het gehoor",
+    "Het geluid stap voor stap afstemmen",
+    "De overgangen op het gehoor afstemmen",
+    "Het volume op het gehoor gelijktrekken",
+    "Volgende",
+    "Opslaan",
+    "Ander nummer",
+    "Wat is deze stap?",
+    "Opgeslagen",
+    "Geen bruikbare nummers in de bibliotheek",
+    "Nummers zoeken…",
+    "Wat is het?",
+    "Waar de muziek nu uit komt, bepaalt de stappen en wat elke stap aanraadt.",
+    "Koptelefoon",
+    "Oordopjes",
+    "Draagbare speaker",
+    "Auto",
+    "Stereo-installatie",
+    "Links en rechts",
+    "Een zacht geluid gaat naar links, het midden en rechts. Het middelste moet precies in het midden klinken; zo niet, verschuif dan de balans. Met één oordopje of één enkele speaker zijn beide kanten als één beter.",
+    "Stereo",
+    "Beide kanten als één",
+    "Balans",
+    "Hoe diep gaat het?",
+    "Lage tonen klinken na elkaar. Zeg wanneer je ze niet meer hoort: daaronder speelt de speler geen bas, en de volgende stap biedt aan wat helpt.",
+    "Tonen",
+    "Baslijn",
+    "Ik hoor het",
+    "Ik hoor het niet",
+    "Nu hoor ik het niet",
+    "Ik hoor ze allemaal",
+    "Opnieuw",
+    "Het gaat omlaag tot ongeveer %d Hz",
+    "Het speelt bijna geen diepe bas",
+    "Bas",
+    "Dezelfde muziek met meer of minder bas. Houd wat vol klinkt zonder te dreunen.",
+    "Zoals het is",
+    "Iets meer",
+    "Meer",
+    "Boventonen, licht",
+    "Boventonen",
+    "Hoge tonen",
+    "Bekkens, adem en lucht: donkerder als het scherp klinkt, helderder als het dof klinkt.",
+    "Donkerder",
+    "Helderder",
+    "Voor je",
+    "Met een koptelefoon bereikt elke kant maar één oor. Een beetje van elke kant in het andere oor zet de muziek voor je, zoals uit speakers.",
+    "Uit",
+    "Licht",
+    "Sterk",
+    "Breedte",
+    "Hoe ver de twee kanten uit elkaar klinken: smaller als de speakers ver uit elkaar staan, breder als ze dicht bij elkaar staan.",
+    "Smaller",
+    "Breder",
+    "Zacht en luid",
+    "Zachte delen dichter bij luide gebracht: een hulp bij lawaai om je heen (de auto, de straat), niet nodig in een stille kamer.",
+    "Iets gelijkmatiger",
+    "Gelijkmatig",
+    "Voor en na",
+    "Al je keuzes samen tegenover het geluid dat je had. Sla op om ze te houden; alles blijft in de geluidsinstellingen van Rockbox.",
+    "Voor",
+    "Na",
+    "Van het ene nummer naar het volgende",
+    "Twee verschillende nummers, het einde van het ene en het begin van het andere.",
+    "Na elkaar",
+    "Automatische overgang",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Stilte aan het einde",
+    "Een nummer met een lange stilte aan het einde: overgeslagen, of gespeeld zoals opgenomen.",
+    "Stilte weglaten",
+    "Houden",
+    "Albums",
+    "Twee opeenvolgende nummers van één album, op volgorde gespeeld.",
+    "Album zonder pauzes",
+    "Overgevloeid zoals de rest",
+    "Luide en zachte nummers",
+    "Een luid en een zacht nummer na elkaar: zoals de bestanden zijn, of op één niveau gebracht door hun ReplayGain-tags.",
+    "Zoals de bestanden zijn",
+    "Gelijkgetrokken",
+    "Binnen een album",
+    "Een zacht en een luid nummer van één album: het album zoals opgenomen, of elk nummer op één niveau.",
+    "Album zoals opgenomen",
+    "Elk nummer gelijk",
+    "Algemeen niveau",
+    "Hoe luid alles speelt na het gelijktrekken.",
+    "Standaard",
+    "Iets luider",
+    "Luider",
+    "Deze bestanden hebben geen ReplayGain-tags: Rockbox kan alleen nummers gelijktrekken die ze hebben.",
+    "Nu: %s",
+};
+static const char *const guide_pl[G_COUNT_] = {
+    "Dostrajanie na słuch",
+    "Dostrój dźwięk krok po kroku",
+    "Dostrój przejścia na słuch",
+    "Wyrównaj głośność na słuch",
+    "Dalej",
+    "Zapisz",
+    "Inny utwór",
+    "Co to za krok?",
+    "Zapisano",
+    "Brak utworów do użycia w bibliotece",
+    "Szukanie utworów…",
+    "Co to jest?",
+    "To, z czego teraz płynie muzyka, decyduje o krokach i o tym, co każdy z nich sugeruje.",
+    "Słuchawki nauszne",
+    "Słuchawki douszne",
+    "Głośnik przenośny",
+    "Samochód",
+    "Domowe stereo",
+    "Lewo i prawo",
+    "Miękki dźwięk idzie w lewo, na środek i w prawo. Ten środkowy powinien brzmieć dokładnie pośrodku; jeśli nie, przesuń balans. Z jedną słuchawką lub jednym głośnikiem lepiej mieć obie strony jako jedną.",
+    "Stereo",
+    "Obie strony jako jedna",
+    "Balans",
+    "Jak nisko schodzi?",
+    "Niskie dźwięki grają jeden po drugim. Powiedz, kiedy przestajesz je słyszeć: poniżej odtwarzacz nie gra basu, a następny krok zaproponuje, co pomoże.",
+    "Tony",
+    "Linia basu",
+    "Słyszę",
+    "Nie słyszę",
+    "Teraz nie słyszę",
+    "Słyszę wszystkie",
+    "Jeszcze raz",
+    "Schodzi do około %d Hz",
+    "Prawie nie gra głębokiego basu",
+    "Bas",
+    "Ta sama muzyka z większym lub mniejszym basem. Zachowaj to, co brzmi pełnie, ale nie dudni.",
+    "Bez zmian",
+    "Trochę więcej",
+    "Więcej",
+    "Harmoniczne, lekko",
+    "Harmoniczne",
+    "Soprany",
+    "Talerze, oddech i powietrze: ciemniej, jeśli brzmi ostro, jaśniej, jeśli brzmi głucho.",
+    "Ciemniej",
+    "Jaśniej",
+    "Przed tobą",
+    "W słuchawkach każda strona trafia tylko do jednego ucha. Trochę każdej w drugim uchu stawia muzykę przed tobą, jak z głośników.",
+    "Wyłączony",
+    "Lekki",
+    "Mocny",
+    "Szerokość",
+    "Jak daleko od siebie brzmią obie strony: węziej, jeśli głośniki stoją daleko od siebie, szerzej, jeśli są blisko.",
+    "Węziej",
+    "Szerzej",
+    "Cicho i głośno",
+    "Ciche fragmenty zbliżone do głośnych: pomoc przy hałasie wokół (samochód, ulica), niepotrzebne w cichym pokoju.",
+    "Trochę wyrównane",
+    "Wyrównane",
+    "Przed i po",
+    "Wszystkie twoje wybory razem w porównaniu z dźwiękiem, który był. Zapisz, aby je zachować; wszystko zostaje w ustawieniach dźwięku Rockboxa.",
+    "Przed",
+    "Po",
+    "Z jednej piosenki do następnej",
+    "Dwie różne piosenki: koniec jednej i początek drugiej.",
+    "Jeden po drugim",
+    "Automatyczne przejście",
+    "Przenikanie, 4 s",
+    "Przenikanie, 8 s",
+    "Cisza na końcu",
+    "Piosenka z długą ciszą na końcu: przeskoczona albo grana tak, jak nagrano.",
+    "Pomiń ciszę",
+    "Zachowaj",
+    "Albumy",
+    "Dwie kolejne piosenki jednego albumu, grane po kolei.",
+    "Album bez przerw",
+    "Przenikanie jak reszta",
+    "Głośne i ciche piosenki",
+    "Głośna piosenka i cicha, jedna po drugiej: tak, jak są pliki, albo sprowadzone do jednego poziomu przez ich tagi ReplayGain.",
+    "Tak, jak są pliki",
+    "Wyrównane",
+    "W obrębie albumu",
+    "Cicha i głośna piosenka jednego albumu: album tak, jak nagrano, albo każda piosenka na jednym poziomie.",
+    "Album tak, jak nagrano",
+    "Każda piosenka tak samo",
+    "Poziom ogólny",
+    "Jak głośno gra wszystko po wyrównaniu.",
+    "Standardowy",
+    "Trochę głośniej",
+    "Głośniej",
+    "Te pliki nie mają tagów ReplayGain: Rockbox może wyrównać tylko piosenki, które je mają.",
+    "Teraz: %s",
+};
+static const char *const guide_pt_br[G_COUNT_] = {
+    "Ajuste fino de ouvido",
+    "Ajustar o som passo a passo",
+    "Ajustar as transições de ouvido",
+    "Igualar o volume de ouvido",
+    "Próximo",
+    "Salvar",
+    "Outra música",
+    "O que é este passo?",
+    "Salvo",
+    "Nenhuma música para usar na biblioteca",
+    "Procurando músicas…",
+    "O que é?",
+    "Por onde a música sai agora decide os passos e o que cada um sugere.",
+    "Fones de ouvido",
+    "Fones intra-auriculares",
+    "Caixa de som portátil",
+    "Carro",
+    "Aparelho de som",
+    "Esquerda e direita",
+    "Um som suave passa pela esquerda, pelo centro e pela direita. O do centro deve soar bem no meio; se não, ajuste o balanço. Com um fone só ou uma única caixa de som, é melhor os dois lados em um.",
+    "Estéreo",
+    "Os dois lados em um",
+    "Balanço",
+    "Até onde vão os graves?",
+    "Notas graves tocam uma depois da outra. Diga quando deixar de ouvi-las: abaixo disso o player não toca graves, e o próximo passo oferece o que ajuda.",
+    "Tons",
+    "Linha de baixo",
+    "Estou ouvindo",
+    "Não estou ouvindo",
+    "Agora não ouço",
+    "Ouço todos",
+    "De novo",
+    "Desce até cerca de %d Hz",
+    "Quase não toca graves profundos",
+    "Graves",
+    "A mesma música com mais ou menos graves. Fique com o que soa cheio sem retumbar.",
+    "Como está",
+    "Um pouco mais",
+    "Mais",
+    "Harmônicos, leve",
+    "Harmônicos",
+    "Agudos",
+    "Pratos, respiração e ar: mais escuro se soar áspero, mais brilhante se soar abafado.",
+    "Mais escuro",
+    "Mais brilhante",
+    "Na sua frente",
+    "Com fones de ouvido cada lado chega a um ouvido só. Um pouco de cada um no outro ouvido coloca a música na sua frente, como em caixas de som.",
+    "Desligado",
+    "Leve",
+    "Forte",
+    "Amplitude",
+    "Quanto os dois lados se separam: mais estreito se as caixas estiverem longe uma da outra, mais amplo se estiverem perto.",
+    "Mais estreito",
+    "Mais amplo",
+    "Suave e forte",
+    "As partes suaves mais perto das fortes: ajuda com barulho em volta (o carro, a rua); numa sala silenciosa não é necessário.",
+    "Um pouco equilibrado",
+    "Equilibrado",
+    "Antes e depois",
+    "Todas as suas escolhas juntas contra o som que você tinha. Salve para mantê-las; tudo fica nas configurações de som do Rockbox.",
+    "Antes",
+    "Depois",
+    "De uma música para a próxima",
+    "Duas músicas diferentes, o fim de uma e o começo da outra.",
+    "Uma depois da outra",
+    "Mixagem automática",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Silêncio no final",
+    "Uma música com um silêncio longo no final: pulado, ou tocado como foi gravado.",
+    "Cortar o silêncio",
+    "Manter",
+    "Álbuns",
+    "Duas músicas seguidas de um álbum, em ordem.",
+    "Álbum sem pausas",
+    "Mixado como o resto",
+    "Músicas altas e baixas",
+    "Uma música alta e uma baixa, uma depois da outra: como os arquivos estão, ou levadas a um mesmo nível pelas tags ReplayGain.",
+    "Como os arquivos estão",
+    "Igualadas",
+    "Dentro de um álbum",
+    "Uma música baixa e uma alta de um álbum: o álbum como foi gravado, ou cada música no mesmo nível.",
+    "Álbum como foi gravado",
+    "Todas iguais",
+    "Nível geral",
+    "O quão alto tudo toca depois de igualado.",
+    "Padrão",
+    "Um pouco mais alto",
+    "Mais alto",
+    "Estes arquivos não têm tags ReplayGain: o Rockbox só consegue igualar as músicas que as têm.",
+    "Agora: %s",
+};
+static const char *const guide_pt[G_COUNT_] = {
+    "Ajuste fino de ouvido",
+    "Ajustar o som passo a passo",
+    "Ajustar as transições de ouvido",
+    "Igualar o volume de ouvido",
+    "Seguinte",
+    "Guardar",
+    "Outra canção",
+    "O que é este passo?",
+    "Guardado",
+    "Não há canções para usar na biblioteca",
+    "A procurar canções…",
+    "O que é?",
+    "Por onde sai agora a música decide os passos e o que cada um sugere.",
+    "Auscultadores",
+    "Auriculares",
+    "Coluna portátil",
+    "Carro",
+    "Aparelhagem",
+    "Esquerda e direita",
+    "Um som suave passa pela esquerda, pelo centro e pela direita. O do centro deve soar mesmo ao meio; se não, mexe no balanço. Com um só auricular ou uma única coluna, é melhor os dois lados num só.",
+    "Estéreo",
+    "Os dois lados num só",
+    "Balanço",
+    "Até onde chegam os graves?",
+    "Tocam notas graves umas atrás das outras. Diz quando deixas de as ouvir: abaixo disso o leitor não dá graves, e o passo seguinte oferece o que ajuda.",
+    "Tons",
+    "Linha de baixo",
+    "Ouço",
+    "Não ouço",
+    "Agora não ouço",
+    "Ouço todos",
+    "Outra vez",
+    "Desce até cerca de %d Hz",
+    "Quase não dá graves profundos",
+    "Graves",
+    "A mesma música com mais ou menos graves. Fica com o que soa cheio sem ribombar.",
+    "Tal como está",
+    "Um pouco mais",
+    "Mais",
+    "Harmónicos, ligeiro",
+    "Harmónicos",
+    "Agudos",
+    "Pratos, respiração e ar: mais escuro se soar áspero, mais brilhante se soar abafado.",
+    "Mais escuro",
+    "Mais brilhante",
+    "À tua frente",
+    "Com auscultadores cada lado chega só a um ouvido. Um pouco de cada um no outro ouvido põe a música à tua frente, como em colunas.",
+    "Desligado",
+    "Ligeiro",
+    "Forte",
+    "Amplitude",
+    "Quanto se afastam os dois lados: mais estreito se as colunas estiverem longe uma da outra, mais amplo se estiverem juntas.",
+    "Mais estreito",
+    "Mais amplo",
+    "Suave e forte",
+    "As partes suaves mais perto das fortes: ajuda com ruído à volta (o carro, a rua); numa sala sossegada não faz falta.",
+    "Um pouco equilibrado",
+    "Equilibrado",
+    "Antes e depois",
+    "Todas as tuas escolhas juntas frente ao som que tinhas. Guarda para as manter; tudo fica nas definições de som do Rockbox.",
+    "Antes",
+    "Depois",
+    "De uma canção para a seguinte",
+    "Duas canções diferentes, o fim de uma e o início da outra.",
+    "Uma após a outra",
+    "Mistura automática",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Silêncio no fim",
+    "Uma canção com um silêncio longo no fim: saltado, ou tocado como foi gravado.",
+    "Retirar o silêncio",
+    "Manter",
+    "Álbuns",
+    "Duas canções seguidas de um álbum, por ordem.",
+    "Álbum sem pausas",
+    "Misturado como o resto",
+    "Canções fortes e baixas",
+    "Uma canção forte e uma baixa, uma após a outra: como estão os ficheiros, ou levadas a um mesmo nível pelas suas etiquetas ReplayGain.",
+    "Como estão os ficheiros",
+    "Igualadas",
+    "Dentro de um álbum",
+    "Uma canção baixa e uma forte de um álbum: o álbum como foi gravado, ou cada canção ao mesmo nível.",
+    "Álbum como foi gravado",
+    "Todas iguais",
+    "Nível geral",
+    "Quão alto soa tudo depois de igualado.",
+    "Padrão",
+    "Um pouco mais alto",
+    "Mais alto",
+    "Estes ficheiros não têm etiquetas ReplayGain: o Rockbox só consegue igualar as canções que as têm.",
+    "Agora: %s",
+};
+static const char *const guide_ro[G_COUNT_] = {
+    "Reglaj fin după ureche",
+    "Reglează sunetul pas cu pas",
+    "Reglează tranzițiile după ureche",
+    "Egalizează volumul după ureche",
+    "Următorul",
+    "Salvează",
+    "Altă piesă",
+    "Ce este acest pas?",
+    "Salvat",
+    "Nicio piesă de folosit în bibliotecă",
+    "Se caută piese…",
+    "Ce este?",
+    "Din ce iese acum muzica decide pașii și ce sugerează fiecare.",
+    "Căști",
+    "Căști intraauriculare",
+    "Boxă portabilă",
+    "Mașină",
+    "Sistem stereo acasă",
+    "Stânga și dreapta",
+    "Un sunet blând merge în stânga, la centru și în dreapta. Cel din centru ar trebui să se audă exact la mijloc; dacă nu, mută balansul. Cu o singură cască sau o singură boxă, e mai bine ambele părți ca una.",
+    "Stereo",
+    "Ambele părți ca una",
+    "Balans",
+    "Cât de jos coboară?",
+    "Note joase se aud una după alta. Spune când nu le mai auzi: sub acel punct playerul nu redă bas, iar pasul următor oferă ce ajută.",
+    "Tonuri",
+    "Linie de bas",
+    "Îl aud",
+    "Nu-l aud",
+    "Acum nu-l mai aud",
+    "Le aud pe toate",
+    "Din nou",
+    "Coboară până la aproximativ %d Hz",
+    "Nu redă aproape deloc bas adânc",
+    "Bas",
+    "Aceeași muzică cu mai mult sau mai puțin bas. Păstrează ce sună plin fără să bubuie.",
+    "Așa cum e",
+    "Puțin mai mult",
+    "Mai mult",
+    "Armonice, ușor",
+    "Armonice",
+    "Înalte",
+    "Cinele, respirația și aerul: mai întunecat dacă sună strident, mai luminos dacă sună înfundat.",
+    "Mai întunecat",
+    "Mai luminos",
+    "În fața ta",
+    "În căști fiecare parte ajunge doar la o ureche. Puțin din fiecare în cealaltă ureche aduce muzica în fața ta, ca din boxe.",
+    "Oprit",
+    "Ușor",
+    "Puternic",
+    "Lățime",
+    "Cât de departe una de alta sună cele două părți: mai îngust dacă boxele sunt departe, mai larg dacă sunt aproape una de alta.",
+    "Mai îngust",
+    "Mai larg",
+    "Încet și tare",
+    "Părțile încete aduse mai aproape de cele tari: un ajutor când e zgomot în jur (mașina, strada), nu e nevoie într-o cameră liniștită.",
+    "Puțin uniform",
+    "Uniform",
+    "Înainte și după",
+    "Toate alegerile tale împreună față de sunetul pe care îl aveai. Salvează ca să le păstrezi; totul rămâne în setările de sunet ale Rockbox.",
+    "Înainte",
+    "După",
+    "De la o melodie la următoarea",
+    "Două melodii diferite, finalul uneia și începutul celeilalte.",
+    "Una după alta",
+    "Îmbinare automată",
+    "Crossfade, 4 s",
+    "Crossfade, 8 s",
+    "Liniște la final",
+    "O melodie cu o liniște lungă la final: sărită sau redată cum a fost înregistrată.",
+    "Scoate liniștea",
+    "Păstreaz-o",
+    "Albume",
+    "Două melodii la rând dintr-un album, cântate în ordine.",
+    "Album fără pauze",
+    "Îmbinate ca restul",
+    "Melodii tari și încete",
+    "O melodie tare și una încetă, una după alta: cum sunt fișierele sau aduse la un singur nivel de etichetele lor ReplayGain.",
+    "Cum sunt fișierele",
+    "Egalizat",
+    "În cadrul unui album",
+    "O melodie încetă și una tare din același album: albumul cum a fost înregistrat sau fiecare melodie la același nivel.",
+    "Album cum a fost înregistrat",
+    "Fiecare melodie la fel",
+    "Nivel general",
+    "Cât de tare se aude totul după egalizare.",
+    "Standard",
+    "Puțin mai tare",
+    "Mai tare",
+    "Aceste fișiere nu au etichete ReplayGain: Rockbox poate egaliza doar melodiile care le au.",
+    "Acum: %s",
+};
+static const char *const guide_ru[G_COUNT_] = {
+    "Тонкая настройка на слух",
+    "Настроить звук шаг за шагом",
+    "Настроить переходы на слух",
+    "Выровнять громкость на слух",
+    "Далее",
+    "Сохранить",
+    "Другой трек",
+    "Что это за шаг?",
+    "Сохранено",
+    "В библиотеке нет подходящих треков",
+    "Поиск треков…",
+    "Что это?",
+    "То, из чего сейчас звучит музыка, определяет шаги и то, что предлагает каждый из них.",
+    "Наушники",
+    "Вкладыши",
+    "Портативная колонка",
+    "Машина",
+    "Домашняя стереосистема",
+    "Слева и справа",
+    "Мягкий звук идёт слева, по центру и справа. Центральный должен звучать ровно посередине; если нет, сдвиньте баланс. С одним наушником или одной колонкой лучше обе стороны как одна.",
+    "Стерео",
+    "Обе стороны как одна",
+    "Баланс",
+    "Насколько низко?",
+    "Низкие ноты звучат одна за другой. Скажите, когда перестанете их слышать: ниже этого плеер басов не играет, и следующий шаг предложит то, что поможет.",
+    "Тоны",
+    "Басовая линия",
+    "Слышу",
+    "Не слышу",
+    "Теперь не слышу",
+    "Слышу все",
+    "Ещё раз",
+    "Опускается примерно до %d Hz",
+    "Глубоких басов почти не воспроизводит",
+    "Басы",
+    "Та же музыка с большим или меньшим количеством басов. Оставьте то, что звучит полно, но не гудит.",
+    "Как есть",
+    "Чуть больше",
+    "Больше",
+    "Гармоники, слегка",
+    "Гармоники",
+    "Высокие",
+    "Тарелки, дыхание и воздух: темнее, если звучит резко, ярче, если звучит глухо.",
+    "Темнее",
+    "Ярче",
+    "Перед вами",
+    "В наушниках каждая сторона попадает только в одно ухо. Немного каждой в другом ухе ставит музыку перед вами, как из колонок.",
+    "Выкл.",
+    "Лёгкий",
+    "Сильный",
+    "Ширина",
+    "Насколько далеко друг от друга звучат две стороны: уже, если колонки стоят далеко друг от друга, шире, если близко.",
+    "Уже",
+    "Шире",
+    "Тихо и громко",
+    "Тихие места ближе к громким: помогает при шуме вокруг (машина, улица), не нужно в тихой комнате.",
+    "Чуть ровнее",
+    "Ровно",
+    "До и после",
+    "Все ваши варианты вместе против звука, который был. Сохраните, чтобы оставить их; всё остаётся в настройках звука Rockbox.",
+    "До",
+    "После",
+    "От одной песни к следующей",
+    "Две разные песни: конец одной и начало другой.",
+    "Один за другим",
+    "Автоматический переход",
+    "Кроссфейд, 4 с",
+    "Кроссфейд, 8 с",
+    "Тишина в конце",
+    "Песня с долгой тишиной в конце: пропущена или сыграна как записано.",
+    "Убрать тишину",
+    "Оставить",
+    "Альбомы",
+    "Две песни подряд из одного альбома, по порядку.",
+    "Альбом без пауз",
+    "Смешивать как остальные",
+    "Громкие и тихие песни",
+    "Громкая песня и тихая, одна за другой: как в файлах или приведённые к одному уровню по их тегам ReplayGain.",
+    "Как в файлах",
+    "Выровнено",
+    "Внутри альбома",
+    "Тихая и громкая песня одного альбома: альбом как записан или каждая песня на одном уровне.",
+    "Альбом как записан",
+    "Все песни одинаково",
+    "Общий уровень",
+    "Насколько громко звучит всё после выравнивания.",
+    "Стандартный",
+    "Чуть громче",
+    "Громче",
+    "У этих файлов нет тегов ReplayGain: Rockbox может выровнять только песни, у которых они есть.",
+    "Сейчас: %s",
+};
+static const char *const guide_sv[G_COUNT_] = {
+    "Finjustering på gehör",
+    "Ställ in ljudet steg för steg",
+    "Ställ in övergångarna på gehör",
+    "Jämna ut volymen på gehör",
+    "Nästa",
+    "Spara",
+    "En annan låt",
+    "Vad är det här steget?",
+    "Sparat",
+    "Inga användbara låtar i biblioteket",
+    "Söker låtar…",
+    "Vad är det?",
+    "Det som musiken kommer ut ur nu avgör stegen och vad varje steg föreslår.",
+    "Hörlurar",
+    "Öronsnäckor",
+    "Bärbar högtalare",
+    "Bil",
+    "Stereo hemma",
+    "Vänster och höger",
+    "Ett mjukt ljud går till vänster, mitten och höger. Det i mitten ska låta mitt i; om inte, flytta balansen. Med en enda öronsnäcka eller en enda högtalare är båda sidor som en bättre.",
+    "Stereo",
+    "Båda sidor som en",
+    "Balans",
+    "Hur djupt går den?",
+    "Djupa toner spelas en efter en. Säg när du slutar höra dem: under det spelar spelaren ingen bas, och nästa steg erbjuder det som hjälper.",
+    "Toner",
+    "Basgång",
+    "Jag hör den",
+    "Jag hör den inte",
+    "Nu hör jag den inte",
+    "Jag hör alla",
+    "Igen",
+    "Den går ner till ungefär %d Hz",
+    "Den spelar knappt någon djup bas",
+    "Bas",
+    "Samma musik med mer eller mindre bas. Behåll det som låter fylligt utan att dåna.",
+    "Som det är",
+    "Lite mer",
+    "Mer",
+    "Övertoner, lätt",
+    "Övertoner",
+    "Diskant",
+    "Cymbaler, andning och luft: mörkare om det låter skarpt, ljusare om det låter dovt.",
+    "Mörkare",
+    "Ljusare",
+    "Framför dig",
+    "I hörlurar når varje sida bara ett öra. Lite av varje i det andra örat lägger musiken framför dig, som från högtalare.",
+    "Av",
+    "Lätt",
+    "Stark",
+    "Bredd",
+    "Hur långt isär de två sidorna låter: smalare om högtalarna står långt isär, bredare om de står nära varandra.",
+    "Smalare",
+    "Bredare",
+    "Tyst och starkt",
+    "Tysta partier närmare de starka: en hjälp vid buller omkring (bilen, gatan), behövs inte i ett tyst rum.",
+    "Lite jämnare",
+    "Jämnt",
+    "Före och efter",
+    "Alla dina val tillsammans mot ljudet du hade. Spara för att behålla dem; allt finns kvar i Rockboxs ljudinställningar.",
+    "Före",
+    "Efter",
+    "Från en låt till nästa",
+    "Två olika låtar, slutet på den ena och början på den andra.",
+    "Det ena efter det andra",
+    "Automatisk övergång",
+    "Övertoning, 4 s",
+    "Övertoning, 8 s",
+    "Tystnad i slutet",
+    "En låt med lång tystnad i slutet: överhoppad, eller spelad som inspelad.",
+    "Klipp bort tystnaden",
+    "Behåll den",
+    "Album",
+    "Två låtar i rad från ett album, spelade i ordning.",
+    "Album utan uppehåll",
+    "Övertonade som resten",
+    "Starka och svaga låtar",
+    "En stark låt och en svag, efter varandra: som filerna är, eller på samma nivå genom sina ReplayGain-taggar.",
+    "Som filerna är",
+    "Utjämnat",
+    "Inom ett album",
+    "En svag och en stark låt från ett album: albumet som inspelat, eller varje låt på samma nivå.",
+    "Album som inspelat",
+    "Varje låt lika",
+    "Total nivå",
+    "Hur högt allt spelas när det är utjämnat.",
+    "Standard",
+    "Lite högre",
+    "Högre",
+    "Dessa filer saknar ReplayGain-taggar: Rockbox kan bara jämna ut låtar som har dem.",
+    "Nu: %s",
+};
+static const char *const guide_tr[G_COUNT_] = {
+    "Kulakla ince ayar",
+    "Sesi adım adım ayarla",
+    "Geçişleri kulakla ayarla",
+    "Ses düzeyini kulakla eşitle",
+    "İleri",
+    "Kaydet",
+    "Başka şarkı",
+    "Bu adım nedir?",
+    "Kaydedildi",
+    "Kitaplıkta kullanılacak şarkı yok",
+    "Şarkılar aranıyor…",
+    "Bu ne?",
+    "Müziğin şu an nereden çıktığı, adımları ve her birinin ne önerdiğini belirler.",
+    "Kulaklık",
+    "Kulak içi kulaklık",
+    "Taşınabilir hoparlör",
+    "Araba",
+    "Ev müzik sistemi",
+    "Sol ve sağ",
+    "Yumuşak bir ses sola, ortaya ve sağa gider. Ortadaki tam ortada duyulmalı; değilse dengeyi kaydırın. Tek kulaklıkla ya da tek hoparlörle iki tarafı tek olarak dinlemek daha iyidir.",
+    "Stereo",
+    "İki taraf tek",
+    "Denge",
+    "Ne kadar derine iniyor?",
+    "Derin notalar birbiri ardına çalar. Duymayı bıraktığınızda söyleyin: onun altında cihaz bas vermiyor ve sonraki adım işe yarayanı önerir.",
+    "Tonlar",
+    "Bas hattı",
+    "Duyuyorum",
+    "Duymuyorum",
+    "Artık duymuyorum",
+    "Hepsini duyuyorum",
+    "Tekrar",
+    "Yaklaşık %d Hz'e kadar iniyor",
+    "Neredeyse hiç derin bas çalmıyor",
+    "Bas",
+    "Aynı müzik, daha çok ya da daha az basla. Gümbürdemeden dolgun gelen seçeneği koruyun.",
+    "Olduğu gibi",
+    "Biraz daha",
+    "Daha fazla",
+    "Harmonikler, hafif",
+    "Harmonikler",
+    "Tiz",
+    "Ziller, nefes ve hava: sert geliyorsa daha koyu, donuk geliyorsa daha parlak.",
+    "Daha koyu",
+    "Daha parlak",
+    "Tam önünüzde",
+    "Kulaklıkta her taraf yalnızca bir kulağa ulaşır. Her birinden biraz diğer kulağa gidince müzik, hoparlörlerden gelir gibi önünüze yerleşir.",
+    "Kapalı",
+    "Hafif",
+    "Güçlü",
+    "Genişlik",
+    "İki tarafın birbirinden ne kadar uzak duyulduğu: hoparlörler birbirinden uzaksa daha dar, yakınsa daha geniş.",
+    "Daha dar",
+    "Daha geniş",
+    "Kısık ve yüksek",
+    "Kısık bölümler yüksek olanlara yaklaştırılır: çevrede gürültü varken (araba, sokak) işe yarar, sessiz bir odada gerekmez.",
+    "Biraz dengeli",
+    "Dengeli",
+    "Önce ve sonra",
+    "Tüm seçimleriniz birlikte, önceki sesinize karşı. Saklamak için kaydedin; her şey Rockbox'ın ses ayarlarında kalır.",
+    "Önce",
+    "Sonra",
+    "Bir şarkıdan sonrakine",
+    "İki farklı şarkı, birinin sonu ve diğerinin başı.",
+    "Art arda",
+    "Otomatik karışma",
+    "Çapraz geçiş, 4 s",
+    "Çapraz geçiş, 8 s",
+    "Sondaki sessizlik",
+    "Sonunda uzun sessizlik olan bir şarkı: atlanır ya da kaydedildiği gibi çalınır.",
+    "Sessizliği atla",
+    "Kalsın",
+    "Albümler",
+    "Bir albümün art arda iki şarkısı, sırayla çalınır.",
+    "Boşluksuz albüm",
+    "Diğerleri gibi karışık",
+    "Yüksek ve alçak sesli şarkılar",
+    "Yüksek sesli bir şarkı ve alçak sesli bir şarkı, art arda: dosyalar olduğu gibi ya da ReplayGain etiketleriyle tek bir düzeye getirilmiş.",
+    "Dosyalar olduğu gibi",
+    "Eşitlenmiş",
+    "Bir albüm içinde",
+    "Bir albümün alçak ve yüksek sesli birer şarkısı: albüm kaydedildiği gibi ya da her şarkı aynı düzeyde.",
+    "Albüm kaydedildiği gibi",
+    "Her şarkı aynı",
+    "Genel düzey",
+    "Eşitlendikten sonra her şeyin ne kadar yüksek çaldığı.",
+    "Standart",
+    "Biraz daha yüksek",
+    "Daha yüksek",
+    "Bu dosyalarda ReplayGain etiketi yok: Rockbox yalnızca etiketi olan şarkıları eşitleyebilir.",
+    "Şu an: %s",
+};
+static const char *const guide_uk[G_COUNT_] = {
+    "Точне налаштування на слух",
+    "Налаштувати звук крок за кроком",
+    "Налаштувати переходи на слух",
+    "Вирівняти гучність на слух",
+    "Далі",
+    "Зберегти",
+    "Інший трек",
+    "Що це за крок?",
+    "Збережено",
+    "У бібліотеці немає придатних треків",
+    "Пошук треків…",
+    "Що це?",
+    "Те, з чого зараз звучить музика, визначає кроки й те, що пропонує кожен із них.",
+    "Навушники",
+    "Вкладиші",
+    "Портативна колонка",
+    "Авто",
+    "Домашня стереосистема",
+    "Ліворуч і праворуч",
+    "М’який звук іде ліворуч, по центру й праворуч. Центральний має звучати рівно посередині; якщо ні, посуньте баланс. З одним навушником або однією колонкою краще обидві сторони як одна.",
+    "Стерео",
+    "Обидві сторони як одна",
+    "Баланс",
+    "Наскільки низько?",
+    "Низькі ноти звучать одна за одною. Скажіть, коли перестанете їх чути: нижче цього плеєр басів не грає, і наступний крок запропонує те, що допоможе.",
+    "Тони",
+    "Басова лінія",
+    "Чую",
+    "Не чую",
+    "Тепер не чую",
+    "Чую всі",
+    "Ще раз",
+    "Опускається приблизно до %d Hz",
+    "Глибоких басів майже не відтворює",
+    "Баси",
+    "Та сама музика з більшими чи меншими басами. Залиште те, що звучить повно, але не гуде.",
+    "Як є",
+    "Трохи більше",
+    "Більше",
+    "Гармоніки, злегка",
+    "Гармоніки",
+    "Високі",
+    "Тарілки, дихання й повітря: темніше, якщо звучить різко, яскравіше, якщо звучить глухо.",
+    "Темніше",
+    "Яскравіше",
+    "Перед вами",
+    "У навушниках кожна сторона потрапляє лише в одне вухо. Трохи кожної в іншому вусі ставить музику перед вами, як із колонок.",
+    "Вимк.",
+    "Легкий",
+    "Сильний",
+    "Ширина",
+    "Наскільки далеко одна від одної звучать дві сторони: вужче, якщо колонки стоять далеко одна від одної, ширше, якщо близько.",
+    "Вужче",
+    "Ширше",
+    "Тихо й гучно",
+    "Тихі місця ближче до гучних: допомагає при шумі навколо (авто, вулиця), не потрібно в тихій кімнаті.",
+    "Трохи рівніше",
+    "Рівно",
+    "До і після",
+    "Усі ваші варіанти разом проти звуку, який був. Збережіть, щоб залишити їх; усе лишається в налаштуваннях звуку Rockbox.",
+    "До",
+    "Після",
+    "Від однієї пісні до наступної",
+    "Дві різні пісні: кінець однієї й початок іншої.",
+    "Один за одним",
+    "Автоматичний перехід",
+    "Кросфейд, 4 с",
+    "Кросфейд, 8 с",
+    "Тиша в кінці",
+    "Пісня з довгою тишею в кінці: пропущена або зіграна як записано.",
+    "Прибрати тишу",
+    "Залишити",
+    "Альбоми",
+    "Дві пісні поспіль з одного альбому, по порядку.",
+    "Альбом без пауз",
+    "Змішувати як решту",
+    "Гучні й тихі пісні",
+    "Гучна пісня й тиха, одна за одною: як у файлах або зведені до одного рівня їхніми тегами ReplayGain.",
+    "Як у файлах",
+    "Вирівняно",
+    "Усередині альбому",
+    "Тиха й гучна пісня одного альбому: альбом як записаний або кожна пісня на одному рівні.",
+    "Альбом як записаний",
+    "Усі пісні однаково",
+    "Загальний рівень",
+    "Наскільки гучно звучить усе після вирівнювання.",
+    "Стандартний",
+    "Трохи гучніше",
+    "Гучніше",
+    "Ці файли не мають тегів ReplayGain: Rockbox може вирівняти лише пісні, які їх мають.",
+    "Зараз: %s",
+};
+static const char *const guide_zh_cn[G_COUNT_] = {
+    "凭耳朵微调",
+    "逐步调整声音",
+    "凭耳朵调整歌曲过渡",
+    "凭耳朵统一音量",
+    "下一步",
+    "保存",
+    "换一首歌",
+    "这一步是什么？",
+    "已保存",
+    "音乐库中没有可用的歌曲",
+    "正在寻找歌曲…",
+    "用什么听？",
+    "音乐现在从哪里播放出来，决定了有哪些步骤以及每一步推荐什么。",
+    "头戴式耳机",
+    "入耳式耳机",
+    "便携音箱",
+    "汽车",
+    "家用音响",
+    "左和右",
+    "一个柔和的声音依次在左、中、右响起。中间那个应该正好在正中；如果不是，请调整平衡。只用一只耳机或单个音箱时，两侧合为一更好。",
+    "立体声",
+    "两侧合为一",
+    "平衡",
+    "能下潜多低？",
+    "低音一个接一个播放。听不到时告诉我们：再往下播放器就放不出低音了，下一步会推荐有帮助的选项。",
+    "单音",
+    "贝斯线",
+    "听得到",
+    "听不到",
+    "现在听不到了",
+    "全都听得到",
+    "再来一次",
+    "大约能低到 %d Hz",
+    "几乎放不出深沉的低音",
+    "低音",
+    "同一段音乐，低音多一些或少一些。选听起来饱满又不轰鸣的那个。",
+    "保持原样",
+    "多一点",
+    "更多",
+    "泛音，轻度",
+    "泛音",
+    "高音",
+    "镲片、气息和空气感：刺耳就调暗一些，发闷就调亮一些。",
+    "更暗",
+    "更亮",
+    "在你面前",
+    "用耳机时，每一侧的声音只进入一只耳朵。把每侧少量送入另一只耳朵，音乐就像从音箱发出一样来到你面前。",
+    "关闭",
+    "轻度",
+    "强",
+    "宽度",
+    "两侧听起来相隔多远：音箱离得远就窄一些，离得近就宽一些。",
+    "更窄",
+    "更宽",
+    "轻与响",
+    "把轻的部分拉近响的部分：周围嘈杂时（车里、街上）有帮助，安静的房间里不需要。",
+    "稍微均衡",
+    "均衡",
+    "前后对比",
+    "你所有的选择合在一起，与原来的声音对比。保存即可保留；所有内容都留在 Rockbox 的声音设置中。",
+    "之前",
+    "之后",
+    "从一首歌到下一首",
+    "两首不同的歌，一首的结尾和另一首的开头。",
+    "一首接一首",
+    "自动混合",
+    "交叉淡化，4 s",
+    "交叉淡化，8 s",
+    "结尾的静音",
+    "结尾有长静音的歌：跳过，或按录音原样播放。",
+    "去掉静音",
+    "保留",
+    "专辑",
+    "同一专辑中相邻的两首歌，按顺序播放。",
+    "专辑无缝播放",
+    "和其他一样混合",
+    "响亮和安静的歌",
+    "一首响亮的歌和一首安静的歌，依次播放：保持文件原样，或按 ReplayGain 标签调到同一电平。",
+    "保持文件原样",
+    "统一",
+    "专辑之内",
+    "同一专辑中一首安静、一首响亮的歌：专辑按录音原样，或每首歌都在同一电平。",
+    "专辑按录音原样",
+    "每首歌都一样",
+    "整体电平",
+    "统一之后所有内容播放的响度。",
+    "标准",
+    "稍响一点",
+    "更响",
+    "这些文件没有 ReplayGain 标签：Rockbox 只能统一有标签的歌曲。",
+    "当前：%s",
+};
+static const char *const guide_zh_tw[G_COUNT_] = {
+    "用耳朵微調",
+    "逐步調整聲音",
+    "用耳朵調整歌曲轉場",
+    "用耳朵統一音量",
+    "下一步",
+    "儲存",
+    "換一首歌",
+    "這一步是什麼？",
+    "已儲存",
+    "音樂庫中沒有可用的歌曲",
+    "正在尋找歌曲…",
+    "用什麼聽？",
+    "音樂現在從哪裡播出來，決定了有哪些步驟以及每一步建議什麼。",
+    "耳罩式耳機",
+    "入耳式耳機",
+    "可攜式喇叭",
+    "汽車",
+    "家用音響",
+    "左和右",
+    "一個柔和的聲音依序在左、中、右響起。中間那個應該剛好在正中央；如果不是，請調整平衡。只用一耳耳機或單一喇叭時，兩側合而為一比較好。",
+    "立體聲",
+    "兩側合而為一",
+    "平衡",
+    "能下潛多低？",
+    "低音一個接一個播放。聽不到時告訴我們：再往下播放器就放不出低音了，下一步會建議有幫助的選項。",
+    "單音",
+    "貝斯線",
+    "聽得到",
+    "聽不到",
+    "現在聽不到了",
+    "全都聽得到",
+    "再一次",
+    "大約能低到 %d Hz",
+    "幾乎放不出深沉的低音",
+    "低音",
+    "同一段音樂，低音多一些或少一些。選聽起來飽滿又不轟隆的那個。",
+    "維持原樣",
+    "多一點",
+    "更多",
+    "泛音，輕度",
+    "泛音",
+    "高音",
+    "鈸、氣息和空氣感：刺耳就調暗一點，悶就調亮一點。",
+    "更暗",
+    "更亮",
+    "在你面前",
+    "用耳機時，每一側的聲音只進入一隻耳朵。把每側少量送進另一隻耳朵，音樂就像從喇叭發出一樣來到你面前。",
+    "關閉",
+    "輕度",
+    "強",
+    "寬度",
+    "兩側聽起來相隔多遠：喇叭離得遠就窄一點，離得近就寬一點。",
+    "更窄",
+    "更寬",
+    "小聲與大聲",
+    "把小聲的部分拉近大聲的部分：周圍吵雜時（車上、街上）有幫助，安靜的房間裡不需要。",
+    "稍微均衡",
+    "均衡",
+    "前後對比",
+    "你所有的選擇合在一起，和原本的聲音對比。儲存即可保留；所有內容都留在 Rockbox 的聲音設定中。",
+    "之前",
+    "之後",
+    "從一首歌到下一首",
+    "兩首不同的歌，一首的結尾和另一首的開頭。",
+    "一首接一首",
+    "自動混合",
+    "交叉淡化，4 s",
+    "交叉淡化，8 s",
+    "結尾的靜音",
+    "結尾有長靜音的歌：略過，或照錄音原樣播放。",
+    "省去靜音",
+    "保留",
+    "專輯",
+    "同一張專輯中相鄰的兩首歌，依序播放。",
+    "專輯無縫播放",
+    "和其他一樣混合",
+    "大聲和小聲的歌",
+    "一首大聲的歌和一首小聲的歌，依序播放：維持檔案原樣，或依 ReplayGain 標籤調到同一電平。",
+    "維持檔案原樣",
+    "統一",
+    "專輯之內",
+    "同一張專輯中一首小聲、一首大聲的歌：專輯照錄音原樣，或每首歌都在同一電平。",
+    "專輯照錄音原樣",
+    "每首歌都一樣",
+    "整體電平",
+    "統一之後所有內容播放的音量。",
+    "標準",
+    "稍微大聲一點",
+    "更大聲",
+    "這些檔案沒有 ReplayGain 標籤：Rockbox 只能統一有標籤的歌曲。",
+    "目前：%s",
+};
+static const struct { const char *lang; const char *const *texts; } guide_more[] = {
+    { "catala", guide_ca },
+    { "deutsch", guide_de },
+    { "greek", guide_el },
+    { "espanol", guide_es },
+    { "basque", guide_eu },
+    { "francais", guide_fr },
+    { "galego", guide_gl },
+    { "italiano", guide_it },
+    { "japanese", guide_ja },
+    { "korean", guide_ko },
+    { "nederlands", guide_nl },
+    { "polski", guide_pl },
+    { "portugues-brasileiro", guide_pt_br },
+    { "portugues", guide_pt },
+    { "romaneste", guide_ro },
+    { "russian", guide_ru },
+    { "svenska", guide_sv },
+    { "turkce", guide_tr },
+    { "ukrainian", guide_uk },
+    { "chinese-simp", guide_zh_cn },
+    { "chinese-trad", guide_zh_tw },
+    { NULL, NULL }
+};
+/* END generated guide texts */
+
+static const char *const *gtexts = guide_en;
+#define G(id) (gtexts[id] ? gtexts[id] : guide_en[id])
+
+static void guide_texts_for(const char *lang)
+{
+    char name[48];
+    const char *slash = rb->strrchr(lang, '/');
+    rb->strlcpy(name, slash ? slash + 1 : lang, sizeof(name));
+    char *dot = rb->strrchr(name, '.');
+    if (dot)
+        *dot = '\0';
+    for (char *c = name; *c; c++)
+        if (*c >= 'A' && *c <= 'Z')
+            *c += 'a' - 'A';
+    gtexts = guide_en;
+    if (!rb->strncmp(name, "espa", 4))
+        rb->strlcpy(name, "espanol", sizeof(name));
+    for (int i = 0; guide_more[i].lang; i++)
+        if (!rb->strcmp(name, guide_more[i].lang))
+            gtexts = guide_more[i].texts;
+}
+
+/* ---- Sounds the plugin makes itself (left, centre, right; tones; a bass line) ---- */
+
+enum { TG_OFF, TG_SIDES, TG_TONE, TG_LINE };
+#define TG_FRAMES 512
+static int16_t tg_buf[2][TG_FRAMES * 2];
+static int tg_which;
+static int16_t tg_sine[1024];
+static volatile int tg_mode;
+static volatile int tg_hz100;          /* the tone (Hz × 100) */
+static volatile int tg_mono, tg_balance; /* for left and right: both as one; −30 … 30 */
+static volatile uint32_t tg_pos;       /* frames since the sound started */
+static uint32_t tg_rate, tg_phase, tg_noise = 12345;
+static int32_t tg_lp, tg_hp;
+
+/* The notes of the bass line (Hz × 100), from E3 down to C1. */
+static const int tg_notes[] = { 16481, 13081, 11000, 8731, 7342, 6174, 4900, 4120, 3270 };
+#define TG_NOTES ((int)(sizeof(tg_notes) / sizeof(tg_notes[0])))
+/* The deep tones, one at a time, from the highest down (Hz). */
+static const int tg_tones[] = { 150, 120, 100, 80, 60, 50, 40, 30 };
+#define TG_TONES ((int)(sizeof(tg_tones) / sizeof(tg_tones[0])))
+
+static void tg_init(void)
+{
+    /* One turn of a sine, by rotation (no maths library here). */
+    double c = 1.0, s = 0.0, a = 2 * 3.14159265358979 / 1024;
+    double ca = 1 - a * a / 2 + a * a * a * a / 24, sa = a - a * a * a / 6 + a * a * a * a * a / 120;
+    for (int i = 0; i < 1024; i++) {
+        tg_sine[i] = (int16_t)(s * 32767);
+        double nc = c * ca - s * sa;
+        s = s * ca + c * sa;
+        c = nc;
+    }
+}
+
+/* 0 … 256 over [0, len): a ramp up over `fade` frames at both ends. */
+static int tg_ramp(uint32_t i, uint32_t len, uint32_t fade)
+{
+    if (i >= len)
+        return 0;
+    uint32_t e = i < len - i ? i : len - 1 - i;
+    return e >= fade ? 256 : (int)(e * 256 / fade);
+}
+
+static void tg_fill(int16_t *out)
+{
+    uint32_t r = tg_rate;
+    for (int f = 0; f < TG_FRAMES; f++) {
+        int32_t l = 0, rr = 0;
+        uint32_t p = tg_pos++;
+        switch (tg_mode) {
+        case TG_SIDES: {
+            uint32_t part = r * 12 / 10, sound = r * 8 / 10, k = p % (part * 3);
+            int which = k / part;
+            int env = tg_ramp(k % part, sound, r / 30);
+            tg_noise = tg_noise * 1664525u + 1013904223u;
+            int32_t w = (int32_t)(tg_noise >> 16) - 32768;
+            tg_lp += (w - tg_lp) >> 2;          /* soft: the top cut */
+            tg_hp += (tg_lp - tg_hp) >> 7;      /* and the deep end */
+            int32_t v = ((tg_lp - tg_hp) * env >> 8) / 3;
+            int32_t gl = which == 0 ? 256 : which == 1 ? 181 : 0;
+            int32_t gr = which == 2 ? 256 : which == 1 ? 181 : 0;
+            l = v * gl >> 8;
+            rr = v * gr >> 8;
+            break;
+        }
+        case TG_TONE: {
+            uint32_t len = r * 21 / 10, sound = r * 16 / 10;
+            int env = tg_ramp(p % len, sound, r / 12);
+            tg_phase += (uint32_t)(((uint64_t)tg_hz100 << 32) / (100ull * r));
+            l = rr = (int32_t)tg_sine[tg_phase >> 22] * env >> 10;   /* −12 dB */
+            break;
+        }
+        case TG_LINE: {
+            uint32_t note = r * 13 / 10, k = p % (note * TG_NOTES), i = k % note;
+            int n = k / note;
+            uint32_t sound = note * 85 / 100;
+            /* Plucked: a quick start, then down to a third over the note. */
+            int env = i < r / 200 ? (int)(i * 256 / (r / 200)) : 256 - (int)((uint64_t)i * 170 / sound);
+            if (env < 0 || i >= sound)
+                env = 0;
+            env = env * tg_ramp(i, sound, r / 20) >> 8;
+            tg_phase += (uint32_t)(((uint64_t)tg_notes[n] << 32) / (100ull * r));
+            l = rr = (int32_t)tg_sine[tg_phase >> 22] * env * 5 / 4 >> 10;
+            break;
+        }
+        default:
+            break;
+        }
+        if (tg_mono) {
+            l = rr = (l + rr) / 2;
+        }
+        if (tg_balance > 0)
+            l = l * (100 - tg_balance) / 100;
+        else if (tg_balance < 0)
+            rr = rr * (100 + tg_balance) / 100;
+        out[f * 2] = (int16_t)l;
+        out[f * 2 + 1] = (int16_t)rr;
+    }
+}
+
+static void tg_more(const void **start, size_t *size)
+{
+    tg_which ^= 1;
+    tg_fill(tg_buf[tg_which]);
+    *start = tg_buf[tg_which];
+    *size = sizeof(tg_buf[0]);
+}
+
+static const struct mixer_play_cbs tg_cbs = { tg_more, NULL };
+
+static void tg_start(int mode, int hz)
+{
+    if (tg_mode == TG_OFF) {
+        rb->audio_stop();
+        tg_rate = rb->mixer_get_frequency();
+    }
+    tg_hz100 = hz * 100;
+    tg_pos = 0;
+    tg_phase = 0;
+    if (tg_mode != TG_OFF) {
+        tg_mode = mode;
+        return;
+    }
+    tg_mode = mode;
+    tg_which = 0;
+    tg_fill(tg_buf[0]);
+    rb->mixer_channel_play_data(PCM_MIXER_CHAN_PLAYBACK, &tg_cbs, tg_buf[0], sizeof(tg_buf[0]));
+}
+
+static void tg_stop(void)
+{
+    if (tg_mode == TG_OFF)
+        return;
+    rb->mixer_channel_stop(PCM_MIXER_CHAN_PLAYBACK);
+    tg_mode = TG_OFF;
+}
+
+/* ---- The list playing before, kept and put back ---- */
+
+#define KEPT_LIST PLAYLIST_DIR "/attacca-guide-kept.m3u8"
+static int kept_index = -1;
+static unsigned long kept_elapsed, kept_offset;
+static bool kept_playing;
+
+static void keep_list(void)
+{
+    kept_index = -1;
+    int total = rb->playlist_amount();
+    struct mp3entry *id3 = rb->audio_current_track();
+    if (total <= 0)
+        return;
+    if (!rb->dir_exists(PLAYLIST_DIR))
+        rb->mkdir(PLAYLIST_DIR);
+    int fd = rb->open(KEPT_LIST, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (fd < 0)
+        return;
+    struct playlist_track_info info;
+    for (int i = 0; i < total; i++)
+        if (rb->playlist_get_track_info(NULL, i, &info) >= 0)
+            rb->fdprintf(fd, "%s\n", info.filename);
+    rb->close(fd);
+    kept_index = rb->playlist_get_current()->index;
+    kept_elapsed = id3 ? id3->elapsed : 0;
+    kept_offset = id3 ? id3->offset : 0;
+    kept_playing = (rb->audio_status() & AUDIO_STATUS_PLAY) && !(rb->audio_status() & AUDIO_STATUS_PAUSE);
+}
+
+static void give_list_back(void)
+{
+    tg_stop();
+    rb->audio_stop();
+    if (kept_index >= 0 && rb->playlist_create(PLAYLIST_DIR, "attacca-guide-kept.m3u8") == 0) {
+        rb->playlist_start(kept_index, kept_elapsed, kept_offset);
+        if (!kept_playing)
+            rb->audio_pause();
+    }
+    kept_index = -1;
+}
+
+/* ---- Songs of the library ---- */
+
+static void rec_path(const struct record *r, char *buf, size_t len)
+{
+    char rel[MAX_PATH];
+    rb->snprintf(buf, len, "%s/%s", base, get_str(r->path, rel, sizeof(rel)));
+}
+
+static void rec_folder(const struct record *r, char *buf, size_t len)
+{
+    get_str(r->path, buf, len);
+    char *slash = rb->strrchr(buf, '/');
+    if (slash)
+        *slash = '\0';
+    else
+        buf[0] = '\0';
+}
+
+/** Plays the songs `recs` (one or two) from `from_ms` into the first; true when it started. */
+static bool play_songs(const int *recs, int n, unsigned long from_ms)
+{
+    char path[MAX_PATH];
+    struct record r;
+    tg_stop();
+    rb->audio_stop();
+    if (rb->playlist_create(NULL, NULL) != 0)
+        return false;
+    for (int i = 0; i < n; i++) {
+        if (!read_record(recs[i], &r))
+            return false;
+        rec_path(&r, path, sizeof(path));
+        rb->playlist_insert_track(NULL, path, PLAYLIST_INSERT_LAST, false, true);
+    }
+    rb->playlist_start(0, from_ms, 0);
+    return true;
+}
+
+/** A song for the sound guide: lively (energy in the upper half), a minute and a half long at least. */
+static int lively_song(void)
+{
+    struct record r;
+    for (int tries = 0; tries < 400; tries++) {
+        int rec = rb->rand() % H.n;
+        if (read_record(rec, &r) && r.duration >= 90 && r.energy >= 5000)
+            return rec;
+    }
+    return H.n ? (int)(rb->rand() % H.n) : -1;
+}
+
+/* ---- The guides' lists: the choices, A, B, C… (the one heard marked), then Next ---- */
+
+static int g_count, g_chosen, g_extra;
+static bool g_last;   /* the last step: Save instead of Next */
+static const char *g_labels[8];
+static const char *g_extra_label[3];
+
+static const char *g_name(int i, void *data, char *buf, size_t len)
+{
+    (void)data;
+    if (i == 0)
+        return G(G_ABOUT);
+    i--;
+    if (i < g_count) {
+        rb->snprintf(buf, len, "%s %c  %s", i == g_chosen ? "*" : " ", 'A' + i, g_labels[i]);
+        return buf;
+    }
+    i -= g_count;
+    if (i < g_extra)
+        return g_extra_label[i];
+    return G(g_last ? G_SAVE : G_NEXT);
+}
+
+/* Called while the list is shown (every tenth of a second when nothing is pressed). */
+static void (*g_tick)(void);
+static int g_action(int action, struct gui_synclist *lists)
+{
+    (void)lists;
+    if (action == ACTION_NONE && g_tick)
+        g_tick();
+    return action;
+}
+
+/**
+ * One step: its choices (`count` of `labels`, `*chosen` heard), `extra` more items, then Next.
+ * Returns the item picked: 0 … count−1 a choice, count … count+extra−1 an extra one, count+extra
+ * Next, −1 back. The step's explanation is the first item (and shown once on entering).
+ */
+static int g_step(const char *title, const char *intro, const char **labels, int count, int chosen,
+                  const char **extra, int extra_n, bool *shown)
+{
+    struct simplelist_info info;
+    if (shown && !*shown) {
+        rb->splash(HZ * 4, intro);
+        *shown = true;
+    }
+    g_count = count;
+    g_chosen = chosen;
+    g_extra = extra_n;
+    for (int i = 0; i < count && i < 8; i++)
+        g_labels[i] = labels[i];
+    for (int i = 0; i < extra_n && i < 3; i++)
+        g_extra_label[i] = extra[i];
+    for (;;) {
+        rb->simplelist_info_init(&info, (char *)title, 1 + count + extra_n + 1, NULL);
+        info.get_name = g_name;
+        info.action_callback = g_action;
+        info.timeout = HZ / 10;
+        info.selection = 1 + (chosen >= 0 ? chosen : 0);
+        rb->simplelist_show_list(&info);
+        if (info.selection < 0)
+            return -1;
+        if (info.selection == 0) {
+            rb->splash(HZ * 5, intro);
+            continue;
+        }
+        return info.selection - 1;
+    }
+}
+
+/* ---- Rockbox's sound settings: kept, changed, put back ---- */
+
+struct sound_set {
+    int balance, bass, treble, channel_config, stereo_width;
+    int crossfeed, cf_direct, cf_cross, cf_hf_att, cf_hf_cut;
+    struct compressor_settings comp;
+    int pbe, pbe_precut;
+    struct replaygain_settings rg;
+};
+
+static void sound_read(struct sound_set *s)
+{
+    const struct user_settings *g = rb->global_settings;
+    s->balance = g->balance; s->bass = g->bass; s->treble = g->treble;
+    s->channel_config = g->channel_config; s->stereo_width = g->stereo_width;
+    s->crossfeed = g->crossfeed; s->cf_direct = g->crossfeed_direct_gain; s->cf_cross = g->crossfeed_cross_gain;
+    s->cf_hf_att = g->crossfeed_hf_attenuation; s->cf_hf_cut = g->crossfeed_hf_cutoff;
+    s->comp = g->compressor_settings;
+    s->pbe = g->pbe; s->pbe_precut = g->pbe_precut;
+    s->rg = g->replaygain_settings;
+}
+
+static void sound_write(const struct sound_set *s)
+{
+    struct user_settings *g = rb->global_settings;
+    g->balance = s->balance; g->bass = s->bass; g->treble = s->treble;
+    g->channel_config = s->channel_config; g->stereo_width = s->stereo_width;
+    g->crossfeed = s->crossfeed; g->crossfeed_direct_gain = s->cf_direct; g->crossfeed_cross_gain = s->cf_cross;
+    g->crossfeed_hf_attenuation = s->cf_hf_att; g->crossfeed_hf_cutoff = s->cf_hf_cut;
+    g->compressor_settings = s->comp;
+    g->pbe = s->pbe; g->pbe_precut = s->pbe_precut;
+    g->replaygain_settings = s->rg;
+    /* Only sound: the crossfade stays as it is, so the sound buffer is not set up again. */
+    rb->settings_apply(false);
+}
+
+/* ---- The sound guide ---- */
+
+enum { SD_HEADPHONES, SD_EARBUDS, SD_SPEAKER, SD_CAR, SD_HOME };
+enum { SS_DEVICE, SS_SIDES, SS_REACH, SS_BASS, SS_TREBLE, SS_CROSSFEED, SS_WIDTH, SS_LEVELS, SS_COMPARE, SS_COUNT };
+
+static struct {
+    int device, mono, balance, reach, bass, treble, crossfeed, width, levels;
+} sg;
+
+static bool sg_on_head(void) { return sg.device == SD_HEADPHONES || sg.device == SD_EARBUDS; }
+
+static int sg_reach_default(void)
+{
+    switch (sg.device) {
+    case SD_EARBUDS: return 50;
+    case SD_SPEAKER: return 80;
+    default: return 40;
+    }
+}
+
+/* 0: plays deep bass; 1: some; 2: little. */
+static int sg_bass_kind(void)
+{
+    int r = sg.reach ? sg.reach : sg_reach_default();
+    return r <= 50 ? 0 : r <= 80 ? 1 : 2;
+}
+
+static void sg_defaults(int device)
+{
+    rb->memset(&sg, 0, sizeof(sg));
+    sg.device = device;
+    sg.treble = 1;
+    sg.width = 1;
+    sg.bass = -1;
+    sg.crossfeed = device == SD_HEADPHONES ? 2 : 1;
+    sg.levels = device == SD_CAR || device == SD_SPEAKER ? 1 : 0;
+}
+
+static int sg_bass_suggested(void)
+{
+    switch (sg_bass_kind()) {
+    case 0: return sg.device == SD_CAR || sg.device == SD_EARBUDS ? 1 : 0;
+    case 1: return 1;
+    default: return 2;
+    }
+}
+
+/** The sound with the choices up to `upto` over `before` (later steps as before). */
+static void sg_settings(const struct sound_set *before, int upto, struct sound_set *s)
+{
+    *s = *before;
+    if (upto >= SS_SIDES && !(sg.device == SD_SPEAKER && 0)) {
+        s->channel_config = sg.mono ? SOUND_CHAN_MONO : SOUND_CHAN_STEREO;
+        s->balance = sg.balance;
+    }
+    if (upto >= SS_BASS) {
+        int b = sg.bass >= 0 ? sg.bass : sg_bass_suggested();
+        int kind = sg_bass_kind();
+        s->bass = 0;
+        s->pbe = 0;
+        if (kind == 0) s->bass = b == 1 ? 3 : b == 2 ? 6 : 0;
+        else if (kind == 1) { if (b == 1) s->bass = 3; else if (b == 2) s->pbe = 60; }
+        else s->pbe = b == 1 ? 40 : b == 2 ? 80 : 0;
+    }
+    if (upto >= SS_TREBLE)
+        s->treble = sg.treble == 0 ? -3 : sg.treble == 2 ? 3 : 0;
+    if (upto >= SS_CROSSFEED && sg_on_head()) {
+        s->crossfeed = sg.crossfeed == 0 ? CROSSFEED_TYPE_NONE : sg.crossfeed == 1 ? CROSSFEED_TYPE_MEIER : CROSSFEED_TYPE_CUSTOM;
+        if (sg.crossfeed == 2) {
+            s->cf_direct = -15;
+            s->cf_cross = -45;
+            s->cf_hf_att = -90;
+            s->cf_hf_cut = 700;
+        }
+    }
+    if (upto >= SS_WIDTH && !sg_on_head() && !sg.mono) {
+        s->channel_config = sg.width == 1 ? SOUND_CHAN_STEREO : SOUND_CHAN_CUSTOM;
+        s->stereo_width = sg.width == 0 ? 75 : sg.width == 2 ? 135 : 100;
+    }
+    if (upto >= SS_LEVELS) {
+        s->comp.threshold = sg.levels == 1 ? -20 : sg.levels == 2 ? -24 : 0;
+        s->comp.ratio = sg.levels == 2 ? 1 : 0;
+        s->comp.makeup_gain = 1;
+        s->comp.knee = 1;
+        s->comp.attack_time = 5;
+        s->comp.release_time = 300;
+    }
+}
+
+static bool sg_has(int step)
+{
+    if (step == SS_CROSSFEED) return sg_on_head();
+    if (step == SS_WIDTH) return !sg_on_head();
+    return true;
+}
+
+/* The reach test: which tone plays, or the bass line. */
+static int sg_tone, sg_line_note;
+static void sg_line_tick(void)
+{
+    uint32_t note = tg_rate * 13 / 10;
+    sg_line_note = note ? (int)((tg_pos / note) % TG_NOTES) : 0;
+}
+
+static int sg_reach_step(bool *shown)
+{
+    bool line = false;
+    for (;;) {
+        char title[64];
+        const char *labels[2];
+        const char *extra[1];
+        int n;
+        g_tick = NULL;
+        if (sg.reach && sg_tone < 0) {
+            /* Done: what was found, and again. */
+            if (sg.reach >= 180)
+                rb->strlcpy(title, G(G_REACH_NONE), sizeof(title));
+            else
+                rb->snprintf(title, sizeof(title), G(G_REACH_FMT), sg.reach);
+            tg_stop();
+            labels[0] = G(G_AGAIN);
+            n = 1;
+            int k = g_step(title, G(G_REACH_INTRO), labels, n, -1, NULL, 0, shown);
+            if (k < 0) return -1;
+            if (k == n) return 1;
+            sg.reach = 0;
+            sg_tone = 0;
+            continue;
+        }
+        if (!line) {
+            if (sg_tone < 0) sg_tone = 0;
+            tg_start(TG_TONE, tg_tones[sg_tone]);
+            rb->snprintf(title, sizeof(title), "%s · %d Hz", G(G_REACH), tg_tones[sg_tone]);
+            labels[0] = G(G_HEAR);
+            labels[1] = G(G_NOT_HEAR);
+            extra[0] = G(G_LINE);
+            int k = g_step(title, G(G_REACH_INTRO), labels, 2, -1, extra, 1, shown);
+            if (k < 0) return -1;
+            if (k == 0) {
+                sg.reach = tg_tones[sg_tone];
+                if (++sg_tone >= TG_TONES) sg_tone = -1;
+            } else if (k == 1) {
+                if (sg_tone == 0) sg.reach = 180;
+                sg_tone = -1;
+            } else if (k == 2) {
+                line = true;
+            } else {
+                return 1;
+            }
+            sg.bass = -1;
+        } else {
+            tg_start(TG_LINE, 0);
+            g_tick = sg_line_tick;
+            rb->snprintf(title, sizeof(title), "%s", G(G_LINE));
+            labels[0] = G(G_STOPPED);
+            labels[1] = G(G_HEAR_ALL);
+            extra[0] = G(G_TONES);
+            int k = g_step(title, G(G_REACH_INTRO), labels, 2, -1, extra, 1, shown);
+            g_tick = NULL;
+            if (k < 0) return -1;
+            if (k == 0) {
+                sg.reach = sg_line_note == 0 ? 180 : (tg_notes[sg_line_note - 1] + 50) / 100;
+                sg_tone = -1;
+            } else if (k == 1) {
+                sg.reach = (tg_notes[TG_NOTES - 1] + 50) / 100;
+                sg_tone = -1;
+            } else if (k == 2) {
+                line = false;
+            } else {
+                return 1;
+            }
+            sg.bass = -1;
+        }
+    }
+}
+
+static void sound_guide(void)
+{
+    if (H.n == 0) {
+        rb->splash(HZ * 2, G(G_NO_SONGS));
+        return;
+    }
+    struct sound_set before, now;
+    sound_read(&before);
+    keep_list();
+    tg_init();
+    sg_defaults(SD_HEADPHONES);
+    int step = SS_DEVICE, song = -1;
+    bool shown[SS_COUNT];
+    rb->memset(shown, 0, sizeof(shown));
+    int compare = 1;
+    bool saved = false;
+    while (step >= 0 && step < SS_COUNT) {
+        if (!sg_has(step)) {
+            step++;
+            continue;
+        }
+        tg_mono = sg.mono;
+        tg_balance = sg.balance;
+        int res = 1;
+        if (step == SS_SIDES) {
+            tg_start(TG_SIDES, 0);
+            sound_write(&before);
+            const char *labels[2] = { G(G_STEREO), G(G_MONO) };
+            char bal[48];
+            rb->snprintf(bal, sizeof(bal), "%s: %d", G(G_BALANCE), sg.balance);
+            const char *extra[1] = { bal };
+            int k = g_step(G(G_SIDES), G(G_SIDES_INTRO), labels, 2, sg.mono, extra, 1, &shown[step]);
+            if (k < 0) res = -1;
+            else if (k < 2) { sg.mono = k; tg_mono = k; res = 0; }
+            else if (k == 2) {
+                rb->set_int(G(G_BALANCE), "", UNIT_INT, &sg.balance, NULL, 2, -30, 30, NULL);
+                tg_balance = sg.balance;
+                res = 0;
+            }
+        } else if (step == SS_REACH) {
+            if (sg.reach == 0) sg_tone = 0;
+            res = sg_reach_step(&shown[step]);
+            tg_stop();
+        } else {
+            /* A choice heard on a song. */
+            if (tg_mode != TG_OFF || !(rb->audio_status() & AUDIO_STATUS_PLAY)) {
+                if (song < 0) song = lively_song();
+                struct record r;
+                if (song >= 0 && read_record(song, &r))
+                    play_songs(&song, 1, (unsigned long)r.duration * 350);
+            }
+            const char *labels[6];
+            int n = 0, chosen = 0, *target = NULL;
+            const char *title = "", *intro = "";
+            switch (step) {
+            case SS_DEVICE:
+                title = G(G_DEVICE); intro = G(G_DEVICE_INTRO);
+                labels[n++] = G(G_HEADPHONES); labels[n++] = G(G_EARBUDS); labels[n++] = G(G_SPEAKER);
+                labels[n++] = G(G_CAR); labels[n++] = G(G_HOME);
+                chosen = sg.device;
+                break;
+            case SS_BASS: {
+                title = G(G_BASS); intro = G(G_BASS_INTRO);
+                int kind = sg_bass_kind();
+                labels[n++] = G(G_SAME);
+                labels[n++] = kind == 2 ? G(G_HARMONICS_LIGHT) : G(G_BASS_LITTLE);
+                labels[n++] = kind == 0 ? G(G_BASS_MORE) : G(G_HARMONICS);
+                if (sg.bass < 0) sg.bass = sg_bass_suggested();
+                target = &sg.bass;
+                break;
+            }
+            case SS_TREBLE:
+                title = G(G_TREBLE); intro = G(G_TREBLE_INTRO);
+                labels[n++] = G(G_DARKER); labels[n++] = G(G_SAME); labels[n++] = G(G_BRIGHTER);
+                target = &sg.treble;
+                break;
+            case SS_CROSSFEED:
+                title = G(G_CROSSFEED); intro = G(G_CROSSFEED_INTRO);
+                labels[n++] = G(G_XF_OFF); labels[n++] = G(G_XF_LIGHT); labels[n++] = G(G_XF_STRONG);
+                target = &sg.crossfeed;
+                break;
+            case SS_WIDTH:
+                title = G(G_WIDTH); intro = G(G_WIDTH_INTRO);
+                labels[n++] = G(G_NARROWER); labels[n++] = G(G_SAME); labels[n++] = G(G_WIDER);
+                target = &sg.width;
+                break;
+            case SS_LEVELS:
+                title = G(G_LEVELS); intro = G(G_LEVELS_INTRO);
+                labels[n++] = G(G_SAME); labels[n++] = G(G_LEVELS_GENTLE); labels[n++] = G(G_LEVELS_EVEN);
+                target = &sg.levels;
+                break;
+            case SS_COMPARE:
+                title = G(G_COMPARE); intro = G(G_COMPARE_INTRO);
+                labels[n++] = G(G_BEFORE); labels[n++] = G(G_AFTER);
+                target = &compare;
+                break;
+            }
+            if (target)
+                chosen = *target;
+            if (step == SS_COMPARE) {
+                if (compare == 0) sound_write(&before);
+                else { sg_settings(&before, SS_LEVELS, &now); sound_write(&now); }
+            } else if (step == SS_DEVICE) {
+                sound_write(&before);
+            } else {
+                sg_settings(&before, step, &now);
+                sound_write(&now);
+            }
+            const char *extra[1] = { G(G_ANOTHER) };
+            g_last = step == SS_COMPARE;
+            int k = g_step(title, intro, labels, n, chosen, extra, 1, &shown[step]);
+            g_last = false;
+            if (k < 0) {
+                res = -1;
+            } else if (k < n) {
+                if (step == SS_DEVICE) {
+                    if (k != sg.device) sg_defaults(k);
+                } else {
+                    *target = k;
+                }
+                res = 0;
+            } else if (k == n) {
+                song = lively_song();
+                struct record r;
+                if (song >= 0 && read_record(song, &r))
+                    play_songs(&song, 1, (unsigned long)r.duration * 350);
+                res = 0;
+            } else if (step == SS_COMPARE) {
+                sg_settings(&before, SS_LEVELS, &now);
+                sound_write(&now);
+                saved = true;
+                res = 1;
+            }
+        }
+        if (res < 0) {
+            do step--; while (step > 0 && !sg_has(step));
+        } else if (res > 0) {
+            step++;
+        }
+    }
+    tg_stop();
+    if (!saved)
+        sound_write(&before);
+    else {
+        rb->settings_save();
+        rb->splash(HZ * 2, G(G_SAVED));
+    }
+    give_list_back();
+}
+
+#ifdef XF_RESIDENT
+/* ---- The transitions guide ---- */
+
+enum { PAIR_DIFFERENT, PAIR_SILENCE, PAIR_ALBUM };
+
+/** Two songs for `kind`: a, then b. */
+static bool find_pair(int kind, int *a, int *b)
+{
+    struct record r, s;
+    struct ends e;
+    char fa[MAX_PATH], fb[MAX_PATH];
+    for (int tries = 0; tries < 600; tries++) {
+        int x = rb->rand() % H.n;
+        if (!read_record(x, &r) || r.duration < 60 || !read_ends(x, &e))
+            continue;
+        if (kind == PAIR_SILENCE && e.tail < 150 && tries < 500)
+            continue;
+        rec_folder(&r, fa, sizeof(fa));
+        if (kind == PAIR_ALBUM) {
+            /* The next song of its album: the same album and folder, the next name. */
+            char pa[MAX_PATH], best[MAX_PATH], ps[MAX_PATH];
+            get_str(r.path, pa, sizeof(pa));
+            int found = -1;
+            best[0] = '\0';
+            for (int d = -40; d <= 40; d++) {
+                int y = x + d;
+                if (d == 0 || y < 0 || (uint32_t)y >= H.n || !read_record(y, &s) || s.album != r.album)
+                    continue;
+                rec_folder(&s, fb, sizeof(fb));
+                get_str(s.path, ps, sizeof(ps));
+                if (rb->strcmp(fa, fb) || rb->strcmp(ps, pa) <= 0)
+                    continue;
+                if (found < 0 || rb->strcmp(ps, best) < 0) {
+                    found = y;
+                    rb->strlcpy(best, ps, sizeof(best));
+                }
+            }
+            if (found < 0)
+                continue;
+            *a = x;
+            *b = found;
+            return true;
+        }
+        for (int t = 0; t < 50; t++) {
+            int y = rb->rand() % H.n;
+            if (y == x || !read_record(y, &s) || s.duration < 30)
+                continue;
+            rec_folder(&s, fb, sizeof(fb));
+            if (!rb->strcmp(fa, fb))
+                continue;
+            *a = x;
+            *b = y;
+            return true;
+        }
+    }
+    return false;
+}
+
+/* 0 gapless, 1 automatic, 2 crossfade 4 s, 3 crossfade 8 s; silence 0 left out, 1 kept; album 0 whole, 1 blended. */
+static int jg_blend, jg_silence, jg_album;
+
+/** Plays the join of `a` into `b` as the choices would make it, from a few seconds before. */
+static void join_play(int a, int b, bool album)
+{
+    struct ends ea, eb;
+    struct xf_values v;
+    struct record r;
+    if (!read_record(a, &r) || !read_ends(a, &ea) || !read_ends(b, &eb))
+        return;
+    int len = jg_blend == 1 ? cfg.xf_len : jg_blend == 2 ? 4 : 8;
+    if (jg_blend == 0 || (album && jg_album == 0)) {
+        rb->memset(&v, 0, sizeof(v));
+    } else if (jg_blend == 1) {
+        plan_join(&ea, &eb, false, len, &v);
+        if (jg_silence == 1) {
+            /* Kept: the silence is heard, not hidden in the blend. */
+            int tail = ea.tail / 100;
+            v.out_duration -= tail;
+            if (v.out_duration < 0) v.out_duration = 0;
+        }
+    } else {
+        rb->memset(&v, 0, sizeof(v));
+        v.out_duration = len;
+        v.in_duration = len;
+    }
+    xf_set(&v);
+    /* From eight seconds before the blend starts. */
+    long from = (long)r.duration * 1000 - (v.out_delay + v.out_duration) * 1000L - 8000;
+    int recs[2] = { a, b };
+    play_songs(recs, 2, from > 0 ? (unsigned long)from : 0);
+}
+
+static int jg_a, jg_b, jg_kind = -1;
+static void join_tick(void) { }
+
+static void transitions_guide(void)
+{
+    if (!has_ends()) {
+        rb->splash(HZ * 3, T(S_XF_OLD_DB));
+        return;
+    }
+    keep_list();
+    bool had_xf = cfg.xf_saved;
+    xf_take_over();
+    jg_blend = !cfg.xf_on ? 0 : 1;
+    jg_silence = cfg.xf_jump ? 0 : 1;
+    jg_album = cfg.blend_albums ? 1 : 0;
+    int step = 0;
+    bool shown[3] = { false, false, false };
+    bool saved = false;
+    jg_kind = -1;
+    g_tick = join_tick;
+    while (step >= 0 && step < 3) {
+        /* The silence step only for the automatic blend (Rockbox's own crossfade keeps silences); albums only when blending. */
+        if ((step == 1 && jg_blend != 1) || (step == 2 && jg_blend == 0)) {
+            step++;
+            continue;
+        }
+        int kind = step == 0 ? PAIR_DIFFERENT : step == 1 ? PAIR_SILENCE : PAIR_ALBUM;
+        if (kind != jg_kind) {
+            rb->splash(0, G(G_WAIT));
+            if (!find_pair(kind, &jg_a, &jg_b)) {
+                rb->splash(HZ * 2, G(G_NO_SONGS));
+                break;
+            }
+            jg_kind = kind;
+            join_play(jg_a, jg_b, kind == PAIR_ALBUM);
+        }
+        const char *labels[4];
+        int n = 0, *target;
+        const char *title, *intro;
+        if (step == 0) {
+            title = G(G_BLEND); intro = G(G_BLEND_INTRO);
+            labels[n++] = G(G_GAPLESS); labels[n++] = G(G_AUTOMATIC); labels[n++] = G(G_CROSSFADE_4); labels[n++] = G(G_CROSSFADE_8);
+            target = &jg_blend;
+        } else if (step == 1) {
+            title = G(G_SILENCE); intro = G(G_SILENCE_INTRO);
+            labels[n++] = G(G_SILENCE_TRIM); labels[n++] = G(G_SILENCE_KEEP);
+            target = &jg_silence;
+        } else {
+            title = G(G_ALBUM); intro = G(G_ALBUM_INTRO);
+            labels[n++] = G(G_ALBUM_GAPLESS); labels[n++] = G(G_ALBUM_BLEND);
+            target = &jg_album;
+        }
+        const char *extra[1] = { G(G_ANOTHER) };
+        g_last = step == 2 || jg_blend == 0 || (step == 1 && jg_blend != 1);
+        int k = g_step(title, intro, labels, n, *target, extra, 1, &shown[step]);
+        g_last = false;
+        if (k < 0) {
+            step--;
+            while (step > 0 && ((step == 1 && jg_blend != 1) || (step == 2 && jg_blend == 0)))
+                step--;
+        } else if (k < n) {
+            *target = k;
+            join_play(jg_a, jg_b, kind == PAIR_ALBUM);
+        } else if (k == n) {
+            jg_kind = -1;
+        } else {
+            step++;
+            if (step >= 3 || (step == 2 && jg_blend == 0) ) {
+                /* Past the last step that applies: saved. */
+                int s = step;
+                while (s < 3 && ((s == 1 && jg_blend != 1) || (s == 2 && jg_blend == 0)))
+                    s++;
+                if (s >= 3) {
+                    saved = true;
+                    step = 3;
+                }
+            }
+        }
+    }
+    g_tick = NULL;
+    rb->audio_stop();
+    if (saved) {
+        if (jg_blend == 0) {
+            cfg.xf_on = 0;
+            cfg.xf_user[5] = CROSSFADE_ENABLE_OFF;
+        } else if (jg_blend == 1) {
+            cfg.xf_on = 1;
+            cfg.xf_jump = jg_silence == 0;
+        } else {
+            /* Rockbox's own crossfade, both songs over the length. */
+            int len = jg_blend == 2 ? 4 : 8;
+            cfg.xf_on = 0;
+            cfg.xf_user[0] = 0; cfg.xf_user[1] = len; cfg.xf_user[2] = 0; cfg.xf_user[3] = len;
+            cfg.xf_user[4] = 0; cfg.xf_user[5] = CROSSFADE_ENABLE_ALWAYS;
+        }
+        cfg.blend_albums = jg_album == 1;
+        configfile_save(CFG_FILE, config, N_CONFIG, CFG_VERSION);
+        rb->splash(HZ * 2, G(G_SAVED));
+    }
+    if (!xf_wanted() || !had_xf)
+        xf_give_back();
+    give_list_back();
+}
+
+#endif /* XF_RESIDENT */
+
+/* ---- The volume guide ---- */
+
+/* Two songs with ReplayGain tags: the loudest and the quietest found (or a quiet and a loud one of one album). */
+static bool find_levels(bool same_album, int *loud, int *quiet)
+{
+    static struct mp3entry id3;
+    char path[MAX_PATH];
+    struct record r;
+    long lo = 0, hi = 0;
+    int nlo = -1, nhi = -1;
+    uint32_t album = 0;
+    for (int tries = 0, tagged = 0; tries < 200 && tagged < 40; tries++) {
+        int x = rb->rand() % H.n;
+        if (!read_record(x, &r) || r.duration < 60)
+            continue;
+        if (same_album && nhi >= 0 && r.album != album)
+            continue;
+        rec_path(&r, path, sizeof(path));
+        int fd = rb->open(path, O_RDONLY);
+        if (fd < 0)
+            continue;
+        bool ok = rb->get_metadata(&id3, fd, path);
+        rb->close(fd);
+        if (!ok || id3.track_gain == 0)
+            continue;
+        tagged++;
+        if (same_album && nhi < 0) {
+            album = r.album;
+            /* The album's songs, around it. */
+            for (int d = -20; d <= 20; d++) {
+                int y = x + d;
+                struct record s;
+                if (y < 0 || (uint32_t)y >= H.n || !read_record(y, &s) || s.album != album)
+                    continue;
+                rec_path(&s, path, sizeof(path));
+                fd = rb->open(path, O_RDONLY);
+                if (fd < 0)
+                    continue;
+                ok = rb->get_metadata(&id3, fd, path);
+                rb->close(fd);
+                if (!ok || id3.track_gain == 0)
+                    continue;
+                if (nhi < 0 || id3.track_gain > hi) { hi = id3.track_gain; nhi = y; }
+                if (nlo < 0 || id3.track_gain < lo) { lo = id3.track_gain; nlo = y; }
+            }
+            if (nlo == nhi) { nlo = nhi = -1; continue; }
+            break;
+        }
+        /* A higher gain is a quieter song. */
+        if (nhi < 0 || id3.track_gain > hi) { hi = id3.track_gain; nhi = x; }
+        if (nlo < 0 || id3.track_gain < lo) { lo = id3.track_gain; nlo = x; }
+    }
+    if (nlo < 0 || nhi < 0 || nlo == nhi)
+        return false;
+    *loud = nlo;
+    *quiet = nhi;
+    return true;
+}
+
+/* 0 as the files are, 1 evened; 0 album, 1 track; 0 standard, 1 +3 dB, 2 +6 dB. */
+static int lg_between, lg_within, lg_overall;
+static int lg_recs[2], lg_which;
+static long lg_switch_tick;
+
+static void level_tick(void)
+{
+    /* Eight seconds of each song, from a third of the way in. */
+    if (TIME_BEFORE(*rb->current_tick, lg_switch_tick))
+        return;
+    lg_which ^= 1;
+    struct record r;
+    if (read_record(lg_recs[lg_which], &r))
+        rb->playlist_start(lg_which, (unsigned long)r.duration * 350, 0);
+    lg_switch_tick = *rb->current_tick + HZ * 8;
+}
+
+static void level_apply(const struct sound_set *before, int step)
+{
+    struct sound_set s = *before;
+    s.rg.noclip = true;
+    if (lg_between == 0) {
+        s.rg.type = 3;   /* off */
+    } else {
+        s.rg.type = step >= 1 && lg_within == 0 ? 2 : 0;   /* album in order (track in shuffle), or track */
+        if (step >= 1 && lg_within == 0)
+            s.rg.type = 1;   /* heard in order: the album's gain */
+        s.rg.preamp = step >= 2 ? (lg_overall == 1 ? 30 : lg_overall == 2 ? 60 : 0) : before->rg.preamp;
+    }
+    sound_write(&s);
+}
+
+static void volume_guide(void)
+{
+    struct sound_set before;
+    sound_read(&before);
+    keep_list();
+    const struct replaygain_settings *rg = &before.rg;
+    lg_between = rg->type == 3 ? 0 : 1;
+    lg_within = rg->type == 0 ? 1 : 0;
+    lg_overall = rg->preamp >= 50 ? 2 : rg->preamp >= 20 ? 1 : 0;
+    int step = 0, kind = -1;
+    bool shown[3] = { false, false, false };
+    bool saved = false;
+    while (step >= 0 && step < 3) {
+        if (step > 0 && lg_between == 0) {
+            saved = true;
+            break;
+        }
+        bool album = step == 1;
+        if ((int)album != kind) {
+            rb->splash(0, G(G_WAIT));
+            if (!find_levels(album, &lg_recs[0], &lg_recs[1])) {
+                rb->splash(HZ * 4, G(G_NO_RG));
+                break;
+            }
+            kind = album;
+            lg_which = 0;
+            struct record r;
+            read_record(lg_recs[0], &r);
+            play_songs(lg_recs, 2, (unsigned long)r.duration * 350);
+            lg_switch_tick = *rb->current_tick + HZ * 8;
+        }
+        level_apply(&before, step);
+        const char *labels[3];
+        int n = 0, *target;
+        const char *title, *intro;
+        if (step == 0) {
+            title = G(G_BETWEEN); intro = G(G_BETWEEN_INTRO);
+            labels[n++] = G(G_LEVEL_OFF); labels[n++] = G(G_LEVEL_EVEN);
+            target = &lg_between;
+        } else if (step == 1) {
+            title = G(G_WITHIN); intro = G(G_WITHIN_INTRO);
+            labels[n++] = G(G_LEVEL_ALBUM); labels[n++] = G(G_LEVEL_TRACK);
+            target = &lg_within;
+        } else {
+            title = G(G_OVERALL); intro = G(G_OVERALL_INTRO);
+            labels[n++] = G(G_STANDARD); labels[n++] = G(G_UP3); labels[n++] = G(G_UP6);
+            target = &lg_overall;
+        }
+        const char *extra[1] = { G(G_ANOTHER) };
+        g_tick = level_tick;
+        g_last = step == 2 || lg_between == 0;
+        int k = g_step(title, intro, labels, n, *target, extra, 1, &shown[step]);
+        g_last = false;
+        g_tick = NULL;
+        if (k < 0) step--;
+        else if (k < n) *target = k;
+        else if (k == n) kind = -1;
+        else if (++step >= 3) saved = true;
+    }
+    rb->audio_stop();
+    if (saved) {
+        struct sound_set s = before;
+        s.rg.noclip = true;
+        s.rg.type = lg_between == 0 ? 3 : lg_within == 0 ? 2 : 0;
+        s.rg.preamp = lg_between == 0 ? before.rg.preamp : lg_overall == 1 ? 30 : lg_overall == 2 ? 60 : 0;
+        sound_write(&s);
+        rb->settings_save();
+        rb->splash(HZ * 2, G(G_SAVED));
+    } else {
+        sound_write(&before);
+    }
+    give_list_back();
+}
+
+/* The guides there are: the transitions one only with the automatic crossfade. */
+static const int tuning_items[] = {
+    G_SOUND,
+#ifdef XF_RESIDENT
+    G_JOIN,
+#endif
+    G_LEVEL,
+};
+#define TUNING_ITEMS ((int)(sizeof(tuning_items) / sizeof(tuning_items[0])))
+
+static const char *tuning_label(int i, char *buf, size_t len)
+{
+    (void)buf; (void)len;
+    return G(tuning_items[i]);
+}
+
+static void tuning_menu(void)
+{
+    int sel = 0;
+    while (!played && run_menu(G(G_MENU), TUNING_ITEMS, &sel, tuning_label) >= 0) {
+        switch (tuning_items[sel]) {
+        case G_SOUND: sound_guide(); break;
+#ifdef XF_RESIDENT
+        case G_JOIN: transitions_guide(); break;
+#endif
+        default: volume_guide(); break;
+        }
+    }
+}
+
+#endif /* !HOST_TEST */
+
+#define MAIN_ITEMS 21
 #define MAX_LIBS 16
 static char lib_paths[MAX_LIBS][MAX_PATH];
 static int lib_count;
@@ -5229,6 +8357,11 @@ static const char *main_label(int i, char *buf, size_t len)
         return label_value(buf, len, S_LIBRARY, slash ? slash + 1 : dbpath);
     }
     case 18: return label_value(buf, len, S_SKIP_FADE, cfg.skip_fade ? T(S_YES) : T(S_NO));
+#ifndef HOST_TEST
+    case 19: return G(G_MENU);
+#else
+    case 19: return "";
+#endif
     default: return T(S_INFO);
     }
 }
@@ -5279,6 +8412,9 @@ enum plugin_status plugin_start(const void *parameter)
     audio_taken = played = false;
     hpath = htail = NULL;
     texts = texts_for((const char *)rb->global_settings->lang_file);
+#ifndef HOST_TEST
+    guide_texts_for((const char *)rb->global_settings->lang_file);
+#endif
 
     configfile_load(CFG_FILE, config, N_CONFIG, CFG_VERSION);
     if (cfg.count < 1)
@@ -5413,6 +8549,9 @@ enum plugin_status plugin_start(const void *parameter)
             }
 #endif
             break;
+#ifndef HOST_TEST
+        case 19: tuning_menu(); break;
+#endif
         default: info(); break;
         }
 #ifdef HAVE_ADJUSTABLE_CPU_FREQ

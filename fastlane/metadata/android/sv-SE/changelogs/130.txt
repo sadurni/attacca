@@ -1,0 +1,3 @@
+• Ljudguide (Ljud → Ställ in ljudet steg för steg): varje effekt hörd A/B/C på din egen musik, för varje enhet.
+• Guider på gehör för övergångarna och volymen, och en kontroll av vad som kan bli bättre (Inställningar).
+• Den automatiska övertoningen tvärstoppar inte längre ett spår som klippts av mitt i sitt ljud.

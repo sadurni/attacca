@@ -39,9 +39,19 @@ class CrossfadePlannerTest {
 
     @Test
     fun aHardEndingKeepsItsLastNoteWithAShortBlend() {
-        val plan = CrossfadePlanner.plan(10_000, steady, duration, duration, steady, duration, 0)
+        // The sound stops a moment before the file ends: a real ending.
+        val plan = CrossfadePlanner.plan(10_000, steady, duration, duration - 600, steady, duration, 0)
         assertEquals(CrossfadePlanner.SHORT_BLEND_MS, plan.lengthMs)
         assertEquals(CrossfadeShape.MIX, plan.shape)
+    }
+
+    @Test
+    fun aFileCutOffInTheMiddleOfItsSoundIsFadedOut() {
+        // Loud to the last sample of the file (a live track cut before the applause ends): kept
+        // whole it would stop dead, so it fades as a plain crossfade.
+        val plan = CrossfadePlanner.plan(10_000, steady, duration, duration, steady, duration, 0)
+        assertEquals(10_000, plan.lengthMs)
+        assertEquals(CrossfadeShape.CROSSFADE, plan.shape)
     }
 
     @Test

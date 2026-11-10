@@ -1,0 +1,3 @@
+• Geluidsgids (Geluid → Het geluid stap voor stap afstemmen): elk effect A/B/C gehoord op je eigen muziek, voor elk apparaat.
+• Gidsen op het gehoor voor de overgangen en het volume, en een controle van wat beter kan (Instellingen).
+• De automatische crossfade stopt een nummer dat midden in zijn geluid is afgekapt niet meer abrupt.

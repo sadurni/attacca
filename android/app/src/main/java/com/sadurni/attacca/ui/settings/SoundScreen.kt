@@ -38,6 +38,8 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Compress
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.Headphones
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlin.math.abs
 
@@ -59,6 +61,15 @@ fun SoundScreen(onBack: () -> Unit) {
         pageTitle = { stringResource(it.titleRes) },
         onBack = onBack,
         menu = { open ->
+            // The sound guide: every effect heard, step by step, for the device in use.
+            var guide by remember { mutableStateOf(false) }
+            val device by settings.profiles.currentDevice.collectAsStateWithLifecycle()
+            val target = device?.takeIf { it.type != OutputType.SPEAKER }?.name ?: stringResource(R.string.guide_this_device)
+            CategoryRow(Icons.Rounded.Tune, stringResource(R.string.guide_open), stringResource(R.string.guide_open_hint, target)) { guide = true }
+            if (guide) SoundGuide { guide = false }
+            var levelGuide by remember { mutableStateOf(false) }
+            CategoryRow(Icons.AutoMirrored.Rounded.VolumeUp, stringResource(R.string.level_guide_open), stringResource(R.string.level_guide_hint)) { levelGuide = true }
+            if (levelGuide) LevelGuide { levelGuide = false }
             ProfileSection(settings)
             SectionTitle(stringResource(R.string.section_effects, profileName(active)))
             for (page in SoundPage.entries) {
@@ -147,7 +158,8 @@ private fun ProfileSection(settings: AppSettings) {
         allowInherit = false,
         onSelect = { id -> device?.let { store.assignProfile(it.key, id) } },
     )
-    Row(
+    // On more lines when they do not fit (a phone's width holds three or so).
+    androidx.compose.foundation.layout.FlowRow(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -155,7 +167,9 @@ private fun ProfileSection(settings: AppSettings) {
         OutlinedButton(onClick = { dialog = "template" }) { Text(stringResource(R.string.template_button)) }
         if (active.id != ProfilesState.DEFAULT_PROFILE_ID) {
             OutlinedButton(onClick = { dialog = "rename" }) { Text(stringResource(R.string.profile_rename)) }
-            OutlinedButton(onClick = { store.deleteProfile(active.id) }) { Text(stringResource(R.string.profile_delete)) }
+        }
+        if (state.profiles.any { it.id != ProfilesState.DEFAULT_PROFILE_ID }) {
+            OutlinedButton(onClick = { dialog = "delete" }) { Text(stringResource(R.string.profile_delete_more)) }
         }
     }
     Hint(stringResource(R.string.profile_hint))
@@ -184,6 +198,7 @@ private fun ProfileSection(settings: AppSettings) {
             },
             onDismiss = { dialog = null },
         )
+        "delete" -> DeleteProfileDialog(state.profiles, state.devices) { dialog = null }
         "rename" -> NameDialog(
             title = stringResource(R.string.profile_rename),
             initial = active.name,
@@ -341,7 +356,7 @@ private fun WidthSection(dsp: DspSettings, update: ((DspSettings) -> DspSettings
     Hint(stringResource(R.string.channels_hint))
 }
 
-private fun formatBalance(value: Float): String = when {
+internal fun formatBalance(value: Float): String = when {
     abs(value) < 0.01f -> "C"
     value < 0 -> "L ${(-value * 100).toInt()} %"
     else -> "R ${(value * 100).toInt()} %"
@@ -398,4 +413,65 @@ private fun LimiterSection(dsp: DspSettings, update: ((DspSettings) -> DspSettin
     SwitchRow(stringResource(R.string.limiter_enabled), dsp.limiterEnabled, { v -> update { it.copy(limiterEnabled = v) } })
     ValueSlider(stringResource(R.string.limiter_ceiling), dsp.limiterCeilingDb, -3f..0f, 0.1f, dbFormat,
         { v -> update { it.copy(limiterCeilingDb = v) } }, enabled = dsp.limiterEnabled)
+}
+
+/**
+ * Every profile but Default, to delete one: each with how many devices use it. Deleting asks
+ * first; the devices that used it go back to their kind's profile, or Default.
+ */
+@Composable
+private fun DeleteProfileDialog(
+    profiles: List<com.sadurni.attacca.settings.DspProfile>,
+    devices: List<com.sadurni.attacca.settings.DeviceRule>,
+    onDismiss: () -> Unit,
+) {
+    val store = LocalContext.current.app.settings.profiles
+    var asked by remember { mutableStateOf<com.sadurni.attacca.settings.DspProfile?>(null) }
+    val deletable = profiles.filter { it.id != ProfilesState.DEFAULT_PROFILE_ID }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.profile_delete_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                for (profile in deletable) {
+                    val users = devices.count { it.profileId == profile.id }
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(profile.name)
+                            if (users > 0) Text(
+                                androidx.compose.ui.res.pluralStringResource(R.plurals.profile_used_by, users, users),
+                                fontSize = com.sadurni.attacca.ui.theme.AttaccaType.secondary,
+                                color = com.sadurni.attacca.ui.theme.LocalAttaccaColors.current.textGrayed,
+                            )
+                        }
+                        androidx.compose.material3.IconButton(onClick = { asked = profile }) {
+                            androidx.compose.material3.Icon(
+                                androidx.compose.material.icons.Icons.Rounded.Delete,
+                                stringResource(R.string.profile_delete),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
+    )
+    asked?.let { profile ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { asked = null },
+            title = { Text(stringResource(R.string.profile_delete)) },
+            text = { Text(stringResource(R.string.profile_delete_confirm, profile.name)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    store.deleteProfile(profile.id)
+                    asked = null
+                    if (deletable.size <= 1) onDismiss()
+                }) { Text(stringResource(R.string.profile_delete)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { asked = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }

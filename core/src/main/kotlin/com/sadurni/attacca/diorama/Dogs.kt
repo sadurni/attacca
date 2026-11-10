@@ -334,12 +334,14 @@ internal fun Scene.ourDogs() {
     // no face is hidden behind another's back.
     val drawn = ArrayList<Pair<Float, () -> Unit>>()
     for ((k, dog) in Dog.entries.withIndex()) {
-        val spot = when (dog) {
-            Dog.GALGO -> travellerX + s * 1.6f
-            Dog.MALAMUTE -> travellerX - s * 1.3f * behind
-            Dog.GOLDIE -> travellerX - s * 2.3f * behind
-            Dog.BRACO -> travellerX - s * 3.2f * behind
-        } + sin(now / 1700.0 + k).toFloat() * s * 0.12f
+        // Its place in the pack changes now and then (each change made gradually: a dog goes ahead
+        // or drops back over a few seconds), and within it it wanders a little.
+        val period = (t / PACK_PERIOD_MS).toLong().coerceAtLeast(0L)
+        val into = ((t - period * PACK_PERIOD_MS) / PACK_CHANGE_MS).toFloat().coerceIn(0f, 1f)
+        val ease = into * into * (3f - 2f * into)
+        val place = packPlace(k, period - 1) + (packPlace(k, period) - packPlace(k, period - 1)) * ease
+        val spot = travellerX + (if (place >= 0f) place else place * behind) * s +
+            (sin(now / 1700.0 + k).toFloat() * 0.18f + sin(now / 4300.0 + k * 2.3).toFloat() * 0.14f) * s
         val wants = dogWants(k, t)
         var x = spot
         // After a rabbit, the podenco always; the others now and then.
@@ -387,6 +389,31 @@ internal fun Scene.ourDogs() {
     }
     drawn.sortByDescending { it.first }
     for ((_, draw) in drawn) draw()
+}
+
+/** How long the pack keeps an order (ms), and how long a change of places takes. */
+private const val PACK_PERIOD_MS = 32_000.0
+private const val PACK_CHANGE_MS = 6_000.0
+
+/** The places in the pack, from ahead of the traveller to the last (in sizes of a dog). */
+private val PACK_PLACES = floatArrayOf(1.6f, -1.3f, -2.3f, -3.2f)
+
+/**
+ * Where dog [k] goes in the pack during [period]: the greyhound mostly ahead (not always), the
+ * order of the rest shuffled, the same for everyone who watches the same moment.
+ */
+private fun packPlace(k: Int, period: Long): Float {
+    val order = intArrayOf(0, 1, 2, 3)
+    val n = period.toInt()
+    // Who is shuffled: all four now and then, else the three behind.
+    val first = if (Diorama.hash(n, 761) < 0.3f) 0 else 1
+    for (i in 3 downTo first + 1) {
+        val j = first + (Diorama.hash(n * 4 + i, 760) * (i - first + 1)).toInt().coerceAtMost(i - first)
+        val tmp = order[i]; order[i] = order[j]; order[j] = tmp
+    }
+    // order[slot] = dog: the place of dog k is the slot holding it.
+    for (slot in 0 until 4) if (order[slot] == k) return PACK_PLACES[slot]
+    return PACK_PLACES[k]
 }
 
 /** One of the pack at [x] in its [state] (see [ourDogs]). */

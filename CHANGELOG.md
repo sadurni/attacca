@@ -3,6 +3,64 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.3.0
+
+### Attacca (Android)
+
+- **Sound guide**: Sound → Tune the sound step by step goes through the effects one at a time on
+  the device in use. Each step plays a stretch of your own music picked for it (the bassiest for
+  the bass, the brightest for the treble, the widest for crossfeed, the most varied for the
+  levels) and you compare two to four choices, A, B, C; left and right with a sound of its own;
+  how deep the device plays, with tones one by one or a bass line going down, decides what the
+  bass step offers (a boost, or the bass it cannot play heard through its harmonics). At the end,
+  before against after, saved as the device's own profile. Also offered when a new device plays
+  for the first time and in the first-start guide.
+  Saving asks where: the profile in use, replaced, or a new profile with a name.
+- **Sound profiles**: Delete… lists every profile but Default (with how many devices use each)
+  and asks before deleting; the profile buttons wrap onto more lines on a narrow screen.
+- **O'rama**: the strip in Now playing and the whole O'rama are one landscape: switching between
+  them goes on where it was (also on the desktop).
+- **Transitions by ear** (Settings → Crossfade): the end of one real song into the start of
+  another as each choice joins them (one after the other, automatic blend, crossfade of 4 or 8 s),
+  a song with silence at its end (left out or kept), two tracks in a row of an album (without
+  gaps or blended); saved as the playback settings.
+- **Volume by ear** (Sound): the loudest and quietest songs of the library one after the other
+  (as the files are or evened out), a quiet and a loud track of one album (as recorded or each
+  song the same), the overall level; saved in the profile in use.
+- **Check-up** (Settings): tracks not analysed, loudness not measured, damaged tracks, effects of
+  the phone or other apps on top, battery saving, devices without a sound of their own; each with
+  what it affects and a button to fix it, and the guides by ear.
+  Which tracks carry ReplayGain tags is now kept in the library (read after each scan), so the
+  loudness count is exact and measuring covers only the tracks with nothing to level them by.
+- **O'rama**: in the strip of Now playing, what flies over (balloons, airships, clouds) keeps its
+  shape instead of being squashed into a ball; the four dogs change places in the pack now and then
+  (going ahead or dropping back gradually) and wander more within it.
+  The sun, the moon and space's planets stay behind everything that flies by, and clouds hide the sun whole.
+  What crosses the sky fades in and out instead of popping up (balloons rise from behind the hills),
+  and a station's train comes in from the left of the screen and goes out on the right.
+  The peak of a track stands out more: the sky darkens a little behind it and each effect shines
+  (a glowing rainbow, more and brighter shooting stars and fireworks, a beating red moon), and over
+  the ice the northern lights fill the sky.
+- **Automatic crossfade**: a track whose file ends in the middle of its sound (a live track cut
+  before the applause dies, an album running on into the next track, a mix) was kept whole as if
+  it ended hard and stopped dead; it now fades out.
+
+### Attacca Desktop
+
+- The sound guide in Sound, for the output in use, with samples from the library.
+- Settings → Fine tuning: the check-up and the guides by ear for the transitions and the volume.
+- The automatic crossfade fades a track cut off in the middle of its sound.
+
+### Attacca for Rockbox
+
+- **Fine tuning by ear** in the plugin's menu: the sound (Rockbox's own settings: balance and
+  mono with a sound of the plugin's, how deep the player goes with tones or a bass line, bass,
+  treble, crossfeed or width, compressor, before and after), the transitions (one after the
+  other, automatic, crossfade of 4 or 8 s, silences, albums) and the volume (ReplayGain), each
+  choice heard on the player; the list that was playing comes back afterwards.
+- The automatic crossfade no longer stops dead a song cut off in the middle of its sound (with
+  a library exported again from Attacca Desktop 1.3.0).
+
 ## 1.2.1
 
 ### Attacca (Android)

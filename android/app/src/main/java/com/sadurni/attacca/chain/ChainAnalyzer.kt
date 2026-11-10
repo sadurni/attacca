@@ -143,9 +143,9 @@ class ChainAnalyzer(
      * Gives every track below [folder] not decoded whole yet the analysis played tracks get
      * (silences, waveform, loudness for the measured gain): the whole file is decoded, slow.
      */
-    fun measureWholeOf(folder: File) = folderPass(folder, Pass.WHOLE)
+    fun measureWholeOf(folder: File, only: Set<String>? = null) = folderPass(folder, Pass.WHOLE, only)
 
-    private fun folderPass(folder: File, pass: Pass) {
+    private fun folderPass(folder: File, pass: Pass, only: Set<String>? = null) {
         if (libraryJob?.isActive == true) return
         libraryJob = scope.launch(io) {
             _libraryProgress.value = Progress(0, 0, pass = pass)
@@ -156,7 +156,8 @@ class ChainAnalyzer(
                 val known = runCatching {
                     if (pass == Pass.WHOLE) analysisDb().getAll(files, threshold).keys else analysisDb().getBounds(files, threshold).keys
                 }.getOrDefault(emptySet())
-                val missing = files.filter { it.absolutePath !in known }
+                // Only those asked for, when some are (the check-up: tracks with nothing to level them by).
+                val missing = files.filter { it.absolutePath !in known && (only == null || it.absolutePath in only) }
                 val timer = ProgressTimer()
                 inParallel(missing, files.size - missing.size, { done ->
                     wakeLock.acquire(WAKE_MS)

@@ -1,0 +1,3 @@
+• Soinu-gida (Soinua → Doitu soinua urratsez urrats): efektu bakoitza A/B/C entzuten da zure musikarekin, gailu bakoitzerako.
+• Belarrizko gidak trantsizioetarako eta bolumenerako, eta hobetu daitekeenaren azterketa orokorra (Ezarpenak).
+• Crossfade automatikoak jada ez du bat-batean gelditzen soinuaren erdian moztutako pista bat.

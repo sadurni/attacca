@@ -168,8 +168,14 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
      * A profile with [template] applied over the active one's settings, named [name] (one of that
      * name already there is replaced), assigned to [deviceKey] or, without one, to [type].
      */
-    fun applyTemplate(template: SoundTemplate, name: String, deviceKey: String?, type: OutputType?): DspProfile {
-        val settings = template.applyTo(_active.value.settings)
+    fun applyTemplate(template: SoundTemplate, name: String, deviceKey: String?, type: OutputType?): DspProfile =
+        applySettings(template.applyTo(_active.value.settings), name, deviceKey, type)
+
+    /**
+     * A profile with [settings] (from the sound guide or a template), named [name] (one of that
+     * name already there is replaced), assigned to [deviceKey] or, without one, to [type].
+     */
+    fun applySettings(settings: DspSettings, name: String, deviceKey: String?, type: OutputType?): DspProfile {
         val existing = _state.value.profiles.firstOrNull { it.name == name && it.id != ProfilesState.DEFAULT_PROFILE_ID }
         val profile = existing?.copy(settings = settings) ?: DspProfile(UUID.randomUUID().toString(), name, settings)
         mutate { s ->
@@ -181,6 +187,10 @@ class ProfileStore(private val prefs: SharedPreferences, legacySettings: () -> D
         }
         return profile
     }
+
+    /** The settings of the profile [id] replaced by [settings]. */
+    fun setProfileSettings(id: String, settings: DspSettings) =
+        mutate { s -> s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(settings = settings) else it }) }
 
     /** [template] applied over the settings of the profile [id] itself. */
     fun applyTemplateToProfile(id: String, template: SoundTemplate) =

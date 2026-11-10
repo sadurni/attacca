@@ -45,6 +45,9 @@ internal fun Scene.skyVisitor() {
     val x = if (ltr) -w * 0.15f + u * w * 1.3f else w * 1.15f - u * w * 1.3f
     val dir = if (ltr) 1f else -1f
     val s = unit
+    // Nothing pops in or out: each one fades in at the start of its visit and out at the end.
+    val faded = out.fade
+    out.fade = faded * minOf(1f, u / 0.05f, (1f - u) / 0.05f).coerceIn(0f, 1f)
     when (kind) {
         Sky.UFO -> {
             val wob = sin(now / 300.0).toFloat() * s * 0.01f
@@ -100,7 +103,8 @@ internal fun Scene.skyVisitor() {
         }
         Sky.BALLOON -> {
             val cx = w * (0.2f + 0.6f * hash(e, 207)) + sin(now / 2000.0).toFloat() * s * 0.03f
-            val cy = h * 0.55f - u * h * 0.6f
+            // Rising from behind the hills.
+            val cy = h * 0.8f - u * h * 0.78f
             val r = s * 0.05f
             val c = if (hash(e, 208) < 0.5f) p.accent else Colors.mix(0xFFE04848.toInt(), p.accent, 0.3f)
             out.circle(c, cx, cy, r)
@@ -237,6 +241,7 @@ internal fun Scene.skyVisitor() {
             for (k in 0 until 3) flockOne(x + k * s * 0.07f * dir, y + sin(now / 800.0 + k).toFloat() * s * 0.03f + k * s * 0.02f, c, s * 0.02f, k)
         }
     }
+    out.fade = faded
 }
 
 /** A burst over the neon city on every other strong beat. */

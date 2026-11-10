@@ -122,7 +122,8 @@ fun OramaPage(state: AppState) {
     val cover by produceState<ImageBitmap?>(null, item?.path) {
         value = withContext(Dispatchers.IO) { item?.let { runCatching { Covers.of(it.path, 160) }.getOrNull() } }
     }
-    val diorama = remember { Diorama() }
+    // One landscape for the strip in Now playing and the whole O'rama (they go on from one to the other).
+    val diorama = OramaShared.diorama
     val list = remember { DrawList() }
     val path = remember { Path() }
     val raw = remember { FloatArray(3) }
@@ -313,7 +314,8 @@ fun OramaStrip(state: AppState, modifier: Modifier) {
     val cover by produceState<ImageBitmap?>(null, item?.path) {
         value = withContext(Dispatchers.IO) { item?.let { runCatching { Covers.of(it.path, 160) }.getOrNull() } }
     }
-    val diorama = remember { Diorama() }
+    // One landscape for the strip in Now playing and the whole O'rama (they go on from one to the other).
+    val diorama = OramaShared.diorama
     val list = remember { DrawList() }
     val path = remember { Path() }
     val raw = remember { FloatArray(3) }
@@ -572,4 +574,9 @@ private fun lookOf(lib: Library?, item: PlayItem?): SongLook {
             seed = item.path.hashCode(),
         ),
     )
+}
+
+/** One landscape for the strip in Now playing and the O'rama page (only one shows at a time). */
+object OramaShared {
+    val diorama = Diorama()
 }

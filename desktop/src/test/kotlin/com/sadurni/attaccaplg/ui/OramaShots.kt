@@ -75,6 +75,20 @@ fun main(args: Array<String>) {
         // Played up to there, so the stretch's world has come.
         shot(File(out, "$name.png"), 1280, 640, d, at, startMs = 0, warm = 600)
     }
+    // The peak of a track in each world: what happens in its sky, standing out.
+    for (name in listOf("meadow", "neon", "castle", "ice", "space")) {
+        val song = Diorama.Song("peak-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000))
+        val at = song.peakMs.toLong().coerceAtLeast(0L)
+        for ((k, into) in listOf(2_500L, 5_000L).withIndex()) {
+            val d = Diorama()
+            d.show(song, null, 0)
+            shot(File(out, "peak-$name-$k.png"), 960, 480, d, at + into, startMs = 30_000L + k * 700L)
+        }
+        // Upright, as the phone shows it (the land lifted over the floating player).
+        val d = Diorama()
+        d.show(song, null, 0)
+        shot(File(out, "peak-tall-$name.png"), 540, 1170, d, at + 4_000L, startMs = 30_000L, lift = 320f)
+    }
     // A ride through whole tracks, a frame every 15 s: places, the peak, company, the end.
     for (name in listOf("meadow", "city", "neon", "castle", "ice", "space")) {
         for (k in 0 until 16) {
@@ -95,6 +109,12 @@ fun main(args: Array<String>) {
         val d = Diorama()
         d.show(Diorama.Song("strip-way", Looks.of(looks.getValue("meadow")), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
         shot(File(out, "strip-way-$k.png"), 1008, 420, d, at, startMs = 3_000L, warm = 150, stripTop = 98f, stripHeight = 280f)
+    }
+    // What flies over a strip (balloons, airships, geese…) at many moments: each thing whole, not squashed.
+    for (name in listOf("meadow", "city")) for (k in 0 until 10) {
+        val d = Diorama()
+        d.show(Diorama.Song("strip-sky-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+        shot(File(out, "strip-sky-$name-$k.png"), 1008, 420, d, 15_000L + k * 21_000L, startMs = 3_000L, warm = 150, stripTop = 98f, stripHeight = 280f)
     }
     // The ship in a strip, at a few moments (it rises and falls with the music).
     for ((k, at) in listOf(12_000L, 60_000L, 100_000L, 150_000L).withIndex()) {
@@ -185,6 +205,12 @@ fun main(args: Array<String>) {
             val d = Diorama()
             d.show(Diorama.Song("way-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
             shot(File(out, "way-$place-$name-$k.png"), 960, 480, d, start + into - 2_000, startMs = 50_000)
+        }
+        // The train at a station: in from the left, across, out on the right (a frame a second).
+        if (place == "station") for (k in 0 until 8) {
+            val d = Diorama()
+            d.show(Diorama.Song("way-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000)), null, 0)
+            shot(File(out, "train-$k.png"), 960, 480, d, start - 2_000, startMs = 50_000L + k * 1_000L)
         }
     }
     for (name in listOf("city", "neon")) {
@@ -395,7 +421,7 @@ private fun songShape(r: Random): FloatArray = FloatArray(512) { i ->
 /** The start of the names of the shots to make; null: all. */
 private var only: String? = null
 
-private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, startMs: Long = 0, warm: Int = 120, stripTop: Float = 0f, stripHeight: Float = 0f) {
+private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, startMs: Long = 0, warm: Int = 120, stripTop: Float = 0f, stripHeight: Float = 0f, lift: Float = 0f) {
     if (only?.let { prefix -> prefix.split(',').none { file.name.startsWith(it) } } == true) return
     val list = DrawList()
     val raw = FloatArray(3)
@@ -405,7 +431,7 @@ private fun shot(file: File, w: Int, h: Int, d: Diorama, positionMs: Long, start
         raw[0] = 0.2f + (if (beat) 0.2f else 0f)
         raw[1] = if (beat) 0.25f else 0.05f
         raw[2] = 0.02f + 0.01f * sin(t / 50.0).toFloat()
-        d.draw(list, w.toFloat(), h.toFloat(), positionMs + k * 16L, true, raw, t, stripTop = stripTop, stripHeight = stripHeight)
+        d.draw(list, w.toFloat(), h.toFloat(), positionMs + k * 16L, true, raw, t, lift = lift, stripTop = stripTop, stripHeight = stripHeight)
     }
     val path = Path()
     val scene = ImageComposeScene(w, h, Density(1f)) {

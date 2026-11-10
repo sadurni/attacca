@@ -166,7 +166,8 @@ fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Uni
             }
         }
     }
-    val diorama = remember { Diorama() }
+    // The same landscape as the whole O'rama: switching between them goes on where it was.
+    val diorama = OramaShared.diorama
     val list = remember { DrawList() }
     val path = remember { Path() }
     val raw = remember { FloatArray(3) }
@@ -193,8 +194,12 @@ fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Uni
         }
         diorama.festive(if (festiveOn) festivePeriod?.festivity else null, festivePeriod?.kings == true)
         diorama.show(song, nextAnalysis?.let(::waveOf), t, now.nextTitle, null, nextLook)
+        // While the whole O'rama shows, it moves the landscape on: the strip under it keeps still.
+        if (OramaShared.fullOpen) return@Canvas
         val heard = app.dspEngine.heardLevels(raw)
-        val tall = maxOf(size.height, size.width / 2.4f)
+        // At most 1.5 times the strip (as upright), so a wide, low strip in landscape shows as much
+        // of the land above and below as upright does instead of a narrower band of it.
+        val tall = maxOf(size.height, minOf(size.width / 2.4f, size.height * 1.5f))
         offset = (tall - size.height) * 0.7f
         diorama.draw(list, size.width, tall, position, now.isPlaying, if (heard) raw else null, t, stripTop = offset, stripHeight = size.height)
         translate(top = -offset) { paint(list, path, coverImage, measurer) }
@@ -282,7 +287,12 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
             }
         }
     }
-    val diorama = remember { Diorama() }
+    // The same landscape as the strip in Now playing (see [OramaShared]).
+    val diorama = OramaShared.diorama
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        OramaShared.fullOpen = true
+        onDispose { OramaShared.fullOpen = false }
+    }
     // Festive days and the new year's show.
     val festiveOn by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
     val festivePeriod by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
@@ -675,4 +685,16 @@ internal fun lookOf(context: android.content.Context, mediaId: String?, cover: B
             seed = mediaId.hashCode(),
         ),
     )
+}
+
+/**
+ * One landscape for the strip in Now playing and the whole O'rama: the traveller, the dogs, the
+ * sky and what is happening in it go on from one to the other instead of each having its own.
+ */
+object OramaShared {
+    val diorama = Diorama()
+
+    /** The whole O'rama is open (and moves the landscape on). */
+    @Volatile
+    var fullOpen = false
 }

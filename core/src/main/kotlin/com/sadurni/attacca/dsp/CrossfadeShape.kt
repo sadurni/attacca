@@ -70,7 +70,9 @@ data class CrossfadePlan(val lengthMs: Int, val shape: CrossfadeShape)
  * - An ending that already fades out by itself is not faded again (it would vanish early): it
  *   plays out whole and the blend lasts as long as its own fade, up to the length set.
  * - An ending that stays loud to the last moment (a final chord, a hard stop) keeps its end too,
- *   with a short blend so the next track does not pile up on it.
+ *   with a short blend so the next track does not pile up on it. But a file that ends in the
+ *   middle of its sound (a live track cut before the applause dies, a track of an album that runs
+ *   on into the next, a mix) has no end of its own: kept whole it would stop dead, so it is faded.
  * - A next track that starts softly by itself is not faded in.
  * - Otherwise both fade over the length set, as a plain crossfade.
  */
@@ -90,6 +92,12 @@ object CrossfadePlanner {
 
     /** Shortest blend for a fade-out the track makes itself. */
     const val MIN_NATURAL_MS = 2_000
+
+    /**
+     * Less than this between the end of the sound and the end of the file, the file stops in the
+     * middle of its sound (a real hard ending leaves at least its decay or a little silence).
+     */
+    const val CUT_OFF_MS = 200L
 
     /** Measured stretch before the blend that tells the track's usual level. */
     private const val BODY_MS = 6_000L
@@ -136,7 +144,8 @@ object CrossfadePlanner {
         val body = median(levels(waveform, durationMs, bodyFrom, bodyTo)) ?: return Ending.Other
         if (body < QUIET_DB) return Ending.Other
         val last = levels(waveform, durationMs, endMs - EDGE_MS, endMs).maxOrNull() ?: return Ending.Other
-        if (last >= body - HARD_END_DB) return Ending.Hard
+        // Loud to the very end of the file: cut off, not ended (see CUT_OFF_MS).
+        if (last >= body - HARD_END_DB) return if (durationMs - endMs < CUT_OFF_MS) Ending.Other else Ending.Hard
         if (last > body - FADE_DROP_DB) return Ending.Other
         // Where the fall begins: the last moment still near the usual level.
         val step = binMs(waveform, durationMs)

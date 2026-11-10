@@ -34,24 +34,39 @@ internal fun Scene.peakMoment() {
     val f = peak
     if (f <= 0f) return
     val night = look.night > 0.5f
+    val from = out.size
     when {
         look.world == World.NEON || (look.world == World.CITY && night) -> bigFireworks(f)
         look.world == World.CASTLE -> bloodMoon(f)
-        look.world == World.SPACE || look.world == World.ICE || night -> starShower(f)
+        look.world == World.ICE -> northernLights(f)
+        look.world == World.SPACE || night -> starShower(f)
         else -> rainbow(f)
     }
+    // Upright the very top of the sky is under the title and the buttons: what starts up there
+    // (fireworks, shooting stars) comes down into the sky that is free (a strip is placed as a whole elsewhere).
+    val high = look.world == World.NEON || (look.world == World.CITY && night) || (look.world != World.CASTLE && look.world != World.ICE && (look.world == World.SPACE || night))
+    if (high && h > w * 1.3f && stripTop <= 0f) out.mapYWhole(from, out.size, h * 0.08f, 1f)
 }
 
 private val RAINBOW = intArrayOf(0xFFE8443A.toInt(), 0xFFF29A38.toInt(), 0xFFF5D547.toInt(), 0xFF5DBB63.toInt(), 0xFF3F8FD9.toInt(), 0xFF7A5BC7.toInt())
 
 private fun Scene.rainbow(f: Float) {
     val cx = w * 0.55f
-    val cy = nearBase + h * 0.05f
-    val r0 = max(w, h) * 0.5f
-    val band = unit * 0.022f
+    // As wide as the screen allows (upright, its top would otherwise be the only part in sight,
+    // behind the land), standing on the land.
+    val r0 = min(max(w, h) * 0.5f, w * 0.62f)
+    val cy = min(nearBase + h * 0.05f, h * 0.1f + r0 * 0.85f)
+    val band = unit * 0.028f
+    // A soft light behind the bows.
+    out.polyline(Colors.alpha(0xFFFFFFFF.toInt(), 0.16f * f), band * 9f)
+    for (m in 0..40) {
+        val a = PI + PI * m / 40
+        val r = r0 - band * 2.5f
+        out.point(cx + (cos(a) * r).toFloat(), cy + (sin(a) * r * 0.85f).toFloat())
+    }
     for ((k, c) in RAINBOW.withIndex()) {
         val r = r0 - k * band
-        out.polyline(Colors.alpha(c, 0.32f * f), band)
+        out.polyline(Colors.alpha(c, (0.62f + 0.2f * live.level) * f), band)
         for (m in 0..40) {
             val a = PI + PI * m / 40
             out.point(cx + (cos(a) * r).toFloat(), cy + (sin(a) * r * 0.85f).toFloat())
@@ -60,9 +75,9 @@ private fun Scene.rainbow(f: Float) {
 }
 
 private fun Scene.starShower(f: Float) {
-    for (k in 0 until 14) {
+    for (k in 0 until 24) {
         val cycle = 1600L
-        val t = now + k * 230L
+        val t = now + k * 133L
         val e = (t / cycle).toInt() * 31 + k
         val v = (t % cycle) / cycle.toFloat()
         if (v > 0.5f) continue
@@ -72,8 +87,48 @@ private fun Scene.starShower(f: Float) {
         val hx = sx + u * unit * 0.35f
         val hy = sy + u * unit * 0.18f
         val a = sin(u * PI).toFloat() * f
-        out.line(Colors.alpha(0xFFFFFFFF.toInt(), 0.55f * a), unit * 0.004f, hx - unit * 0.1f, hy - unit * 0.05f, hx, hy)
-        out.circle(Colors.alpha(0xFFFFFFFF.toInt(), a), hx, hy, unit * 0.006f)
+        out.line(Colors.alpha(Colors.mix(0xFFFFFFFF.toInt(), p.accent, 0.25f), 0.35f * a), unit * 0.012f, hx - unit * 0.14f, hy - unit * 0.07f, hx, hy)
+        out.line(Colors.alpha(0xFFFFFFFF.toInt(), 0.85f * a), unit * 0.005f, hx - unit * 0.12f, hy - unit * 0.06f, hx, hy)
+        out.circle(Colors.alpha(0xFFFFFFFF.toInt(), 0.3f * a), hx, hy, unit * 0.02f)
+        out.circle(Colors.alpha(0xFFFFFFFF.toInt(), a), hx, hy, unit * 0.008f)
+    }
+}
+
+/**
+ * The peak over the ice: the northern lights filling the sky, curtains of green and violet
+ * light hanging and waving, brighter as the music swells.
+ */
+private fun Scene.northernLights(f: Float) {
+    val greens = intArrayOf(0xFF5CFFB0.toInt(), 0xFF3CE6A0.toInt(), 0xFF8AFFD0.toInt())
+    val curtains = 5
+    val step = w / 150f
+    for (cIdx in 0 until curtains) {
+        val top = h * (0.04f + 0.06f * hash(cIdx, 471))
+        val depth = h * (0.16f + 0.10f * hash(cIdx, 472)) * (1f + 0.25f * live.level)
+        val phase = cIdx * 1.7 + now / (2400.0 + cIdx * 600)
+        val green = greens[cIdx % greens.size]
+        val violet = Colors.mix(0xFFB06CFF.toInt(), p.accent, 0.3f)
+        // Hanging rays: thin bands from a waving top edge, green below fading up into violet.
+        var x = -step
+        var k = 0
+        while (x < w + step) {
+            val wave = sin(x / (w * 0.17f) + phase).toFloat() * h * 0.045f + sin(x / (w * 0.07f) + phase * 1.6).toFloat() * h * 0.012f
+            val y0 = top + wave
+            val shimmer = 0.5f + 0.5f * sin(now / 300.0 + k * 0.35 + cIdx).toFloat()
+            val a = f * (0.07f + 0.12f * live.level + 0.06f * kick) * shimmer
+            val len = depth * (0.7f + 0.3f * sin(k * 0.45 + phase).toFloat())
+            out.gradient(Colors.alpha(violet, 0f), Colors.alpha(green, a * 1.4f), x, y0 - len * 0.25f, x + step * 0.9f, y0 + len * 0.6f)
+            out.gradient(Colors.alpha(green, a * 1.4f), Colors.alpha(green, 0f), x, y0 + len * 0.6f, x + step * 0.9f, y0 + len)
+            x += step
+            k++
+        }
+    }
+    // A bright fold along the lowest curtain.
+    out.polyline(Colors.alpha(0xFFB8FFE0.toInt(), 0.45f * f * (0.7f + 0.3f * live.level)), unit * 0.006f)
+    var x = -step
+    while (x < w + step) {
+        out.point(x, h * 0.2f + sin(x / (w * 0.17f) + now / 2400.0).toFloat() * h * 0.045f + h * 0.12f)
+        x += step * 2
     }
 }
 
@@ -82,8 +137,9 @@ private fun Scene.bloodMoon(f: Float) {
     val y = h * (0.42f - 0.18f * f)
     val r = unit * 0.15f
     val red = Colors.mix(0xFFB8322A.toInt(), p.accent, 0.2f)
-    out.circle(Colors.alpha(red, 0.15f * f * (1f + kick)), x, y, r * 1.6f)
-    out.circle(Colors.alpha(red, 0.9f * f), x, y, r)
+    out.circle(Colors.alpha(red, 0.10f * f * (1f + kick)), x, y, r * (2.6f + 0.4f * kick))
+    out.circle(Colors.alpha(red, 0.22f * f * (1f + kick)), x, y, r * 1.7f)
+    out.circle(Colors.alpha(Colors.lighter(red, 0.25f), f), x, y, r)
     out.circle(Colors.alpha(Colors.darker(red, 0.25f), 0.6f * f), x - r * 0.3f, y - r * 0.2f, r * 0.25f)
     out.circle(Colors.alpha(Colors.darker(red, 0.25f), 0.6f * f), x + r * 0.35f, y + r * 0.3f, r * 0.18f)
     // Bats going round it.
@@ -111,13 +167,16 @@ private fun Scene.bigFireworks(f: Float) {
             1 -> p.light
             else -> Colors.fromHsl(255, hash(e, 463) * 360f, 0.8f, 0.6f)
         }
-        val rad = unit * 0.13f * (0.3f + 0.7f * b) * (1f + 0.3f * live.level)
-        for (m in 0 until 16) {
-            val a = m * PI / 8
+        val rad = unit * 0.16f * (0.3f + 0.7f * b) * (1f + 0.3f * live.level)
+        // The flash of the burst.
+        if (b < 0.25f) out.circle(Colors.alpha(Colors.lighter(c, 0.5f), (0.25f - b) * 1.6f * f), fx, fy, rad * 1.1f)
+        for (m in 0 until 24) {
+            val a = m * PI / 12
             val ex = fx + (cos(a) * rad).toFloat()
             val ey = fy + (sin(a) * rad).toFloat() + b * b * unit * 0.04f
-            out.line(Colors.alpha(c, (1f - b) * 0.5f * f), unit * 0.003f, fx + (ex - fx) * 0.55f, fy + (ey - fy) * 0.55f, ex, ey)
-            out.circle(Colors.alpha(c, (1f - b) * f), ex, ey, unit * 0.006f)
+            out.line(Colors.alpha(c, (1f - b) * 0.75f * f), unit * 0.005f, fx + (ex - fx) * 0.5f, fy + (ey - fy) * 0.5f, ex, ey)
+            out.circle(Colors.alpha(c, (1f - b) * 0.35f * f), ex, ey, unit * 0.014f)
+            out.circle(Colors.alpha(Colors.lighter(c, 0.4f), (1f - b) * f), ex, ey, unit * 0.007f)
         }
     }
 }
@@ -589,8 +648,10 @@ private fun Scene.station(a: Float, b: Float) {
     val car = h * 0.085f
     val cars = 4
     val trainLen = cars * car * 1.05f + car * 0.4f
-    val from = a - trainRun
-    val to = b + trainRun
+    // The track runs on past both edges of the screen: the train comes in from the left and
+    // goes out on the right, never appearing out of nowhere.
+    val from = minOf(a - trainRun, -car)
+    val to = maxOf(b + trainRun, w + car)
     // The track: on the far side of the platform.
     val rail = ground - ts * 0.42f
     val ballast = Colors.darker(Colors.mix(p.near, 0xFF7A6A58.toInt(), 0.4f), 0.2f)
@@ -601,8 +662,10 @@ private fun Scene.station(a: Float, b: Float) {
         sx += h * 0.026f
     }
     out.line(0xFF9AA0A8.toInt(), h * 0.0035f, from, rail - h * 0.002f, to, rail - h * 0.002f)
-    // The train runs along it, from one end to the other.
-    val tx = from + ((now * h * 0.0006f) % (to - from - trainLen + car * 0.4f).coerceAtLeast(1f))
+    // The train crosses the screen from left to right, then a pause before the next one.
+    val speed = h * 0.0006f
+    val cycle = w + trainLen * 2f + speed * 3_000f
+    val tx = -trainLen - car * 0.4f + (now * speed) % cycle
     val body = Colors.mix(p.accent, 0xFFC03A2E.toInt(), 0.4f)
     for (k in 0 until cars) {
         val x0 = tx + k * car * 1.05f

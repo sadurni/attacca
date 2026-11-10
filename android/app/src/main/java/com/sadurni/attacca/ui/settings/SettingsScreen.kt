@@ -60,6 +60,8 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -106,6 +108,10 @@ fun SettingsScreen(
                 SettingsSearchResults(query) { open(it) }
             } else {
                 CategoryRow(Icons.Rounded.AutoAwesome, stringResource(R.string.setup_title), stringResource(R.string.setup_entry_summary)) { guide = true }
+                // The check-up: what keeps things from being at their best, and the guides by ear.
+                var checkup by remember { mutableStateOf(false) }
+                CategoryRow(Icons.Rounded.Checklist, stringResource(R.string.checkup_title), stringResource(R.string.checkup_summary)) { checkup = true }
+                if (checkup) Checkup { checkup = false }
                 SectionTitle(stringResource(R.string.settings_essentials))
                 EssentialsSection(settings) { open(it) }
                 for (group in SettingsGroup.entries) {
@@ -325,6 +331,9 @@ private fun pageSummary(page: SettingsPage): String {
 @Composable
 private fun CrossfadePage(settings: com.sadurni.attacca.settings.AppSettings) {
     val playback by settings.playback.collectAsStateWithLifecycle()
+    var joinGuide by remember { mutableStateOf(false) }
+    CategoryRow(Icons.Rounded.SwapHoriz, stringResource(R.string.join_guide_open), stringResource(R.string.join_guide_hint)) { joinGuide = true }
+    if (joinGuide) TransitionsGuide { joinGuide = false }
     val off = stringResource(R.string.off)
     ValueSlider(
         label = stringResource(R.string.crossfade_duration),

@@ -48,6 +48,8 @@ class TagDb(context: Context) : SQLiteOpenHelper(context, "tags.db", null, VERSI
             // The files already checked for damage, with their size and date then (fine or not).
             db.execSQL("CREATE TABLE IF NOT EXISTS damage_checked (path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL)")
             db.execSQL("CREATE TABLE IF NOT EXISTS damaged (path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL, kind INTEGER NOT NULL, amount INTEGER NOT NULL, at INTEGER NOT NULL)")
+            // Whether each file carries ReplayGain tags (1) or not (0), as read at its size and date.
+            db.execSQL("CREATE TABLE IF NOT EXISTS replaygain (path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL, has INTEGER NOT NULL)")
             repairTextOnce(db)
             rereadYearsOnce(db)
         }
@@ -155,6 +157,31 @@ class TagDb(context: Context) : SQLiteOpenHelper(context, "tags.db", null, VERSI
         writableDatabase.insertWithOnConflict("damage_checked", null, ContentValues().apply {
             put("path", path); put("size", size); put("mtime", mtime)
         }, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    /** The files read for ReplayGain tags: path → (size, mtime, 1 tagged / 0 not). */
+    fun replayGainKnown(): Map<String, LongArray> {
+        val result = HashMap<String, LongArray>()
+        readableDatabase.rawQuery("SELECT path, size, mtime, has FROM replaygain", null).use { c ->
+            while (c.moveToNext()) result[c.getString(0)] = longArrayOf(c.getLong(1), c.getLong(2), c.getLong(3))
+        }
+        return result
+    }
+
+    /** Stores whether each file carries ReplayGain tags, with its (size, mtime) then. */
+    fun putReplayGain(entries: List<Triple<File, Boolean, LongArray>>) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for ((file, has, stamp) in entries) {
+                db.insertWithOnConflict("replaygain", null, ContentValues().apply {
+                    put("path", file.absolutePath); put("size", stamp[0]); put("mtime", stamp[1]); put("has", if (has) 1 else 0)
+                }, SQLiteDatabase.CONFLICT_REPLACE)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
 
     /** Forgets which files were checked (all are checked again). */

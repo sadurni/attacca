@@ -58,7 +58,10 @@ Rockbox's own one. When the plugin is closed it stays in the background and, at 
 change, sets up the next join from how the two songs end and start (the library knows it):
 
 - a song that fades out by itself plays out whole over its own fade while the next one comes in;
-- a hard, loud ending gets a short blend (2 s), so the next song does not pile up on it;
+- a hard, loud ending gets a short blend (2 s), so the next song does not pile up on it; a song
+  whose file ends in the middle of its sound (a live song cut before the applause ends, an album
+  that runs on into the next song) is not taken for one and fades as usual (export the library
+  again from Attacca Desktop 1.3.0 or later for this);
 - otherwise both fade over the **crossfade length** set in the plugin (10 s unless changed);
 - a next song that starts softly is not faded in;
 - the next song of the same album (same folder, later in it) follows on without a blend;
@@ -117,9 +120,29 @@ so they sound alike; the file tells them apart. It starts again past 32 KB.
 Silence skipping as such is not available: Rockbox playlists have no per-track start and end
 points; the automatic crossfade hides the silences between songs instead.
 
+## Fine tuning by ear
+
+**Fine tuning by ear** in the plugin's menu has three guides, each choice heard A, B, C… on
+the player (select a choice to hear it, Next to go on; the list that was playing comes back
+afterwards):
+
+- **The sound**, in Rockbox's own sound settings: what the music comes out of, left and right
+  (balance, both sides as one) with a sound the plugin makes, how deep the player goes (deep
+  tones one at a time or a bass line going down, also made by the plugin), then bass (a lift, or
+  Rockbox's perceptual bass enhancement for the bass it cannot play), treble, crossfeed on the
+  head or stereo width on speakers, the compressor, and before against after.
+- **The transitions**: the end of a song of the library into the start of another as each choice
+  joins them (one after the other, the automatic blend, Rockbox's crossfade of 4 or 8 s), a song
+  with a long silence at its end (jumped over or kept) and two songs in a row of an album (without
+  gaps or blended); saved in the plugin's crossfade settings.
+- **The volume**: a loud song and a quiet one with ReplayGain tags, one after the other, as the
+  files are or evened out, an album as recorded or each song the same, and the overall level
+  (Rockbox's ReplayGain settings). Rockbox can only even out songs that have the tags.
+
 ## What's new
 
-See [CHANGELOG.md](../CHANGELOG.md). In 1.1.0: **Keep albums whole**, also with the automatic
+See [CHANGELOG.md](../CHANGELOG.md). In 1.3.0: **Fine tuning by ear** (sound, transitions,
+volume). In 1.1.0: **Keep albums whole**, also with the automatic
 crossfade off.
 
 ## Installation

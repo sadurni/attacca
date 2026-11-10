@@ -64,7 +64,7 @@ private val topics = listOf(
     HelpTopic(Icons.AutoMirrored.Rounded.QueueMusic, R.string.help_queue_title, R.string.help_queue_body, listOf(R.string.help_strip_icons, R.string.help_queue_undo, R.string.help_queue_undo_last)),
     HelpTopic(Icons.Rounded.Folder, R.string.help_browser_title, R.string.help_browser_body, listOf(R.string.help_browser_more, R.string.help_music_bridge, R.string.help_damaged)),
     HelpTopic(Icons.Rounded.Album, R.string.help_music_title, R.string.help_music_body, listOf(R.string.help_music_grouped, R.string.help_music_bridge, R.string.help_music_by_year, R.string.help_cover_search)),
-    HelpTopic(Icons.Rounded.GraphicEq, R.string.help_sound_title, R.string.help_sound_body, listOf(R.string.help_sound_templates, R.string.help_sound_more, R.string.help_sound_bass, R.string.help_sound_peq, R.string.help_sound_presets)),
+    HelpTopic(Icons.Rounded.GraphicEq, R.string.help_sound_title, R.string.help_sound_body, listOf(R.string.help_sound_guide, R.string.help_play_guides, R.string.help_checkup, R.string.help_sound_templates, R.string.help_sound_more, R.string.help_sound_bass, R.string.help_sound_peq, R.string.help_sound_presets)),
     HelpTopic(Icons.Rounded.Headphones, R.string.help_devices_title, R.string.help_devices_body, listOf(R.string.help_devices_fold, R.string.help_devices_notifications)),
     HelpTopic(Icons.Rounded.AutoAwesome, R.string.help_chain_title, R.string.help_chain_body, listOf(R.string.help_chain_silences, R.string.help_moods)),
     HelpTopic(Icons.Rounded.PriorityHigh, R.string.help_inclusion_title, R.string.help_inclusion_body, listOf(R.string.help_inclusion_sets, R.string.help_inclusion_default)),

@@ -234,7 +234,7 @@ class Diorama {
         internal val sections: Sections? by lazy { wave?.let { Sections.of(it) } }
 
         /** Its loudest stretch's start (8 s windows), or -1 for a short or unknown track. */
-        internal val peakMs: Double by lazy {
+        val peakMs: Double by lazy {
             val w = wave ?: return@lazy -1.0
             if (w.lengthMs < 60_000) return@lazy -1.0
             var best = -1.0

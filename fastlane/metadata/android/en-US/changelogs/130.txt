@@ -1,0 +1,3 @@
+• Sound guide (Sound → Tune the sound step by step): every effect heard A/B/C on your own music, for each device.
+• Guides by ear for the transitions and the volume, and a check-up of what could be better (Settings).
+• The automatic crossfade no longer stops dead a track cut off in the middle of its sound.

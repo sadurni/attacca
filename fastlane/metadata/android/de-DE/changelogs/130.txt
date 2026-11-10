@@ -1,0 +1,3 @@
+• Klang-Assistent (Klang → Klang Schritt für Schritt abstimmen): jeder Effekt A/B/C an deiner eigenen Musik gehört, für jedes Gerät.
+• Assistenten nach Gehör für die Übergänge und die Lautstärke, und ein Check-up, was besser sein könnte (Einstellungen).
+• Die automatische Überblendung stoppt einen mitten im Klang abgeschnittenen Titel nicht mehr abrupt.

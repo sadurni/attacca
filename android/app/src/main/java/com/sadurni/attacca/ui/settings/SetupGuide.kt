@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -172,7 +173,7 @@ fun SetupGuide(start: SetupStep = SetupStep.FOLDER, onDone: () -> Unit) {
 }
 
 @Composable
-private fun StepTitle(title: String, intro: String) {
+internal fun StepTitle(title: String, intro: String) {
     Text(
         title,
         fontSize = AttaccaType.title,
@@ -239,6 +240,13 @@ private fun ListeningStep(selected: SoundTemplate?, onSelect: (SoundTemplate?) -
     TemplateChoices(selected, onSelect)
     RadioRow(stringResource(R.string.setup_listening_none), selected == null) { onSelect(null) }
     Hint(stringResource(R.string.setup_listening_hint))
+    // Or every effect heard, step by step: what is chosen there is saved by the guide itself.
+    var guide by remember { mutableStateOf(false) }
+    androidx.compose.material3.OutlinedButton(onClick = { guide = true }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(stringResource(R.string.guide_open))
+    }
+    // Saved there, no template on top of it.
+    if (guide) SoundGuide(onSaved = { onSelect(null) }) { guide = false }
 }
 
 /** The templates as choices, each with what it does. */

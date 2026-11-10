@@ -144,6 +144,8 @@ class AttaccaApp : Application() {
                 // Lists from a track find the collection ready.
                 if (result != null) chainLists.warm()
                 val folder = settings.musicFolder
+                // Which of the new and changed tracks carry ReplayGain tags (the check-up counts them).
+                if (result != null && folder != null) com.sadurni.attacca.library.ReplayGainCheck.checkFolder(folder)
                 if (result != null && folder != null && settings.chain.value.autoAnalyze) {
                     chainAnalyzer.analyzeLibrary(java.io.File(folder))
                 }
