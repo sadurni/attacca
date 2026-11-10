@@ -114,7 +114,10 @@ all those connected, without choosing anything.
   *Tune the sound step by step* is the phone's sound guide: each effect heard A/B/C on a stretch
   of the library picked for it, a test of how deep the output plays, before against after.
   Settings → *Fine tuning*: a check-up (tracks not analysed or without loudness, damaged tracks,
-  outputs without a sound of their own) and guides by ear for the transitions and the volume.
+  outputs without a sound of their own) and guides by ear for the transitions, the volume and the
+  chaining: *Chaining to your taste* moves how much the beat, the sound, the energy and the key
+  count when lists are chained (also for the command line and the library exported for Rockbox
+  and the web).
 - **Covers**: every album's cover at a glance, with those without one marked. *Find the missing
   covers* looks for them online in an open music database ([MusicBrainz](https://musicbrainz.org)
   and its [Cover Art Archive](https://coverartarchive.org)) by album and artist; clicking an album

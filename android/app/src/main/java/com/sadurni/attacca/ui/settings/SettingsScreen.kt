@@ -61,6 +61,7 @@ import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.SwapHoriz
+import kotlin.math.roundToInt
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -1373,6 +1374,22 @@ private fun ChainingPage(settings: com.sadurni.attacca.settings.AppSettings) {
         onChange = { v -> settings.updateChain { it.copy(quickNotPlayedDays = v.toInt()) } },
     )
     Hint(stringResource(R.string.chain_quick_not_played_hint))
+    // The listener's taste: what counts most when one song leads into the next.
+    val taste by settings.chainTaste.collectAsStateWithLifecycle()
+    var tasteGuide by remember { mutableStateOf(false) }
+    CategoryRow(
+        Icons.Rounded.SwapHoriz,
+        stringResource(R.string.taste_guide_open),
+        if (taste.isDefault) stringResource(R.string.taste_guide_hint)
+        else stringResource(
+            R.string.taste_custom,
+            (taste.share(com.sadurni.attacca.chain.TasteGroup.TEMPO) * 100).roundToInt(),
+            (taste.share(com.sadurni.attacca.chain.TasteGroup.SOUND) * 100).roundToInt(),
+            (taste.share(com.sadurni.attacca.chain.TasteGroup.ENERGY) * 100).roundToInt(),
+            (taste.share(com.sadurni.attacca.chain.TasteGroup.KEY) * 100).roundToInt(),
+        ),
+    ) { tasteGuide = true }
+    if (tasteGuide) TasteGuide { tasteGuide = false }
     ValueSlider(
         label = stringResource(R.string.chain_artist_spacing),
         value = chain.artistSpacing.toFloat(),

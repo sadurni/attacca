@@ -56,6 +56,7 @@ fun main(args: Array<String>) {
     runCatching { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()) }.onFailure(::logError)
     val prefs = Prefs()
     Lang.apply(prefs["language"] ?: "system")
+    DeskTaste.load(prefs)
     val state = AppState(prefs)
     application {
         val window = rememberWindowState(

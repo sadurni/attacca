@@ -233,6 +233,9 @@ function readLibrary(buf) {
     spacing: v.getUint16(36, true), created: v.getUint32(40, true), base: v.getUint32(48, true),
     yearmin: v.getUint16(56, true), yearmax: v.getUint16(58, true), bpmmin: v.getUint16(60, true), bpmmax: v.getUint16(62, true),
   };
+  // The listener's chaining weights (tempo, timbre, spectrum, activity, key, notes), when the file has them.
+  TASTE = [330, 290, 160, 120, 50, 40];
+  if (h.dictoff >= 76) { const t = [0, 1, 2, 3, 4, 5].map(i => v.getUint16(64 + 2 * i, true)); if (t.some(x => x > 0)) TASTE = t; }
   const bytes = new Uint8Array(buf), dec = new TextDecoder();
   const str = off => { if (off === NONE32 || off >= h.strsize) return ""; const s = h.stroff + off; let e = s; while (bytes[e]) e++; return dec.decode(bytes.subarray(s, e)); };
   const dicts = []; let off = h.dictoff;
@@ -293,8 +296,10 @@ function similarityWithTimbre(e, endOff, s, startOff, harmony, bands, activity) 
     const r = ta - tb, d = Math.min(Math.abs(r), Math.abs(r - 1000), Math.abs(r + 1000));
     tempo = asClearAs(expNeg(d, 40), Math.min(e[endOff + 44], s[startOff + 44]) * 2);
   }
-  return Math.floor((4 * harmony + 5 * key + 16 * bands + 29 * timbre + 12 * activity + 33 * tempo) / 99);
+  const w = TASTE, total = w[0] + w[1] + w[2] + w[3] + w[4] + w[5];
+  return Math.floor((w[0] * tempo + w[1] * timbre + w[2] * bands + w[3] * activity + w[4] * key + w[5] * harmony) / total);
 }
+let TASTE = [330, 290, 160, 120, 50, 40];
 function transition(a, b) {
   // A whole album (albums like one) links by its last song's end into the next album's first start.
   if (a.tracks) a = a.last;

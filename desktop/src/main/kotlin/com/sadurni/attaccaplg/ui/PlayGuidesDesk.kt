@@ -64,7 +64,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /** The guides' own output: [loop] to the output in use, on a thread of its own. */
-private class DeskLoopPlayer(private val device: String?) {
+internal class DeskLoopPlayer(private val device: String?) {
     val loop = TuneLoop(AudioOut.RATE)
 
     @Volatile
@@ -96,7 +96,7 @@ private class DeskLoopPlayer(private val device: String?) {
 }
 
 /** A stretch of [file] from [fromMs] to [toMs] (null: to its end), as stereo at the output's rate. */
-private fun decodeStretch(file: File, fromMs: Long, toMs: Long?): Pcm? {
+internal fun decodeStretch(file: File, fromMs: Long, toMs: Long?): Pcm? {
     var rate = 0
     var channels = 2
     var frame = 0L
@@ -186,7 +186,7 @@ private class DeskPlaySamples(all: List<StoredTrack>) {
 
 /** A guide's frame in the window. */
 @Composable
-private fun DeskGuideFrame(title: String, index: Int, count: Int, stepTitle: String, intro: String, onClose: () -> Unit, onBack: () -> Unit, onNext: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun DeskGuideFrame(title: String, index: Int, count: Int, stepTitle: String, intro: String, onClose: () -> Unit, onBack: () -> Unit, onNext: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     val grayed = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
     PageFrame(title) {
         ScrollColumn {
@@ -207,7 +207,7 @@ private fun DeskGuideFrame(title: String, index: Int, count: Int, stepTitle: Str
 }
 
 @Composable
-private fun DeskChoice(letter: String, title: String, hint: String, selected: Boolean, onClick: () -> Unit) {
+internal fun DeskChoice(letter: String, title: String, hint: String, selected: Boolean, onClick: () -> Unit) {
     val accent = MaterialTheme.colorScheme.primary
     val grayed = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
     val shape = RoundedCornerShape(12.dp)
@@ -424,6 +424,7 @@ fun DeskCheckup(state: AppState, onGuide: (String) -> Unit, onDone: () -> Unit) 
                     OutlinedButton(onClick = { onGuide("sound") }) { Text(tr("Tune the sound step by step", "Ajustar el sonido paso a paso")) }
                     OutlinedButton(onClick = { onGuide("join") }) { Text(tr("Tune the transitions by ear", "Ajustar las transiciones de oído")) }
                     OutlinedButton(onClick = { onGuide("level") }) { Text(tr("Even out the volume by ear", "Igualar el volumen de oído")) }
+                    OutlinedButton(onClick = { onGuide("taste") }) { Text(tr("Chaining to your taste", "Encadenado a tu gusto")) }
                 }
                 TextButton(onClick = onDone) { Text(tr("Close", "Cerrar")) }
             }

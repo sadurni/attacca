@@ -80,7 +80,7 @@ F-Droid as well.
 The defaults are made to sound right without touching anything. When you want more: Settings opens
 with the essentials and a search, Sound keeps a profile for each output (a template starts one in a
 tap, or a guide tunes it step by step by ear on your own music; transitions and volume have their
-guides too, and a check-up says what could be better), Devices says what each one does when it connects, and the **?** opens the help.
+guides too, a check-up says what could be better, and chaining learns your taste by ear), Devices says what each one does when it connects, and the **?** opens the help.
 
 **On the PC**
 

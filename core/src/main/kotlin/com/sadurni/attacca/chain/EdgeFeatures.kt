@@ -212,12 +212,32 @@ object EdgeFeatures {
     }
 
     /**
-     * The similarity of edges with timbre and tempo. Its parts and their weights were learnt from
+     * The similarity of edges with timbre and tempo. Its parts and their default weights were learnt from
      * music cut where it flows on (the chaining bench, on the user's own collection): tempo (half
      * or double counting as equal, as much as the beats are clear) weighs most, then the timbre
      * coefficients, the spectrum's shape, the activity, the key (as clear as it is) and the notes.
      */
-    private fun similarityWithTimbre(end: EdgeDescriptor, start: EdgeDescriptor, endTimbre: FloatArray, startTimbre: FloatArray): Float {
+    private fun similarityWithTimbre(end: EdgeDescriptor, start: EdgeDescriptor, endTimbre: FloatArray, startTimbre: FloatArray): Float =
+        taste.score(partsWithTimbre(end, start, endTimbre, startTimbre))
+
+    /**
+     * How much the chaining weighs each part of a link (the listener's taste, see [ChainTaste]):
+     * set from the settings at start and when the chaining guide saves.
+     */
+    @Volatile
+    var taste: ChainTaste = ChainTaste.DEFAULT
+
+    /**
+     * The parts of a link from [end] into [start], each 0 … 1, in the order of [ChainTaste]
+     * (tempo, timbre, spectrum, activity, key, notes); null for edges without timbre.
+     */
+    fun parts(end: EdgeDescriptor, start: EdgeDescriptor): FloatArray? {
+        val endTimbre = end.timbre ?: return null
+        val startTimbre = start.timbre ?: return null
+        return partsWithTimbre(end, start, endTimbre, startTimbre)
+    }
+
+    private fun partsWithTimbre(end: EdgeDescriptor, start: EdgeDescriptor, endTimbre: FloatArray, startTimbre: FloatArray): FloatArray {
         val harmony = (pearson(end.chroma, start.chroma) + 1f) / 2f
         val keyClarity = minOf(end.key.second, start.key.second).coerceIn(0f, 1f)
         val key = 0.5f + (Keys.compatibility(end.key.first, start.key.first) - 0.5f) * keyClarity
@@ -241,16 +261,9 @@ object EdgeFeatures {
             val d = minOf(abs(r), abs(r - 1), abs(r + 1))
             0.5f + (exp(-d / TEMPO_OCTAVES) - 0.5f) * (minOf(end.pulse, start.pulse) * 2f).coerceIn(0f, 1f)
         }
-        return (W_HARMONY * harmony + W_KEY * key + W_BANDS * bands + W_TIMBRE * timbre + W_ACTIVITY * activity + W_TEMPO * tempo) / W_TOTAL
+        return floatArrayOf(tempo, timbre, bands, activity, key, harmony)
     }
 
-    private const val W_HARMONY = 0.04f
-    private const val W_KEY = 0.05f
-    private const val W_BANDS = 0.16f
-    private const val W_TIMBRE = 0.29f
-    private const val W_ACTIVITY = 0.12f
-    private const val W_TEMPO = 0.33f
-    private const val W_TOTAL = W_HARMONY + W_KEY + W_BANDS + W_TIMBRE + W_ACTIVITY + W_TEMPO
     /** Typical distance of the timbre coefficients between different songs (learnt). */
     private const val CEPSTRUM_SCALE = 1.11f
     /** A tempo this far apart (in octaves, about 3 %) scores 1/e of a match. */

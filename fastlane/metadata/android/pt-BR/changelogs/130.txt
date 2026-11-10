@@ -1,3 +1,4 @@
 • Guia de som (Som → Ajustar o som passo a passo): cada efeito ouvido A/B/C na sua própria música, para cada dispositivo.
 • Guias de ouvido para as transições e o volume, e uma verificação do que poderia ser melhor (Configurações).
 • O crossfade automático não para mais de repente uma faixa cortada no meio do som.
+• Encadeamento ao seu gosto (Configurações → Encadeamento): ouça qual faixa segue melhor e as listas aprendem o que importa para você.

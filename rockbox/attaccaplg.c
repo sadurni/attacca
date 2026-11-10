@@ -34,6 +34,7 @@
 
 #define MAGIC "BPCR2\0\0\0"
 #define HEADER_SIZE 64
+#define TASTE_SIZE 12      /* the chaining weights after the header (files written from 1.3.0) */
 #define NONE16 0xFFFFu
 #define NONE32 0xFFFFFFFFu
 #define N_DICTS 4
@@ -2097,6 +2098,17 @@ static void apply_set(uint32_t i, struct record *r, bool windowed)
     r->flags = (r->flags & ~F_INCLUDED) | (((rd32(m) >> set_bit) & 1) ? F_INCLUDED : 0);
 }
 
+/* How much each part of a link weighs: tempo, timbre, spectrum, activity, key, notes (Attacca's
+ * ChainTaste; the library file may carry the listener's own, in thousandths). */
+static uint32_t taste[6];
+
+static void taste_default(void)
+{
+    static const uint16_t learnt[6] = { 330, 290, 160, 120, 50, 40 };
+    for (int i = 0; i < 6; i++)
+        taste[i] = learnt[i];
+}
+
 static const char *open_db(const char *path)
 {
     close_db();
@@ -2123,6 +2135,19 @@ static const char *open_db(const char *path)
     H.yearmax = rd16(h + 58);
     H.bpm100min = rd16(h + 60);
     H.bpm100max = rd16(h + 62);
+    /* The listener's chaining weights, when the file has them (its dictionaries start after). */
+    taste_default();
+    if (H.dictoff >= HEADER_SIZE + TASTE_SIZE) {
+        uint8_t t[TASTE_SIZE];
+        if (read_at(HEADER_SIZE, t, TASTE_SIZE)) {
+            uint32_t sum = 0;
+            for (int i = 0; i < 6; i++)
+                sum += rd16(t + 2 * i);
+            if (sum > 0)
+                for (int i = 0; i < 6; i++)
+                    taste[i] = rd16(t + 2 * i);
+        }
+    }
     if (H.recsize < sizeof(struct record) || rd32(h + 44) < N_DICTS || rd16(h + 52) != VEC
         || rd16(h + 54) != sizeof(struct edge)) {
         close_db();
@@ -2343,7 +2368,11 @@ static uint32_t similarity_with_timbre(const struct edge *end, const struct edge
         int pulse = end->pulse < start->pulse ? end->pulse : start->pulse;
         tempo = as_clear_as(exp_neg(d, 40), pulse * 2);                            /* 0.04 octaves */
     }
-    return (uint32_t)(((uint64_t)4 * harmony + 5 * key + 16 * bands + 29 * timbre + 12 * activity + 33 * tempo) / 99);
+    uint32_t total = taste[0] + taste[1] + taste[2] + taste[3] + taste[4] + taste[5];
+    if (total == 0)
+        return (uint32_t)(((uint64_t)4 * harmony + 5 * key + 16 * bands + 29 * timbre + 12 * activity + 33 * tempo) / 99);
+    return (uint32_t)(((uint64_t)taste[0] * tempo + (uint64_t)taste[1] * timbre + (uint64_t)taste[2] * bands
+        + (uint64_t)taste[3] * activity + (uint64_t)taste[4] * key + (uint64_t)taste[5] * harmony) / total);
 }
 
 /** How alike the end of one song is to the start of another, 0..65536 (Attacca's edge similarity). */

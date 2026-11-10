@@ -1,3 +1,4 @@
 • Guia de so (So → Ajusta el so pas a pas): cada efecte se sent A/B/C amb la teva pròpia música, per a cada dispositiu.
 • Guies d'oïda per a les transicions i el volum, i una revisió del que es pot millorar (Configuració).
 • El crossfade automàtic ja no atura en sec una pista tallada a mig so.
+• Encadenament al teu gust (Configuració → Encadenament): escolta quina cançó segueix millor i les llistes aprenen què t'importa.

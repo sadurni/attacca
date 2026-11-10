@@ -1,3 +1,4 @@
 • Guía de son (Son → Axustar o son paso a paso): cada efecto óese A/B/C coa túa propia música, para cada dispositivo.
 • Guías de oído para as transicións e o volume, e unha revisión do que se pode mellorar (Axustes).
 • O crossfade automático xa non detén en seco unha pista cortada a metade do seu son.
+• Encadeamento ao teu gusto (Axustes → Encadeamento): escoita que canción segue mellor e as listas aprenden o que che importa.

@@ -79,7 +79,7 @@ import kotlinx.coroutines.delay
 
 /** A guide's frame: full screen, its steps as dots, the step's title and text, back and next or save. */
 @Composable
-private fun GuideFrame(
+internal fun GuideFrame(
     title: String,
     index: Int,
     count: Int,
@@ -153,7 +153,7 @@ private fun PairRow(first: String?, second: String?, loading: Boolean, nowSecond
 
 /** Where the sample is: a bar with the change marked. */
 @Composable
-private fun ChangeBar(position: Int, frames: Int, changeFrom: Int, changeTo: Int) {
+internal fun ChangeBar(position: Int, frames: Int, changeFrom: Int, changeTo: Int) {
     val accent = LocalAccent.current
     val grayed = LocalAttaccaColors.current.textGrayed
     Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 16.dp, vertical = 6.dp)) {
@@ -169,7 +169,7 @@ private fun ChangeBar(position: Int, frames: Int, changeFrom: Int, changeTo: Int
 }
 
 @Composable
-private fun GuideDialog(onDone: () -> Unit, content: @Composable () -> Unit) {
+internal fun GuideDialog(onDone: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDone, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { content() }
     }

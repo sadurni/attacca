@@ -252,6 +252,21 @@ class AppSettings(context: Context) {
         prefs.edit().putString("row_gesture_${swipe.name}", action.name).apply()
     }
 
+    private val _chainTaste = MutableStateFlow(
+        com.sadurni.attacca.chain.ChainTaste.decode(prefs.getString("chain_taste", null))
+            .also { com.sadurni.attacca.chain.EdgeFeatures.taste = it },
+    )
+
+    /** How much chaining weighs each part of a link (the chaining guide's result); in use at once. */
+    val chainTaste: StateFlow<com.sadurni.attacca.chain.ChainTaste> = _chainTaste.asStateFlow()
+
+    fun setChainTaste(taste: com.sadurni.attacca.chain.ChainTaste) {
+        val t = taste.normalized()
+        _chainTaste.value = t
+        com.sadurni.attacca.chain.EdgeFeatures.taste = t
+        prefs.edit().putString("chain_taste", if (t.isDefault) null else t.encode()).apply()
+    }
+
     private val _chain = MutableStateFlow(
         // A single inclusion list from before sets existed becomes the first set.
         InclusionSets.keepInStep(ChainSettings(

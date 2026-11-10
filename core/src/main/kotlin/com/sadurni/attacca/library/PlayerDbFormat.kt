@@ -26,12 +26,15 @@ import kotlin.math.sqrt
  * sound families, percentiles, the similarity vectors, edges in integers), so a player without
  * floating point only adds and compares. Written by Attacca and by Attacca Desktop alike.
  *
- * Little-endian. Header (64 bytes):
+ * Little-endian. Header (76 bytes):
  *  0 "BPCR2\0\0\0" · 8 tracks u32 · 12 record size u32 · 16 dictionaries offset · 20 records offset ·
  *  24 edges offset · 28 strings offset · 32 strings size (all u32) · 36 artist spacing u16 ·
  *  38 edge seconds u16 · 40 creation date (string) u32 · 44 dictionaries u32 (4) · 48 music folder
  *  on the device (string) u32 · 52 vector size u16 · 54 edge size in bytes u16 · 56 first year u16 ·
- *  58 last year u16 · 60 lowest BPM ×100 u16 · 62 highest BPM ×100 u16.
+ *  58 last year u16 · 60 lowest BPM ×100 u16 · 62 highest BPM ×100 u16 · 64 the chaining weights
+ *  (the listener's taste, see [com.sadurni.attacca.chain.ChainTaste]): tempo, timbre, spectrum,
+ *  activity, key, notes, thousandths u16 each. Files written before end the header at 64 (their
+ *  dictionaries start there): readers then keep the default weights.
  * Dictionaries (artist, genre tag, mood, sound family, inclusion sets): count u32, then that many
  *  string offsets u32. Libraries written before have only the first four (the header says how many).
  * Record (160 bytes): 0 title · 4 path within the music folder · 8 album (strings, u32) · 12 hash of
@@ -54,7 +57,7 @@ import kotlin.math.sqrt
  */
 object PlayerDbFormat {
     const val EXTENSION = "bpcr2"
-    private const val HEADER = 64
+    private const val HEADER = 76
     private const val VECTOR = Moods.SOUND_COMPONENTS + SoundProfile.TIMBRE_SIZE
     private const val RECORD = 44 + VECTOR * 2 + 8 + 4
 
@@ -185,6 +188,7 @@ object PlayerDbFormat {
         header.putShort(VECTOR.toShort()).putShort((EDGE_VALUES * 2).toShort())
         header.putShort((years.minOrNull() ?: 0).toShort()).putShort((years.maxOrNull() ?: 0).toShort())
         header.putShort((bpms.minOrNull() ?: 0).toShort()).putShort((bpms.maxOrNull() ?: 0).toShort())
+        for (w in com.sadurni.attacca.chain.EdgeFeatures.taste.thousandths()) header.putShort(w.toShort())
         file.absoluteFile.parentFile?.mkdirs()
         file.outputStream().buffered().use { out ->
             out.write(header.array())

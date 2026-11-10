@@ -66,7 +66,7 @@ private val topics = listOf(
     HelpTopic(Icons.Rounded.Album, R.string.help_music_title, R.string.help_music_body, listOf(R.string.help_music_grouped, R.string.help_music_bridge, R.string.help_music_by_year, R.string.help_cover_search)),
     HelpTopic(Icons.Rounded.GraphicEq, R.string.help_sound_title, R.string.help_sound_body, listOf(R.string.help_sound_guide, R.string.help_play_guides, R.string.help_checkup, R.string.help_sound_templates, R.string.help_sound_more, R.string.help_sound_bass, R.string.help_sound_peq, R.string.help_sound_presets)),
     HelpTopic(Icons.Rounded.Headphones, R.string.help_devices_title, R.string.help_devices_body, listOf(R.string.help_devices_fold, R.string.help_devices_notifications)),
-    HelpTopic(Icons.Rounded.AutoAwesome, R.string.help_chain_title, R.string.help_chain_body, listOf(R.string.help_chain_silences, R.string.help_moods)),
+    HelpTopic(Icons.Rounded.AutoAwesome, R.string.help_chain_title, R.string.help_chain_body, listOf(R.string.help_chain_taste, R.string.help_chain_silences, R.string.help_moods)),
     HelpTopic(Icons.Rounded.PriorityHigh, R.string.help_inclusion_title, R.string.help_inclusion_body, listOf(R.string.help_inclusion_sets, R.string.help_inclusion_default)),
     HelpTopic(Icons.Rounded.Palette, R.string.help_themes_title, R.string.help_themes_body, listOf(R.string.help_themes_layout, R.string.help_themes_images, R.string.help_themes_names, R.string.help_themes_parts, R.string.help_themes_system_mood, R.string.help_themes_desktop), gallery = true),
     HelpTopic(Icons.Rounded.DirectionsCar, R.string.help_car_title, R.string.help_car_body, listOf(R.string.help_car_cover)),

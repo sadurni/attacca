@@ -142,7 +142,8 @@ afterwards):
 ## What's new
 
 See [CHANGELOG.md](../CHANGELOG.md). In 1.3.0: **Fine tuning by ear** (sound, transitions,
-volume). In 1.1.0: **Keep albums whole**, also with the automatic
+volume), and lists chained to your taste when Attacca's chaining guide was used (the weights come
+in the exported library). In 1.1.0: **Keep albums whole**, also with the automatic
 crossfade off.
 
 ## Installation

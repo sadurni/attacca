@@ -1,3 +1,4 @@
 • Guía de sonido (Sonido → Ajustar el sonido paso a paso): cada efecto se escucha A/B/C con tu propia música, para cada dispositivo.
 • Guías de oído para las transiciones y el volumen, y una revisión de lo que se puede mejorar (Configuración).
 • El crossfade automático ya no detiene en seco una pista cortada a mitad de su sonido.
+• Encadenado a tu gusto (Configuración → Encadenamiento): escucha qué pista sigue mejor y las listas aprenden lo que te importa.

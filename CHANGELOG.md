@@ -44,11 +44,18 @@ the [releases](https://github.com/sadurni/attacca/releases) have the files.
 - **Automatic crossfade**: a track whose file ends in the middle of its sound (a live track cut
   before the applause dies, an album running on into the next track, a mix) was kept whole as if
   it ended hard and stopped dead; it now fades out.
+- **Chaining to your taste** (Settings → Chaining, and the check-up): the end of a song of your
+  music goes into two songs that could follow it, eight times; one matches the end better in one
+  thing (the beat, the sound, the energy, or the key and notes) and the other in the rest, and you
+  keep the one that follows better. What you keep moves how much each counts when lists are
+  chained; the result shows each before and after, and can go back to Attacca's own weights.
 
 ### Attacca Desktop
 
 - The sound guide in Sound, for the output in use, with samples from the library.
-- Settings → Fine tuning: the check-up and the guides by ear for the transitions and the volume.
+- Settings → Fine tuning: the check-up and the guides by ear for the transitions, the volume and
+  the chaining (to your taste, as on the phone; also for the command line).
+- The library exported for Rockbox and the web carries the chaining weights.
 - The automatic crossfade fades a track cut off in the middle of its sound.
 
 ### Attacca for Rockbox
@@ -60,6 +67,8 @@ the [releases](https://github.com/sadurni/attacca/releases) have the files.
   choice heard on the player; the list that was playing comes back afterwards.
 - The automatic crossfade no longer stops dead a song cut off in the middle of its sound (with
   a library exported again from Attacca Desktop 1.3.0).
+- Lists chain to your taste when the library comes from an Attacca or Attacca Desktop whose
+  chaining guide was used (the web generator too).
 
 ## 1.2.1
 

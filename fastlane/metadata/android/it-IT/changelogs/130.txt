@@ -1,3 +1,4 @@
 • Guida al suono (Suono → Regola il suono passo dopo passo): ogni effetto ascoltato A/B/C sulla tua musica, per ogni dispositivo.
 • Guide a orecchio per i passaggi e il volume, e un controllo di cosa si può migliorare (Impostazioni).
 • La dissolvenza incrociata automatica non ferma più di colpo un brano tagliato a metà del suo suono.
+• Concatenamento a tuo gusto (Impostazioni → Concatenamento): ascolta quale brano segue meglio e le liste imparano cosa conta per te.

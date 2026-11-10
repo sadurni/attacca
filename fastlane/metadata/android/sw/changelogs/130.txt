@@ -1,3 +1,4 @@
 • Mwongozo wa sauti (Sauti → Rekebisha sauti hatua kwa hatua): kila athari husikika A/B/C kwenye muziki wako, kwa kila kifaa.
 • Miongozo kwa sikio ya mipito na kiwango cha sauti, na ukaguzi wa kinachoweza kuwa bora (Mipangilio).
 • Crossfade otomatiki haisimamishi tena ghafla wimbo uliokatwa katikati ya sauti yake.
+• Kufuatanisha kwa ladha yako (Mipangilio → Kufuatanisha): sikia upi unafuata vizuri, orodha zijifunze kinachokuhusu.

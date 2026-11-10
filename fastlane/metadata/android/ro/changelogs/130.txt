@@ -1,3 +1,4 @@
 • Ghid de sunet (Sunet → Reglează sunetul pas cu pas): fiecare efect ascultat A/B/C pe propria muzică, pentru fiecare dispozitiv.
 • Ghiduri după ureche pentru tranziții și volum, și o verificare a ceea ce s-ar putea îmbunătăți (Setări).
 • Crossfade-ul automat nu mai oprește brusc o piesă tăiată în mijlocul sunetului.
+• Înlănțuire după gustul tău (Setări → Înlănțuire): auzi care piesă urmează mai bine, iar listele învață ce contează pentru tine.

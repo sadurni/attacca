@@ -43,6 +43,8 @@ private const val USAGE = """Attacca Desktop - chained lists from the analysed m
 """
 
 fun main(args: Array<String>) {
+    // The chaining weights chosen in the window (chaining guide) count for the command line too.
+    runCatching { com.sadurni.attaccaplg.ui.DeskTaste.load(com.sadurni.attaccaplg.ui.Prefs()) }
     val options = Options(args.toList())
     when (options.positional.firstOrNull()) {
         "scan" -> scan(options)

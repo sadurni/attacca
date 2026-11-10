@@ -415,6 +415,9 @@ plays them so one song flows into the next.
   **Check-up** (Settings) lists what keeps Attacca from its best (tracks not analysed, loudness
   not measured, damaged tracks, effects of the phone on top, battery saving, devices without a
   sound of their own), each with a button to fix it.
+  **Chaining to your taste** (Settings → Chaining): the end of a song goes into two songs that
+  could follow it; one matches it better in the beat, the sound, the energy or the key, the other
+  in the rest. What you keep, eight times, moves how much each counts when lists are chained.
 - **A list per device**: each device (the phone speaker included) continues its own list, which
   can follow the last list played on it. The list is loaded when the device connects and when
   the player opens with it as the output.
@@ -553,7 +556,7 @@ plays them so one song flows into the next.
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
 new). In 1.3.0: the sound guide, every effect heard step by step on your own music for each
-device, guides by ear for the transitions and the volume, and a check-up. In 1.2.1: O'rama can take the waveform's place in Now playing, and O'rama shows the cover by
+device, guides by ear for the transitions, the volume and the chaining (to your taste), and a check-up. In 1.2.1: O'rama can take the waveform's place in Now playing, and O'rama shows the cover by
 the title. In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes
 (the largest with O'rama's landscape), damaged tracks marked and repaired from more places with
 better repairs, the inclusion list in use at the top of Lists, folders with covers (also as a

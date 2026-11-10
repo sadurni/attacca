@@ -22,7 +22,8 @@ install and nothing sent anywhere: the file is read in the browser.
   Turkish, Japanese, Korean, Simplified and Traditional Chinese, Hindi, Kannada, Arabic, Tamazight,
   Kabyle, Swahili, Hausa, Yoruba and Amharic), the browser's at first.
 
-The scoring is the Rockbox plugin's (integers): both give the same lists from the same file.
+The scoring is the Rockbox plugin's (integers): both give the same lists from the same file. A file exported
+after using Attacca's chaining guide carries the listener's weights, and both follow them.
 
 Export the file in Attacca Desktop (**Attacca → For Rockbox and the web generator**) or with
 `attacca-desktop player-db attaccaplg.bpcr2 --path-to "/storage/emulated/0/Music"`, open

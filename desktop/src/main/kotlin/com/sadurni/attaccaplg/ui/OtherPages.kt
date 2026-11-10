@@ -243,6 +243,7 @@ fun SettingsPage(state: AppState) {
         "sound" -> return DeskSoundGuide(state) { shown = "checkup" }
         "join" -> return DeskTransitionsGuide(state) { shown = null }
         "level" -> return DeskLevelGuide(state) { shown = null }
+        "taste" -> return DeskTasteGuide(state) { shown = null }
     }
     PageFrame(tr("Settings", "Ajustes")) {
         ScrollColumn {
@@ -251,8 +252,12 @@ fun SettingsPage(state: AppState) {
                     androidx.compose.material3.OutlinedButton(onClick = { shown = "checkup" }) { Text(tr("Check-up", "Revisión")) }
                     androidx.compose.material3.OutlinedButton(onClick = { shown = "join" }) { Text(tr("Tune the transitions by ear", "Ajustar las transiciones de oído")) }
                     androidx.compose.material3.OutlinedButton(onClick = { shown = "level" }) { Text(tr("Even out the volume by ear", "Igualar el volumen de oído")) }
+                    androidx.compose.material3.OutlinedButton(onClick = { shown = "taste" }) { Text(tr("Chaining to your taste", "Encadenado a tu gusto")) }
                 }
                 Hint(tr("What could be better, and guides that let you hear each choice on your own music.", "Lo que se puede mejorar, y guías para oír cada opción con tu propia música."))
+                if (!com.sadurni.attacca.chain.EdgeFeatures.taste.isDefault) {
+                    Hint(tr("Chaining to your taste: ", "Encadenado a tu gusto: ") + deskTasteLine(com.sadurni.attacca.chain.EdgeFeatures.taste))
+                }
             }
             Section(tr("Window", "Ventana")) {
                 var language by remember { mutableStateOf(state.prefs["language"] ?: "system") }

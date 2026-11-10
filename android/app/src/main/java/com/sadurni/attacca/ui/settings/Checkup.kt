@@ -221,6 +221,7 @@ private fun CheckupContent(onDone: () -> Unit) {
                 CategoryRow(Icons.Rounded.Tune, stringResource(R.string.guide_open), stringResource(R.string.checkup_sound_hint)) { guide = "sound" }
                 CategoryRow(Icons.Rounded.SwapHoriz, stringResource(R.string.join_guide_open), stringResource(R.string.join_guide_hint)) { guide = "join" }
                 CategoryRow(Icons.AutoMirrored.Rounded.VolumeUp, stringResource(R.string.level_guide_open), stringResource(R.string.level_guide_hint)) { guide = "level" }
+                CategoryRow(Icons.Rounded.SwapHoriz, stringResource(R.string.taste_guide_open), stringResource(R.string.taste_guide_hint)) { guide = "taste" }
             }
         }
     }
@@ -228,6 +229,7 @@ private fun CheckupContent(onDone: () -> Unit) {
         "sound" -> SoundGuide { guide = null }
         "join" -> TransitionsGuide { guide = null }
         "level" -> LevelGuide { guide = null }
+        "taste" -> TasteGuide { guide = null }
     }
     if (showDamaged && folder != null) DamagedListDialog(folder) { showDamaged = false }
 }

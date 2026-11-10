@@ -1,3 +1,4 @@
 • Guide du son (Son → Régler le son pas à pas) : chaque effet écouté en A/B/C sur votre propre musique, pour chaque appareil.
 • Des guides à l’oreille pour les transitions et le volume, et un bilan de ce qui pourrait aller mieux (Paramètres).
 • Le fondu enchaîné automatique n’arrête plus net une piste coupée en plein son.
+• Enchaînement à votre goût (Paramètres → Enchaînement) : écoutez quel morceau suit le mieux, les listes apprennent ce qui compte pour vous.
