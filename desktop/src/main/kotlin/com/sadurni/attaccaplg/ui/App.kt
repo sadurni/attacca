@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
         var visible by remember { mutableStateOf(true) }
         // O'rama over the whole screen, back to how the window was when it ends.
         var placementBefore by remember { mutableStateOf(window.placement) }
-        val full = state.oramaFull && state.page == Page.ORAMA
+        val full = state.oramaFull && (state.page == Page.ORAMA || state.page == Page.WORLD)
         LaunchedEffect(full) {
             if (full) {
                 placementBefore = window.placement
@@ -148,7 +148,7 @@ fun main(args: Array<String>) {
 private fun shortcut(e: androidx.compose.ui.input.key.KeyEvent, state: AppState): Boolean {
     if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return false
     // Esc ends O'rama over the whole screen; F11 starts or ends it.
-    if (state.page == Page.ORAMA && (e.key == androidx.compose.ui.input.key.Key.F11 || (state.oramaFull && e.key == androidx.compose.ui.input.key.Key.Escape))) {
+    if ((state.page == Page.ORAMA || state.page == Page.WORLD) && (e.key == androidx.compose.ui.input.key.Key.F11 || (state.oramaFull && e.key == androidx.compose.ui.input.key.Key.Escape))) {
         state.oramaFull = e.key == androidx.compose.ui.input.key.Key.F11 && !state.oramaFull
         return true
     }
@@ -183,12 +183,13 @@ private fun logError(e: Throwable) {
 @Composable
 internal fun AppWindow(state: AppState) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        val full = state.oramaFull && state.page == Page.ORAMA
+        val full = state.oramaFull && (state.page == Page.ORAMA || state.page == Page.WORLD)
         Row(Modifier.fillMaxSize()) {
             if (!full) NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                 Spacer(Modifier.height(8.dp))
                 Rail(state, Page.PLAYING, PlayerIcons.PlayCircle, tr("Playing", "Reproduciendo"))
                 Rail(state, Page.ORAMA, PlayerIcons.Landscape, "O'rama")
+                Rail(state, Page.WORLD, PlayerIcons.Cube, "World")
                 Rail(state, Page.MUSIC, PlayerIcons.LibraryMusic, tr("Music", "Música"))
                 Rail(state, Page.COVERS, PlayerIcons.Album, tr("Covers", "Portadas"))
                 Rail(state, Page.LIBRARY, NavIcons.Library, tr("Library", "Biblioteca"))
@@ -207,6 +208,7 @@ internal fun AppWindow(state: AppState) {
                     when (state.page) {
                         Page.PLAYING -> PlayingPage(state)
                         Page.ORAMA -> OramaPage(state)
+                        Page.WORLD -> com.sadurni.attaccaplg.ui.world.WorldPage(state)
                         Page.MUSIC -> MusicPage(state)
                         Page.COVERS -> CoversPage(state)
                         Page.LIBRARY -> LibraryPage(state)
@@ -219,8 +221,8 @@ internal fun AppWindow(state: AppState) {
                     }
                 }
                 if (!full) StatusBar(state)
-                // O'rama has its own small player.
-                if (state.page != Page.ORAMA) PlayerBar(state)
+                // O'rama and Attacca World have their own small player.
+                if (state.page != Page.ORAMA && state.page != Page.WORLD) PlayerBar(state)
                 MenuDialogs(state)
             }
         }

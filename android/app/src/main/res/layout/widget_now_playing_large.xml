@@ -45,7 +45,7 @@
                 android:maxLines="1"
                 android:text="@string/app_name"
                 android:textColor="#FFFFFFFF"
-                android:textSize="17sp"
+                android:textSize="21sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -55,7 +55,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#D9FFFFFF"
-                android:textSize="13sp" />
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/widget_album"
@@ -64,7 +64,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#B3FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/widget_next_title"
@@ -74,7 +74,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#99FFFFFF"
-                android:textSize="11sp" />
+                android:textSize="14sp" />
 
             <LinearLayout
                 android:id="@+id/widget_time_row"
@@ -87,14 +87,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="11sp" />
+                    android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/widget_length"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="11sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <LinearLayout

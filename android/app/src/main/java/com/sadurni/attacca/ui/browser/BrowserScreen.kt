@@ -206,7 +206,7 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
     // The music folder in memory for searching, built in the background while browsing.
     LaunchedEffect(Unit) {
         settings.musicFolder?.let(::File)?.takeIf { it.isDirectory }?.let { music ->
-            withContext(com.sadurni.attacca.Background.dispatcher) { AudioFiles.warmSearchIndex(music) }
+            withContext(com.sadurni.attacca.Background.folders) { AudioFiles.warmSearchIndex(music) }
         }
     }
 
@@ -457,7 +457,7 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                     val file = shown[index]
                     val inSelection = selection
                     val isSelected = inSelection?.any { it.absolutePath == file.absolutePath }
-                    if (!file.isDirectory) {
+                    if (!AudioFiles.isFolder(file)) {
                         BrowserRow(
                             file = file,
                             isRoot = false,
@@ -483,7 +483,7 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                         onClick = {
                             when {
                                 inSelection != null -> toggle(file)
-                                file.isDirectory -> {
+                                AudioFiles.isFolder(file) -> {
                                     folder = file
                                     searching = false
                                     query = ""
@@ -537,7 +537,7 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                         onClick = {
                             when {
                                 inSelection != null -> toggle(file)
-                                isRoot && query.isBlank() || file.isDirectory -> {
+                                isRoot && query.isBlank() || AudioFiles.isFolder(file) -> {
                                     folder = file
                                     searching = false
                                     query = ""
@@ -579,7 +579,7 @@ private fun BrowserCell(file: File, selected: Boolean?, highlighted: Boolean, on
                 Box(Modifier.fillMaxSize().background(colors.surface, com.sadurni.attacca.ui.theme.AttaccaShapes.small), contentAlignment = Alignment.Center) {
                     com.sadurni.attacca.ui.theme.ThemedIcon(
                         when {
-                            file.isDirectory -> Icons.Rounded.Folder
+                            AudioFiles.isFolder(file) -> Icons.Rounded.Folder
                             AudioFiles.isPlaylist(file) -> Icons.AutoMirrored.Rounded.QueueMusic
                             else -> Icons.Rounded.MusicNote
                         },
@@ -588,7 +588,7 @@ private fun BrowserCell(file: File, selected: Boolean?, highlighted: Boolean, on
                 }
             }
             when {
-                file.isDirectory -> com.sadurni.attacca.ui.common.FolderThumbnail(file, maxWidth, fallback)
+                AudioFiles.isFolder(file) -> com.sadurni.attacca.ui.common.FolderThumbnail(file, maxWidth, fallback)
                 AudioFiles.isAudio(file) -> com.sadurni.attacca.ui.common.TrackThumbnail(file.absolutePath, maxWidth)
                 else -> fallback()
             }
@@ -602,7 +602,7 @@ private fun BrowserCell(file: File, selected: Boolean?, highlighted: Boolean, on
             }
         }
         Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (file.isDirectory) {
+            if (AudioFiles.isFolder(file)) {
                 com.sadurni.attacca.ui.common.FolderDamagedMark(file.absolutePath)
                 com.sadurni.attacca.ui.common.FolderExcludedMark(file.absolutePath)
             } else if (AudioFiles.isAudio(file)) {
@@ -652,8 +652,8 @@ private fun BrowserRow(
             selected == true -> Icons.Rounded.CheckCircle
             selected == false -> Icons.Rounded.RadioButtonUnchecked
             isRoot && subtitle == null -> Icons.Rounded.SdStorage
-            file.isDirectory && favorite -> Icons.Rounded.FolderSpecial
-            file.isDirectory -> Icons.Rounded.Folder
+            AudioFiles.isFolder(file) && favorite -> Icons.Rounded.FolderSpecial
+            AudioFiles.isFolder(file) -> Icons.Rounded.Folder
             AudioFiles.isPlaylist(file) -> Icons.AutoMirrored.Rounded.QueueMusic
             else -> Icons.Rounded.MusicNote
         }
@@ -670,13 +670,13 @@ private fun BrowserRow(
         // The cover of a folder (its picture or its first track's) or a track; icons while selecting.
         when {
             selected != null || (isRoot && subtitle == null) -> plainIcon()
-            file.isDirectory -> com.sadurni.attacca.ui.common.FolderThumbnail(file, 44.dp, plainIcon)
+            AudioFiles.isFolder(file) -> com.sadurni.attacca.ui.common.FolderThumbnail(file, 44.dp, plainIcon)
             AudioFiles.isAudio(file) -> com.sadurni.attacca.ui.common.TrackThumbnail(file.absolutePath, 44.dp)
             else -> plainIcon()
         }
         Column(Modifier.weight(1f).padding(start = 12.dp, top = 8.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (file.isDirectory) {
+                if (AudioFiles.isFolder(file)) {
                     if (!(isRoot && subtitle == null)) {
                         com.sadurni.attacca.ui.common.FolderDamagedMark(file.absolutePath)
                         com.sadurni.attacca.ui.common.FolderExcludedMark(file.absolutePath)
@@ -704,7 +704,7 @@ private fun BrowserRow(
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.tipAnchor("browser.rowMenu", enabled = tipTarget)) {
                     Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.more_options))
                 }
-                if (file.isDirectory) {
+                if (AudioFiles.isFolder(file)) {
                     FolderMenu(
                         expanded = menuOpen,
                         onDismiss = { menuOpen = false },

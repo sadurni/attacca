@@ -337,6 +337,15 @@ class Diorama {
 
     private var trackLookOfPrevious: SongLook? = null
 
+    /**
+     * The look O'rama shows for track [id] (its own, or another when it looks just like the one
+     * before) while it is the current one, else null: Attacca World takes the same.
+     */
+    fun trackLookFor(id: String?): SongLook? = trackLook.takeIf { id != null && current?.id == id }
+
+    /** Where track [id] starts on the land's own timeline (where O'rama's places fall), while it is the current one. */
+    fun originFor(id: String?): Double? = originMs.takeIf { id != null && current?.id == id }
+
     private fun alike(a: SongLook, b: SongLook?) = b != null && a.world == b.world && a.traveller == b.traveller
 
     /**
@@ -461,6 +470,10 @@ class Diorama {
 
     companion object {
         const val TRANSITION_MS = 4000L
+
+        /** [look] as shown after [previous]: another look of it when the two are alike (same world and traveller). */
+        fun following(look: SongLook, previous: SongLook?): SongLook =
+            if (previous != null && look.world == previous.world && look.traveller == previous.traveller) look.reseeded() else look
 
         /** The look of a track with nothing known about it. */
         val NEUTRAL: SongLook = Looks.of(SongFacts())

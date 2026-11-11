@@ -36,6 +36,12 @@ internal fun Scene.skyVisitor() {
         World.CASTLE -> arrayOf(Sky.BATS, Sky.DRAGON, Sky.GHOST)
         World.COAST -> if (night) arrayOf(Sky.SHOOTING_STARS) else arrayOf(Sky.SEAGULLS, Sky.BALLOON, Sky.BUTTERFLIES)
         World.ICE -> arrayOf(Sky.SHOOTING_STARS, Sky.GEESE)
+        World.DESERT, World.CANYON -> if (night) arrayOf(Sky.SHOOTING_STARS) else arrayOf(Sky.BALLOON, Sky.GEESE)
+        World.WALL, World.JAPAN -> if (night) arrayOf(Sky.SHOOTING_STARS) else arrayOf(Sky.GEESE, Sky.BUTTERFLIES, Sky.BALLOON)
+        World.JUNGLE, World.AMAZON -> if (night) arrayOf(Sky.SHOOTING_STARS) else arrayOf(Sky.BUTTERFLIES, Sky.GEESE)
+        World.VOLCANO -> arrayOf(Sky.BATS, Sky.DRAGON)
+        // Under the sea nothing flies: the fish and the whale are there instead.
+        World.REEF -> return
     }
     val kind = kinds[(hash(e, 202) * kinds.size).toInt().coerceAtMost(kinds.size - 1)]
     val y = h * (0.1f + 0.22f * hash(e, 203)) - live.low * h * 0.02f
@@ -277,6 +283,13 @@ internal fun Scene.groundVisitor(world: World) {
         World.COAST -> arrayOf(Runner.CRAB, Runner.DOG)
         World.SPACE -> arrayOf(Runner.ROVER)
         World.ICE -> arrayOf(Runner.SEAL)
+        World.DESERT, World.CANYON -> arrayOf(Runner.RABBIT, Runner.DOG)
+        World.WALL, World.JAPAN -> arrayOf(Runner.RABBIT, Runner.DEER)
+        World.JUNGLE -> arrayOf(Runner.DEER, Runner.RABBIT)
+        World.REEF -> arrayOf(Runner.CRAB)
+        World.VOLCANO -> arrayOf(Runner.WOLF)
+        // On the river nothing runs alongside.
+        World.AMAZON -> return
     }
     val kind = kinds[(hash(e, 222) * kinds.size).toInt().coerceAtMost(kinds.size - 1)]
     val s = h * 0.035f

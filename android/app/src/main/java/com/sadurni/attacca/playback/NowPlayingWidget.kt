@@ -36,10 +36,37 @@ class NowPlayingWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         render(context, manager, appWidgetIds)
+        sceneIfMissing(context)
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle) {
         render(context, manager, intArrayOf(appWidgetId))
+        sceneIfMissing(context)
+    }
+
+    /**
+     * A widget placed or made big enough for the landscape while nothing plays (or with the app
+     * closed): its still is made now for the last track, not only on the next track that plays.
+     */
+    private fun sceneIfMissing(context: Context) {
+        if (!wantsScene(context)) return
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val id = prefs.getString("mediaId", null) ?: return
+        if (prefs.getString("sceneId", null) == id && File(context.filesDir, SCENE_FILE).isFile) return
+        val pending = goAsync()
+        Thread {
+            try {
+                val (w, h) = sceneSize(context)
+                val cover = File(context.filesDir, ART_FILE).takeIf { it.isFile }?.let { BitmapFactory.decodeFile(it.path) }
+                val still = OramaStill.render(
+                    context, id, prefs.getString("title", null), prefs.getString("artist", null), prefs.getString("album", null),
+                    prefs.getString("next", null), positionNow(prefs), cover, w, h,
+                )
+                if (still != null) updateScene(context, still, id)
+            } finally {
+                pending.finish()
+            }
+        }.start()
     }
 
     /** The heart: the playing track into or out of Favorites, also with the app closed. */
@@ -96,7 +123,7 @@ class NowPlayingWidget : AppWidgetProvider() {
 
         /** The smallest size (dp) of the O'rama layout. */
         const val SCENE_MIN_WIDTH = 250f
-        const val SCENE_MIN_HEIGHT = 180f
+        const val SCENE_MIN_HEIGHT = 160f
 
         /** The service's state for the widgets: shown at once on every widget placed. */
         fun update(context: Context, info: Info, art: Bitmap?) {
@@ -153,9 +180,10 @@ class NowPlayingWidget : AppWidgetProvider() {
         }
 
         /** A new still of the landscape for the O'rama widgets. */
-        fun updateScene(context: Context, scene: Bitmap?) {
+        fun updateScene(context: Context, scene: Bitmap?, mediaId: String? = null) {
             val file = File(context.filesDir, SCENE_FILE)
             if (scene != null) runCatching { file.outputStream().use { scene.compress(Bitmap.CompressFormat.PNG, 100, it) } } else file.delete()
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("sceneId", mediaId.takeIf { scene != null }).apply()
             renderAll(context)
         }
 

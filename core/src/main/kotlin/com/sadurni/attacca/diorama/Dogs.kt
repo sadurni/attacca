@@ -10,7 +10,7 @@ import kotlin.math.sin
 // The dogs of O'rama: four of them, always the same ones, after the author's own.
 
 /** The four dogs. */
-internal enum class Dog {
+enum class Dog {
     /** Small and golden, a golden retriever the size of a cocker, with a pink nose. */
     GOLDIE,
 
@@ -292,7 +292,7 @@ internal object DogState {
 }
 
 /** Worlds the dogs go on foot through. */
-private val DOG_WORLDS = setOf(World.MEADOW, World.CITY, World.COAST, World.CASTLE, World.NEON)
+private val DOG_WORLDS = setOf(World.MEADOW, World.CITY, World.COAST, World.CASTLE, World.NEON, World.DESERT, World.WALL, World.JUNGLE, World.CANYON, World.JAPAN, World.VOLCANO)
 
 /**
  * Whether dog [k] wants to be with the traveller at [t] on the land's own timeline (it runs on
@@ -519,7 +519,7 @@ internal fun Scene.sittingDog(dog: Dog, x: Float, ground: Float, s: Float, dir: 
 internal fun Scene.dogsWatching() {
     if (out.fade < 0.5f) return
     val world = lane.look.world
-    if (world != World.SPACE && world != World.ICE) return
+    if (world != World.SPACE && world != World.ICE && world != World.AMAZON && world != World.REEF) return
     val s = min(h * 0.11f, w * 0.12f)
     slotsMs(1f, 50_000.0) { i, x0, x1 ->
         if (Diorama.hash(i, 750) > 0.55f) return@slotsMs
@@ -529,11 +529,12 @@ internal fun Scene.dogsWatching() {
         val span = gap * (order.size - 1)
         if (cx + span < -w * 0.1f || cx - span > w * 1.1f) return@slotsMs
         // On the moon's ground, or on a floe of ice rocking on the sea.
-        val floe = world == World.ICE
+        // On the river a raft of logs; under the sea, in helmets on the sand.
+        val floe = world == World.ICE || world == World.AMAZON
         val rock = if (floe) sin(now / 1200.0 + i).toFloat() * s * 0.03f else 0f
         val seaLevel = nearBase - heightAt(cx, 1f, 60f) * nearAmp * 0.6f
         if (floe) {
-            val ice = Colors.mix(p.mid, 0xFFFFFFFF.toInt(), 0.35f)
+            val ice = if (world == World.AMAZON) 0xFF8A6238.toInt() else Colors.mix(p.mid, 0xFFFFFFFF.toInt(), 0.35f)
             val top = seaLevel - s * 0.12f + rock
             out.polygon(ice)
             out.point(cx - span / 2f - s * 0.7f, seaLevel + s * 0.05f + rock); out.point(cx - span / 2f - s * 0.45f, top)
@@ -547,7 +548,7 @@ internal fun Scene.dogsWatching() {
             val jump = bounce(poked(did), 700)
             // Looking at the traveller: towards it, then after it once it has gone by.
             val dir = if (dx > travellerX) -1f else 1f
-            sittingDog(dog, dx, ground - (jump?.get(0) ?: 0f) * s * 0.6f, s, dir, helmet = world == World.SPACE)
+            sittingDog(dog, dx, ground - (jump?.get(0) ?: 0f) * s * 0.6f, s, dir, helmet = world == World.SPACE || world == World.REEF)
         }
         if (floe) out.rect(Colors.alpha(p.near, 0.85f), cx - span / 2f - s * 0.8f, seaLevel + s * 0.03f + rock, cx + span / 2f + s * 0.85f, seaLevel + s * 0.14f + rock)
     }

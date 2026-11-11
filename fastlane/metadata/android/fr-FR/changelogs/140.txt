@@ -1,0 +1,5 @@
+• Attacca World (bouton 3D d'O'rama) : le morceau comme une terre à parcourir derrière le voyageur et les quatre chiens, aussi sur l'ordinateur.
+• Huit nouveaux mondes : désert, Grande Muraille, Inde, Amazonie, canyon, Japon, sous la mer, volcan ; selon le genre, l'humeur ou le titre, ou avec le globe.
+• O'rama et World ensemble (écran partagé).
+• Texte plus grand sur le grand widget ; parcourir les dossiers ne bloque plus.
+• World : lieux d'O'rama, le monde suivant, lumière dans le noir.

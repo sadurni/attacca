@@ -50,6 +50,9 @@ all those connected, without choosing anything.
   faint between two marks, and the blend into the next track lighter); files, playlists (M3U, PLS, XSPF, CUE) and folders of the PC can
   be opened there. The player bar has favourites and a sleep timer (in so many minutes, at the end
   of the track or of the album).
+- **Attacca World** (World in the menu on the left, or the 3D button in O'rama): the song as a land in 3D to go through behind the
+  traveller and the four dogs, as on the phone, drawn by the processor. Drag to turn the camera,
+  the wheel to bring it closer, the right button to raise it; a click on the traveller makes a move.
 - **O'rama** (in the menu on the left): the playing song as a moving landscape, as Attacca's
   O'rama on the phone. Its land is the song's waveform; its world comes from its mood and sound
   family in the library, and the look takes some of the cover's colours:

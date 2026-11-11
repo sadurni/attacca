@@ -45,6 +45,14 @@ fun main(args: Array<String>) {
         "meadow-rain" to SongFacts(mood = Mood.MELANCHOLIC, energy = 0.5f, positivity = 0.1f, voice = 0.6f, family = FamilyName(listOf(Trait.PERCUSSION to true))),
         "ice" to SongFacts(mood = Mood.MELANCHOLIC, energy = 0.25f, positivity = 0.2f, voice = 0.3f),
         "space" to SongFacts(mood = Mood.CALM, energy = 0.08f, positivity = 0.5f, voice = 0.1f),
+        "w-desert" to SongFacts(mood = Mood.CALM, energy = 0.45f, positivity = 0.6f, voice = 0.4f, genre = "arabic"),
+        "w-wall" to SongFacts(mood = Mood.MELANCHOLIC, energy = 0.5f, positivity = 0.6f, voice = 0.4f, genre = "chinese"),
+        "w-jungle" to SongFacts(mood = Mood.CHEERFUL, energy = 0.6f, positivity = 0.6f, voice = 0.4f, genre = "bollywood"),
+        "w-amazon" to SongFacts(mood = Mood.ENERGETIC, energy = 0.7f, positivity = 0.6f, voice = 0.4f, genre = "brazil"),
+        "w-canyon" to SongFacts(mood = Mood.ENERGETIC, energy = 0.7f, positivity = 0.6f, voice = 0.4f, genre = "country"),
+        "w-japan" to SongFacts(mood = Mood.CHEERFUL, energy = 0.55f, positivity = 0.6f, voice = 0.4f, genre = "j-pop"),
+        "w-reef" to SongFacts(mood = Mood.CALM, energy = 0.35f, positivity = 0.6f, voice = 0.4f, genre = "ambient"),
+        "w-volcano" to SongFacts(mood = Mood.TENSE, energy = 0.85f, positivity = 0.6f, voice = 0.4f, genre = "metal"),
         "unknown" to SongFacts(),
         // The meadow taking the made-up cover's colours.
         "meadow-cover" to SongFacts(mood = Mood.CALM, energy = 0.35f, positivity = 0.65f, voice = 0.4f, cover = coverPixels(), accent = 0xFFFF8A2A.toInt()),
@@ -76,7 +84,7 @@ fun main(args: Array<String>) {
         shot(File(out, "$name.png"), 1280, 640, d, at, startMs = 0, warm = 600)
     }
     // The peak of a track in each world: what happens in its sky, standing out.
-    for (name in listOf("meadow", "neon", "castle", "ice", "space")) {
+    for (name in listOf("meadow", "neon", "castle", "ice", "space", "w-desert", "w-wall", "w-jungle", "w-amazon", "w-canyon", "w-japan", "w-reef", "w-volcano")) {
         val song = Diorama.Song("peak-$name", Looks.of(looks.getValue(name)), SongWave(wave, 240_000, 2_000, 236_000))
         val at = song.peakMs.toLong().coerceAtLeast(0L)
         for ((k, into) in listOf(2_500L, 5_000L).withIndex()) {

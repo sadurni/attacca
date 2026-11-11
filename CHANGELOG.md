@@ -3,6 +3,78 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.4.0
+
+### Attacca (Android)
+
+- **Attacca World** (the cube button in O'rama): the same song as a land in 3D to go through
+  behind the traveller and the four dogs, smooth and warm rather than blocky. The way winds and
+  rises and falls with the music; quiet stretches are open valleys and lakes, loud ones mountains;
+  a ring runs over the land on each strong beat, and the water swells with it. People with knees
+  and elbows walk, run, ride (a horse, a camel, an elephant), cycle, drive, sail, paddle a canoe or
+  go down in a submarine (with diving helmets, the dogs too); someone waits along the way to take
+  over, the vehicle of the next song waits where its land starts, the dogs get on board. Obstacles
+  to jump, jumps, spins and flips on the strong beats (a tap on the traveller asks for one),
+  houses and villages, each world's trees and things, clouds, rain, snow, storms, stars; at the
+  song's peak the camera goes round low, near or far as the land is open or narrow, under each
+  world's show in the sky (northern lights, a red moon, a dragon, fireworks, a whale…; the
+  desert's golden pyramid rises from the sand). The camera follows on its own, lower so the sun
+  or the moon is in sight, and never goes through a house or a person; one finger turns it, two
+  bring it closer or raise it. The land goes on from one song to the next, and long quiet or loud
+  stretches bring another world for a while, as in O'rama.
+- **O'rama and Attacca World at once**: the split button shows both, World above and O'rama
+  below upright, World on the left and O'rama on the right when wide, joined by a soft shadow,
+  with smaller titles, buttons and player; both choose their worlds alike.
+- **More of O'rama in Attacca World**: its places at the same moments (bridges over rivers,
+  tunnels lit by torches, stations with their train going by, villages, a big wheel, ruins,
+  natural arches, a moon base, a rocket going up), smoke from chimneys (in O'rama too), birds,
+  balloons, grazing animals, other dogs running by, divers under the sea and little men from Mars;
+  boards with the song's cover by the way and a sign with the next song before the end; the
+  rainbow at the peak, and the red moon where the moon is.
+- **In Attacca World**: the next song's world comes into sight ahead before it starts; before a
+  change of vehicle the traveller and the dogs get off (the submarine floats at a shore, they
+  climb in, it dives, and the dogs look out of its windows; it comes up again at the end); the
+  four dogs go their own ways (ahead, behind, off to a side, stopping to sniff, running off);
+  the camera rises over crests, comes closer rather than through a house, goes along beside the
+  traveller now and then and turns to what is worth seeing; a head torch, a flaming torch in
+  tunnels, headlights and the submarine's lamp in the dark; the sun and the moon shine on the
+  water.
+- On the whole screen (O'rama and Attacca World), the song's name shows in the middle as it starts.
+- With the music in Attacca World: trees and plants sway to the beat, torches and lava flicker,
+  lights glow up on the beat, and the sun and the moon beat with the low hits.
+- **Eight new worlds** in O'rama and in Attacca World: the desert (camels, oases, pyramids), the
+  Great Wall of China (a dragon), a jungle of India (temples, elephants), the Amazon (by canoe),
+  a canyon of the far west, Japan in cherry blossom, the bottom of the sea (by submarine) and a
+  volcano. The genre tag helps choose them, and so do words of the title when the sound agrees
+  (Siren Song, a quiet song: under the sea). The globe button shows the song in each world in
+  turn, the same in both; the note button brings back each song's own.
+- The coast's land goes down into the sea on one side; the way's turns are gentler; O'rama's
+  pyramids stand on the dunes.
+- **Widget**: bigger text on the large sizes, the time beside the cover in the landscape one,
+  which now shows from two rows high and is drawn as soon as it is placed (also with nothing
+  playing).
+- Browsing folders no longer stalls: the marks of the inclusion list are worked out for every
+  folder in one pass, on a thread of their own.
+- Wide, the small player of O'rama and Attacca World keeps clear of the side buttons.
+
+### Attacca Desktop
+
+- **Attacca World** (World in the menu on the left, or the 3D button in O'rama): the same land, figures and camera as on the phone,
+  drawn by the processor (no graphics card needed). Drag to turn the camera, the wheel to bring it
+  closer, drag with the right button to raise it, click the traveller for a move; F11 for the whole
+  screen.
+- The eight new worlds in O'rama, and words of the title choosing them as on the phone.
+- Attacca World as on the phone: O'rama's places, the life about the way, the next song's world
+  coming, the four dogs' own ways, clouds, rain, snow and lightning, each world's show in the sky
+  at the peak (the rainbow, the red moon…), the lights in the dark, the sun and the moon on the
+  water, under the sea, the cover and the next song's sign on the boards; the globe to choose a
+  world (in O'rama too), O'rama and World side by side, and the song's name on the whole screen.
+
+### Attacca for Rockbox
+
+- The full Rockbox builds in the release (Shanling Q1 zip, Android 2.3 APK) carry the current
+  plugin, with Fine tuning by ear in its menu.
+
 ## 1.3.0
 
 ### Attacca (Android)

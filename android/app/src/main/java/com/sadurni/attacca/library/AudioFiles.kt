@@ -103,10 +103,20 @@ object AudioFiles {
     fun listFolder(folder: File): List<File> {
         val children = folder.listFiles() ?: return emptyList()
         val visible = children.filter { !it.name.startsWith(".") }
-        val folders = visible.filter { it.isDirectory }.sortedWith(NaturalOrder)
-        val files = visible.filter { it.isFile && (isAudio(it) || isPlaylist(it)) }.sortedWith(NaturalOrder)
+        // Audio and playlist names are files without asking the storage (slow on memory cards).
+        val (named, others) = visible.partition { isAudio(it) || isPlaylist(it) }
+        val folders = others.filter { it.isDirectory }.sortedWith(NaturalOrder)
+        folders.forEach { knownFolders.add(it.path) }
+        val files = named.filter { it.isFile }.sortedWith(NaturalOrder)
         return folders + files
     }
+
+    /** Folders [listFolder] has seen, so the browser's rows need not ask the storage again. */
+    private val knownFolders = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<String, Boolean>())
+
+    /** Whether [file] is a folder, from what [listFolder] saw when it can (rows are drawn often). */
+    fun isFolder(file: File): Boolean =
+        file.path in knownFolders || (!isAudio(file) && !isPlaylist(file) && file.isDirectory)
 
     /**
      * Folders, playlists and audio files below [roots] whose name contains every word of
@@ -159,7 +169,41 @@ object AudioFiles {
         val root = folder.absolutePath.trimEnd('/')
         val current = searchIndex
         if (current != null && current.root == root && System.currentTimeMillis() - current.builtAt < INDEX_MAX_AGE_MS) return
-        indexLibrary(folder)
+        // Never two walks of the whole music folder at once (each opening of the browser asks).
+        if (!indexing.compareAndSet(false, true)) return
+        try {
+            indexLibrary(folder)
+        } finally {
+            indexing.set(false)
+        }
+    }
+
+    private val indexing = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /**
+     * Every audio file below [folder] from the last walk of the music folder, when it covers it
+     * and is a few minutes old at most; null otherwise (nothing walked here).
+     */
+    fun indexedAudio(folder: File): List<File>? {
+        val known = listing ?: return null
+        if (!known.covers(folder) || System.currentTimeMillis() - known.builtAt >= INDEX_MAX_AGE_MS) return null
+        return known.entries.asSequence().map { it.file }.filter { isAudio(it) && !IgnoredPaths.isIgnored(it.path) }.toList()
+    }
+
+    /** The root of the last walk of the music folder, if any. */
+    fun indexedRoot(): File? = listing?.root?.let(::File)
+
+    /** When the last walk of the music folder was made (0: none), to know when it changed. */
+    fun indexedAt(): Long = listing?.builtAt ?: 0L
+
+    /** As [collectAudio], stopping early when [isCancelled] (a folder scrolled out of sight). */
+    fun collectAudio(folder: File, isCancelled: () -> Boolean): List<File> {
+        val result = ArrayList<File>()
+        walkEntries(folder, isCancelled) { entry ->
+            if (isAudio(entry.file) && !IgnoredPaths.isIgnored(entry.file.path)) result.add(entry.file)
+            true
+        }
+        return result
     }
 
     /** The audio files of the last [indexLibrary], for the background jobs that follow a scan. */

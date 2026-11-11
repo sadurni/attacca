@@ -33,6 +33,11 @@ plays them so one song flows into the next.
   dynamic and virtual bass, stereo width, crossfeed, compressor and true-peak limiter; gapless
   playback, crossfades that follow how each track ends, silence trimming, ReplayGain. A profile
   for each output: headphones, car, speaker.
+- 🗺️ **Attacca World: go through the song.** O'rama's land in 3D (the cube button): behind the
+  traveller and the four dogs, on foot, riding, by car, ship, canoe or submarine, with relays,
+  obstacles, houses, O'rama's bridges, tunnels, stations and villages, birds and grazing animals,
+  weather and each world's show at the peak; one finger turns the camera, two
+  bring it closer, a tap on the traveller makes a move, and the split button shows O'rama beside it.
 - 🌄 **O'rama: watch the song.** A moving landscape drawn from the song's waveform, mood and
   beat: someone runs, rides or flies through castles, cities, seas and space, jumping on the
   strong beats, through tunnels with a torch, towards a gate into the next track's world. And a few little
@@ -555,7 +560,8 @@ plays them so one song flows into the next.
 ## What's new
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
-new). In 1.3.0: the sound guide, every effect heard step by step on your own music for each
+new). In 1.4.0: Attacca World, the song as a land in 3D to go through (also beside O'rama, the
+screen split in two), and eight new worlds in both. In 1.3.0: the sound guide, every effect heard step by step on your own music for each
 device, guides by ear for the transitions, the volume and the chaining (to your taste), and a check-up. In 1.2.1: O'rama can take the waveform's place in Now playing, and O'rama shows the cover by
 the title. In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes
 (the largest with O'rama's landscape), damaged tracks marked and repaired from more places with

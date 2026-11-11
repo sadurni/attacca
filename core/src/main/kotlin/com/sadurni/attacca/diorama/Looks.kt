@@ -30,10 +30,34 @@ enum class World {
 
     /** Space: planets, stars and the surface of a moon. */
     SPACE,
+
+    /** Golden dunes, oases and caravans of camels; a pyramid at the peak. */
+    DESERT,
+
+    /** Ridges with a great wall along them, watchtowers, pagodas; a dragon at the peak. */
+    WALL,
+
+    /** A dense jungle of India with old temples, elephants and peacocks. */
+    JUNGLE,
+
+    /** The Amazon: a river through giant trees, lianas and macaws, gone along by canoe. */
+    AMAZON,
+
+    /** A canyon of the far west: red mesas, cacti, tumbleweeds, a steam train. */
+    CANYON,
+
+    /** Japan: cherry trees in flower, torii gates, bamboo, a snowy mountain. */
+    JAPAN,
+
+    /** The bottom of the sea: corals, shoals of fish, whales, gone through by submarine. */
+    REEF,
+
+    /** A volcano: black rock, rivers of lava; it erupts at the peak. */
+    VOLCANO,
 }
 
 /** Who or what goes through the land. */
-enum class Traveller { RIDER, RUNNER, CAR, CYCLIST, WALKER, ICEBERG, SHIP }
+enum class Traveller { RIDER, RUNNER, CAR, CYCLIST, WALKER, ICEBERG, SHIP, CAMEL, ELEPHANT, CANOE, SUBMARINE }
 
 /** Colours of a scene, ARGB. */
 class Palette(
@@ -143,8 +167,12 @@ class SongFacts(
      * traveller, time of day and shades.
      */
     val seed: Int = 0,
+    /** The track's genre tag, when it says where the music comes from (desert, China, India…). */
+    val genre: String? = null,
+    /** The track's title: words in it (the sea, the snow, the stars…) can choose the world when the sound agrees. */
+    val title: String? = null,
 ) {
-    internal fun reseeded() = SongFacts(features, mood, secondMood, energy, positivity, voice, family, cover, accent, seed * 31 + 17)
+    internal fun reseeded() = SongFacts(features, mood, secondMood, energy, positivity, voice, family, cover, accent, seed * 31 + 17, genre, title)
 }
 
 object Looks {
@@ -176,8 +204,20 @@ object Looks {
             else -> ownBpm
         }
 
-        fun worldOf(mood: Mood?) = when {
+        // Now and then another world of the same feeling, so every one turns up.
+        val pick = hash(seed, 9)
+        fun worldOf(mood: Mood?) = genreWorld(facts.genre) ?: titleWorld(facts.title, mood, ownEnergy) ?: when {
             f == null && mood == null -> World.MEADOW
+            mood == Mood.TENSE && pick < 0.4f -> World.VOLCANO
+            mood == Mood.ENERGETIC && pick < 0.15f -> World.CANYON
+            mood == Mood.ENERGETIC && pick < 0.3f -> World.AMAZON
+            mood == Mood.CHEERFUL && pick < 0.25f -> World.JUNGLE
+            mood == Mood.CHEERFUL && pick < 0.45f -> World.JAPAN
+            mood == Mood.MELANCHOLIC && pick < 0.2f -> World.WALL
+            mood == Mood.MELANCHOLIC && pick < 0.35f -> World.DESERT
+            mood == Mood.CALM && ownEnergy >= 0.15f && pick < 0.18f -> World.JAPAN
+            mood == Mood.CALM && ownEnergy >= 0.15f && pick < 0.36f -> World.REEF
+            mood == Mood.CALM && ownEnergy >= 0.15f && pick < 0.5f -> World.DESERT
             mood == Mood.TENSE || (distorted && positivity < 0.35f && ownEnergy > 0.5f) -> World.CASTLE
             mood == Mood.ENERGETIC -> if (voice < 0.4f || (heavyBass && pulse > 0.5f)) World.NEON else World.CITY
             mood == Mood.CHEERFUL -> World.COAST
@@ -203,17 +243,19 @@ object Looks {
         val sun = when (world) {
             World.NEON, World.SPACE -> 0f
             World.CASTLE -> 0.05f * brightness
+            World.VOLCANO -> 0.1f + 0.1f * brightness
+            World.REEF -> 0.6f
             World.ICE -> (0.15f + 0.3f * brightness + hour * 0.4f).coerceIn(0.05f, 0.6f)
             else -> (0.25f + 0.75f * (0.6f * brightness + 0.4f * positivity) + hour).coerceIn(0.12f, 1f)
         }
         val sad = ((1f - positivity) * (1f - energy)).coerceIn(0f, 1f)
         val storm = if (heavyBass && energy > 0.55f && positivity < 0.5f) ((energy - 0.4f) * 2f).coerceIn(0f, 1f) else 0f
         val rain = when (world) {
-            World.SPACE, World.NEON, World.ICE -> 0f
+            World.SPACE, World.NEON, World.ICE, World.DESERT, World.REEF -> 0f
             else -> max(storm, ((sad - 0.35f) * 2.2f).coerceIn(0f, 1f))
         }
         val clouds = when (world) {
-            World.SPACE -> 0f
+            World.SPACE, World.REEF -> 0f
             else -> max(max(rain, storm), (1f - positivity) * 0.7f + 0.15f).coerceIn(0f, 1f)
         }
         val snow = if (world == World.ICE) 0.35f + 0.4f * (1f - energy) else 0f
@@ -243,15 +285,105 @@ object Looks {
     /** Worlds always at night: no dusk. */
     private val NIGHT_WORLDS = setOf(World.CASTLE, World.NEON, World.SPACE)
 
+    /** A world the genre tag points to (where the music comes from), if any. */
+    /**
+     * The world a word of the title names ("Siren Song": under the sea), only when the music
+     * agrees with it: the sea, space and the snow for quiet songs, the volcano and neon for loud
+     * ones, the sunny ones for songs that are not tense; the rest whatever the sound.
+     */
+    fun titleWorld(title: String?, mood: Mood?, energy: Float): World? {
+        val lower = title?.lowercase() ?: return null
+        val words = lower.split(Regex("[^\\p{L}]+")).filter { it.length >= 2 }
+        if (words.isEmpty()) return null
+        val world = TITLE_WORDS.firstOrNull { (_, keys) ->
+            keys.any { k -> words.any { w -> w == k || w == k + "s" || w == k + "es" } || (" " in k && k in lower) }
+        }?.first ?: return null
+        val quiet = mood == Mood.CALM || mood == Mood.MELANCHOLIC || (mood == null && energy < 0.45f)
+        val loud = mood == Mood.TENSE || mood == Mood.ENERGETIC || (mood == null && energy > 0.55f)
+        val fits = when (world) {
+            World.REEF, World.SPACE, World.ICE -> quiet || energy < 0.4f
+            World.VOLCANO, World.NEON -> loud || energy > 0.6f
+            World.COAST, World.MEADOW, World.JAPAN -> mood != Mood.TENSE
+            World.CASTLE -> mood != Mood.CHEERFUL
+            else -> true
+        }
+        return world.takeIf { fits }
+    }
+
+    /** Words of titles (English, Spanish, Catalan, French, Italian, German, Portuguese) and the world each one calls up. */
+    private val TITLE_WORDS: List<Pair<World, List<String>>> = listOf(
+        World.REEF to listOf("sea", "seas", "ocean", "siren", "sirens", "mermaid", "underwater", "coral", "whale", "dolphin", "abyss", "deep", "tide", "mar", "océano", "oceano", "sirena", "ballena", "delfín", "abismo", "profundo", "mer", "océan", "baleine", "meer", "ozean", "mare", "balena"),
+        World.SPACE to listOf("space", "star", "stars", "moon", "planet", "galaxy", "cosmic", "cosmos", "astronaut", "rocket", "orbit", "mars", "saturn", "jupiter", "universe", "comet", "espacio", "estrella", "luna", "planeta", "galaxia", "cósmico", "universo", "espai", "estel", "lluna", "étoile", "lune", "espace", "stella", "stern", "mond", "weltall", "estrela", "lua"),
+        World.ICE to listOf("ice", "snow", "winter", "frozen", "freeze", "cold", "arctic", "polar", "glacier", "frost", "hielo", "nieve", "invierno", "frío", "helado", "glaciar", "gel", "neu", "hivern", "fred", "glace", "neige", "hiver", "froid", "ghiaccio", "neve", "inverno", "freddo", "eis", "schnee", "kalt", "gelo"),
+        World.VOLCANO to listOf("volcano", "lava", "fire", "inferno", "hell", "burn", "burning", "flame", "flames", "magma", "eruption", "volcán", "fuego", "infierno", "llama", "llamas", "arde", "volcà", "foc", "infern", "feu", "enfer", "fuoco", "inferno", "feuer", "hölle", "fogo"),
+        World.DESERT to listOf("desert", "deserts", "sand", "sahara", "camel", "mirage", "dune", "dunes", "oasis", "egypt", "pyramid", "pharaoh", "arabia", "arabian", "cairo", "desierto", "arena", "duna", "egipto", "pirámide", "faraón", "desert", "sorra", "désert", "sable", "deserto", "sabbia", "wüste", "sand", "areia"),
+        World.WALL to listOf("china", "chinese", "dragon", "beijing", "peking", "shanghai", "great wall", "dragón", "drac", "drago", "drache", "chine", "cina"),
+        World.JUNGLE to listOf("india", "jungle", "tiger", "elephant", "temple", "ganges", "bombay", "mumbai", "delhi", "bengal", "selva", "jungla", "tigre", "elefante", "templo", "elefant", "jungle", "éléphant", "giungla"),
+        World.AMAZON to listOf("amazon", "amazonas", "rainforest", "brazil", "brasil", "parrot", "río", "rio", "loro", "amazonia", "amazonie", "riu"),
+        World.CANYON to listOf("canyon", "cowboy", "cowboys", "west", "western", "texas", "arizona", "prairie", "eagle", "rodeo", "ranch", "outlaw", "cañón", "vaquero", "oeste", "águila", "cow-boy", "ouest", "aigle"),
+        World.JAPAN to listOf("japan", "japanese", "tokyo", "kyoto", "osaka", "geisha", "samurai", "sakura", "cherry", "ninja", "shogun", "japón", "cerezo", "japó", "japon", "giappone", "tokio"),
+        World.CASTLE to listOf("castle", "king", "queen", "knight", "kingdom", "crown", "throne", "empire", "prince", "princess", "castillo", "rey", "reina", "caballero", "reino", "corona", "trono", "castell", "rei", "château", "roi", "reine", "castello", "re", "regina", "burg", "könig", "königin"),
+        World.NEON to listOf("neon", "cyber", "electric", "disco", "laser", "robot", "digital", "neón", "eléctrico", "elèctric", "électrique", "elettrico", "elektrisch"),
+        World.COAST to listOf("beach", "shore", "surf", "summer", "island", "coast", "harbor", "harbour", "bay", "sail", "sailing", "lighthouse", "playa", "costa", "isla", "verano", "faro", "platja", "illa", "estiu", "plage", "île", "été", "spiaggia", "isola", "estate", "strand", "insel", "sommer", "praia", "ilha", "verão"),
+        World.CITY to listOf("city", "street", "streets", "downtown", "avenue", "boulevard", "subway", "metro", "town", "ciudad", "calle", "avenida", "ciutat", "carrer", "ville", "rue", "città", "strada", "stadt", "straße", "cidade", "rua"),
+        World.MEADOW to listOf("garden", "meadow", "field", "fields", "flower", "flowers", "spring", "valley", "farm", "jardín", "prado", "campo", "flor", "flores", "primavera", "valle", "jardí", "camp", "jardin", "fleur", "printemps", "giardino", "fiore", "garten", "blume", "frühling", "jardim"),
+    )
+
+    fun genreWorld(genre: String?): World? {
+        val g = genre?.lowercase() ?: return null
+        fun has(vararg w: String) = w.any { it in g }
+        return when {
+            has("arab", "flamenc", "tuareg", "desert", "rai", "middle east", "maghreb", "turk", "persian") -> World.DESERT
+            has("chin", "mandopop", "cantopop", "c-pop", "guzheng") -> World.WALL
+            has("india", "bollywood", "raga", "bhangra", "sitar", "carnatic", "hindustani") -> World.JUNGLE
+            has("latin", "brazil", "bossa", "samba", "tropical", "mpb", "salsa", "cumbia", "forro") -> World.AMAZON
+            has("country", "western", "americana", "bluegrass", "honky") -> World.CANYON
+            has("japan", "j-pop", "j-rock", "jpop", "jrock", "anime", "city pop", "enka", "shamisen") -> World.JAPAN
+            has("ambient", "new age", "underwater", "drone") -> World.REEF
+            has("metal", "industrial", "grindcore", "sludge") -> World.VOLCANO
+            else -> null
+        }
+    }
+
     /** A quiet stretch's world next to a track's own, and a loud one's. */
     private val CALMER = mapOf(
         World.CITY to World.MEADOW, World.NEON to World.SPACE, World.CASTLE to World.ICE, World.COAST to World.MEADOW,
         World.MEADOW to World.ICE, World.ICE to World.SPACE, World.SPACE to World.ICE,
+        World.DESERT to World.REEF, World.WALL to World.JAPAN, World.JUNGLE to World.AMAZON, World.AMAZON to World.JUNGLE,
+        World.CANYON to World.DESERT, World.JAPAN to World.WALL, World.REEF to World.SPACE, World.VOLCANO to World.CASTLE,
     )
     private val WILDER = mapOf(
         World.MEADOW to World.CITY, World.ICE to World.CASTLE, World.SPACE to World.NEON, World.COAST to World.CITY,
         World.CITY to World.NEON, World.NEON to World.CASTLE, World.CASTLE to World.NEON,
+        World.DESERT to World.CANYON, World.WALL to World.VOLCANO, World.JUNGLE to World.AMAZON, World.AMAZON to World.CANYON,
+        World.CANYON to World.VOLCANO, World.JAPAN to World.CITY, World.REEF to World.AMAZON, World.VOLCANO to World.CASTLE,
     )
+
+    /**
+     * [look] moved to [world] (chosen by hand in Attacca World): that world's colours, light and
+     * weather and someone who may cross it; the song's pace and energy kept.
+     */
+    fun inWorld(look: SongLook, world: World): SongLook {
+        if (look.world == world) return look
+        val sun = when (world) {
+            World.CASTLE -> 0.05f
+            World.NEON -> 0.04f
+            World.SPACE -> 0.1f
+            World.ICE -> 0.4f
+            World.VOLCANO -> 0.15f
+            World.REEF -> 0.6f
+            else -> look.sun.coerceAtLeast(0.45f)
+        }
+        val dry = world == World.SPACE || world == World.NEON || world == World.ICE || world == World.DESERT || world == World.REEF
+        val storm = if (dry) 0f else look.storm
+        val rain = if (dry) 0f else look.rain
+        val clouds = if (world == World.SPACE || world == World.REEF) 0f else look.clouds
+        val snow = if (world == World.ICE) 0.5f else 0f
+        val may = TRAVELLERS.getValue(world)
+        val traveller = if (look.traveller in may) look.traveller else may.first()
+        val palette = weathered(BASE.getValue(world), sun, max(clouds * 0.6f, max(rain, storm)), world)
+        return SongLook(world, traveller, palette, sun, clouds, rain, storm, snow, look.bpm, look.pulse, look.energy)
+    }
 
     /** Who may cross each world (the first the likeliest when there are repeats). */
     private val TRAVELLERS = mapOf(
@@ -260,6 +392,14 @@ object Looks {
         World.NEON to listOf(Traveller.CAR, Traveller.CAR, Traveller.CYCLIST, Traveller.RUNNER),
         World.COAST to listOf(Traveller.CYCLIST, Traveller.RUNNER, Traveller.WALKER),
         World.MEADOW to listOf(Traveller.WALKER, Traveller.RIDER, Traveller.CYCLIST, Traveller.RUNNER),
+        World.DESERT to listOf(Traveller.CAMEL, Traveller.CAMEL, Traveller.CAR, Traveller.WALKER),
+        World.WALL to listOf(Traveller.WALKER, Traveller.RUNNER, Traveller.RIDER),
+        World.JUNGLE to listOf(Traveller.ELEPHANT, Traveller.ELEPHANT, Traveller.WALKER),
+        World.AMAZON to listOf(Traveller.CANOE),
+        World.CANYON to listOf(Traveller.RIDER, Traveller.RIDER, Traveller.CAR, Traveller.CYCLIST),
+        World.JAPAN to listOf(Traveller.CYCLIST, Traveller.WALKER, Traveller.RUNNER),
+        World.REEF to listOf(Traveller.SUBMARINE),
+        World.VOLCANO to listOf(Traveller.RUNNER, Traveller.CAR, Traveller.RIDER),
         World.ICE to listOf(Traveller.ICEBERG),
         World.SPACE to listOf(Traveller.SHIP),
     )
@@ -279,7 +419,7 @@ object Looks {
     private fun weathered(p: Palette, sun: Float, grey: Float, world: World): Palette {
         val night = (1f - sun * 2.5f).coerceIn(0f, 1f)
         val nightSky = when (world) {
-            World.CASTLE, World.NEON, World.SPACE -> 0f // already night colours
+            World.CASTLE, World.NEON, World.SPACE, World.VOLCANO, World.REEF -> 0f // already night (or sea) colours
             else -> night
         }
         fun land(c: Int) = Colors.greyed(Colors.mix(c, Colors.darker(c, 0.55f), nightSky), grey * 0.5f)
@@ -316,6 +456,14 @@ object Looks {
         World.MEADOW to palette(0xFF62BEEB, 0xFFE2F5FF, 0xFF8AAFC6, 0xFF66B556, 0xFF3D8A37, 0xFFF6D55E, 0xFFFFF7D4),
         World.ICE to palette(0xFF223448, 0xFF8EA8BE, 0xFFA7BFD1, 0xFFE6F0F7, 0xFF1C3D59, 0xFFBFE3F5, 0xFFEAF2F8),
         World.SPACE to palette(0xFF04020E, 0xFF1B1242, 0xFF3A2D78, 0xFF2B2160, 0xFF4B3F7C, 0xFFFF9F43, 0xFFFFFFFF),
+        World.DESERT to palette(0xFF4AA8E0, 0xFFFBE3B0, 0xFFD9A867, 0xFFE8BD72, 0xFFF0CF8E, 0xFFC0392B, 0xFFFFF0C2),
+        World.WALL to palette(0xFF7FB3D9, 0xFFEAE6D6, 0xFF7E8C8A, 0xFF5D7A5A, 0xFF4E6B45, 0xFFC0392B, 0xFFFFF4D6),
+        World.JUNGLE to palette(0xFF6FB8C9, 0xFFF4E3B5, 0xFF5E8C5A, 0xFF2F7A3E, 0xFF3E6B2C, 0xFFE67E22, 0xFFFFF0C8),
+        World.AMAZON to palette(0xFF8FC7C0, 0xFFE8F0E0, 0xFF4E7F5A, 0xFF1F6B3A, 0xFF2E5E36, 0xFFFF5A36, 0xFFFFF6D8),
+        World.CANYON to palette(0xFF4F95D8, 0xFFF7D9A8, 0xFFB5583A, 0xFFC4673E, 0xFFD69A62, 0xFF2E86C1, 0xFFFFE8B0),
+        World.JAPAN to palette(0xFF8EC5EA, 0xFFFBE9EE, 0xFF8A9CB8, 0xFF7FA86A, 0xFF5C8A4A, 0xFFE84A6F, 0xFFFFF6E8),
+        World.REEF to palette(0xFF0C3E66, 0xFF1F8DB0, 0xFF2A6F8C, 0xFF2E8C8A, 0xFFE0CFA0, 0xFFFF6F61, 0xFFBFF4FF),
+        World.VOLCANO to palette(0xFF2A1A20, 0xFF7A3A2A, 0xFF3A2A2E, 0xFF2A2024, 0xFF1E1A1C, 0xFFFF6A1A, 0xFFFFC46A),
     )
 
     private fun palette(vararg c: Long) = Palette(c[0].toInt(), c[1].toInt(), c[2].toInt(), c[3].toInt(), c[4].toInt(), c[5].toInt(), c[6].toInt())

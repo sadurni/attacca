@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Landscape
+import androidx.compose.material.icons.rounded.ViewInAr
 import androidx.compose.material.icons.rounded.LastPage
 import androidx.compose.material.icons.rounded.AutoMode
 import androidx.compose.material.icons.rounded.Casino
@@ -145,7 +146,7 @@ import com.sadurni.attacca.ui.theme.LocalAttaccaColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-private enum class PlayerDialog { SLEEP, SPEED, ADD_TO_LIST, LIST_SETTINGS, MOOD, ORAMA }
+private enum class PlayerDialog { SLEEP, SPEED, ADD_TO_LIST, LIST_SETTINGS, MOOD, ORAMA, WORLD }
 
 /** Where the buttons and boxes of Now playing lead (to other screens and dialogs). */
 private class PlayerHandlers(
@@ -270,7 +271,7 @@ fun PlayerScreen(
         )
     }
 
-    Dialogs(viewModel, dialog, onOpenQueue) { dialog = null }
+    Dialogs(viewModel, dialog, onOpenQueue, onOpenWorld = { dialog = PlayerDialog.WORLD }, onOpenOrama = { dialog = PlayerDialog.ORAMA }) { dialog = null }
 }
 
 /**
@@ -665,14 +666,18 @@ private fun InfoLine(block: PlayerBlock, values: (String) -> String?) {
 }
 
 @Composable
-private fun Dialogs(viewModel: PlayerViewModel, dialog: PlayerDialog?, onOpenQueue: () -> Unit, onDismiss: () -> Unit) {
+private fun Dialogs(viewModel: PlayerViewModel, dialog: PlayerDialog?, onOpenQueue: () -> Unit, onOpenWorld: () -> Unit, onOpenOrama: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val sleepTimer by viewModel.sleepTimer.collectAsStateWithLifecycle()
     val speed by viewModel.speed.collectAsStateWithLifecycle()
     val listSettings by viewModel.listSettings.collectAsStateWithLifecycle()
     val addedMessage = stringResource(R.string.added_to_list)
     when (dialog) {
-        PlayerDialog.ORAMA -> com.sadurni.attacca.ui.orama.OramaScreen(viewModel, onDismiss) {
+        PlayerDialog.ORAMA -> com.sadurni.attacca.ui.orama.OramaScreen(viewModel, onDismiss, onOpenWorld = onOpenWorld) {
+            onDismiss()
+            onOpenQueue()
+        }
+        PlayerDialog.WORLD -> com.sadurni.attacca.ui.world.WorldScreen(viewModel, onDismiss, onOpenOrama = onOpenOrama) {
             onDismiss()
             onOpenQueue()
         }
@@ -1620,6 +1625,7 @@ private fun PlayerButton(viewModel: PlayerViewModel, action: PlayerAction, handl
         }
         PlayerAction.QUEUE -> ToolButton(Icons.AutoMirrored.Rounded.QueueMusic, description, handlers.onOpenQueue, size = size)
         PlayerAction.ORAMA -> ToolButton(Icons.Rounded.Landscape, description, { handlers.openDialog(PlayerDialog.ORAMA) }, size = size, modifier = Modifier.tipAnchor("player.orama"))
+        PlayerAction.WORLD -> ToolButton(Icons.Rounded.ViewInAr, description, { handlers.openDialog(PlayerDialog.WORLD) }, size = size)
         PlayerAction.LISTS -> ToolButton(Icons.Rounded.LibraryMusic, description, handlers.onOpenLists, size = size)
         PlayerAction.LYRICS -> ToolButton(Icons.Rounded.Lyrics, description, handlers.toggleLyrics, size = size)
         PlayerAction.ADD_TO_LIST -> ToolButton(
@@ -1723,6 +1729,7 @@ fun actionName(action: PlayerAction): String = stringResource(
         PlayerAction.QUICK_LIST -> R.string.quick_list
         PlayerAction.RANDOM_LIST -> R.string.random_list
         PlayerAction.ORAMA -> R.string.orama_name
+        PlayerAction.WORLD -> R.string.world_name
         PlayerAction.NAVIGATOR -> R.string.action_navigator
         PlayerAction.BOOKMARK -> R.string.action_bookmarks
         PlayerAction.SLEEP -> R.string.action_sleep_timer
@@ -1757,6 +1764,7 @@ fun actionIcon(action: PlayerAction): ImageVector = when (action) {
     PlayerAction.QUICK_LIST -> Icons.Rounded.AutoMode
     PlayerAction.RANDOM_LIST -> Icons.Rounded.Casino
     PlayerAction.ORAMA -> Icons.Rounded.Landscape
+    PlayerAction.WORLD -> Icons.Rounded.ViewInAr
     PlayerAction.NAVIGATOR -> Icons.Rounded.Explore
     PlayerAction.BOOKMARK -> Icons.Rounded.BookmarkBorder
     PlayerAction.SLEEP -> Icons.Rounded.Timer

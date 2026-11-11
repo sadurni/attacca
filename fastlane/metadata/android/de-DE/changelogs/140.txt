@@ -1,0 +1,5 @@
+• Attacca World (3D-Knopf in O'rama): der Titel als Land, durch das man hinter dem Reisenden und den vier Hunden zieht, auch am Computer.
+• Acht neue Welten: Wüste, Große Mauer, Indien, Amazonas, Canyon, Japan, unter dem Meer, Vulkan; nach Genre, Stimmung oder Titel oder mit dem Globus.
+• O'rama und World zugleich (geteilter Bildschirm).
+• Größere Schrift im großen Widget; das Blättern in Ordnern hängt nicht mehr.
+• World: Orte aus O'rama, die nächste Welt naht, Licht im Dunkeln.

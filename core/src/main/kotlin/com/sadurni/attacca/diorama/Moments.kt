@@ -36,6 +36,7 @@ internal fun Scene.peakMoment() {
     val night = look.night > 0.5f
     val from = out.size
     when {
+        newPeak(look.world, f) -> {}
         look.world == World.NEON || (look.world == World.CITY && night) -> bigFireworks(f)
         look.world == World.CASTLE -> bloodMoon(f)
         look.world == World.ICE -> northernLights(f)
@@ -183,12 +184,12 @@ private fun Scene.bigFireworks(f: Float) {
 
 // ---------- Places along the way ----------
 
-private enum class Landmark { BRIDGE, TUNNEL, VILLAGE, STATION, WHEEL, SCREEN, RUINS, ARCH, BASE, ROCKET }
+internal enum class Landmark { BRIDGE, TUNNEL, VILLAGE, STATION, WHEEL, SCREEN, RUINS, ARCH, BASE, ROCKET }
 
 /** Music between two places (on the near land). */
-private const val LANDMARK_EVERY_MS = 45_000.0
+internal const val LANDMARK_EVERY_MS = 45_000.0
 
-private fun landmarksOf(world: World): Array<Landmark> = when (world) {
+internal fun landmarksOf(world: World): Array<Landmark> = when (world) {
     World.MEADOW -> arrayOf(Landmark.BRIDGE, Landmark.TUNNEL, Landmark.VILLAGE)
     World.CITY -> arrayOf(Landmark.BRIDGE, Landmark.TUNNEL, Landmark.STATION)
     World.NEON -> arrayOf(Landmark.WHEEL, Landmark.SCREEN, Landmark.TUNNEL)
@@ -196,6 +197,14 @@ private fun landmarksOf(world: World): Array<Landmark> = when (world) {
     World.COAST -> arrayOf(Landmark.WHEEL, Landmark.BRIDGE, Landmark.VILLAGE)
     World.ICE -> arrayOf(Landmark.ARCH)
     World.SPACE -> arrayOf(Landmark.BASE, Landmark.ROCKET)
+    World.DESERT -> arrayOf(Landmark.RUINS, Landmark.ARCH)
+    World.WALL -> arrayOf(Landmark.BRIDGE, Landmark.TUNNEL, Landmark.VILLAGE)
+    World.JUNGLE -> arrayOf(Landmark.RUINS, Landmark.BRIDGE)
+    World.AMAZON -> arrayOf(Landmark.BRIDGE)
+    World.CANYON -> arrayOf(Landmark.BRIDGE, Landmark.TUNNEL, Landmark.STATION)
+    World.JAPAN -> arrayOf(Landmark.BRIDGE, Landmark.VILLAGE, Landmark.TUNNEL)
+    World.REEF -> arrayOf(Landmark.ARCH)
+    World.VOLCANO -> arrayOf(Landmark.BRIDGE, Landmark.TUNNEL, Landmark.RUINS)
 }
 
 /** Every place on screen: its kind, number and where it begins and ends on the near land. */
@@ -857,7 +866,7 @@ internal fun Scene.foreground() {
         if (hash(i, 601) > 0.2f + 0.15f * look.energy) return@slots
         val x = x0 + (x1 - x0) * hash(i, 602)
         val tall = h * (0.16f + 0.1f * hash(i, 603))
-        when (lane.look.world) {
+        when (foregroundLike(lane.look.world)) {
             World.MEADOW, World.COAST -> if (hash(i, 604) < 0.3f && lane.look.world == World.MEADOW) {
                 bough(x, c, i)
             } else {
@@ -885,6 +894,7 @@ internal fun Scene.foreground() {
                 out.polygon(if (lane.look.world == World.ICE) Colors.alpha(Colors.mix(p.mid, 0xFFFFFFFF.toInt(), 0.2f), 0.9f) else c)
                 out.point(x - unit * 0.08f, bottom + 2f); out.point(x - unit * 0.03f, h - tall * 0.6f); out.point(x + unit * 0.01f, h - tall * 0.45f); out.point(x + unit * 0.05f, h - tall * 0.7f); out.point(x + unit * 0.09f, bottom + 2f)
             }
+            else -> {}
         }
     }
 }
@@ -981,6 +991,10 @@ internal fun Scene.finish() {
             World.COAST -> bunting(fx, s)
             World.ICE -> iceGate(fx, s)
             World.SPACE -> spaceRing(fx, s)
+            World.DESERT, World.CANYON -> fenceGate(fx, s)
+            World.WALL, World.VOLCANO -> wallGate(fx, s)
+            World.JUNGLE, World.AMAZON, World.JAPAN -> bunting(fx, s)
+            World.REEF -> iceGate(fx, s)
             null -> finishArch(fx, s)
         }
     }
@@ -1282,6 +1296,10 @@ internal fun Scene.companion(song: SongLook) {
         World.MEADOW, World.CITY, World.COAST, World.CASTLE -> if (song.traveller == Traveller.CAR) arrayOf(Mate.BIRD) else arrayOf(Mate.DOG, Mate.BIRD, Mate.BIRD)
         World.ICE -> arrayOf(Mate.BIRD)
         World.NEON, World.SPACE -> arrayOf(Mate.DRONE)
+        World.DESERT, World.WALL, World.JUNGLE, World.CANYON, World.JAPAN, World.VOLCANO -> arrayOf(Mate.BIRD, Mate.BIRD, Mate.DOG)
+        World.AMAZON -> arrayOf(Mate.BIRD)
+        // Under the sea no bird keeps the traveller company.
+        World.REEF -> return
     }
     val kind = kinds[(hash(seed + round, 702) * kinds.size).toInt().coerceAtMost(kinds.size - 1)]
     val s = travellerSize
@@ -1316,4 +1334,13 @@ internal fun Scene.companion(song: SongLook) {
             if ((now / 300) % 2 == 0L) out.circle(p.light, dx, dy + s * 0.02f, s * 0.035f)
         }
     }
+}
+
+/** Which old world's foreground a newer one borrows (grass, lamps, branches, ice…). */
+private fun foregroundLike(w: World): World = when (w) {
+    World.DESERT, World.CANYON -> World.COAST
+    World.WALL, World.JAPAN, World.JUNGLE, World.AMAZON -> World.MEADOW
+    World.REEF -> World.ICE
+    World.VOLCANO -> World.CASTLE
+    else -> w
 }

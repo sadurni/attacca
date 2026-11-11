@@ -398,6 +398,7 @@ internal class Scene(
             World.ICE -> { iceCliffs(); icebergs(); floatingAlbums(farBase + h * 0.07f, ZOOM_MID); coldSea() }
             // (Its planets are drawn with the sky, behind what flies by.)
             World.SPACE -> { ridge(); buriedAlbums(); moonGround(); spaceThings() }
+            else -> newLand(song.world)
         }
         landmarksBack()
         finish()
@@ -685,6 +686,19 @@ internal class Scene(
             return
         }
         out.rect(wall, cx - s * 0.5f, ground - s * 0.6f, cx + s * 0.5f, ground)
+        // Some houses have their fire lit: a chimney smoking, the smoke drifting off (more in the cold).
+        val which = if (hid != 0) hid else (s * 977f).toInt()
+        val cold = look.world == World.ICE || look.world == World.CASTLE || look.world == World.WALL
+        if (hash(which, 541) < (if (cold) 0.75f else 0.5f) && look.world != World.SPACE && look.world != World.REEF) {
+            val chx = cx + s * 0.3f
+            out.rect(Colors.darker(roof, 0.25f), chx - s * 0.06f, ground - s * 0.98f, chx + s * 0.06f, ground - s * 0.7f)
+            val smoke = Colors.mix(0xFFE8E8EC.toInt(), p.skyBottom, 0.25f)
+            for (k in 0 until 5) {
+                val age = ((now / 2200.0 + k / 5.0 + hash(which, 542)) % 1.0).toFloat()
+                val r = s * (0.05f + 0.1f * age)
+                out.circle(Colors.alpha(smoke, 0.5f * (1f - age) * min(1f, age * 6f)), chx + age * s * 0.45f + sin(age * 6f + k) * s * 0.03f, ground - s * 1.0f - age * s * 0.95f, r)
+            }
+        }
         out.polygon(roof)
         out.point(cx - s * 0.62f, ground - s * 0.6f); out.point(cx, ground - s * 1.05f); out.point(cx + s * 0.62f, ground - s * 0.6f)
         val lit = (look.night > 0.4f) != switched

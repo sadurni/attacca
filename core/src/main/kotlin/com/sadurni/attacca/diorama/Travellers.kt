@@ -49,6 +49,10 @@ internal fun Scene.onBeat(song: SongLook) {
             else -> Trick.HOP
         }
         Traveller.SHIP -> if (big && q < 0.4f) Trick.LOOP else Trick.HOP
+        Traveller.CAMEL -> if (big && q < 0.3f) Trick.REAR else Trick.JUMP
+        Traveller.ELEPHANT -> if (big && q < 0.4f) Trick.REAR else Trick.ARMS
+        Traveller.CANOE -> if (q < 0.5f) Trick.ARMS else Trick.HOP
+        Traveller.SUBMARINE -> if (big && q < 0.4f) Trick.LOOP else Trick.ROLL
     }
     start(trick)
 }
@@ -62,7 +66,9 @@ internal fun Scene.touchedMove(song: SongLook) {
             Traveller.WALKER, Traveller.ICEBERG -> Trick.CARTWHEEL
             Traveller.RIDER -> Trick.REAR
             Traveller.CYCLIST, Traveller.CAR -> if (hash(moves.onsets, 303) < 0.5f) Trick.WHEELIE else Trick.FLIP
-            Traveller.SHIP -> Trick.LOOP
+            Traveller.SHIP, Traveller.SUBMARINE -> Trick.LOOP
+            Traveller.CAMEL, Traveller.ELEPHANT -> Trick.REAR
+            Traveller.CANOE -> Trick.ARMS
         },
     )
 }
@@ -185,6 +191,20 @@ internal fun Scene.traveller(song: SongLook) {
         }
         Traveller.ICEBERG -> icebergRider(x, s, color)
         Traveller.SHIP -> ship(x, s)
+        Traveller.CAMEL -> {
+            val pz = pose()
+            val tilt = slope(x - s * 0.4f, x + s * 0.4f)
+            val ground = (nearY(x - s * 0.4f) + nearY(x + s * 0.4f)) / 2f - pz.lift * s
+            tilted(tilt, x, ground, pz.angle, x - s * 0.4f, ground) { camelRider(x, ground, s, if (moving) phase / 2f else 0.25f, color, pz.arms) }
+        }
+        Traveller.ELEPHANT -> {
+            val pz = pose()
+            val tilt = slope(x - s * 0.45f, x + s * 0.45f)
+            val ground = (nearY(x - s * 0.45f) + nearY(x + s * 0.45f)) / 2f - pz.lift * s * 0.5f
+            tilted(tilt, x, ground, pz.angle * 0.6f, x - s * 0.4f, ground) { elephantRider(x, ground, s, if (moving) phase / 2f else 0.25f, color, pz.arms) }
+        }
+        Traveller.CANOE -> canoe(x, s, color, if (moving) phase else 0f)
+        Traveller.SUBMARINE -> submarine(x, s)
     }
 }
 
@@ -778,8 +798,104 @@ internal fun Scene.crowd(song: SongLook) {
                 turned(slope(x - s * 0.32f, x + s * 0.32f), x, ground) { car(x, ground, s, color, if (look.night > 0.3f) 1 else 0, false) }
             }
             Traveller.SHIP -> ship(x, s * 0.8f, dy = (if (k % 2 == 0) -1f else 1f) * s * (0.9f + 0.4f * k), tricks = false)
-            Traveller.ICEBERG -> {}
+            Traveller.CAMEL -> camelShape(x, (nearY(x - s * 0.4f) + nearY(x + s * 0.4f)) / 2f, s, if (playing) phase / 2f else 0f, color)
+            Traveller.ELEPHANT -> elephantShape(x, (nearY(x - s * 0.45f) + nearY(x + s * 0.45f)) / 2f, s * 0.9f, if (playing) phase / 2f else 0f, color, null)
+            Traveller.ICEBERG, Traveller.CANOE, Traveller.SUBMARINE -> {}
         }
     }
     moves.headStyle = own
+}
+
+/** On a camel: sitting on its hump, legs down its sides, a hand up with the music. */
+private fun Scene.camelRider(x: Float, ground: Float, s: Float, phase: Float, color: Int, arms: Float) {
+    camelShape(x, ground, s, phase, Colors.darker(color, 0.25f))
+    val lw = s * 0.08f
+    val sway = sin(phase * 2 * PI).toFloat() * s * 0.03f
+    val seatX = x - s * 0.12f
+    val seatY = ground - s * 1.15f + sway
+    out.polyline(color, lw)
+    out.point(seatX, seatY); out.point(seatX + s * 0.12f, seatY + s * 0.18f); out.point(seatX + s * 0.05f, seatY + s * 0.36f)
+    val shY = seatY - s * 0.36f
+    out.line(color, lw * 1.2f, seatX, seatY, seatX + s * 0.04f, shY)
+    head(seatX + s * 0.05f, shY - s * 0.13f, s * 0.11f, color)
+    val up = (0.2f + live.level * 0.6f).coerceAtLeast(arms)
+    out.polyline(color, lw * 0.8f)
+    out.point(seatX + s * 0.04f, shY + s * 0.04f); out.point(seatX + s * 0.2f, shY + s * 0.08f - up * s * 0.2f); out.point(seatX + s * 0.32f, shY + s * 0.02f - up * s * 0.45f)
+    // A scarf in the desert wind.
+    out.polyline(Colors.alpha(p.accent, 0.9f), lw * 0.7f)
+    out.point(seatX + s * 0.04f, shY + s * 0.02f); out.point(seatX - s * 0.2f, shY + sin(now / 260.0).toFloat() * s * 0.04f); out.point(seatX - s * 0.38f, shY + s * 0.05f + sin(now / 210.0).toFloat() * s * 0.05f)
+}
+
+/** On an elephant: sitting on its back on a bright cloth. */
+private fun Scene.elephantRider(x: Float, ground: Float, s: Float, phase: Float, color: Int, arms: Float) {
+    elephantShape(x, ground, s, phase, Colors.mix(0xFF8A8A92.toInt(), p.mid, 0.2f), p.accent)
+    val lw = s * 0.08f
+    val seatX = x - s * 0.05f
+    val seatY = ground - s * 1.3f + sin(phase * 2 * PI).toFloat() * s * 0.02f
+    out.polyline(color, lw)
+    out.point(seatX, seatY); out.point(seatX + s * 0.16f, seatY + s * 0.12f); out.point(seatX + s * 0.12f, seatY + s * 0.3f)
+    val shY = seatY - s * 0.36f
+    out.line(color, lw * 1.2f, seatX, seatY, seatX + s * 0.03f, shY)
+    head(seatX + s * 0.04f, shY - s * 0.13f, s * 0.11f, color)
+    val up = (0.15f + live.level * 0.5f).coerceAtLeast(arms)
+    out.polyline(color, lw * 0.8f)
+    out.point(seatX + s * 0.03f, shY + s * 0.04f); out.point(seatX + s * 0.22f, shY + s * 0.06f - up * s * 0.25f); out.point(seatX + s * 0.34f, shY - up * s * 0.5f)
+}
+
+/** In a canoe down the river: paddling on the beat, rocked by the water. */
+private fun Scene.canoe(x: Float, s: Float, color: Int, phase: Float) {
+    val water = seaY(x)
+    val pz = pose()
+    val rock = sin(now / 900.0).toFloat() * s * 0.03f
+    val y = water - pz.lift * s * 0.5f + rock
+    turned(pz.angle * 0.3f, x, y) {
+        val hull = Colors.mix(0xFF8A5A34.toInt(), p.accent, 0.3f)
+        out.polygon(hull)
+        out.point(x - s * 0.95f, y - s * 0.22f); out.point(x + s * 0.95f, y - s * 0.22f); out.point(x + s * 0.7f, y + s * 0.05f); out.point(x - s * 0.7f, y + s * 0.05f)
+        out.line(Colors.darker(hull, 0.3f), s * 0.04f, x - s * 0.9f, y - s * 0.2f, x + s * 0.9f, y - s * 0.2f)
+        // The paddler, kneeling; the paddle dips on each beat, one side then the other.
+        val lw = s * 0.08f
+        val hip = y - s * 0.3f
+        val shY = hip - s * 0.38f
+        out.line(color, lw * 1.2f, x, hip, x + s * 0.06f, shY)
+        head(x + s * 0.08f, shY - s * 0.14f, s * 0.11f, color)
+        val a = sin(phase * 2 * PI).toFloat()
+        val px = x + s * (0.15f + 0.25f * a)
+        out.line(Colors.darker(hull, 0.4f), s * 0.05f, px - s * 0.2f, shY - s * 0.1f, px + s * 0.25f, y + s * 0.2f)
+        out.circle(Colors.darker(hull, 0.4f), px + s * 0.27f, y + s * 0.2f, s * 0.07f)
+        out.line(color, lw * 0.8f, x + s * 0.06f, shY + s * 0.05f, px - s * 0.05f, shY)
+    }
+    // Water over the hull's foot.
+    out.polygon(Colors.alpha(Colors.mix(0xFF4E7A5A.toInt(), p.skyBottom, 0.25f), 0.85f))
+    var wx = x - s * 1.2f
+    while (wx <= x + s * 1.2f) {
+        out.point(wx, seaY(wx) + s * 0.02f)
+        wx += s * 0.1f
+    }
+    out.point(x + s * 1.2f, water + s * 0.2f); out.point(x - s * 1.2f, water + s * 0.2f)
+}
+
+/** A small yellow submarine in the open water: portholes, a periscope, its propeller turning. */
+private fun Scene.submarine(x: Float, s: Float) {
+    val pz = pose()
+    val y = h * 0.5f - heightAt(x, 1f, 40f) * h * 0.16f + sin(now / 1100.0).toFloat() * s * 0.08f - pz.lift * s
+    turned(pz.angle, x, y) {
+        val body = Colors.mix(0xFFF5C542.toInt(), p.accent, 0.2f)
+        out.circle(body, x - s * 0.45f, y, s * 0.25f)
+        out.circle(body, x + s * 0.45f, y, s * 0.25f)
+        out.rect(body, x - s * 0.45f, y - s * 0.25f, x + s * 0.45f, y + s * 0.25f)
+        out.rect(body, x - s * 0.1f, y - s * 0.42f, x + s * 0.22f, y - s * 0.2f)
+        out.line(Colors.darker(body, 0.4f), s * 0.04f, x + s * 0.12f, y - s * 0.42f, x + s * 0.12f, y - s * 0.6f)
+        out.line(Colors.darker(body, 0.4f), s * 0.04f, x + s * 0.12f, y - s * 0.6f, x + s * 0.24f, y - s * 0.6f)
+        for (k in -1..1) {
+            out.circle(Colors.darker(body, 0.35f), x + k * s * 0.3f, y, s * 0.09f)
+            out.circle(Colors.alpha(p.light, 0.8f), x + k * s * 0.3f, y, s * 0.06f)
+        }
+        val turn = (now / 60.0 % (2 * PI)).toFloat()
+        out.line(Colors.darker(body, 0.4f), s * 0.05f, x - s * 0.72f, y - cos(turn) * s * 0.18f, x - s * 0.72f, y + cos(turn) * s * 0.18f)
+    }
+    for (k in 0 until 4) {
+        val age = ((now / 1500.0 + k * 0.25) % 1.0).toFloat()
+        out.ring(Colors.alpha(0xFFE8F8FF.toInt(), 0.6f * (1 - age)), x - s * 0.8f - age * s * 0.3f, y - age * s * 1.2f, s * 0.05f, s * 0.015f)
+    }
 }

@@ -1,0 +1,5 @@
+• Attacca World (przycisk 3D w O'rama): utwór jako kraina, przez którą idzie się za podróżnikiem i czterema psami, także na komputerze.
+• Osiem nowych światów: pustynia, Wielki Mur, Indie, Amazonia, kanion, Japonia, pod morzem, wulkan; według gatunku, nastroju lub tytułu albo globusem.
+• O'rama i World naraz (podzielony ekran).
+• Większy tekst w dużym widżecie; przeglądanie folderów już się nie zacina.
+• World: miejsca z O'rama, nadchodzący świat, światła w ciemności.

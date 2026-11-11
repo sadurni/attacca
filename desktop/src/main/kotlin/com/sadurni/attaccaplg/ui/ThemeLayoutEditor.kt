@@ -422,4 +422,5 @@ internal fun actionName(a: PlayerAction) = when (a) {
     PlayerAction.QUICK_LIST -> tr("Quick list", "Lista rápida")
     PlayerAction.RANDOM_LIST -> tr("Random list", "Lista al azar")
     PlayerAction.ORAMA -> "Attacca O'rama"
+    PlayerAction.WORLD -> "Attacca World"
 }

@@ -14,8 +14,8 @@ android {
         applicationId = "com.sadurni.attacca"
         minSdk = 26
         targetSdk = 36
-        versionCode = 130
-        versionName = "1.3.0"
+        versionCode = 140
+        versionName = "1.4.0"
         // On-device tests of the media library (what Android Auto sees).
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

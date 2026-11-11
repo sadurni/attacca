@@ -49,6 +49,13 @@ object Background {
      */
     val prePlay: CoroutineDispatcher = pool(1, "attacca-preplay")
 
+    /**
+     * One thread walking folders for the browser (the search index, the inclusion marks of
+     * folders): a walk of a big music folder takes a while and must not keep the shared threads,
+     * which read tags and covers, waiting while the user browses.
+     */
+    val folders: CoroutineDispatcher = pool(1, "attacca-folders")
+
     /** One thread decoding the playing track a few seconds ahead, for skip blends. */
     val ahead: CoroutineDispatcher = pool(1, "attacca-ahead")
 

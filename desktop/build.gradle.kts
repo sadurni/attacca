@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.sadurni.attaccaplg"
-version = "1.3.0"
+version = "1.4.0"
 
 kotlin {
     jvmToolchain(17)
@@ -273,4 +273,17 @@ tasks.register<JavaExec>("oramaSections") {
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("com.sadurni.attaccaplg.ui.OramaSectionsKt")
     args = (project.findProperty("snapArgs") as String? ?: "").split('|').filter { it.isNotEmpty() }
+}
+
+/** Development: Attacca World drawn without a screen to PNG files, with the time a frame takes. Args: output folder. */
+tasks.register<JavaExec>("worldShots") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("com.sadurni.attaccaplg.ui.world.WorldShotsKt")
+    args = listOf(layout.buildDirectory.dir("world-shots").get().asFile.path)
+}
+
+tasks.register<JavaExec>("placeShots") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("com.sadurni.attaccaplg.ui.world.PlaceShotsKt")
+    args = (project.findProperty("shotArgs") as String? ?: "MEADOW - 0 places").split(" ").let { listOf(layout.buildDirectory.dir("place-shots").get().asFile.path) + it }
 }

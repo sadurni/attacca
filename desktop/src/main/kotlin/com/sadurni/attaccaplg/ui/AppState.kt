@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class Page { PLAYING, ORAMA, MUSIC, COVERS, LIBRARY, TRACKS, LISTS, SOUND, EXCHANGE, THEMES, SETTINGS }
+enum class Page { PLAYING, ORAMA, WORLD, MUSIC, COVERS, LIBRARY, TRACKS, LISTS, SOUND, EXCHANGE, THEMES, SETTINGS }
 
 /** The Lists page: making lists, or the lists kept (Attacca's way). */
 enum class ListsView { MAKE, SAVED }

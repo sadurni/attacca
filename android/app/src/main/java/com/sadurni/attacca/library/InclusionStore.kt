@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -43,22 +44,65 @@ class InclusionStore(private val settings: AppSettings, private val scope: Corou
     /** Folder marks for the current [effective]; walking a big folder takes a moment. */
     private val folderMarks = java.util.concurrent.ConcurrentHashMap<String, FolderMark>()
 
-    /** How much of [folder] the list leaves out; [FolderMark.NONE] without a list. */
+    /**
+     * How much of [folder] the list leaves out; [FolderMark.NONE] without a list. Below the music
+     * folder every folder's mark comes from one pass over its last walk (worked out once per
+     * list); elsewhere the folder is walked, stopping if the row goes out of sight. On its own
+     * thread: a big folder takes a while and the browser must not wait on it for tags or covers.
+     */
     suspend fun folderMark(folder: String): FolderMark {
         val e = _effective.value ?: return FolderMark.NONE
         folderMarks[folder]?.let { return it }
-        return withContext(Background.dispatcher) {
-            val files = AudioFiles.collectAudio(File(folder), recent = true)
-            val out = files.count { !e.includes(it.absolutePath) }
-            val mark = when {
-                out == 0 -> FolderMark.NONE
-                out == files.size -> FolderMark.ALL
-                else -> FolderMark.PART
+        return withContext(Background.folders) {
+            folderMarks[folder]?.let { return@withContext it }
+            val counts = countsFor(e)
+            val key = folder.trimEnd('/')
+            val mark = if (counts != null && AudioFiles.indexedRoot()?.let { key == it.path || key.startsWith(it.path + "/") } == true) {
+                counts[key]?.let { markOf(it[0], it[1]) } ?: FolderMark.NONE
+            } else {
+                val job = coroutineContext
+                val files = AudioFiles.collectAudio(File(folder)) { !job.isActive }
+                if (!job.isActive) return@withContext FolderMark.NONE
+                markOf(files.size, files.count { !e.includes(it.absolutePath) })
             }
             // Kept only while the list is the one it was worked out for.
             if (_effective.value === e) folderMarks[folder] = mark
             mark
         }
+    }
+
+    private fun markOf(total: Int, out: Int) = when {
+        out == 0 -> FolderMark.NONE
+        out == total -> FolderMark.ALL
+        else -> FolderMark.PART
+    }
+
+    /** For [counted]: each folder below the music folder with its audio files and those left out. */
+    private var counts: Map<String, IntArray>? = null
+    private var counted: Effective? = null
+    private var countedAt = 0L
+
+    private fun countsFor(e: Effective): Map<String, IntArray>? {
+        if (counted === e && countedAt == AudioFiles.indexedAt()) counts?.let { return it }
+        val root = AudioFiles.indexedRoot() ?: return null
+        val files = AudioFiles.indexedAudio(root) ?: return null
+        val map = HashMap<String, IntArray>()
+        val top = root.path
+        for (f in files) {
+            val out = !e.includes(f.absolutePath)
+            var dir = f.path.substringBeforeLast('/', "")
+            while (dir.length >= top.length) {
+                val c = map.getOrPut(dir) { IntArray(2) }
+                c[0]++
+                if (out) c[1]++
+                if (dir == top) break
+                dir = dir.substringBeforeLast('/', "")
+            }
+        }
+        counts = map
+        counted = e
+        countedAt = AudioFiles.indexedAt()
+        return map
     }
 
     /** What the list is made of: its rules (empty for a list made elsewhere) and its tracks. */

@@ -1,0 +1,5 @@
+• Attacca World (butonul 3D din O'rama): piesa ca un ținut de străbătut în urma călătorului și a celor patru câini, și pe calculator.
+• Opt lumi noi: deșert, Marele Zid, India, Amazon, canion, Japonia, sub mare, vulcan; după gen, stare sau titlu, ori cu globul.
+• O'rama și World împreună (ecran împărțit).
+• Text mai mare în widgetul mare; navigarea prin dosare nu se mai blochează.
+• World: locurile din O'rama, lumea care vine, lumini în întuneric.

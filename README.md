@@ -21,8 +21,14 @@ plays them so one song flows into the next.
   for each output: headphones, car, speaker.
 - 🌄 **O'rama: watch the song.** A moving landscape drawn from the song's waveform, mood and
   beat: someone runs, rides or flies through castles, cities, seas and space, jumping on the
-  strong beats, through tunnels with a torch, towards a gate into the next track's world. And a few little
-  surprises to find.
+  strong beats, through tunnels with a torch, towards a gate into the next track's world, in
+  fifteen worlds (deserts, the Great Wall, jungles, the Amazon, canyons, Japan, under the sea,
+  volcanoes…). And a few little surprises to find.
+- 🗺️ **Attacca World: go through the song.** The same song as a land in 3D, smooth and warm, to
+  go through behind the traveller and four dogs: the way rises with the music, the land goes on
+  from one song to the next and comes into the next one's world, O'rama's bridges, tunnels,
+  stations and villages come by, and someone waits along the way to take over. On the phone (also
+  beside O'rama, the screen split in two) and on the desktop.
 - 🎭 **Moods and sound families, found by ear.** A sound-recognition network runs on the phone
   itself and groups your music by how it sounds: lists by mood and family, without anyone
   else's tags.

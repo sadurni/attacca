@@ -426,7 +426,7 @@ class PlaybackService : MediaLibraryService() {
         val still = kotlinx.coroutines.withContext(com.sadurni.attacca.Background.dispatcher) {
             OramaStill.render(this@PlaybackService, id, metadata.title?.toString(), metadata.artist?.toString(), metadata.albumTitle?.toString(), null, position, widgetArt, w, h)
         }
-        if (still != null) NowPlayingWidget.updateScene(this, still)
+        if (still != null) NowPlayingWidget.updateScene(this, still, id)
     }
 
     /** Listens for a shake only while music plays and shaking is on. */
@@ -529,6 +529,8 @@ class PlaybackService : MediaLibraryService() {
             // Shuffle and repeat come from the list's own settings (PlaybackExtras).
             player.setMediaItems(items, saved.index.coerceIn(0, saved.locations.lastIndex), saved.positionMs)
             player.prepare()
+            // Where the list was taken up again, for a report of "it started from the first song".
+            com.sadurni.attacca.ExitLog.note(this@PlaybackService, "queue restored: track ${saved.index + 1} of ${saved.locations.size} at ${saved.positionMs / 1000} s")
         }
     }
 

@@ -1,5 +1,9 @@
 package com.sadurni.attaccaplg.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+
+import com.sadurni.attacca.diorama.World
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -92,7 +96,7 @@ import java.io.File
  * landscape alone (a click, Esc or F11 brings the rest back).
  */
 @Composable
-fun OramaPage(state: AppState) {
+fun OramaPage(state: AppState, embedded: Boolean = false) {
     val p = state.player
     val item = p.queue.getOrNull(p.index)
     val nextItem = when {
@@ -141,14 +145,15 @@ fun OramaPage(state: AppState) {
             }
         }
     }
-    val full = state.oramaFull
+    val full = state.oramaFull && !embedded
+    val chosenWorld by OramaShared.chosenWorld
     val cutEnd = p.cutEndMs.takeIf { it > p.cutStartMs } ?: p.durationMs
     // Upright, the land rises over the floating player so the traveller stays in sight.
     var barTop by remember { mutableFloatStateOf(-1f) }
     var canvasHeight by remember { mutableFloatStateOf(0f) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth > maxHeight
-        val lift by animateFloatAsState(if (!full && !wide && barTop > 0f) (canvasHeight - barTop) * 0.85f else 0f, label = "lift")
+        val lift by animateFloatAsState(if (!full && !wide && !embedded && barTop > 0f) (canvasHeight - barTop) * 0.85f else 0f, label = "lift")
         Canvas(
             Modifier.fillMaxSize().clipToBounds()
                 // A click on something in the landscape makes it react; elsewhere, over the whole screen, it brings the rest back.
@@ -163,7 +168,7 @@ fun OramaPage(state: AppState) {
             val now = System.nanoTime() / 1_000_000L
             val song = item?.let {
                 Diorama.Song(
-                    it.path, look ?: Diorama.NEUTRAL, it.waveform?.let { w -> SongWave(w, it.durationMs, p.cutStartMs, cutEnd) },
+                    it.path, OramaShared.shown(look ?: Diorama.NEUTRAL), it.waveform?.let { w -> SongWave(w, it.durationMs, p.cutStartMs, cutEnd) },
                     it.album.ifBlank { it.title }, it.artist,
                 )
             }
@@ -183,7 +188,8 @@ fun OramaPage(state: AppState) {
             diorama.draw(list, size.width, size.height, (p.positionMs - p.cutStartMs).coerceAtLeast(0), p.playing, if (heard) raw else null, now, lift)
             paint(list, path, cover, measurer)
         }
-        if (!full) {
+        // In half of World's page: only the landscape (the title, buttons and player are World's).
+        if (!full && !embedded) {
             if (item != null) {
                 val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(1f, 2f), 6f)
                 // On a box like the small player's, so they read on any sky.
@@ -205,7 +211,9 @@ fun OramaPage(state: AppState) {
                     Column(Modifier.padding(end = 4.dp)) {
                         Text(item.title, style = TextStyle(color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(listOf(item.artist, item.album).filter { it.isNotBlank() }.joinToString(" · "), style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 13.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        listOfNotNull(moodLine, World.entries.firstOrNull { it.name == chosenWorld }?.let { worldName(it) }).joinToString(" · ").takeIf { it.isNotEmpty() }?.let {
+                            Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 13.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
                 }
@@ -236,6 +244,22 @@ fun OramaPage(state: AppState) {
                 ) {
                     IconButton(onClick = { used(); state.oramaFull = true }) {
                         Icon(PlayerIcons.Fullscreen, tr("Whole screen (F11)", "Pantalla completa (F11)"), tint = Color.White)
+                    }
+                    // Another world: the song's own, or each of the others in turn (the same in Attacca World).
+                    IconButton(onClick = { used(); OramaShared.nextWorld() }) {
+                        Icon(PlayerIcons.Public, tr("Another world (the song's own, or each of the others in turn)", "Otro mundo (el de la canción o cada uno de los demás por turno)"), tint = Color.White)
+                    }
+                    if (chosenWorld != null) {
+                        IconButton(onClick = { used(); OramaShared.chosenWorld.value = null }) {
+                            Icon(PlayerIcons.MusicNote, tr("Each song's own world again", "Otra vez el mundo de cada canción"), tint = Color.White)
+                        }
+                    }
+                    // The same song as a land to go through, in 3D; or both at once.
+                    TextButton(onClick = { OramaShared.split.value = false; state.page = Page.WORLD }) {
+                        Text("3D", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Attacca World" })
+                    }
+                    IconButton(onClick = { OramaShared.split.value = true; state.page = Page.WORLD }) {
+                        Icon(PlayerIcons.VerticalSplit, tr("O'rama and Attacca World together", "O'rama y Attacca World a la vez"), tint = Color.White)
                     }
                     // Only on festive days: their look on or off.
                     FestiveDesk.period?.let { period ->
@@ -282,11 +306,75 @@ fun OramaPage(state: AppState) {
             }
             OramaBar(state, item, nextItem, cutEnd, wide, barModifier.onGloballyPositioned { barTop = it.positionInParent().y })
         }
+        // Over the whole screen: the song's name as it starts, fading in and out.
+        if (!embedded) SongIntro(item?.path, item?.title ?: "", item?.artist, full)
     }
 }
 
+/**
+ * Over the whole screen with nothing else on it ([show]): the name of the song starting, in the
+ * middle, fading in and out over a few seconds.
+ */
+@Composable
+internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean) {
+    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(id, show) {
+        alpha.snapTo(0f)
+        if (id == null || !show) return@LaunchedEffect
+        alpha.animateTo(1f, androidx.compose.animation.core.tween(900))
+        kotlinx.coroutines.delay(1900)
+        alpha.animateTo(0f, androidx.compose.animation.core.tween(1200))
+    }
+    if (alpha.value <= 0.01f || title.isBlank()) return
+    val shadow = Shadow(Color.Black.copy(alpha = 0.75f), Offset(2f, 3f), 14f)
+    Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.graphicsLayer { this.alpha = alpha.value }) {
+            Text(
+                title,
+                style = TextStyle(
+                    color = Color.White, fontSize = 52.sp, lineHeight = 60.sp, shadow = shadow,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive, fontWeight = FontWeight.SemiBold,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                ),
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
+            artist?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it.uppercase(),
+                    style = TextStyle(
+                        color = Color.White.copy(alpha = 0.88f), fontSize = 16.sp, letterSpacing = 5.sp, shadow = shadow,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    ),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
+    }
+}
+
+/** A world's name, for the title. */
+internal fun worldName(w: World): String = when (w) {
+    World.MEADOW -> tr("Meadows", "Prados")
+    World.COAST -> tr("Coast", "Costa")
+    World.CASTLE -> tr("Castles", "Castillos")
+    World.CITY -> tr("City", "Ciudad")
+    World.NEON -> tr("Neon city", "Ciudad de neón")
+    World.ICE -> tr("Ice", "Hielo")
+    World.SPACE -> tr("Space", "Espacio")
+    World.DESERT -> tr("Desert", "Desierto")
+    World.WALL -> tr("The Great Wall", "La Gran Muralla")
+    World.JUNGLE -> tr("Jungle of India", "Selva de la India")
+    World.AMAZON -> tr("Amazon", "Amazonas")
+    World.CANYON -> tr("Canyon", "Cañón")
+    World.JAPAN -> tr("Japan", "Japón")
+    World.REEF -> tr("Under the sea", "Bajo el mar")
+    World.VOLCANO -> tr("Volcano", "Volcán")
+}
+
 /** Under the texts and buttons over the landscape: dark and see-through, like the small player. */
-private val PANEL = Color(0xFF15151A).copy(alpha = 0.55f)
+internal val PANEL = Color(0xFF15151A).copy(alpha = 0.55f)
 
 /**
  * O'rama in a strip, for Now playing in place of the waveform: the same landscape at the track's
@@ -365,7 +453,7 @@ fun OramaStrip(state: AppState, modifier: Modifier) {
  * next, and the map of this track and the next to move in; [compact] stacks them in a small block.
  */
 @Composable
-private fun OramaBar(state: AppState, item: PlayItem?, nextItem: PlayItem?, cutEnd: Long, compact: Boolean, modifier: Modifier) {
+internal fun OramaBar(state: AppState, item: PlayItem?, nextItem: PlayItem?, cutEnd: Long, compact: Boolean, modifier: Modifier) {
     val p = state.player
     val curLen = (cutEnd - p.cutStartMs).coerceAtLeast(1)
     val at = (p.positionMs - p.cutStartMs).coerceIn(0, curLen)
@@ -535,7 +623,7 @@ private fun DrawScope.paintShapes(list: DrawList, path: Path, cover: ImageBitmap
 }
 
 /** The track's mood (or two) and sound family, as words: "Calm (or Melancholic) · bright, smooth". */
-private fun moodLineOf(lib: Library?, item: PlayItem?): String? {
+internal fun moodLineOf(lib: Library?, item: PlayItem?): String? {
     if (lib == null || item == null) return null
     val rel = lib.root?.let { root -> runCatching { File(item.path).relativeTo(root).invariantSeparatorsPath }.getOrNull() } ?: return null
     val i = lib.indexOf(rel) ?: return null
@@ -552,7 +640,7 @@ private fun moodLineOf(lib: Library?, item: PlayItem?): String? {
 }
 
 /** What the library knows of [item] (measures, mood, family) and its cover's colours, as a look. */
-private fun lookOf(lib: Library?, item: PlayItem?): SongLook {
+internal fun lookOf(lib: Library?, item: PlayItem?): SongLook {
     if (item == null) return Diorama.NEUTRAL
     val rel = lib?.root?.let { root -> runCatching { File(item.path).relativeTo(root).invariantSeparatorsPath }.getOrNull() }
     val track = rel?.let { lib.byPath[it] }
@@ -572,6 +660,8 @@ private fun lookOf(lib: Library?, item: PlayItem?): SongLook {
             family = i?.let { k?.let { c -> c.familyNames.getOrNull(c.families[it]) } },
             cover = cover,
             seed = item.path.hashCode(),
+            genre = track?.tags?.genre,
+            title = track?.tags?.title?.ifBlank { null } ?: java.io.File(item.path).nameWithoutExtension,
         ),
     )
 }
@@ -579,4 +669,33 @@ private fun lookOf(lib: Library?, item: PlayItem?): SongLook {
 /** One landscape for the strip in Now playing and the O'rama page (only one shows at a time). */
 object OramaShared {
     val diorama = Diorama()
+
+    /** Attacca World shows O'rama beside it, the window split in two. */
+    val split = androidx.compose.runtime.mutableStateOf(false)
+
+    /** A world chosen by hand (its name; null: each song's own), the same in O'rama and Attacca World. */
+    val chosenWorld = androidx.compose.runtime.mutableStateOf<String?>(null)
+
+    /** The next world in turn: the song's own, then each of the others. */
+    fun nextWorld() {
+        val all = World.entries
+        val i = all.indexOfFirst { it.name == chosenWorld.value }
+        chosenWorld.value = if (i + 1 < all.size) all[i + 1].name else null
+    }
+
+    private var shownFrom: SongLook? = null
+    private var shownWorld: String? = null
+    private var shownLook: SongLook? = null
+
+    /** [look] in the chosen world, if one is chosen (the same object while neither changes). */
+    fun shown(look: SongLook): SongLook {
+        val name = chosenWorld.value ?: return look
+        val w = World.entries.firstOrNull { it.name == name } ?: return look
+        if (shownFrom !== look || shownWorld != name || shownLook == null) {
+            shownLook = com.sadurni.attacca.diorama.Looks.inWorld(look, w)
+            shownFrom = look
+            shownWorld = name
+        }
+        return shownLook!!
+    }
 }
