@@ -95,7 +95,7 @@ object Places {
                 }
                 // Not where the land still goes on from the last song, nor near the end (the sign, the next world).
                 val reach = if (kind == PlaceKind.STATION) RUN else 6f
-                if (z0 - reach > WorldLand.CONT + WorldLand.CONT_BLEND + 6 && z0 + rows + reach < endZ - WorldLand.ARRIVE - 10) {
+                if (z0 - reach > land.contEnd + 6 && z0 + rows + reach < endZ - WorldLand.ARRIVE - 10) {
                     out += Place(kind, z0, z0 + rows, side, world, k)
                 }
             }
@@ -408,7 +408,9 @@ object Places {
             val x = xAt(land, tz, s * (r0 - 0.85f))
             val y = land.pathAt(tz) + 1.7f
             out.tube(x, y - 0.3f, tz, x, y, tz, 0.05f, 0xFF3A2A20.toInt())
-            out.blob(x - 0.12f, y - 0.02f, tz - 0.12f, x + 0.12f, y + 0.3f, tz + 0.12f, Props.glow(0xFFFFB04A.toInt()))
+            out.blob(x - 0.13f, y - 0.02f, tz - 0.13f, x + 0.13f, y + 0.26f, tz + 0.13f, Props.glow(0xFFFF9A2A.toInt()))
+            out.blob(x - 0.07f, y + 0.02f, tz - 0.07f, x + 0.07f, y + 0.2f, tz + 0.07f, Props.glow(0xFFFFE08A.toInt()))
+            out.blob(x - 0.05f, y + 0.2f, tz - 0.05f, x + 0.05f, y + 0.42f, tz + 0.05f, Props.glow(0xFFFFB04A.toInt()))
             tz += 6f
             k++
         }
@@ -689,7 +691,12 @@ object Places {
     }
 
     private val poses = HashMap<Any, Pose>()
-    private fun poseOf(key: Any, rig: Rig) = synchronized(poses) { poses.getOrPut(key) { rig.pose() } }.also { it.reset() }
+    private fun poseOf(key: Any, rig: Rig): Pose {
+        // (A key may come to another rig, another animal across a change of world: a pose of its own size then.)
+        val p = synchronized(poses) { poses[key]?.takeIf { it.pitch.size == rig.bones.size } ?: rig.pose().also { poses[key] = it } }
+        p.reset()
+        return p
+    }
 
     /** Where the train's engine is (row) with the traveller at [tz]: it comes from behind and overtakes along the track. */
     fun trainHead(p: Place, tz: Float): Float = (p.z0 - RUN) + (tz - (p.z0 - RUN - 14f)) * 2.6f

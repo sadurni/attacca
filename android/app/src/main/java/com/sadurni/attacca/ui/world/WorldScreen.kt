@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onSizeChanged
@@ -64,6 +66,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,14 +89,20 @@ import kotlin.math.sqrt
  */
 @Composable
 fun WorldScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenOrama: () -> Unit = {}, onOpenQueue: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    // Back over the whole screen brings the controls back first.
+    var full by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    // While it is open the strip in Now playing rests.
+    DisposableEffect(Unit) {
+        com.sadurni.attacca.ui.orama.OramaShared.worldOpen.value = true
+        onDispose { com.sadurni.attacca.ui.orama.OramaShared.worldOpen.value = false }
+    }
+    Dialog(onDismissRequest = { if (full) full = false else onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         val view = LocalView.current
         DisposableEffect(view) {
             view.keepScreenOn = true
             onDispose { view.keepScreenOn = false }
         }
         // Over the whole screen the system bars hide too (a swipe from the edge shows them for a moment), as in O'rama.
-        var full by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
         val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
         DisposableEffect(window, full) {
             val controller = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
@@ -118,9 +128,12 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
     val cover by viewModel.cover.collectAsStateWithLifecycle()
     val id = now.mediaId
     val coverBitmap = cover.bitmap.takeIf { cover.mediaId == id }
-    val look by produceState<com.sadurni.attacca.diorama.SongLook?>(null, id, coverBitmap) {
-        value = withContext(Dispatchers.IO) { com.sadurni.attacca.ui.orama.lookOf(context, id, coverBitmap) }
+    // The song's look, known for this very song (not the one before's while it is worked out).
+    // (Its own small cover, the same as for the song coming next: no colours changing as it comes.)
+    val lookFor by produceState<Pair<String?, com.sadurni.attacca.diorama.SongLook?>>(null to null, id) {
+        value = id to com.sadurni.attacca.ui.orama.songLook(context, id)
     }
+    val look = lookFor.second.takeIf { lookFor.first == id }
     val analysis = id?.let { analyses[it] }
     val clipEnd = now.clipEndMs ?: analysis?.durationMs ?: now.durationMs
     val queue by viewModel.queue.collectAsStateWithLifecycle()
@@ -144,19 +157,121 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
     // 30 or 60 frames a second (the same choice as O'rama's).
     val prefs = remember { context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE) }
     var fps60 by remember { mutableStateOf(prefs.getBoolean("fps60", false)) }
+    val feed = rememberWorldFeed(viewModel)
+    val camera = remember { WorldCamera() }
+    val chosen by com.sadurni.attacca.ui.orama.OramaShared.chosenWorld
+    var manual by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            manual = camera.manual
+            delay(300)
+        }
+    }
+
+    val split by com.sadurni.attacca.ui.orama.OramaShared.split
+    val songProgress = (position.toFloat() / (clipEnd - now.clipStartMs).coerceAtLeast(1L)).coerceIn(0f, 1f)
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+      // Split: Attacca World above (or on the right), O'rama below (or on the left).
+      androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val wideScreen = maxWidth > maxHeight
+        val scene: @Composable (Modifier) -> Unit = { m -> Box(m) { WorldScene(feed, camera, fps60, full, onFull) } }
+        if (!split) {
+            scene(Modifier.fillMaxSize())
+        } else {
+            // Upright World above, O'rama below; wide World on the left, O'rama on the right.
+            // World's land first; O'rama over it, reaching a little into World's half and fading
+            // out towards it, so the two landscapes melt into each other where they meet (no band).
+            // (Only see-through there: World's land, a surface under the window, shows through.)
+            val half = if (wideScreen) Modifier.fillMaxHeight().fillMaxWidth(0.5f) else Modifier.fillMaxWidth().fillMaxHeight(0.5f)
+            scene(half.align(if (wideScreen) Alignment.CenterStart else Alignment.TopCenter))
+            val melt = 56.dp
+            val oramaPart = if (wideScreen) Modifier.fillMaxHeight().width(maxWidth / 2 + melt) else Modifier.fillMaxWidth().height(maxHeight / 2 + melt)
+            Box(
+                oramaPart.align(if (wideScreen) Alignment.CenterEnd else Alignment.BottomCenter).clipToBounds()
+                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        val edge = melt.toPx()
+                        val fade = if (wideScreen) {
+                            androidx.compose.ui.graphics.Brush.horizontalGradient(0f to Color.Transparent, edge / size.width to Color.Black, 1f to Color.Black)
+                        } else {
+                            androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Transparent, edge / size.height to Color.Black, 1f to Color.Black)
+                        }
+                        drawRect(fade, blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                    },
+            ) {
+                com.sadurni.attacca.ui.orama.OramaScene(viewModel, full, onFull)
+            }
+        }
+      }
+        if (!full) {
+            WorldOverlay(viewModel, now, position, analysis, clipEnd, nextAnalysis, id, coverImage, moodLine, chosen, manual, camera, fps60, { fps60 = it; prefs.edit().putBoolean("fps60", it).apply() }, onFull, onDismiss, onOpenOrama, onOpenQueue, split)
+        }
+        // Over the whole screen, unsplit: the same band along the bottom, filling as the song goes on;
+        // split, a thin line in the accent colour along the very bottom.
+        if (full && !split) com.sadurni.attacca.ui.orama.ProgressBand(songProgress, vertical = false, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(26.dp))
+        if (full && split) com.sadurni.attacca.ui.orama.ProgressLine(songProgress, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp))
+        // Over the whole screen with nothing else on it: the song's name as it starts, fading in and out (one, in the middle, when split).
+        com.sadurni.attacca.ui.orama.SongIntro(id, now.title, now.artist, full, now.album)
+    }
+}
+
+/** What Attacca World's land is drawn from (the song, its look, where it is, what is heard), kept up to date. */
+@Composable
+internal fun rememberWorldFeed(viewModel: PlayerViewModel): WorldFeed {
+    val context = LocalContext.current
+    val app = context.app
+    val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
+    val position by viewModel.positionMs.collectAsStateWithLifecycle()
+    val analyses by app.analysisResults.collectAsStateWithLifecycle()
+    val cover by viewModel.cover.collectAsStateWithLifecycle()
+    val id = now.mediaId
+    val coverBitmap = cover.bitmap.takeIf { cover.mediaId == id }
+    // The song's look, known for this very song (not the one before's while it is worked out).
+    // (Its own small cover, the same as for the song coming next: no colours changing as it comes.)
+    val lookFor by produceState<Pair<String?, com.sadurni.attacca.diorama.SongLook?>>(null to null, id) {
+        value = id to com.sadurni.attacca.ui.orama.songLook(context, id)
+    }
+    val look = lookFor.second.takeIf { lookFor.first == id }
+    val analysis = id?.let { analyses[it] }
+    val clipEnd = now.clipEndMs ?: analysis?.durationMs ?: now.durationMs
+    val queue by viewModel.queue.collectAsStateWithLifecycle()
+    val nextId = when {
+        queue.isEmpty() || id == null -> null
+        now.repeatMode == androidx.media3.common.Player.REPEAT_MODE_ONE -> id
+        now.index + 1 in queue.indices -> queue[now.index + 1].mediaId
+        now.repeatMode == androidx.media3.common.Player.REPEAT_MODE_ALL -> queue.first().mediaId
+        else -> null
+    }
     val feed = remember { WorldFeed() }
+    // The festive days' look, as O'rama has it (on or off from O'rama's own button).
+    val festiveOn by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
+    val festivePeriod by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
+    val newYear by com.sadurni.attacca.festive.FestiveState.show.collectAsStateWithLifecycle()
+    feed.festive = if (festiveOn) festivePeriod?.festivity else null
+    feed.kings = festiveOn && festivePeriod?.kings == true
+    feed.vikram = newYear?.newYear == com.sadurni.attacca.festive.NewYear.VIKRAM
+    if (com.sadurni.attacca.BuildConfig.DEBUG) {
+        // Testing: adb can set a festive look (orama prefs, "world_festive": CHRISTMAS, CHRISTMAS_KINGS, DIWALI…).
+        context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE).getString("world_festive", null)?.let { f ->
+            feed.festive = com.sadurni.attacca.festive.Festivity.entries.firstOrNull { it.name == f.removeSuffix("_KINGS") }
+            feed.kings = f.endsWith("_KINGS")
+        }
+        // And the sun as a record ("world_weather" with "record").
+        if ("record" in (context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE).getString("world_weather", null) ?: "")) feed.recordOf = id
+
+    }
     if (com.sadurni.attacca.BuildConfig.DEBUG) {
         // Testing: adb can set a traveller (orama prefs, "world_traveller") to see each vehicle.
         val forced = context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE).getString("world_traveller", null)
         feed.forceTraveller = com.sadurni.attacca.diorama.Traveller.entries.firstOrNull { it.name == forced }
         feed.forcePeak = "peak" in (context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE).getString("world_weather", null) ?: "")
     }
-    val camera = remember { WorldCamera() }
     // A world chosen by hand (null: the song's own), kept while Attacca World is open.
     val chosen by com.sadurni.attacca.ui.orama.OramaShared.chosenWorld
     // The next song's look (without its cover: its world and traveller are what matter here).
     val nextLookRaw by produceState<com.sadurni.attacca.diorama.SongLook?>(null, nextId) {
-        value = withContext(Dispatchers.IO) { nextId?.let { com.sadurni.attacca.ui.orama.lookOf(context, it, null) } }
+        value = nextId?.let { com.sadurni.attacca.ui.orama.songLook(context, it) }
     }
     // Song after song: the look shown before (two alike in a row, the second in another look, as
     // in O'rama) and where each song starts on the land's own timeline (O'rama's places fall there).
@@ -180,15 +295,17 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
     }
 
     // The song for the renderer.
-    LaunchedEffect(id, look, analysis, clipEnd, chosen, nextLookRaw) {
+    LaunchedEffect(id, look, analysis, clipEnd, chosen, nextLookRaw, nextId?.let { analyses[it] }) {
+        // Until the song's own look is known the land goes on as it was (never a world in between).
+        if (look == null && id != null) return@LaunchedEffect
         val wave = analysis?.let { a -> SongWave(a.waveform, a.durationMs, now.clipStartMs, clipEnd) }
-        feed.wave = wave
-        feed.peakMs = if (id != null && wave != null) Diorama.Song(id, look ?: Diorama.NEUTRAL, wave).peakMs else -1.0
         val chosenWorld = com.sadurni.attacca.diorama.World.entries.firstOrNull { it.name == chosen }
-        feed.look = look?.let outer@{ l0 ->
+        val newLook = look?.let outer@{ l0 ->
             // The same look as O'rama's for this song (its own, or another after one alike).
-            val l = com.sadurni.attacca.ui.orama.OramaShared.diorama.trackLookFor(id)?.takeIf { chosenWorld == null || it.world == chosenWorld }
-                ?: Diorama.following(chosenWorld?.let { com.sadurni.attacca.ui.orama.OramaShared.shown(l0) } ?: l0, seq.prevLook)
+            // O'rama's own decision for this song (the same world in both).
+            val l = if (chosenWorld == null) com.sadurni.attacca.ui.orama.OramaShared.diorama.lookForTrack(id, l0)
+            else com.sadurni.attacca.ui.orama.OramaShared.diorama.trackLookFor(id)?.takeIf { it.world == chosenWorld }
+                ?: Diorama.following(com.sadurni.attacca.ui.orama.OramaShared.shown(l0), seq.prevLook)
             seq.shown = l
             if (chosenWorld != null || !com.sadurni.attacca.BuildConfig.DEBUG) return@outer l
             // Testing: a world and weather to see (orama prefs "world_world", "world_weather": rain, snow, storm, night).
@@ -202,12 +319,26 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                 l.bpm, l.pulse, l.energy,
             )
         }
-        feed.sectioned = chosen == null
-        feed.originMs = com.sadurni.attacca.ui.orama.OramaShared.diorama.originFor(id) ?: seq.origin
-        feed.nextLook = nextLookRaw?.let { n -> Diorama.following(chosenWorld?.let { com.sadurni.attacca.diorama.Looks.inWorld(n, it) } ?: n, feed.look) }
-        feed.songId = id
+        // What is seen coming at the end: the next song just as it will start (its first stretch's world).
+        val nextWave = nextId?.let { analyses[it] }?.let { a -> SongWave(a.waveform, a.durationMs, 0L, a.durationMs) }
+        val newNext = nextLookRaw?.let { n -> Diorama.startOf(Diorama.following(chosenWorld?.let { com.sadurni.attacca.diorama.Looks.inWorld(n, it) } ?: n, newLook), if (chosenWorld == null) nextWave else null) }
+        val newOrigin = com.sadurni.attacca.ui.orama.OramaShared.diorama.originFor(id) ?: seq.origin
+        // All of the song at once for the renderer (it reads them together).
+        synchronized(feed) {
+            feed.wave = wave
+            feed.peakMs = if (id != null && wave != null) Diorama.Song(id, look ?: Diorama.NEUTRAL, wave).peakMs else -1.0
+            feed.look = newLook
+            feed.sectioned = chosen == null
+            feed.originMs = newOrigin
+            feed.nextLook = newNext
+            feed.songId = id
+        }
     }
-    LaunchedEffect(position, now.isPlaying) {
+    val positionItem by viewModel.positionItem.collectAsStateWithLifecycle()
+    LaunchedEffect(position, now.isPlaying, positionItem) {
+        // (The place and the song it belongs to: the player may give the next song's place a
+        // moment before the song shown changes.)
+        feed.positionFor = positionItem
         feed.positionMs = position
         feed.positionAtNs = System.nanoTime()
         feed.playing = now.isPlaying
@@ -222,46 +353,7 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
             delay(16)
         }
     }
-    var manual by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            manual = camera.manual
-            delay(300)
-        }
-    }
-
-    val split by com.sadurni.attacca.ui.orama.OramaShared.split
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
-      // Split: Attacca World above (or on the right), O'rama below (or on the left).
-      androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-        val wideScreen = maxWidth > maxHeight
-        val scene: @Composable (Modifier) -> Unit = { m -> Box(m) { WorldScene(feed, camera, fps60, full, onFull) } }
-        if (!split) {
-            scene(Modifier.fillMaxSize())
-        } else {
-            // O'rama first, World's land after it: the land's surface shows through a hole in
-            // what is drawn before it, so nothing opaque may be drawn over its half afterwards.
-            // Upright World above, O'rama below; wide World on the left, O'rama on the right.
-            val half = if (wideScreen) Modifier.fillMaxHeight().fillMaxWidth(0.5f) else Modifier.fillMaxWidth().fillMaxHeight(0.5f)
-            Box(half.align(if (wideScreen) Alignment.CenterEnd else Alignment.BottomCenter).clipToBounds()) {
-                com.sadurni.attacca.ui.orama.OramaScene(viewModel)
-            }
-            scene(half.align(if (wideScreen) Alignment.CenterStart else Alignment.TopCenter))
-            // Where the two meet: a soft shadow rather than a hard edge (see-through, so World's land still shows).
-            val fade = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f), Color.Black.copy(alpha = 0.62f), Color.Black.copy(alpha = 0.5f), Color.Transparent)
-            if (wideScreen) {
-                Box(Modifier.fillMaxHeight().width(30.dp).align(Alignment.Center).background(androidx.compose.ui.graphics.Brush.horizontalGradient(fade)))
-            } else {
-                Box(Modifier.fillMaxWidth().height(30.dp).align(Alignment.Center).background(androidx.compose.ui.graphics.Brush.verticalGradient(fade)))
-            }
-        }
-      }
-        if (!full) {
-            WorldOverlay(viewModel, now, position, analysis, clipEnd, nextAnalysis, id, coverImage, moodLine, chosen, manual, camera, fps60, { fps60 = it; prefs.edit().putBoolean("fps60", it).apply() }, onFull, onDismiss, onOpenOrama, onOpenQueue, split)
-        }
-        // Over the whole screen with nothing else on it: the song's name as it starts, fading in and out (one, in the middle, when split).
-        com.sadurni.attacca.ui.orama.SongIntro(id, now.title, now.artist, full)
-    }
+    return feed
 }
 
 /** What World keeps from song to song: the look shown and where each song starts on the land's own timeline. */
@@ -275,7 +367,7 @@ private class Sequence {
 
 /** Attacca World's land: the GL view and the camera's gestures. */
 @Composable
-private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, full: Boolean, onFull: (Boolean) -> Unit) {
+private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, full: Boolean, onFull: (Boolean) -> Unit, onTap: (() -> Unit)? = null) {
     Box(Modifier.fillMaxSize()) {
         var surface by remember { mutableStateOf<GLSurfaceView?>(null) }
         AndroidView(
@@ -294,6 +386,8 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
             surface?.onResume()
             onDispose { surface?.onPause() }
         }
+        // The festive sky over it (not in Now playing's strip).
+        if (onTap == null) FestiveSky(feed)
         LaunchedEffect(surface, fps60) {
             val step = if (fps60) 16_000_000L else 32_000_000L
             var last = 0L
@@ -307,6 +401,7 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
             }
         }
         // Gestures: one finger turns the camera, two bring it closer or further and raise or lower it.
+        val sunTaps = remember { LongArray(5) { Long.MIN_VALUE / 2 } }
         Box(
             Modifier.fillMaxSize().pointerInput(Unit) {
                 awaitEachGesture {
@@ -319,7 +414,10 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
                         val down = event.changes.filter { it.pressed }
                         if (down.isEmpty()) break
                         val t = System.nanoTime() / 1_000_000L
-                        if (down.size == 1) {
+                        if (onTap != null) {
+                            // A strip: no camera by hand.
+                            moved += down.sumOf { (kotlin.math.abs(it.positionChange().x) + kotlin.math.abs(it.positionChange().y)).toDouble() }.toFloat()
+                        } else if (down.size == 1) {
                             val d = down[0].positionChange()
                             moved += kotlin.math.abs(d.x) + kotlin.math.abs(d.y)
                             camera.drag(d.x, d.y, t)
@@ -338,12 +436,21 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
                         down.forEach { it.consume() }
                     }
                     if (moved < 12f) {
-                        // A tap on the traveller: a jump, a spin, a flip…; elsewhere over the whole screen, the rest back.
+                        // A tap on the traveller: a jump, a spin, a flip…; on the sun, five quick ones
+                        // turn it into a record; elsewhere over the whole screen, the rest back.
                         val dx = first.position.x - feed.travellerX
                         val dy = first.position.y - feed.travellerY
-                        val reach = minOf(size.width, size.height) * 0.12f
-                        if (feed.travellerX >= 0f && dx * dx + dy * dy < reach * reach) feed.tapMove = true
-                        else if (full) onFull(false)
+                        val reach = minOf(size.width, size.height) * (if (full) 0.06f else 0.12f)
+                        val sx = first.position.x - feed.sunX
+                        val sy = first.position.y - feed.sunY
+                        if (onTap != null) onTap()
+                        else if (feed.travellerX >= 0f && dx * dx + dy * dy < reach * reach) feed.tapMove = true
+                        else if (feed.sunX >= 0f && sx * sx + sy * sy < feed.sunR * feed.sunR) {
+                            val t = System.currentTimeMillis()
+                            for (k in 0 until sunTaps.size - 1) sunTaps[k] = sunTaps[k + 1]
+                            sunTaps[sunTaps.size - 1] = t
+                            if (t - sunTaps[0] < 4000) feed.recordOf = feed.songId
+                        } else if (full) onFull(false)
                     }
                 }
             },
@@ -379,13 +486,16 @@ private fun WorldOverlay(
     val titleSize = if (split) 16.sp else 20.sp
     val bySize = if (split) 12.sp else 14.sp
     val button = if (split) Modifier.size(40.dp) else Modifier
+    // Split side by side (wide): the title in the middle at the top, the small player in the middle
+    // at the bottom, stretched (two lines) across both halves.
+    val wideSplit = split && androidx.compose.ui.platform.LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
     Box(Modifier.fillMaxSize()) {
         run {
             val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(1f, 2f), 6f)
             val panel = com.sadurni.attacca.ui.orama.PANEL
             Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.safeDrawing).padding(start = if (split) 10.dp else 16.dp, top = if (split) 4.dp else 8.dp), verticalAlignment = Alignment.Top) {
                 // The title with the cover (a tap goes back to Now playing), as in O'rama.
-                Box(Modifier.weight(1f).padding(top = 4.dp, end = 8.dp)) {
+                Box(Modifier.weight(1f).padding(top = 4.dp, end = 8.dp, start = if (wideSplit) 48.dp else 0.dp), contentAlignment = if (wideSplit) Alignment.TopCenter else Alignment.TopStart) {
                     if (id != null) {
                         Row(
                             Modifier.clip(RoundedCornerShape(16.dp)).background(panel).clickable(onClick = onDismiss).padding(horizontal = 8.dp, vertical = 6.dp),
@@ -399,15 +509,14 @@ private fun WorldOverlay(
                                 )
                             }
                             Column(Modifier.padding(end = 4.dp)) {
+                                // As in O'rama: title; artist · album; mood · family · chosen world.
                                 val worldName = com.sadurni.attacca.diorama.World.entries.firstOrNull { it.name == chosen }?.let { stringResource(com.sadurni.attacca.ui.orama.worldNameRes(it)) }
-                                Text(
-                                    stringResource(R.string.world_name) + (worldName?.let { " · $it" } ?: ""),
-                                    style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 11.sp, shadow = shadow),
-                                )
                                 Text(now.title, style = TextStyle(color = Color.White, fontSize = titleSize, fontWeight = FontWeight.SemiBold, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                val by = listOfNotNull(now.artist?.takeIf { it.isNotBlank() }, now.album?.takeIf { it.isNotBlank() && !split }).joinToString(" · ")
+                                val by = listOfNotNull(now.artist?.takeIf { it.isNotBlank() }, now.album?.takeIf { it.isNotBlank() }).joinToString(" · ")
                                 if (by.isNotEmpty()) Text(by, style = TextStyle(color = Color.White.copy(alpha = 0.85f), fontSize = bySize, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                if (!split) moodLine?.let { Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                listOfNotNull(moodLine, worldName).joinToString(" · ").takeIf { it.isNotEmpty() }?.let {
+                                    Text(it, style = TextStyle(color = Color.White.copy(alpha = 0.72f), fontSize = if (split) 11.sp else 12.sp, shadow = shadow), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         }
                     }
@@ -468,8 +577,10 @@ private fun WorldOverlay(
             }
             // The small player floats: across the bottom when upright; when wide, a compact block in the corner.
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-                val wide = maxWidth > maxHeight || split
-                val barModifier = if (split) {
+                val wide = (maxWidth > maxHeight || split) && !wideSplit
+                val barModifier = if (wideSplit) {
+                    Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.safeDrawing).padding(bottom = 12.dp).fillMaxWidth(0.62f)
+                } else if (split) {
                     Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = if (maxWidth > maxHeight) 64.dp else 10.dp, bottom = 8.dp).width(236.dp)
                 } else if (wide) {
                     Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = 76.dp, bottom = 14.dp).width(264.dp)
@@ -478,6 +589,46 @@ private fun WorldOverlay(
                 }
                 com.sadurni.attacca.ui.orama.OramaBar(viewModel, now.isPlaying, position, analysis, now.clipStartMs, clipEnd, nextAnalysis, now.nextTitle, onOpenQueue, wide, barModifier)
             }
+        }
+    }
+}
+
+
+/**
+ * Attacca World in a strip (Now playing): the same land as the whole one, drawn small; a tap opens
+ * it. It rests while the whole World is open.
+ */
+@Composable
+internal fun WorldStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Unit) {
+    val feed = rememberWorldFeed(viewModel)
+    val camera = remember { WorldCamera() }
+    val worldOpen by com.sadurni.attacca.ui.orama.OramaShared.worldOpen
+    Box(modifier.background(Color.Black)) {
+        if (!worldOpen) WorldScene(feed, camera, false, false, {}, onTap = onOpen)
+    }
+}
+
+/** O'rama's festive sky (and the new year's show with its greeting) laid over Attacca World. */
+@Composable
+private fun FestiveSky(feed: WorldFeed) {
+    val on by com.sadurni.attacca.festive.FestiveState.on.collectAsStateWithLifecycle()
+    val period by com.sadurni.attacca.festive.FestiveState.period.collectAsStateWithLifecycle()
+    val newYear by com.sadurni.attacca.festive.FestiveState.show.collectAsStateWithLifecycle()
+    val dots by produceState<FloatArray?>(null, newYear) {
+        value = newYear?.let { s -> withContext(Dispatchers.Default) { com.sadurni.attacca.festive.GreetingDots.of(com.sadurni.attacca.festive.FestiveState.greeting(s)) } }
+    }
+    val festive = feed.festive ?: if (on) period?.festivity else null
+    if (festive == null && newYear == null) return
+    val layer = remember { com.sadurni.attacca.diorama.FestiveLayer() }
+    var frame by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) { while (true) androidx.compose.runtime.withFrameMillis { frame = it } }
+    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        if (frame < 0L) return@Canvas
+        val celebration = newYear?.let { s ->
+            com.sadurni.attacca.diorama.Celebration(s.newYear, java.time.Duration.between(s.startedAt, java.time.LocalDateTime.now()).toMillis(), dots)
+        }
+        if (layer.frame(size.width, size.height, feed.look ?: com.sadurni.attacca.diorama.Diorama.NEUTRAL, System.currentTimeMillis(), festive, feed.kings, celebration)) {
+            drawIntoCanvas { com.sadurni.attacca.playback.OramaStill.paint(it.nativeCanvas, layer.list, null) }
         }
     }
 }

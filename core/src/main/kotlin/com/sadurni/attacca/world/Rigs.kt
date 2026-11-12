@@ -36,7 +36,8 @@ object Human {
     /** Height of the hips (where the figure sits on a seat). */
     const val HIP = 0.92f
 
-    fun rig(p: Person, helmet: Boolean = false): Rig {
+    /** [santa]: a Santa hat (Christmas days); [crown]: a king's crown of that colour. */
+    fun rig(p: Person, helmet: Boolean = false, santa: Boolean = false, crown: Int? = null): Rig {
         val r = RigBuilder()
         r.bone(-1, 0f, HIP, 0f) {
             // Body, head and hair, maybe a hat; a pack on the back.
@@ -46,7 +47,12 @@ object Human {
             blob(-0.17f, 1.62f, -0.19f, 0.17f, 1.84f, 0.13f, p.hair)
             if (p.longHair) blob(-0.15f, 1.38f, -0.2f, 0.15f, 1.72f, -0.06f, p.hair)
             blob(-0.035f, 1.66f, 0.14f, 0.035f, 1.72f, 0.18f, 0xFF201818.toInt())
-            p.hat?.let { blob(-0.2f, 1.76f, -0.2f, 0.2f, 1.9f, 0.2f, it); blob(-0.28f, 1.75f, -0.28f, 0.28f, 1.79f, 0.28f, it) }
+            when {
+                helmet -> {}
+                crown != null -> crownOn(0f, 1.78f, 0f, 0.17f, crown)
+                santa -> santaHat(0f, 1.74f, 0f, 0.19f)
+                else -> p.hat?.let { blob(-0.2f, 1.76f, -0.2f, 0.2f, 1.9f, 0.2f, it); blob(-0.28f, 1.75f, -0.28f, 0.28f, 1.79f, 0.28f, it) }
+            }
             blob(-0.18f, 0.98f, -0.3f, 0.18f, 1.36f, -0.12f, p.pack)
         }
         for (side in intArrayOf(-1, 1)) {
@@ -84,14 +90,15 @@ object Quad {
     /** Height of the back (where a dog sits up, or a rider sits on a horse). */
     class Shape(val h: Float, val l: Float, val t: Float, val coat: Int, val light: Int, val nose: Int, val legs: Int, val ears: Float, val tail: Int)
 
-    fun dog(dog: Dog, helmet: Boolean = false): Pair<Rig, Shape> {
+    /** [leds]: in the dark the collar's little lights glow. */
+    fun dog(dog: Dog, helmet: Boolean = false, santa: Boolean = false, leds: Boolean = false): Pair<Rig, Shape> {
         val k = when (dog) {
             Dog.GOLDIE -> Shape(0.5f, 0.82f, 0.34f, 0xFFD6A050.toInt(), 0xFFF0CD8C.toInt(), 0xFFE58F98.toInt(), 0xFFD6A050.toInt(), 0.12f, 0xFFE0B060.toInt())
             Dog.MALAMUTE -> Shape(0.72f, 1.1f, 0.44f, 0xFF2F2D31.toInt(), 0xFFE9DCC4.toInt(), 0xFF1A1818.toInt(), 0xFFE9DCC4.toInt(), 0.13f, 0xFFE9DCC4.toInt())
             Dog.GALGO -> Shape(0.84f, 1.14f, 0.3f, 0xFFC98E52.toInt(), 0xFFF3E8DA.toInt(), 0xFFE0939A.toInt(), 0xFFC98E52.toInt(), 0.19f, 0xFFC98E52.toInt())
             Dog.BRACO -> Shape(0.5f, 0.8f, 0.28f, 0xFFF4F2EE.toInt(), 0xFF1E1E22.toInt(), 0xFF2A2224.toInt(), 0xFFF4F2EE.toInt(), 0.13f, 0xFFF4F2EE.toInt())
         }
-        return quad(k, dog, helmet) to k
+        return quad(k, dog, helmet, santa = santa, leds = leds) to k
     }
 
     fun horse(): Pair<Rig, Shape> {
@@ -105,7 +112,7 @@ object Quad {
         return quad(k, null, horseShape = false) to k
     }
 
-    private fun quad(k: Shape, dog: Dog?, helmet: Boolean = false, horseShape: Boolean = dog == null): Rig {
+    private fun quad(k: Shape, dog: Dog?, helmet: Boolean = false, horseShape: Boolean = dog == null, santa: Boolean = false, leds: Boolean = false): Rig {
         val r = RigBuilder()
         val legH = k.h * 0.52f
         val half = k.t / 2
@@ -139,6 +146,33 @@ object Quad {
                 blob(-half * 0.85f, neckTop - 0.12f, headZ - 0.06f, half * 0.85f, neckTop + 0.18f, headZ + 0.24f, head)
                 blob(-half * 0.45f, neckTop - 0.1f, headZ + 0.18f, half * 0.45f, neckTop + 0.04f, headZ + 0.4f, head)
                 blob(-0.045f, neckTop - 0.03f, headZ + 0.38f, 0.045f, neckTop + 0.04f, headZ + 0.44f, k.nose)
+                // The collar round the neck, with little lights that glow in the dark (LEDs).
+                if (dog != null) {
+                    val u = 0.42f
+                    val cy = k.h - 0.1f + (neckTop - (k.h - 0.1f)) * u
+                    val cz = hz - 0.1f + (headZ - (hz - 0.1f)) * u
+                    val rr = half * 0.6f
+                    val strap = when (dog) {
+                        Dog.GOLDIE -> 0xFF2E6FD8.toInt()
+                        Dog.MALAMUTE -> 0xFFD8402E.toInt()
+                        Dog.GALGO -> 0xFF2EA860.toInt()
+                        Dog.BRACO -> 0xFFE09A1E.toInt()
+                    }
+                    val lights = intArrayOf(0xFFFF4060.toInt(), 0xFF40FF90.toInt(), 0xFF50A0FF.toInt(), 0xFFFFE040.toInt())
+                    val n = 14
+                    for (i in 0 until n) {
+                        val a = (2 * Math.PI * i / n).toFloat()
+                        val x = kotlin.math.cos(a) * rr
+                        val z = cz + kotlin.math.sin(a) * rr * 0.9f
+                        blob(x - 0.028f, cy - 0.03f, z - 0.028f, x + 0.028f, cy + 0.03f, z + 0.028f, strap, 6, 4)
+                        if (i % 2 == 0) {
+                            val c = lights[(i / 2) % lights.size]
+                            val lx = kotlin.math.cos(a) * (rr + 0.022f)
+                            val lz = cz + kotlin.math.sin(a) * (rr + 0.022f) * 0.9f
+                            blob(lx - 0.026f, cy - 0.026f, lz - 0.026f, lx + 0.026f, cy + 0.026f, lz + 0.026f, if (leds) Props.glow(c) else Props.shadeOf(c, 0.55f), 6, 4)
+                        }
+                    }
+                }
                 for (s in intArrayOf(-1, 1)) {
                     blob(s * half * 0.6f - 0.05f, neckTop + 0.1f, headZ, s * half * 0.6f + 0.05f, neckTop + 0.14f + k.ears, headZ + 0.08f,
                         if (dog == Dog.BRACO) k.light else k.coat)
@@ -153,7 +187,10 @@ object Quad {
             val upper = r.bone(Quad.BODY, x, legH + 0.04f, z) { tube(x, legH + 0.04f, z, x, legH * 0.5f, z, legR * 1.15f, k.legs) }
             r.bone(upper, x, legH * 0.5f, z) {
                 tube(x, legH * 0.5f, z, x, 0.05f, z, legR, k.legs)
-                blob(x - legR * 1.2f, 0f, z - legR, x + legR * 1.2f, legR * 1.6f, z + legR * 2.2f, if (horse) 0xFF2A1A12.toInt() else k.legs)
+                // The galgo-podenco's white feet: a white paw and sock, easy to tell.
+                val white = dog == Dog.GALGO
+                if (white) tube(x, legH * 0.24f, z, x, 0.06f, z, legR * 1.12f, k.light)
+                blob(x - legR * 1.3f, 0f, z - legR * 1.1f, x + legR * 1.3f, legR * 1.8f, z + legR * 2.3f, if (horse) 0xFF2A1A12.toInt() else if (white) k.light else k.legs)
             }
         }
         r.bone(Quad.BODY, 0f, k.h - 0.06f, -k.l / 2) {
@@ -164,6 +201,12 @@ object Quad {
                 dog == Dog.GALGO -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.12f, tz - 0.14f, 0.04f, k.tail)
                 else -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.18f, tz - 0.3f, 0.05f, k.tail)
             }
+        }
+        if (santa && !helmet) {
+            // Christmas days: a little Santa hat on the head.
+            val hz = k.l / 2 + 0.05f
+            val rr = maxOf(k.t * 0.75f, 0.3f)
+            r.bone(Quad.BODY, 0f, legH, 0f) { santaHat(0f, k.h + 0.12f + rr * 0.45f, hz - rr * 0.1f, rr * 0.55f) }
         }
         if (helmet) {
             // The dogs' diving helmets: a collar and a glass bubble round the head.
@@ -329,6 +372,12 @@ object Vehicles {
             tube(0.3f, 2.7f, 0.4f, 0.3f, 2.7f, 0.7f, 0.05f, 0xFF7A6A40.toInt())
             blob(-0.08f, 0.6f, -2.3f, 0.08f, 1.1f, -1.9f, 0xFF7A6A40.toInt())
         }
+        // Glass domes over the windows: the dogs look out of them from inside.
+        r.bone(0, 0f, 0.8f, 0f, alpha = 0.28f) {
+            for (z in floatArrayOf(-0.9f, 0.1f, 1.1f)) for (s in floatArrayOf(-1f, 1f)) {
+                blob(if (s > 0) 0.82f else -1.36f, 0.66f, z - 0.3f, if (s > 0) 1.36f else -0.82f, 1.34f, z + 0.3f, 0xFFCFF4FF.toInt(), 14, 8)
+            }
+        }
         val prop = r.bone(0, 0f, 0.85f, -2.25f) {
             blob(-0.5f, 0.75f, -2.3f, 0.5f, 0.95f, -2.2f, 0xFF7A6A40.toInt())
             blob(-0.1f, 0.35f, -2.3f, 0.1f, 1.35f, -2.2f, 0xFF7A6A40.toInt())
@@ -371,4 +420,44 @@ object Obstacles {
             blob(x - 0.09f, 0.3f, -0.09f, x + 0.09f, 0.38f, 0.09f, 0xFFF8F8F8.toInt())
         }
     }.mesh()
+}
+
+/** A Santa hat on a head whose top is near ([cx], [y], [cz]), [r] round: a white brim, a red cone drooping back, a white bobble. */
+internal fun FloatList.santaHat(cx: Float, y: Float, cz: Float, r: Float) {
+    val red = 0xFFD32F2F.toInt()
+    blob(cx - r * 1.08f, y - r * 0.12f, cz - r * 1.08f, cx + r * 1.08f, y + r * 0.3f, cz + r * 1.08f, 0xFFF7F7F2.toInt())
+    val tx = cx
+    val ty = y + r * 1.9f
+    val tz = cz - r * 1.1f
+    val n = 10
+    for (k in 0 until n) {
+        val a0 = (2 * Math.PI * k / n).toFloat()
+        val a1 = (2 * Math.PI * (k + 1) / n).toFloat()
+        val x0 = cx + kotlin.math.cos(a0) * r * 0.95f; val z0 = cz + kotlin.math.sin(a0) * r * 0.95f
+        val x1 = cx + kotlin.math.cos(a1) * r * 0.95f; val z1 = cz + kotlin.math.sin(a1) * r * 0.95f
+        tri(x0, y + r * 0.2f, z0, x1, y + r * 0.2f, z1, tx, ty, tz, if (k % 2 == 0) red else Props.shadeOf(red, 0.88f))
+        tri(x1, y + r * 0.2f, z1, x0, y + r * 0.2f, z0, tx, ty, tz, red)
+    }
+    blob(tx - r * 0.3f, ty - r * 0.3f, tz - r * 0.3f, tx + r * 0.3f, ty + r * 0.3f, tz + r * 0.3f, 0xFFFFFFFF.toInt())
+}
+
+/** A king's crown of [c] (gold, silver…) on a head whose top is near ([cx], [y], [cz]), [r] round, with a jewel in front. */
+internal fun FloatList.crownOn(cx: Float, y: Float, cz: Float, r: Float, c: Int) {
+    val n = 10
+    for (k in 0 until n) {
+        val a0 = (2 * Math.PI * k / n).toFloat()
+        val a1 = (2 * Math.PI * (k + 1) / n).toFloat()
+        val x0 = cx + kotlin.math.cos(a0) * r; val z0 = cz + kotlin.math.sin(a0) * r
+        val x1 = cx + kotlin.math.cos(a1) * r; val z1 = cz + kotlin.math.sin(a1) * r
+        val shade = if (k % 2 == 0) c else Props.shadeOf(c, 0.85f)
+        // The band, both faces, and a point on every other piece.
+        tri(x0, y, z0, x1, y, z1, x1, y + r * 0.5f, z1, shade); tri(x0, y, z0, x1, y + r * 0.5f, z1, x0, y + r * 0.5f, z0, shade)
+        tri(x1, y, z1, x0, y, z0, x1, y + r * 0.5f, z1, shade); tri(x0, y, z0, x0, y + r * 0.5f, z0, x1, y + r * 0.5f, z1, shade)
+        if (k % 2 == 0) {
+            val mx = (x0 + x1) / 2; val mz = (z0 + z1) / 2
+            tri(x0, y + r * 0.5f, z0, x1, y + r * 0.5f, z1, mx, y + r * 1.05f, mz, shade)
+            tri(x1, y + r * 0.5f, z1, x0, y + r * 0.5f, z0, mx, y + r * 1.05f, mz, shade)
+        }
+    }
+    blob(cx - r * 0.18f, y + r * 0.12f, cz + r * 0.88f, cx + r * 0.18f, y + r * 0.42f, cz + r * 1.08f, Props.glow(0xFFE53935.toInt()))
 }

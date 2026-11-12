@@ -308,7 +308,8 @@ class Diorama {
         nextWave = next
         this.nextTitle = nextTitle
         this.nextPlace = nextPlace
-        this.nextLook = nextLook
+        // As the next track will start: in its first stretch's world (a quiet or loud start).
+        this.nextLook = nextLook?.let { startOf(it, next) }
         val old = current
         if (song?.id == old?.id) {
             // The same track, its look known better now (analysed, its cover read).
@@ -343,6 +344,17 @@ class Diorama {
      */
     fun trackLookFor(id: String?): SongLook? = trackLook.takeIf { id != null && current?.id == id }
 
+    /**
+     * The look for track [id] (of its own [look]) exactly as O'rama takes it: its own while it is
+     * the current one, else as it will be when it comes after the current one (another look when
+     * the two are alike). Attacca World asks here, so both show the same world.
+     */
+    fun lookForTrack(id: String?, look: SongLook): SongLook = when {
+        id != null && current?.id == id -> trackLook
+        current != null && alike(look, trackLook) -> look.reseeded()
+        else -> look
+    }
+
     /** Where track [id] starts on the land's own timeline (where O'rama's places fall), while it is the current one. */
     fun originFor(id: String?): Double? = originMs.takeIf { id != null && current?.id == id }
 
@@ -368,7 +380,7 @@ class Diorama {
         celebration = c
     }
 
-    fun draw(out: DrawList, w: Float, h: Float, positionMs: Long, playing: Boolean, raw: FloatArray?, nowMs: Long, lift: Float = 0f, stripTop: Float = 0f, stripHeight: Float = 0f) {
+    fun draw(out: DrawList, w: Float, h: Float, positionMs: Long, playing: Boolean, raw: FloatArray?, nowMs: Long, lift: Float = 0f, stripTop: Float = 0f, stripHeight: Float = 0f, travellerShare: Float = 0.3f) {
         out.clear()
         if (w <= 0f || h <= 0f) return
         val dt = if (lastDrawMs == Long.MIN_VALUE) 0L else (nowMs - lastDrawMs).coerceIn(0, 250)
@@ -405,7 +417,7 @@ class Diorama {
         val look = if (old != null && t < 1f) Looks.mix(old.look, cur, smooth(t)) else cur
 
         moves.clearHits()
-        val scene = Scene(out, w, (h - lift.coerceIn(0f, h * 0.4f)), look, nowMs, playing, live, moves, driftMs, h, stripTop, stripHeight)
+        val scene = Scene(out, w, (h - lift.coerceIn(0f, h * 0.4f)), look, nowMs, playing, live, moves, driftMs, h, stripTop, stripHeight, travellerShare)
         scene.festive = festivity
         scene.kings = kingsDays
         scene.show = celebration
@@ -470,6 +482,9 @@ class Diorama {
 
     companion object {
         const val TRANSITION_MS = 4000L
+
+        /** [look] as a track of [wave] starts: its first stretch's (quiet, loud or its own). */
+        fun startOf(look: SongLook, wave: SongWave?): SongLook = look.variant(wave?.let { Sections.of(it) }?.modeAt(0.0) ?: 0)
 
         /** [look] as shown after [previous]: another look of it when the two are alike (same world and traveller). */
         fun following(look: SongLook, previous: SongLook?): SongLook =

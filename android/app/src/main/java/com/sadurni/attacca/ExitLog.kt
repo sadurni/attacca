@@ -65,6 +65,7 @@ object ExitLog {
     }
 
     private fun append(context: Context, entry: String) {
+        if (!Logs.on) return
         val f = file()
         f.parentFile?.mkdirs()
         // Only the latest: the oldest half goes once it grows too big.

@@ -881,6 +881,13 @@ private fun Scene.submarine(x: Float, s: Float) {
     val y = h * 0.5f - heightAt(x, 1f, 40f) * h * 0.16f + sin(now / 1100.0).toFloat() * s * 0.08f - pz.lift * s
     turned(pz.angle, x, y) {
         val body = Colors.mix(0xFFF5C542.toInt(), p.accent, 0.2f)
+        // Its lamp's beam ahead and down into the water, a little brighter near the lamp.
+        val beam = 0xFFFFF0C0.toInt()
+        out.polygon(Colors.alpha(beam, 0.12f))
+        out.point(x + s * 0.66f, y - s * 0.06f); out.point(x + s * 3.2f, y + s * 0.2f); out.point(x + s * 3.0f, y + s * 1.25f); out.point(x + s * 0.66f, y + s * 0.08f)
+        out.polygon(Colors.alpha(beam, 0.14f))
+        out.point(x + s * 0.66f, y - s * 0.03f); out.point(x + s * 1.8f, y + s * 0.12f); out.point(x + s * 1.7f, y + s * 0.6f); out.point(x + s * 0.66f, y + s * 0.05f)
+        out.circle(Colors.alpha(beam, 0.9f), x + s * 0.68f, y, s * 0.05f)
         out.circle(body, x - s * 0.45f, y, s * 0.25f)
         out.circle(body, x + s * 0.45f, y, s * 0.25f)
         out.rect(body, x - s * 0.45f, y - s * 0.25f, x + s * 0.45f, y + s * 0.25f)

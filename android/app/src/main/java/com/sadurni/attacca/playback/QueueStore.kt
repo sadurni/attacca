@@ -23,6 +23,8 @@ data class SavedQueue(
     val positionMs: Long,
     val shuffle: Boolean,
     val repeatMode: Int,
+    /** The output it was playing on when saved (null in queues saved before this was kept). */
+    val device: String? = null,
 ) {
     fun toMediaItems(): List<MediaItem> =
         locations.mapIndexed { i, location ->
@@ -34,7 +36,7 @@ class QueueStore(context: Context) {
 
     private val file = File(context.filesDir, "queue.json")
 
-    fun save(player: Player, listName: String, source: ListSource?) {
+    fun save(player: Player, listName: String, source: ListSource?, device: String? = null) {
         // A finished list resumes from the top rather than at the very end of its last track.
         val ended = player.playbackState == Player.STATE_ENDED
         val locations = JSONArray()
@@ -59,6 +61,7 @@ class QueueStore(context: Context) {
             .put("positionMs", if (ended) 0L else player.currentPosition)
             .put("shuffle", player.shuffleModeEnabled)
             .put("repeatMode", player.repeatMode)
+            .put("device", device ?: JSONObject.NULL)
         // Write-then-rename so a crash mid-write never loses the queue.
         val tmp = File(file.parentFile, file.name + ".tmp")
         tmp.writeText(json.toString())
@@ -84,6 +87,7 @@ class QueueStore(context: Context) {
             positionMs = json.optLong("positionMs"),
             shuffle = json.optBoolean("shuffle"),
             repeatMode = json.optInt("repeatMode", Player.REPEAT_MODE_OFF),
+            device = json.optString("device").takeIf { it.isNotEmpty() && !json.isNull("device") },
         )
     }.getOrNull()
 

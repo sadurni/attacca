@@ -101,7 +101,7 @@ static const char *const texts_en[S_COUNT_] = {
     "Attacca", "From the current song", "Generate by filters", "Reorder current playlist",
     "Mood, family, genre, artist", "More filters", "Fit the filters to the current song",
     "Same mood", "Same sound family", "Songs", "Artist spacing", "When done", "Play", "Save only",
-    "Start with current song", "Library info", "(any)",
+    "Start with current song", "Version", "(any)",
     "Mood", "Sound family", "Genre", "Artist", "Clear these filters",
     "Year from", "Year to", "Minimum BPM", "Maximum BPM", "Energy from", "Energy to",
     "Positivity from", "Positivity to", "Voice", "With voice", "Instrumental", "Only included",
@@ -133,7 +133,7 @@ static const char *const texts_es[S_COUNT_] = {
     "Attacca", "Desde la canción actual", "Generar por filtros", "Reordenar la lista actual",
     "Ánimo, familia, género, artista", "Más filtros", "Ajustar los filtros a la canción actual",
     "Mismo ánimo", "Misma familia de sonido", "Canciones", "Separación de artista", "Al terminar",
-    "Reproducir", "Solo guardar", "Empezar por la canción actual", "Info de la biblioteca",
+    "Reproducir", "Solo guardar", "Empezar por la canción actual", "Versión",
     "(cualquiera)",
     "Ánimo", "Familia de sonido", "Género", "Artista", "Quitar estos filtros",
     "Año desde", "Año hasta", "BPM mínimo", "BPM máximo", "Energía desde", "Energía hasta",
@@ -180,7 +180,7 @@ static const char *const texts_ca[S_COUNT_] = {
     "Reprodueix",
     "Només desa",
     "Comença per la cançó actual",
-    "Info de la biblioteca",
+    "Versió",
     "(qualsevol)",
     "Estat d'ànim",
     "Família de so",
@@ -263,7 +263,7 @@ static const char *const texts_gl[S_COUNT_] = {
     "Reproducir",
     "Só gardar",
     "Comezar pola canción actual",
-    "Info da biblioteca",
+    "Versión",
     "(calquera)",
     "Estado de ánimo",
     "Familia de son",
@@ -346,7 +346,7 @@ static const char *const texts_eu[S_COUNT_] = {
     "Erreproduzitu",
     "Gorde soilik",
     "Hasi uneko abestiarekin",
-    "Liburutegiaren info",
+    "Bertsioa",
     "(edozein)",
     "Aldartea",
     "Soinu-familia",
@@ -429,7 +429,7 @@ static const char *const texts_pt[S_COUNT_] = {
     "Reproduzir",
     "Só guardar",
     "Começar pela canção atual",
-    "Info da biblioteca",
+    "Versão",
     "(qualquer)",
     "Estado de espírito",
     "Família sonora",
@@ -512,7 +512,7 @@ static const char *const texts_pt_br[S_COUNT_] = {
     "Tocar",
     "Só salvar",
     "Começar pela música atual",
-    "Info da biblioteca",
+    "Versão",
     "(qualquer)",
     "Humor",
     "Família sonora",
@@ -595,7 +595,7 @@ static const char *const texts_fr[S_COUNT_] = {
     "Lire",
     "Enregistrer seulement",
     "Commencer par le morceau actuel",
-    "Infos bibliothèque",
+    "Version",
     "(tous)",
     "Ambiance",
     "Famille sonore",
@@ -678,7 +678,7 @@ static const char *const texts_it[S_COUNT_] = {
     "Riproduci",
     "Solo salva",
     "Inizia dal brano attuale",
-    "Info libreria",
+    "Versione",
     "(qualsiasi)",
     "Atmosfera",
     "Famiglia sonora",
@@ -761,7 +761,7 @@ static const char *const texts_de[S_COUNT_] = {
     "Abspielen",
     "Nur speichern",
     "Mit aktuellem Titel beginnen",
-    "Bibliotheksinfo",
+    "Version",
     "(beliebig)",
     "Stimmung",
     "Klangfamilie",
@@ -844,7 +844,7 @@ static const char *const texts_nl[S_COUNT_] = {
     "Afspelen",
     "Alleen opslaan",
     "Begin met huidig nummer",
-    "Bibliotheekinfo",
+    "Versie",
     "(alle)",
     "Stemming",
     "Klankfamilie",
@@ -927,7 +927,7 @@ static const char *const texts_sv[S_COUNT_] = {
     "Spela",
     "Bara spara",
     "Börja med aktuell låt",
-    "Biblioteksinfo",
+    "Version",
     "(alla)",
     "Stämning",
     "Ljudfamilj",
@@ -1010,7 +1010,7 @@ static const char *const texts_pl[S_COUNT_] = {
     "Odtwórz",
     "Tylko zapisz",
     "Zacznij od bieżącego utworu",
-    "Info o bibliotece",
+    "Wersja",
     "(dowolny)",
     "Nastrój",
     "Rodzina brzmień",
@@ -1093,7 +1093,7 @@ static const char *const texts_ro[S_COUNT_] = {
     "Redă",
     "Doar salvează",
     "Începe cu piesa curentă",
-    "Info bibliotecă",
+    "Versiune",
     "(oricare)",
     "Stare",
     "Familie de sunet",
@@ -1176,7 +1176,7 @@ static const char *const texts_ru[S_COUNT_] = {
     "Играть",
     "Только сохранить",
     "Начать с текущего трека",
-    "О библиотеке",
+    "Версия",
     "(любое)",
     "Настроение",
     "Звуковое семейство",
@@ -1259,7 +1259,7 @@ static const char *const texts_uk[S_COUNT_] = {
     "Відтворити",
     "Лише зберегти",
     "Почати з поточного треку",
-    "Про бібліотеку",
+    "Версія",
     "(будь-який)",
     "Настрій",
     "Звукова родина",
@@ -1342,7 +1342,7 @@ static const char *const texts_el[S_COUNT_] = {
     "Αναπαραγωγή",
     "Μόνο αποθήκευση",
     "Έναρξη με το τρέχον τραγούδι",
-    "Πληροφορίες βιβλιοθήκης",
+    "Έκδοση",
     "(οποιοδήποτε)",
     "Διάθεση",
     "Ηχητική οικογένεια",
@@ -1425,7 +1425,7 @@ static const char *const texts_tr[S_COUNT_] = {
     "Çal",
     "Yalnızca kaydet",
     "Geçerli şarkıyla başla",
-    "Kitaplık bilgisi",
+    "Sürüm",
     "(herhangi)",
     "Ruh hali",
     "Ses ailesi",
@@ -1508,7 +1508,7 @@ static const char *const texts_ja[S_COUNT_] = {
     "再生",
     "保存のみ",
     "再生中の曲から開始",
-    "ライブラリ情報",
+    "バージョン",
     "（指定なし）",
     "ムード",
     "サウンドファミリー",
@@ -1591,7 +1591,7 @@ static const char *const texts_ko[S_COUNT_] = {
     "재생",
     "저장만",
     "현재 곡으로 시작",
-    "라이브러리 정보",
+    "버전",
     "(모두)",
     "분위기",
     "사운드 계열",
@@ -1674,7 +1674,7 @@ static const char *const texts_zh_cn[S_COUNT_] = {
     "播放",
     "仅保存",
     "从当前歌曲开始",
-    "媒体库信息",
+    "版本",
     "（任意）",
     "情绪",
     "声音类别",
@@ -1757,7 +1757,7 @@ static const char *const texts_zh_tw[S_COUNT_] = {
     "播放",
     "僅儲存",
     "從目前歌曲開始",
-    "媒體庫資訊",
+    "版本",
     "（不限）",
     "情緒",
     "聲音類別",
@@ -7317,6 +7317,18 @@ static int tg_ramp(uint32_t i, uint32_t len, uint32_t fade)
     return e >= fade ? 256 : (int)(e * 256 / fade);
 }
 
+/* The phase steps of the tone and of each note of the line, worked out once (no 64-bit
+   division for every sample while the sound is made). */
+static uint32_t tg_inc_tone, tg_inc_line[TG_NOTES];
+
+static void tg_steps(void)
+{
+    uint32_t r = tg_rate ? tg_rate : 44100;
+    tg_inc_tone = (uint32_t)(((uint64_t)tg_hz100 << 32) / (100ull * r));
+    for (int n = 0; n < TG_NOTES; n++)
+        tg_inc_line[n] = (uint32_t)(((uint64_t)tg_notes[n] << 32) / (100ull * r));
+}
+
 static void tg_fill(int16_t *out)
 {
     uint32_t r = tg_rate;
@@ -7342,7 +7354,7 @@ static void tg_fill(int16_t *out)
         case TG_TONE: {
             uint32_t len = r * 21 / 10, sound = r * 16 / 10;
             int env = tg_ramp(p % len, sound, r / 12);
-            tg_phase += (uint32_t)(((uint64_t)tg_hz100 << 32) / (100ull * r));
+            tg_phase += tg_inc_tone;
             l = rr = (int32_t)tg_sine[tg_phase >> 22] * env >> 10;   /* −12 dB */
             break;
         }
@@ -7355,7 +7367,7 @@ static void tg_fill(int16_t *out)
             if (env < 0 || i >= sound)
                 env = 0;
             env = env * tg_ramp(i, sound, r / 20) >> 8;
-            tg_phase += (uint32_t)(((uint64_t)tg_notes[n] << 32) / (100ull * r));
+            tg_phase += tg_inc_line[n];
             l = rr = (int32_t)tg_sine[tg_phase >> 22] * env * 5 / 4 >> 10;
             break;
         }
@@ -7389,10 +7401,16 @@ static void tg_start(int mode, int hz)
     if (tg_mode == TG_OFF) {
         rb->audio_stop();
         tg_rate = rb->mixer_get_frequency();
+        if (!tg_rate)
+            tg_rate = 44100;
+        /* Stopped (or paused) music leaves the playback channel faded down to silence: up again,
+           or the tones and the noise play unheard. */
+        rb->pcmbuf_fade(false, true);
     }
     tg_hz100 = hz * 100;
     tg_pos = 0;
     tg_phase = 0;
+    tg_steps();
     if (tg_mode != TG_OFF) {
         tg_mode = mode;
         return;
@@ -7668,12 +7686,19 @@ static void sg_settings(const struct sound_set *before, int upto, struct sound_s
         int kind = sg_bass_kind();
         s->bass = 0;
         s->pbe = 0;
+        /* (Rockbox takes the bass harmonics in steps of 25 %, with a precut in tenths of dB.) */
         if (kind == 0) s->bass = b == 1 ? 3 : b == 2 ? 6 : 0;
-        else if (kind == 1) { if (b == 1) s->bass = 3; else if (b == 2) s->pbe = 60; }
-        else s->pbe = b == 1 ? 40 : b == 2 ? 80 : 0;
+        else if (kind == 1) { if (b == 1) s->bass = 3; else if (b == 2) s->pbe = 50; }
+        else s->pbe = b == 1 ? 25 : b == 2 ? 75 : 0;
+        s->pbe_precut = s->pbe == 25 ? -20 : s->pbe == 50 ? -30 : s->pbe == 75 ? -40 : before->pbe_precut;
+        if (s->bass > rb->sound_max(SOUND_BASS)) s->bass = rb->sound_max(SOUND_BASS);
     }
     if (upto >= SS_TREBLE)
         s->treble = sg.treble == 0 ? -3 : sg.treble == 2 ? 3 : 0;
+    if (upto >= SS_TREBLE) {
+        if (s->treble > rb->sound_max(SOUND_TREBLE)) s->treble = rb->sound_max(SOUND_TREBLE);
+        if (s->treble < rb->sound_min(SOUND_TREBLE)) s->treble = rb->sound_min(SOUND_TREBLE);
+    }
     if (upto >= SS_CROSSFEED && sg_on_head()) {
         s->crossfeed = sg.crossfeed == 0 ? CROSSFEED_TYPE_NONE : sg.crossfeed == 1 ? CROSSFEED_TYPE_MEIER : CROSSFEED_TYPE_CUSTOM;
         if (sg.crossfeed == 2) {
@@ -7688,7 +7713,8 @@ static void sg_settings(const struct sound_set *before, int upto, struct sound_s
         s->stereo_width = sg.width == 0 ? 75 : sg.width == 2 ? 135 : 100;
     }
     if (upto >= SS_LEVELS) {
-        s->comp.threshold = sg.levels == 1 ? -20 : sg.levels == 2 ? -24 : 0;
+        /* (The threshold goes in steps of 3 dB.) */
+        s->comp.threshold = sg.levels == 1 ? -21 : sg.levels == 2 ? -24 : 0;
         s->comp.ratio = sg.levels == 2 ? 1 : 0;
         s->comp.makeup_gain = 1;
         s->comp.knee = 1;
@@ -8424,11 +8450,16 @@ static void choose_library(size_t mark)
     resolve_filters();
 }
 
+/* The plugin's own version: the same as Attacca's (desktop/build.gradle.kts), set with it. */
+#define PLUGIN_VERSION "1.4.1"
+
+/* Version: the plugin's, and the library's (when and with which Attacca it was made, its songs). */
 static void info(void)
 {
-    char created[40];
+    char created[96], lib[160];
     get_str(H.created, created, sizeof(created));
-    rb->splashf(HZ * 4, T(S_INFO_FMT), (unsigned long)H.n, created);
+    rb->snprintf(lib, sizeof(lib), T(S_INFO_FMT), (unsigned long)H.n, created);
+    rb->splashf(HZ * 6, "Plugin %s · %s: %s", PLUGIN_VERSION, T(S_LIBRARY), lib);
 }
 
 /* ======================= Entry point ======================= */

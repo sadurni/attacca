@@ -506,6 +506,8 @@
     <string name="waveform_off">Av (vanligt sökfält)</string>
     <string name="strip_show_orama">Visa O\'rama här</string>
     <string name="strip_show_wave">Visa vågformen här</string>
+    <string name="strip_view">Vad som syns i Spelas nu</string>
+    <string name="orama_open">Vad O\'rama öppnar</string>
     <string name="waveform_orama">O\'ramas landskap (vågformen liten mellan tiderna)</string>
     <string name="section_silence">Hoppa över tystnad</string>
     <string name="silence_enabled">Hoppa över tystnad i början och slutet av spår</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Fler världar: en öken med oaser och kameler (en gyllene pyramid på höjdpunkten), Kinesiska muren (en drake), en djungel i Indien med tempel och elefanter (färgmoln), Amazonas nedfärdat i kanot (en regnbåge över ett vattenfall), en kanjon i vilda västern (en örn i solnedgången), Japan i körsbärsblom (fyrverkerier och kronblad), havets botten med ubåt (en val) och en vulkan (ett utbrott). Genretaggen hjälper till att välja dem (arabiskt eller flamenco, kinesiskt, indiskt, latin eller brasilianskt, country, japanskt, ambient, metal). Jordklotsknappen visar låten i varje värld i tur och ordning, likadant i O\'rama och i Attacca World, samma låts landskap i 3D (kubknappen): du färdas genom det bakom resenären och de fyra hundarna, ett finger vrider kameran och två för den närmare eller höjer den.</string>
     <string name="help_world">• Attacca World (kubknappen i O\'rama): samma låt som ett land i 3D att färdas genom bakom resenären och de fyra hundarna, med stafettbyten, hinder och sin världs väder; landet följer musiken och fortsätter från en låt till nästa, och långa lugna eller starka partier ger en annan värld en stund. Ett finger vrider kameran, två för den närmare eller högre; ett tryck på resenären får den att hoppa eller snurra. Knappen för delad skärm visar O\'rama och Attacca World samtidigt. Ord i titeln kan välja världen när ljudet stämmer (Siren Song, lugn: under havet). Även på datorn.</string>
     <string name="help_world_life">• I Attacca World passerar vägen O\'ramas platser i samma ögonblick (broar, tunnlar med facklor, stationer med sitt tåg, byar med rykande skorstenar, ett pariserhjul, ruiner, valv, en raket som stiger), och nästa låts värld syns innan den börjar. Innan ett byte av fordon kliver resenären av (in i ubåten vid stranden, med hundarna tittande ut genom dess fönster). Fåglar, ballonger, betande djur och andra hundar passerar; en pannlampa lyser upp mörkret; kameran vänder sig mot det som är värt att se och stiger över krönen. På hela skärmen visas låtens namn när den börjar.</string>
+    <string name="help_world_views">• Remsan i Spelas nu kan visa O\'rama, Attacca World eller båda sida vid sida (Inställningar → Utseende), och O\'rama-knappen kan öppna O\'rama, Attacca World eller båda delade (Inställningar). På hela skärmen tar tillbaka fram kontrollerna igen; en tunn linje i accentfärgen visar hur långt låten har kommit, och dess namn kommer tillbaka då och då. Widgetens textstorlek finns i Inställningar → Utseende. I Om antecknar ”Spara loggar för rapporter” avslut och övergångar i filer bredvid dina listor, bara medan den är på.</string>
     <string name="help_orama_buttons">• I O\'rama ligger knapparna till höger (stäng, helskärm, bildfrekvens) halvt undanstoppade så att himlen syns: ett tryck tar fram dem, och några sekunder senare glider de undan igen. Solen och månen hamnar aldrig bakom titeln eller knapparna.</string>
     <string name="app_slogan">”Upptäck din musiksamling på nytt: lyssna på nya sätt, med det bästa ljudet.”</string>
     <string name="help_orama_surprises">• O\'rama gömmer också några små överraskningar. Hitta dem själv!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">I natt vid midnatt börjar det nya året och något stort händer i O\'rama: ha Attacca öppen på skärmen då.</string>
     <string name="browser_as_grid">Visa som omslag</string>
     <string name="browser_as_list">Visa som lista</string>
+    <string name="widget_text_size">Widgetens textstorlek</string>
+    <string name="widget_text_size_hint">Omslaget blir mindre ju större texten är. Ovan den stora widgeten som den kommer att se ut.</string>
     <string name="widget_big">Gjord stor visar widgeten</string>
     <string name="widget_big_cover">Omslaget, stort</string>
     <string name="widget_big_orama">O\'ramas landskap</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Sätts på nytt med varje spår. Tillbaka till Som den är tar låsskärmen startskärmens bild (den som fanns innan kan inte läsas tillbaka).</string>
     <string name="over_lock_screen">Visa över låsskärmen under uppspelning</string>
     <string name="over_lock_screen_hint">När Attacca är öppen (Spelas nu, O\'rama…) när skärmen släcks visas den över låsskärmen när telefonen väcks medan musik spelas; för allt annat förblir telefonen låst.</string>
+    <string name="about_logs">Spara loggar för rapporter</string>
+    <string name="about_logs_hint">Antecknar när appen stängs, övergångar mellan låtar och låtbyten i Attacca World i filer bredvid dina listor, att skicka när något går fel. Av om du inte slår på det.</string>
 </resources>

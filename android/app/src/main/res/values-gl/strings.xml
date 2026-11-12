@@ -506,6 +506,8 @@
     <string name="waveform_off">Desactivada (barra de progreso simple)</string>
     <string name="strip_show_orama">Amosar aquí O\'rama</string>
     <string name="strip_show_wave">Amosar aquí a forma de onda</string>
+    <string name="strip_view">Que se ve en Reproducindo</string>
+    <string name="orama_open">Que se abre con O\'rama</string>
     <string name="waveform_orama">A paisaxe de O\'rama (a forma de onda, pequena entre os tempos)</string>
     <string name="section_silence">Salto de silencios</string>
     <string name="silence_enabled">Saltar os silencios ao comezo e ao final da pista</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Máis mundos: un deserto con oasis e camelos (unha pirámide dourada no punto álxido), a Gran Muralla (un dragón), unha selva da India con templos e elefantes (nubes de cores), o Amazonas baixado en canoa (un arco da vella sobre unha cascada), un canón do lonxano oeste (unha aguia ao solpor), o Xapón coas cerdeiras en flor (lume de artificio e pétalos), o fondo do mar en submarino (unha balea) e un volcán (unha erupción). A etiqueta de xénero axuda a elixilos (árabe ou flamenco, chinés, indio, latino ou brasileiro, country, xaponés, ambient, metal). O botón do globo mostra a canción en cada mundo por quendas, igual en O\'rama e en Attacca World, a paisaxe da mesma canción en 3D (o botón do cubo): percórrelo detrás do viaxeiro e os catro cans, un dedo xira a cámara e dous achéganna ou súbena.</string>
     <string name="help_world">• Attacca World (o botón do cubo en O\'rama): a mesma canción como unha terra en 3D que se percorre detrás do viaxeiro e dos catro cans, con relevos, obstáculos e o tempo do seu mundo; a terra vai coa música e segue dunha canción á seguinte, e os tramos longos tranquilos ou fortes traen outro mundo durante un anaco. Un dedo xira a cámara e dous achégana ou súbena; un toque no viaxeiro faino saltar ou xirar. O botón de pantalla dividida amosa O\'rama e Attacca World á vez. Palabras do título poden escoller o mundo se o son acompaña (Siren Song, tranquila: baixo o mar). Tamén no escritorio.</string>
     <string name="help_world_life">• En Attacca World o camiño pasa polos lugares de O\'rama nos mesmos momentos (pontes, túneles con fachos, estacións co seu tren, aldeas con chemineas fumegantes, unha noria, ruínas, arcos, un foguete que sobe), e o mundo da seguinte canción vese antes de que comece. Antes de cambiar de vehículo, o viaxeiro baixa (e entra no submarino na beira, cos cans asomados ás súas fiestras). Pasan paxaros, globos, animais pacendo e outros cans; unha lanterna frontal ilumina a escuridade; a cámara vólvese cara ao que paga a pena ver e elévase sobre os cumes. En pantalla completa, o nome da canción aparece ao comezar.</string>
+    <string name="help_world_views">• A franxa de Reproducindo pode amosar O\'rama, Attacca World ou os dous un xunto ao outro (Axustes → Aparencia), e o botón de O\'rama pode abrir O\'rama, Attacca World ou os dous en pantalla dividida (Axustes). En pantalla completa, atrás devolve os controis; unha liña fina na cor de realce amosa canto avanzou a canción, e o seu nome volve aparecer de cando en vez. O tamaño da letra do widget está en Axustes → Aparencia. En Acerca de, «Gardar rexistros para informes» anota saídas e transicións en ficheiros xunto ás túas listas, só mentres está activado.</string>
     <string name="help_orama_buttons">• En O\'rama os botóns da dereita (pechar, pantalla completa, fotogramas) quedan medio agochados para que se vexa o ceo: un toque sácaos e volven agocharse aos poucos segundos. O sol e a lúa non se poñen detrás do título nin dos botóns.</string>
     <string name="app_slogan">«Redescubre a túa colección de música: escóitaa de xeitos novos, co mellor son.»</string>
     <string name="help_orama_surprises">• O\'rama agocha ademais algunhas pequenas sorpresas. Descóbreas ti!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Esta noite á medianoite comeza o ano novo e en O\'rama pasa algo grande: ten Attacca aberto na pantalla a esa hora.</string>
     <string name="browser_as_grid">Amosar como portadas</string>
     <string name="browser_as_list">Amosar como lista</string>
+    <string name="widget_text_size">Tamaño da letra do widget</string>
+    <string name="widget_text_size_hint">A portada faise máis pequena canto máis grande é a letra. Arriba, o widget grande tal como quedará.</string>
     <string name="widget_big">Ao facelo grande, o widget amosa</string>
     <string name="widget_big_cover">A portada, en grande</string>
     <string name="widget_big_orama">A paisaxe de O\'rama</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Ponse de novo con cada pista. Ao volver a Como está, a pantalla de bloqueo colle a imaxe da pantalla de inicio (a que tiña antes non se pode recuperar).</string>
     <string name="over_lock_screen">Amosar sobre a pantalla de bloqueo ao reproducir</string>
     <string name="over_lock_screen_hint">Se Attacca está aberto (Reproducindo, O\'rama…) cando se apaga a pantalla, ao espertar o móbil amósase sobre a pantalla de bloqueo mentres soa música; para todo o demais o móbil segue bloqueado.</string>
+    <string name="about_logs">Gardar rexistros para informes</string>
+    <string name="about_logs_hint">Anota os peches da app, as transicións entre cancións e os cambios de canción de Attacca World en ficheiros xunto ás túas listas, para envialos cando algo falle. Desactivado salvo que o actives.</string>
 </resources>

@@ -31,10 +31,12 @@ internal class Scene(
     val stripTop: Float = 0f,
     /** How much is shown from [stripTop] down (0: all of it). */
     val stripHeight: Float = 0f,
+    /** Where across the traveller goes (share of the width): a little further in when a player floats over a corner. */
+    val travellerShare: Float = 0.3f,
 ) {
     val p = look.palette.vivid()
     val unit = min(w, h)
-    val travellerX = w * 0.3f
+    val travellerX = w * travellerShare
 
     // The land being drawn (set by land()).
     var lane: Lane = Lane(look, null, null, null, 0.0, 0.0)
@@ -160,6 +162,9 @@ internal class Scene(
 
     /** The new year's show going on, or null. */
     var show: Celebration? = null
+
+    /** Drawn as a layer over another picture (Attacca World): only what is in the sky, no sun of its own. */
+    var overlay = false
 
     /** Milliseconds since the last frame. */
     var dt = 0L

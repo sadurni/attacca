@@ -48,6 +48,9 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         /** Each dog's place about the traveller (sideways, ahead or behind), in pairs. */
         private val PLACES = floatArrayOf(-0.95f, -1.7f, 1.05f, -2.7f, -0.75f, -3.9f, 0.95f, 1.5f)
 
+        /** Rows the people at a relay walk onto and off the way. */
+        private const val RELAY_WALK = 4f
+
         /** Rows between relays along a song. */
         private const val RELAY_EVERY = 380f
     }
@@ -60,15 +63,37 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
     private val dogsAboard = kind == Traveller.CAR || kind == Traveller.SHIP || kind == Traveller.ICEBERG || kind == Traveller.CANOE || kind == Traveller.SUBMARINE
     private val floats = kind == Traveller.ICEBERG || kind == Traveller.CANOE
 
-    /** The relays along the song (rows): the song's start on foot, then every so often. */
-    val relays: List<Float> = if (kind == Traveller.SUBMARINE) emptyList() else buildList {
+    /**
+     * The relays along the song (rows): the song's start on foot, then every so often, each where
+     * the one waiting can stand by the way on firm ground (moved on a little to the next such row,
+     * or none): never in the water, on a bridge or in a tunnel. None aboard what floats (the
+     * iceberg, a canoe, the ship, the submarine): nobody waits in the water.
+     */
+    val relays: List<Float> = if (kind == Traveller.SUBMARINE || kind == Traveller.ICEBERG || kind == Traveller.CANOE || kind == Traveller.SHIP) emptyList() else buildList {
         if (onFoot) add(start)
         var z = start + 170f
         val end = land.zAt((land.wave?.endMs ?: 0L).toDouble()) - 70f
         while (z < end) {
-            add(z)
+            var r = z
+            while (r < z + 80f && r < end && !firmForRelay(r)) r += 2f
+            if (r < end && firmForRelay(r)) add(r)
             z += RELAY_EVERY
         }
+    }
+
+    /** Whether at row [z] the way and both its sides are dry, firm ground (no place there, no water, no drop). */
+    private fun firmForRelay(z: Float): Boolean {
+        for (p in land.places) if (z > p.z0 - 8f && z < p.z1 + 8f) return false
+        val path = land.pathAt(z)
+        if (path < WorldLand.WATER + 0.3f) return false
+        val h = land.headingAt(z)
+        val cx = land.centerAt(z)
+        for (dz in floatArrayOf(-RELAY_WALK, 0f, RELAY_WALK)) for (side in floatArrayOf(-1.9f, 1.9f)) {
+            val x = cx + side * cos(h)
+            val y = land.heightAt(x, z + dz - side * sin(h))
+            if (y < WorldLand.WATER + 0.25f || abs(y - path) > 1.0f) return false
+        }
+        return true
     }
 
     /** Where something lies across the way (rows), and what: where the song strikes harder. */
@@ -97,12 +122,36 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         else -> if (seed % 2 == 0) Obstacles.log() else Obstacles.rocks()
     }
 
+    /** Christmas days: the traveller, the people and the dogs wear Santa hats. */
+    var santa = false
+        set(v) {
+            if (field != v) {
+                field = v
+                peopleRigs.clear()
+                travellerRigs.clear()
+                dogsNow = null
+            }
+        }
+
     private val peopleRigs = HashMap<Int, Rig>()
     /** Under the sea everyone wears a diving helmet. */
-    private val underSea = land.look.world == World.REEF && kind != Traveller.SUBMARINE
-    private fun personRig(k: Int) = peopleRigs.getOrPut(k) { Human.rig(Person.of(7, k, accent), underSea) }
+    // (And in space a glass bowl too: everyone and the dogs, as in O'rama.)
+    private val underSea = (land.look.world == World.REEF && kind != Traveller.SUBMARINE) || land.look.world == World.SPACE
+    private fun personRig(k: Int) = peopleRigs.getOrPut(k) { Human.rig(Person.of(7, k, accent), underSea, santa) }
 
-    private val dogs = Dog.entries.map { Quad.dog(it, underSea) }
+    /** Whoever is the traveller now wears the song's accent colour (shirt and hat), as in O'rama. */
+    private val travellerRigs = HashMap<Int, Rig>()
+    private fun travellerRig(k: Int) = travellerRigs.getOrPut(k) {
+        val p = Person.of(7, k, accent)
+        val a = accent or (0xFF shl 24)
+        Human.rig(Person(a, p.trousers, p.skin, p.hair, p.hat?.let { scale(a, 0.72f) }, p.longHair, p.pack), underSea, santa)
+    }
+
+    private var dogsNow: List<Pair<Rig, Quad.Shape>>? = null
+    private val dogs: List<Pair<Rig, Quad.Shape>> get() = dogsNow ?: Dog.entries.map { Quad.dog(it, underSea, santa, leds) }.also { dogsNow = it }
+
+    /** In the dark the dogs' collars light up (little LEDs). */
+    private var leds = false
     // What is ridden: a horse, a camel or an elephant (with the horse's bones).
     private val horse = when (kind) {
         Traveller.RIDER -> Quad.horse()
@@ -125,7 +174,12 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
 
     // Poses kept between frames (one per figure).
     private val poses = HashMap<Any, Pose>()
-    private fun poseOf(key: Any, rig: Rig) = poses.getOrPut(key) { rig.pose() }.also { it.reset() }
+    private fun poseOf(key: Any, rig: Rig): Pose {
+        // (A key may come to another rig, another animal across a change of world: a pose of its own size then.)
+        val p = run { poses[key]?.takeIf { it.pitch.size == rig.bones.size } ?: rig.pose().also { poses[key] = it } }
+        p.reset()
+        return p
+    }
 
     // The current move.
     private var move = Move.NONE
@@ -209,6 +263,26 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
     }
 
     private val pups = List(4) { i -> Pup(PLACES[i * 2], PLACES[i * 2 + 1]) }
+
+    /** When this cast was first shown, and how far its waiting vehicle has come in (0 … 1). */
+    private var shownMs = Long.MIN_VALUE
+    private var appear = 1f
+
+    /** Shown from [nowMs] on (its first frame may have been made aside, before it was shown). */
+    fun shownFrom(nowMs: Long) {
+        shownMs = nowMs
+    }
+
+    /** The dogs go on where and as they were with [old] (a new song, or the same one's land again): no jump. */
+    fun carryDogsFrom(old: Cast?) {
+        if (old == null || old.dogsAboard || dogsAboard) return
+        for (i in pups.indices) {
+            val a = old.pups[i]
+            val b = pups[i]
+            b.ox = a.ox; b.oz = a.oz; b.tx = a.tx; b.tz = a.tz
+            b.mode = a.mode; b.until = a.until; b.phase = a.phase; b.yaw = a.yaw; b.speed = a.speed; b.lateral = a.lateral
+        }
+    }
     private val rnd = java.util.Random(seed * 31L + 7)
     private var lastMs = -1L
 
@@ -262,6 +336,80 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         val target = kotlin.math.atan2(p.lateral, max(p.speed, 0.6f))
         p.yaw += (target - p.yaw) * min(1f, dt * 5f)
     }
+
+    /** How far from the way's middle a dog may go at row [z] towards [ox]'s side: not off a bridge, into the water or lava, nor down a drop. */
+    private fun safeReach(z: Float, ox: Float): Float {
+        val want = kotlin.math.abs(ox)
+        if (pierAt(z) > Float.NEGATIVE_INFINITY) return min(want, 0.6f)
+        if (want < 0.5f) return want
+        for (p in land.places) {
+            if (p.kind == PlaceKind.BRIDGE && z > p.mid - Places.RIVER - 6f && z < p.mid + Places.RIVER + 6f) return 1.15f
+            if (p.kind == PlaceKind.TUNNEL && z > p.z0 - 1f && z < p.z1 + 1f) return 1.8f
+        }
+        if (land.look.world == World.REEF) return want
+        val h = land.headingAt(z)
+        val cx = land.centerAt(z)
+        val path = land.pathAt(z)
+        val side = if (ox >= 0f) 1f else -1f
+        var d = 0.4f
+        while (d <= want) {
+            val y = land.heightAt(cx + side * d * cos(h), z - side * d * sin(h))
+            if (y < WorldLand.WATER + 0.15f || kotlin.math.abs(y - path) > 1.4f) return (d - 0.45f).coerceAtLeast(0.5f)
+            d += 0.4f
+        }
+        return want
+    }
+
+    // ---- Piers and stairs: getting on and off coherently ----
+
+    /** Boats and the submarine are boarded from a pier at the shore. */
+    private val floatsBoard = kind == Traveller.CANOE || kind == Traveller.ICEBERG || kind == Traveller.SUBMARINE
+
+    /** The piers (from, to rows): at the start (unless aboard already) and where they get off. */
+    private val piers: List<FloatArray> by lazy {
+        buildList {
+            if (floatsBoard && !arrives) add(floatArrayOf(start - 8f, start + 0.6f))
+            if (floatsBoard && leaves) add(floatArrayOf(offZ - 0.6f, offZ + 8f))
+        }
+    }
+
+    /** The pier's deck height at row [z], or minus infinity where there is none. */
+    private fun pierAt(z: Float): Float = if (piers.any { z >= it[0] && z <= it[1] }) WorldLand.WATER + 0.45f else Float.NEGATIVE_INFINITY
+
+    /** The piers (and the ship's stairs) as one figure, made once. */
+    private val supports: Rig? by lazy {
+        val out = FloatList(8192)
+        val wood = 0xFF8A5A34.toInt()
+        val dark = 0xFF5A3A22.toInt()
+        for (p in piers) {
+            var z = p[0]
+            var k = 0
+            while (z < p[1]) {
+                val zc = z + 0.5f
+                Props.bakeMesh(FloatList(512).apply {
+                    box(-0.95f, -0.12f, -0.5f, 0.95f, 0f, 0.46f, if (k % 2 == 0) wood else Props.shadeOf(wood, 0.9f))
+                    if (k % 3 == 0) for (s in floatArrayOf(-0.85f, 0.85f)) tube(s, -4.5f, 0f, s, 0.35f, 0f, 0.09f, dark)
+                }.mesh(), land.centerAt(zc), WorldLand.WATER + 0.45f, zc, land.headingAt(zc), 1f, out)
+                z += 1f
+                k++
+            }
+        }
+        if (kind == Traveller.SHIP) {
+            // Stairs up to the ship's deck beside it, where they get on (and off at the end).
+            val at = buildList { if (!arrives) add(start); if (leaves) add(offZ) }
+            for (z in at) {
+                val h = land.headingAt(z)
+                val cx = land.centerAt(z)
+                Props.bakeMesh(FloatList(1024).apply {
+                    for (i in 0 until 4) box(-1.2f - 0.45f * (4 - i), -0.4f, -0.55f, -1.2f - 0.45f * (3 - i), 0.26f * (i + 1), 0.55f, if (i % 2 == 0) wood else dark)
+                    tube(-3.0f, 0.4f, 0.55f, -1.2f, 1.4f, 0.55f, 0.04f, dark)
+                }.mesh(), cx, land.heightAt(cx, z), z, h, 1f, out)
+            }
+        }
+        if (out.size == 0) null else Rig(listOf(Bone(out.mesh(), -1, 0f, 0f, 0f)))
+    }
+
+    private val supportPose = Pose(1)
 
     // ---- Light in the dark ----
 
@@ -362,6 +510,13 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
      * [dark] (night, a volcano) and [tunnel] bring out a light.
      */
     fun frame(tz: Float, beats: Double, playing: Boolean, nowMs: Long, out: MutableList<Draw>, dark: Boolean = false, tunnel: Boolean = false) {
+        if (shownMs == Long.MIN_VALUE) shownMs = nowMs
+        // A song's vehicle waiting by the way comes in softly (not out of nowhere as the song changes).
+        appear = if (arrives) 1f else ((nowMs - shownMs) / 1400f).coerceIn(0f, 1f)
+        if ((dark || tunnel) != leds) {
+            leds = dark || tunnel
+            dogsNow = null
+        }
         val go = if (playing) 1f else 0f
         val t = nowMs / 1000.0
         val dt = if (lastMs < 0) 0f else ((nowMs - lastMs).coerceIn(0, 100)) / 1000f
@@ -371,6 +526,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         val mv = if (move != Move.NONE && nowMs - moveAt < move.ms) move else Move.NONE
         val mu = if (mv == Move.NONE) 0f else (nowMs - moveAt).toFloat() / mv.ms
 
+        supports?.let { out += Draw(it, Mat4.identity(), supportPose) }
         // Obstacles in sight.
         obstacleRig?.let { rig ->
             for (z in obstacles) if (z > tz - 30 && z < tz + WorldRendererLimits.FAR) {
@@ -386,18 +542,35 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             val sx = land.centerAt(r) + side * cos(heading)
             val sz = r - side * sin(heading)
             val sy = land.heightAt(sx, sz)
+            val cx = land.centerAt(r)
+            val cy = land.heightAt(cx, r)
             if (tz < r) {
-                // The next one waits, turned towards the way, waving when the traveller is near.
+                // The next one waits, turned towards the way, waving when the traveller is near;
+                // then walks onto the way to meet the traveller there.
                 val rig = personRig(k + 1)
                 val p = poseOf("wait$k", rig)
-                if (r - tz < 30) wave(p, t, side > 0)
-                out += Draw(rig, Mat4.model(sx, sy, sz, heading + if (side > 0) -1.2f else 1.2f), p)
-            } else {
-                // The one before stays where the other was, waving goodbye.
+                val u = (1f - (r - tz) / RELAY_WALK).coerceIn(0f, 1f)
+                if (u <= 0f) {
+                    if (r - tz < 30) wave(p, t, side > 0)
+                    out += Draw(rig, Mat4.model(sx, sy, sz, heading + if (side > 0) -1.2f else 1.2f), p)
+                } else {
+                    gait(p, (t * 1.6).toFloat(), false, 1f)
+                    val x = sx + (cx - sx) * u
+                    val z = sz + (r - sz) * u
+                    out += Draw(rig, Mat4.model(x, sy + (cy - sy) * u + 0.04f, z, heading + (if (side > 0) -1f else 1f) * (1.4f - 1.4f * u * u)), p)
+                }
+            } else if (onFoot || r != start) {
+                // The one before walks off to where the other waited, and stays there waving goodbye.
                 val rig = personRig(k)
                 val p = poseOf("left$k", rig)
-                wave(p, t + i, side > 0)
-                out += Draw(rig, Mat4.model(sx, sy, sz, heading + if (side > 0) -1.9f else 1.9f), p)
+                val u = ((tz - r) / RELAY_WALK).coerceIn(0f, 1f)
+                if (u >= 1f) {
+                    wave(p, t + i, side > 0)
+                    out += Draw(rig, Mat4.model(sx, sy, sz, heading + if (side > 0) -1.9f else 1.9f), p)
+                } else {
+                    gait(p, (t * 1.6).toFloat(), false, 1f)
+                    out += Draw(rig, Mat4.model(cx + (sx - cx) * u, cy + (sy - cy) * u + 0.04f, r + (sz - r) * u, heading + (if (side > 0) -1f else 1f) * 1.3f * u), p)
+                }
             }
         }
 
@@ -408,7 +581,8 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         val gotOff = leaves && tz >= offZ + BOARD
         val walking = onFoot || (!startAboard && tz < start + BOARD) || gotOff
         // Where the traveller is along the way (waiting by the vehicle before getting on).
-        val walkerZ = if (onFoot || gotOff) tz else min(tz, start)
+        // (At a pier the traveller stops at its end, behind the boat.)
+        val walkerZ = if (onFoot || gotOff) tz else min(tz, if (floatsBoard) start - 1.5f else start)
         var personBase: FloatArray? = null
         var personPose: Pose? = null
         var personRigNow: Rig? = null
@@ -417,11 +591,11 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         if (walking) {
             val walkerX = land.centerAt(walkerZ)
             val run = kind == Traveller.RUNNER
-            val rig = personRig(person)
+            val rig = travellerRig(person)
             val p = poseOf("traveller", rig)
             val phase = (beats / 2).toFloat() * go
             gait(p, phase, run, go)
-            var y = land.heightAt(walkerX, walkerZ) + 0.04f + abs(sin(phase * 2 * PI.toFloat())) * 0.05f * go
+            var y = max(land.heightAt(walkerX, walkerZ) + 0.04f, pierAt(walkerZ) + 0.02f) + abs(sin(phase * 2 * PI.toFloat())) * 0.05f * go
             var yaw = land.headingAt(walkerZ)
             if (onFoot || gotOff) {
                 y += over * 1.0f
@@ -472,7 +646,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             if (kind == Traveller.ELEPHANT) p.pitch[Quad.BODY] += sin(t * 2.0).toFloat() * 0.02f
             p.yaw[Quad.TAIL] = sin(t * 3.0).toFloat() * 0.25f
             val base = Mat4.model(vx, y, vz, vh, r[1])
-            out += Draw(rig, base, p)
+            out += Draw(rig, base, p, if (tz < start) appear else 1f)
             if (leaves && tz > offZ) { parkedBase = base; parkedRig = rig; parkedPose = p }
             val m = Array(rig.bones.size) { FloatArray(16) }
             rig.matrices(base, p, m)
@@ -532,7 +706,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             y += over * 0.9f * moving
             if (kind == Traveller.CYCLIST && over > 0f) p.pitch[0] -= 0.25f * over
             val base = Mat4.model(vx, y, vz, vh, tilt)
-            out += Draw(rig, base, p)
+            out += Draw(rig, base, p, if (tz < start) appear else 1f)
             if (leaves && tz > offZ) { parkedBase = base; parkedRig = rig; parkedPose = p }
             val m = Array(rig.bones.size) { FloatArray(16) }
             rig.matrices(base, p, m)
@@ -558,7 +732,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         // forward onto the way. Into the submarine: in through the hatch, and out again.
         val rb = riderBase
         if (!onFoot && rb != null && (startAboard || tz >= start) && !gotOff) {
-            val rig = personRig(person)
+            val rig = travellerRig(person)
             val p = poseOf("rider", rig)
             when (kind) {
                 Traveller.CYCLIST -> pedal(p, (beats / 2).toFloat() * moving)
@@ -573,13 +747,16 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                 // From the ground at the way's side up into the seat, in an arc.
                 val hop = sin(boarded * PI).toFloat() * 0.7f
                 val k = 1 - boarded
-                base = Mat4.mul(Mat4.model(-k * 1.1f * cos(vh), hop, k * 1.1f * sin(vh)), rb)
+                base = if (floatsBoard) {
+                    // From the end of the pier behind it, a step down into it.
+                    Mat4.mul(Mat4.model(-k * 1.5f * sin(vh), hop + k * (pierAt(start - 1.5f) - rb[13]), -k * 1.5f * cos(vh)), rb)
+                } else Mat4.mul(Mat4.model(-k * 1.1f * cos(vh), hop, k * 1.1f * sin(vh)), rb)
             }
             if (off > 0f) {
                 // Down onto the way ahead, in an arc.
                 val gz = offZ + BOARD
                 val gx = land.centerAt(gz)
-                val ground = Mat4.model(gx, land.heightAt(gx, gz) + 0.04f, gz, land.headingAt(gz))
+                val ground = Mat4.model(gx, max(land.heightAt(gx, gz) + 0.04f, pierAt(gz) + 0.02f), gz, land.headingAt(gz))
                 base = lerpBase(rb, ground, off)
                 base[13] += sin(off * PI).toFloat() * 0.8f
             }
@@ -602,12 +779,18 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             val jumpedOff = leaves && tz >= offZ + i * 0.6f + BOARD
             val aboard = wasAboard && !jumpedOff
             // Waiting by the vehicle before getting on, the traveller stands: so do they, more or less.
-            if (!aboard) think(pup, dt, if (walking && tz >= start && !onFoot && !gotOff) 0f else v, nowMs)
+            if (!aboard) {
+                think(pup, dt, if (walking && tz >= start && !onFoot && !gotOff) 0f else v, nowMs)
+                // Never off a bridge, into water or lava, or down a drop: as far out as is safe there.
+                val reach = safeReach(anchor + pup.oz, pup.ox)
+                if (kotlin.math.abs(pup.ox) > reach) pup.ox = kotlin.math.sign(pup.ox) * reach
+                if (kotlin.math.abs(pup.tx) > reach) pup.tx = kotlin.math.sign(pup.tx) * reach
+            }
             val gz = anchor + pup.oz
             val gh = land.headingAt(gz)
             val gx = land.centerAt(gz) + pup.ox * cos(gh)
             val gr = rest(gx, gz, gh, 0.4f)
-            var gy = gr[0] - 0.04f
+            var gy = max(gr[0] - 0.04f, pierAt(gz) + 0.02f)
             if (aboard) {
                 val s = dogSpots[i]
                 sitDog(p)
@@ -636,7 +819,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                         val side = if (w < 3) 1f else -1f
                         val wz = floatArrayOf(-0.9f, 0.1f, 1.1f)[w % 3]
                         val look = sin(t * 1.3 + i * 2.1).toFloat() * 0.35f
-                        val face = Mat4.mul(vehicleBody!!, Mat4.model(side * 1.0f, 1.0f + sin(t * 2.0 + i).toFloat() * 0.02f, wz, side * PI.toFloat() / 2 + look, s = 0.95f))
+                        val face = Mat4.mul(vehicleBody!!, Mat4.model(side * 1.02f, 1.0f + sin(t * 2.0 + i).toFloat() * 0.02f, wz, side * PI.toFloat() / 2 + look, s = 0.9f))
                         out += Draw(faces[i], face, poseOf("face$i", faces[i]))
                     }
                 }
@@ -741,6 +924,20 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         p.pitch[Human.FOREARM_L] = -(if (run) 1.3f else 0.35f) - max(0f, -sin(a)) * 0.3f * go
         p.pitch[Human.FOREARM_R] = -(if (run) 1.3f else 0.35f) - max(0f, sin(a)) * 0.3f * go
         if (run) p.pitch[Human.BODY] = 0.12f * go
+        // The body rolls over each foot and turns against the hips; the head nods with the steps.
+        p.roll[Human.BODY] = sin(a) * (if (run) 0.06f else 0.045f) * go
+        p.yaw[Human.BODY] = sin(a) * (if (run) 0.1f else 0.07f) * go
+        p.pitch[Human.BODY] += kotlin.math.abs(sin(a)) * 0.03f * go
+        if (go < 0.5f) {
+            // Standing: breathing, shifting the weight now and then.
+            val t = System.nanoTime() / 1e9
+            p.pitch[Human.BODY] += sin(t * 1.4).toFloat() * 0.02f
+            p.roll[Human.BODY] += sin(t * 0.37).toFloat() * 0.035f
+            p.pitch[Human.ARM_L] += sin(t * 1.4 + 0.5).toFloat() * 0.04f
+            p.pitch[Human.ARM_R] += sin(t * 1.4 + 1.1).toFloat() * 0.04f
+            p.pitch[Human.FOREARM_L] -= 0.12f
+            p.pitch[Human.FOREARM_R] -= 0.12f
+        }
     }
 
     /** Knees up, for a jump. */
@@ -841,6 +1038,10 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             val bend = max(0f, sin(a + off + 1.3f)) * amp * 1.8f
             p.pitch[Quad.lower(leg)] = if (leg < 2) bend else -bend
         }
+        // The back rolls and dips with the diagonal pairs, the tail swings wider.
+        p.roll[Quad.BODY] = sin(a) * 0.05f * go
+        p.pitch[Quad.BODY] += sin(a * 2f) * 0.03f * go
+        p.yaw[Quad.TAIL] += sin(a) * 0.3f * go
     }
 
     /** A gallop: front legs together, then the hind ones; the back rocks. */

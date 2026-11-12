@@ -122,6 +122,8 @@ object PlayerDbFormat {
         file: File,
         /** The names of the inclusion sets (all different), in the order of [Track.sets]' bits (at most 32). */
         setNames: List<String> = emptyList(),
+        /** What made it ("Attacca 1.4.1"), shown by the players with its date. */
+        madeBy: String? = null,
     ): Int {
         require(tracks.size == classification.moods.size)
         val k = classification
@@ -171,7 +173,7 @@ object PlayerDbFormat {
         }
         val dicts = ByteArrayOutputStream()
         for (d in listOf(artists, genres, moods, families, sets)) dicts.write(d.bytes())
-        val created = strings.add(SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date()))
+        val created = strings.add(SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date()) + (madeBy?.let { " · $it" } ?: ""))
         val baseString = strings.add(root)
 
         val years = tracks.map { it.year }.filter { it > 0 }

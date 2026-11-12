@@ -113,6 +113,19 @@ fun AboutScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
             InfoLine(stringResource(R.string.about_package), BuildConfig.APPLICATION_ID)
             InfoLine(stringResource(R.string.about_android), "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
             InfoLine(stringResource(R.string.about_device), "${Build.MANUFACTURER} ${Build.MODEL}")
+            // The logs for reports: off unless turned on.
+            val context = androidx.compose.ui.platform.LocalContext.current
+            var logsOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.sadurni.attacca.Logs.on) }
+            Row(
+                Modifier.fillMaxWidth().clickable { logsOn = !logsOn; com.sadurni.attacca.Logs.set(context, logsOn) }.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.about_logs), fontSize = AttaccaType.body, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.about_logs_hint), fontSize = AttaccaType.secondary, color = LocalAttaccaColors.current.textGrayed)
+                }
+                androidx.compose.material3.Switch(checked = logsOn, onCheckedChange = { logsOn = it; com.sadurni.attacca.Logs.set(context, it) }, modifier = Modifier.padding(start = 12.dp))
+            }
 
             SectionTitle(stringResource(R.string.about_project))
             ProjectRow(stringResource(R.string.changelog_title), stringResource(R.string.about_changelog_hint, BuildConfig.VERSION_NAME), external = false, onClick = onOpenChangelog)

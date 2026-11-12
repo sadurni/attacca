@@ -506,6 +506,8 @@
     <string name="waveform_off">Desactivada (barra de progrés simple)</string>
     <string name="strip_show_orama">Mostra aquí O\'rama</string>
     <string name="strip_show_wave">Mostra aquí la forma d\'ona</string>
+    <string name="strip_view">Què es veu a Reproduint</string>
+    <string name="orama_open">Què s\'obre amb O\'rama</string>
     <string name="waveform_orama">El paisatge d\'O\'rama (la forma d\'ona, petita entre els temps)</string>
     <string name="section_silence">Salt de silencis</string>
     <string name="silence_enabled">Salta els silencis a l\'inici i al final de la pista</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Més mons: un desert amb oasis i camells (una piràmide daurada al punt àlgid), la Gran Muralla (un drac), una jungla de l\'Índia amb temples i elefants (núvols de colors), l\'Amazònia baixada en canoa (un arc de Sant Martí sobre una cascada), un canyó de l\'oest llunyà (una àguila a la posta de sol), el Japó amb els cirerers en flor (focs artificials i pètals), el fons del mar en submarí (una balena) i un volcà (una erupció). L\'etiqueta de gènere ajuda a triar-los (àrab o flamenc, xinès, indi, llatí o brasiler, country, japonès, ambient, metal). El botó del globus mostra la cançó en cada món per torns, igual a O\'rama i a Attacca World, el paisatge de la mateixa cançó en 3D (el botó del cub): el recorres darrere del viatger i els quatre gossos, un dit gira la càmera i dos l\'acosten o la pugen.</string>
     <string name="help_world">• Attacca World (el botó del cub a O\'rama): la mateixa cançó com una terra en 3D que es recorre darrere del viatger i els quatre gossos, amb relleus, obstacles i el temps del seu món; la terra va amb la música i continua d\'una cançó a la següent, i els trams llargs tranquils o forts porten un altre món durant una estona. Un dit gira la càmera i dos l\'acosten o la pugen; un toc al viatger el fa saltar o girar. El botó de pantalla partida mostra O\'rama i Attacca World alhora. Paraules del títol poden triar el món si el so hi acompanya (Siren Song, tranquil·la: sota el mar). També a l\'escriptori.</string>
     <string name="help_world_life">• A Attacca World el camí passa pels llocs d\'O\'rama als mateixos moments (ponts, túnels amb torxes, estacions amb el seu tren, pobles amb xemeneies que fumegen, una roda de fira, ruïnes, arcs, un coet que s\'enlaira), i el món de la cançó següent es veu abans que comenci. Abans de canviar de vehicle, el viatger baixa (i entra al submarí a la vora, amb els gossos guaitant per les finestres). Passen ocells, globus, animals pasturant i altres gossos; un frontal il·lumina la foscor; la càmera es gira cap al que val la pena veure i s\'alça sobre els cims. A pantalla completa, el nom de la cançó apareix quan comença.</string>
+    <string name="help_world_views">• La franja de la pantalla de reproducció pot mostrar O\'rama, Attacca World o tots dos l\'un al costat de l\'altre (Configuració → Aparença), i el botó d\'O\'rama pot obrir O\'rama, Attacca World o tots dos amb pantalla partida (Configuració). A pantalla completa, enrere torna els controls; una línia fina del color d\'accent mostra fins on ha arribat la cançó, i el seu nom torna a aparèixer de tant en tant. La mida de la lletra del widget és a Configuració → Aparença. A Quant a, «Desa registres per a informes» anota sortides i transicions en fitxers al costat de les teves llistes, només mentre està activat.</string>
     <string name="help_orama_buttons">• A O\'rama els botons de la dreta (tancar, pantalla completa, fotogrames) queden mig amagats perquè es vegi el cel: un toc els fa sortir i tornen a amagar-se al cap de pocs segons. El sol i la lluna no es posen darrere del títol ni dels botons.</string>
     <string name="app_slogan">«Redescobreix la teva col·lecció de música: escolta-la de maneres noves, amb el millor so.»</string>
     <string name="help_orama_surprises">• O\'rama amaga també algunes petites sorpreses. Descobreix-les tu!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Aquesta nit a mitjanit comença l\'any nou i a O\'rama passa una cosa grossa: tingues Attacca obert a la pantalla a aquella hora.</string>
     <string name="browser_as_grid">Mostra com a portades</string>
     <string name="browser_as_list">Mostra com a llista</string>
+    <string name="widget_text_size">Mida de la lletra del widget</string>
+    <string name="widget_text_size_hint">La portada es fa més petita com més gran és la lletra. A dalt, el widget gran tal com quedarà.</string>
     <string name="widget_big">En fer-lo gran, el widget mostra</string>
     <string name="widget_big_cover">La portada, en gran</string>
     <string name="widget_big_orama">El paisatge d\'O\'rama</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Es torna a posar amb cada pista. En tornar a Tal com és, la pantalla de bloqueig agafa la imatge de la pantalla d\'inici (la que tenia abans no es pot recuperar).</string>
     <string name="over_lock_screen">Mostra sobre la pantalla de bloqueig mentre reprodueix</string>
     <string name="over_lock_screen_hint">Si Attacca és obert (S\'està reproduint, O\'rama…) quan s\'apaga la pantalla, en despertar el mòbil es mostra sobre la pantalla de bloqueig mentre sona música; per a tota la resta el mòbil continua bloquejat.</string>
+    <string name="about_logs">Desa registres per a informes</string>
+    <string name="about_logs_hint">Anota els tancaments de l\'app, les transicions entre cançons i els canvis de cançó d\'Attacca World en fitxers al costat de les teves llistes, per enviar-los quan alguna cosa falli. Desactivat tret que l\'activis.</string>
 </resources>

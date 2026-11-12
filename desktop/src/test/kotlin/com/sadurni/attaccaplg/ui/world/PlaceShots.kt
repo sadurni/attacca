@@ -19,6 +19,103 @@ import kotlin.math.sin
  */
 fun main(args: Array<String>) {
     val out = File(args[0]).apply { mkdirs() }
+    if (args[1] == "COSTS") {
+        // What a new song's land costs to set up (ms), part by part, a few times (warm JIT last).
+        val bins = FloatArray(1200) { i -> (0.45f + 0.3f * sin(i * 0.05f) + 0.15f * sin(i * 0.31f)).coerceIn(0.05f, 1f) }
+        val wave = SongWave(bins, 240_000L, 0L, 240_000L)
+        for (round in 0 until 4) for (w in listOf(World.MEADOW, World.DESERT, World.CITY, World.CASTLE)) {
+            val look = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.5f, positivity = 0.6f, voice = 0.4f, seed = round * 7 + w.ordinal)), w)
+            var t = System.nanoTime()
+            fun lap(): Double { val n = System.nanoTime(); val d = (n - t) / 1e6; t = n; return d }
+            val land = WorldLand(wave, look, round * 13 + w.ordinal, true, null, look, 0.0)
+            val tLand = lap()
+            land.places.size
+            val tPlaces = lap()
+            land.heightAt(0f, 10f); land.lookBlend(10f)
+            val tFirst = lap()
+            val cast = com.sadurni.attacca.world.Cast(land, look.traveller, 0, round, false)
+            val tCast = lap()
+            val ex = com.sadurni.attacca.world.Extras(land, round)
+            val tEx = lap()
+            for (k in -1..1) com.sadurni.attacca.world.LandMesher.chunk(land, k)
+            val tChunks = lap()
+            val draws = ArrayList<com.sadurni.attacca.world.Draw>()
+            cast.frame(2f, 0.0, true, 1000L, draws)
+            ex.frame(2f, land.pathAt(2f), 1000L, true, 0f, null, look.palette.accent, true, draws)
+            val tFrame = lap()
+            println("round $round ${w.name}: land %.1f places %.1f first %.1f cast %.1f extras %.1f 3chunks %.1f firstframe %.1f".format(tLand, tPlaces, tFirst, tCast, tEx, tChunks, tFrame))
+        }
+        return
+    }
+    if (args[1] == "SWITCH") {
+        // One song into the next in the same picture: SWITCH A B skipAtSeconds (0: to its end).
+        val wa = World.valueOf(args[2])
+        val wb = World.valueOf(args[3])
+        val skipAt = args.getOrNull(4)?.toDoubleOrNull() ?: 0.0
+        val binsA = FloatArray(600) { i -> (0.45f + 0.3f * sin(i * 0.05f) + 0.15f * sin(i * 0.31f)).coerceIn(0.05f, 1f) }
+        // B starts quietly (a quiet stretch's world first), then grows loud.
+        val binsB = FloatArray(600) { i -> (if (i < 160) 0.08f else 0.7f) + 0.05f * sin(i * 0.07f) }
+        val waveA = SongWave(binsA, 120_000L, 0L, 120_000L)
+        val waveB = SongWave(binsB, 120_000L, 0L, 120_000L)
+        val lookA = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.5f, positivity = 0.6f, voice = 0.4f, seed = 11)), wa)
+        val lookB = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.2f, positivity = 0.6f, voice = 0.4f, seed = 12)), wb)
+        val input = WorldInput()
+        input.songId = "a"; input.look = lookA; input.wave = waveA; input.nextLook = if ("mispredict" in args) Looks.inWorld(lookB, World.ICE) else com.sadurni.attacca.diorama.Diorama.startOf(lookB, waveB); input.hasNext = true; input.playing = true
+        val camera = WorldCamera()
+        val soft = SoftWorld(input, camera)
+        val (w, h) = 800 to 450
+        fun shot(name: String) {
+            val img = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)
+            img.setRGB(0, 0, w, h, soft.pixels, 0, w)
+            ImageIO.write(img, "png", File(out, "$name.png"))
+        }
+        val endA = if (skipAt > 0) skipAt * 1000 else 120_000.0
+        val wantA = listOf(endA - 6000, endA - 70)
+        var t = endA - 9000
+        var k = 0
+        while (t < endA) {
+            input.positionMs = t.toLong(); input.positionAtNs = System.nanoTime()
+            soft.frame(w, h)
+            if (wantA.any { kotlin.math.abs(it - t) < 17 }) shot("switch-a-%02d".format(k++))
+            t += 33.0
+            Thread.sleep(2)
+        }
+        synchronized(input) {
+            input.songId = "b"; input.look = lookB; input.wave = waveB; input.nextLook = null; input.hasNext = false
+            input.positionMs = 0L; input.positionAtNs = System.nanoTime()
+        }
+        val wantB = listOf(0.0, 300.0, 1500.0, 4000.0, 9000.0, 16000.0)
+        t = 0.0
+        k = 0
+        while (t < 16_100.0) {
+            input.positionMs = if ("stale" in args && t < 400) 118_000L else t.toLong(); input.positionAtNs = System.nanoTime()
+            soft.frame(w, h)
+            if (wantB.any { kotlin.math.abs(it - t) < 17 }) shot("switch-b-%02d".format(k++))
+            if (k == 1 && kotlin.math.abs(t - 33.0) < 1) println("B starts: " + (SoftWorld::class.java.getDeclaredField("land").also { it.isAccessible = true }.get(soft) as WorldLand).describeStart())
+            t += 33.0
+            Thread.sleep(2)
+        }
+        soft.close()
+        return
+    }
+    if (args[1] == "DRAGONCHECK") {
+        // The Great Wall's peak dragon alone on a plain sky, its head in the middle.
+        val soft = SoftWorld(WorldInput(), WorldCamera())
+        fun set(n: String, v: Any) = SoftWorld::class.java.getDeclaredField(n).also { it.isAccessible = true }.set(soft, v)
+        set("peakNow", 1f); set("peakKind", 5f)
+        val m = SoftWorld::class.java.declaredMethods.first { it.name.startsWith("peakShow") }.also { it.isAccessible = true }
+        val w = 640; val h = 320
+        val img = java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB)
+        for (y in 0 until h) for (x in 0 until w) {
+            val nx = -0.25f + 0.6f * x / w
+            val ny = 0.75f - 0.3f * y / h
+            val c = m.invoke(soft, nx, ny, 0f, 1f, floatArrayOf(0f, 0f, 1f), floatArrayOf(-1f, 0f, 0f), floatArrayOf(0f, 1f, 0f), 0.6f, 4.5f, 0.55f, 0.75f, 0.95f) as FloatArray
+            fun ch(v: Float) = (v.coerceIn(0f, 1f) * 255).toInt()
+            img.setRGB(x, y, (ch(c[0]) shl 16) or (ch(c[1]) shl 8) or ch(c[2]))
+        }
+        javax.imageio.ImageIO.write(img, "png", File(out, "dragon.png"))
+        return
+    }
     if (args[1] == "RAINBOWCHECK") {
         val soft = SoftWorld(WorldInput(), WorldCamera())
         fun set(n: String, v: Any) = SoftWorld::class.java.getDeclaredField(n).also { it.isAccessible = true }.set(soft, v)
@@ -40,7 +137,7 @@ fun main(args: Array<String>) {
     val wave = SongWave(bins, 300_000L, 0L, 300_000L)
     val base = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.5f, positivity = 0.6f, voice = 0.4f, seed = world.name.hashCode())), world)
     val look = if (flags.isEmpty()) base else com.sadurni.attacca.diorama.SongLook(
-        world, base.traveller, base.palette,
+        world, if ("walker" in flags) com.sadurni.attacca.diorama.Traveller.WALKER else base.traveller, base.palette,
         if ("night" in flags) 0.05f else base.sun, if ("cloud" in flags || "storm" in flags) 0.8f else base.clouds,
         if ("rain" in flags) 0.9f else 0f, if ("storm" in flags) 0.9f else 0f, if ("snow" in flags) 0.9f else 0f,
         base.bpm, base.pulse, base.energy,
@@ -76,6 +173,16 @@ fun main(args: Array<String>) {
         input.sign = Boards.sign("7/23  Next Song Title")
         if ("peak" in flags) input.peakMs = sec * 1000
         if ("late" in flags) input.peakMs = sec * 1000 - 5800
+        // Festive days (xmas, kings, diwali, eid, lunar) and the sun as a record (record).
+        input.festive = when {
+            "xmas" in flags || "kings" in flags -> com.sadurni.attacca.festive.Festivity.CHRISTMAS
+            "diwali" in flags -> com.sadurni.attacca.festive.Festivity.DIWALI
+            "eid" in flags -> com.sadurni.attacca.festive.Festivity.EID
+            "lunar" in flags -> com.sadurni.attacca.festive.Festivity.LUNAR_NEW_YEAR
+            else -> null
+        }
+        input.kings = "kings" in flags
+        if ("record" in flags) input.recordOf = input.songId
         val camera = WorldCamera()
         val soft = SoftWorld(input, camera)
         val (w, h) = 800 to 450

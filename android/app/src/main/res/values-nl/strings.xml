@@ -506,6 +506,8 @@
     <string name="waveform_off">Uit (gewone zoekbalk)</string>
     <string name="strip_show_orama">O\'rama hier tonen</string>
     <string name="strip_show_wave">De golfvorm hier tonen</string>
+    <string name="strip_view">Wat er in Speelt nu te zien is</string>
+    <string name="orama_open">Wat O\'rama opent</string>
     <string name="waveform_orama">Het landschap van O\'rama (de golfvorm klein tussen de tijden)</string>
     <string name="section_silence">Stilte overslaan</string>
     <string name="silence_enabled">Stilte aan begin en einde van nummers overslaan</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Meer werelden: een woestijn met oases en kamelen (een gouden piramide op het hoogtepunt), de Chinese Muur (een draak), een jungle van India met tempels en olifanten (kleurwolken), de Amazone per kano afgedaald (een regenboog boven een waterval), een canyon in het Wilde Westen (een adelaar bij zonsondergang), Japan in kersenbloesem (vuurwerk en bloemblaadjes), de zeebodem per onderzeeër (een walvis) en een vulkaan (een uitbarsting). De genretag helpt bij het kiezen (Arabisch of flamenco, Chinees, Indiaas, Latin of Braziliaans, country, Japans, ambient, metal). De wereldbol-knop toont het nummer om de beurt in elke wereld, hetzelfde in O\'rama en in Attacca World, het landschap van hetzelfde nummer in 3D (de kubusknop): je gaat erdoorheen achter de reiziger en de vier honden, één vinger draait de camera en twee halen hem dichterbij of tillen hem op.</string>
     <string name="help_world">• Attacca World (de kubusknop in O\'rama): hetzelfde nummer als een land in 3D om achter de reiziger en de vier honden door te trekken, met aflossingen, hindernissen en het weer van zijn wereld; het land gaat met de muziek mee en loopt door van het ene nummer naar het volgende, en lange rustige of luide stukken brengen een tijdje een andere wereld. Eén vinger draait de camera, twee brengen hem dichterbij of hoger; een tik op de reiziger laat hem springen of draaien. De knop voor gedeeld scherm toont O\'rama en Attacca World tegelijk. Woorden uit de titel kunnen de wereld kiezen als de klank klopt (Siren Song, rustig: onder de zee). Ook op de computer.</string>
     <string name="help_world_life">• In Attacca World komt de weg op dezelfde momenten langs de plekken van O\'rama (bruggen, tunnels met fakkels, stations met hun trein, dorpen met rokende schoorstenen, een reuzenrad, ruïnes, bogen, een opstijgende raket), en de wereld van het volgende nummer komt in zicht voordat het begint. Voor een wissel van voertuig stapt de reiziger uit (aan de kust de onderzeeër in, met de honden die door de raampjes kijken). Vogels, ballonnen, grazende dieren en andere honden komen voorbij; een hoofdlamp verlicht het donker; de camera draait naar wat de moeite waard is en stijgt boven de toppen uit. Op het hele scherm verschijnt de naam van het nummer als het begint.</string>
+    <string name="help_world_views">• De strook in Nu speelt kan O\'rama, Attacca World of beide naast elkaar tonen (Instellingen → Weergave), en de O\'rama-knop kan O\'rama, Attacca World of beide in gedeeld scherm openen (Instellingen). Op het hele scherm brengt terug de bediening terug; een dunne lijn in de accentkleur toont hoe ver het nummer is, en de naam komt af en toe terug. De tekstgrootte van de widget staat in Instellingen → Weergave. In Over noteert „Logboeken bijhouden voor meldingen” afsluitingen en overgangen in bestanden naast je lijsten, alleen zolang het aan staat.</string>
     <string name="help_orama_buttons">• In O\'rama blijven de knoppen rechts (sluiten, volledig scherm, beeldsnelheid) half weggestopt zodat de lucht zichtbaar is: een tik haalt ze tevoorschijn en na een paar seconden verdwijnen ze weer. Zon en maan staan nooit achter de titel of de knoppen.</string>
     <string name="app_slogan">„Herontdek je muziekcollectie: luister er op nieuwe manieren naar, met het beste geluid.”</string>
     <string name="help_orama_surprises">• O\'rama verbergt ook een paar kleine verrassingen. Ontdek ze zelf!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Vannacht om middernacht begint het nieuwe jaar en gebeurt er iets groots in O\'rama: heb Attacca dan open op het scherm.</string>
     <string name="browser_as_grid">Als hoezen tonen</string>
     <string name="browser_as_list">Als lijst tonen</string>
+    <string name="widget_text_size">Tekstgrootte van de widget</string>
+    <string name="widget_text_size_hint">De hoes wordt kleiner naarmate de tekst groter wordt. Hierboven de grote widget zoals hij eruit komt te zien.</string>
     <string name="widget_big">Groot gemaakt toont de widget</string>
     <string name="widget_big_cover">De hoes, groot</string>
     <string name="widget_big_orama">Het landschap van O\'rama</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Wordt bij elk nummer opnieuw ingesteld. Terug naar Zoals het is neemt het vergrendelscherm de afbeelding van het startscherm over (de vorige kan niet worden teruggehaald).</string>
     <string name="over_lock_screen">Tijdens afspelen over het vergrendelscherm tonen</string>
     <string name="over_lock_screen_hint">Is Attacca open (Nu speelt, O\'rama…) als het scherm uitgaat, dan verschijnt het bij het wekken van de telefoon over het vergrendelscherm terwijl er muziek speelt; voor al het andere blijft de telefoon vergrendeld.</string>
+    <string name="about_logs">Logboeken bijhouden voor meldingen</string>
+    <string name="about_logs_hint">Noteert het afsluiten van de app, overgangen tussen nummers en de nummerwissels in Attacca World in bestanden naast je lijsten, om te sturen als er iets misgaat. Uit, tenzij je het aanzet.</string>
 </resources>

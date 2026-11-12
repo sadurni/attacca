@@ -243,8 +243,35 @@ class NowPlayingWidget : AppWidgetProvider() {
             return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
         }
 
-        private fun render(context: Context, manager: AppWidgetManager, ids: IntArray, art: Bitmap? = null) {
+        /** The size of the widget's text against its layout's own (Settings → Widget). */
+        const val SCALE_MIN = 0.8f
+        const val SCALE_MAX = 1.7f
+
+        fun textScale(context: Context): Float = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat("textScale", 1f)
+
+        fun setTextScale(context: Context, scale: Float) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putFloat("textScale", scale.coerceIn(SCALE_MIN, SCALE_MAX)).apply()
+            renderAll(context)
+        }
+
+        /** The large widget as it looks with the text at [scale], with what is playing: for the preview in Settings. */
+        fun preview(context: Context, scale: Float): RemoteViews = builder(context, null, scale)(R.layout.widget_now_playing_large)
+
+        /** Each layout's texts and their own sizes (sp), scaled together. */
+        private val TEXT_SIZES: Map<Int, List<Pair<Int, Float>>> by lazy {
+            mapOf(
+                R.layout.widget_now_playing to listOf(R.id.widget_title to 15f, R.id.widget_subtitle to 12f, R.id.widget_elapsed to 11f, R.id.widget_length to 11f),
+                R.layout.widget_now_playing_large to listOf(R.id.widget_title to 24f, R.id.widget_subtitle to 18f, R.id.widget_album to 17f, R.id.widget_next_title to 16f, R.id.widget_elapsed to 16f, R.id.widget_length to 16f),
+                R.layout.widget_now_playing_orama to listOf(R.id.widget_title to 23f, R.id.widget_subtitle to 17f, R.id.widget_next_title to 16f, R.id.widget_elapsed to 17f, R.id.widget_length to 17f),
+                R.layout.widget_now_playing_square to listOf(R.id.widget_title to 13f, R.id.widget_subtitle to 11f),
+                R.layout.widget_now_playing_tall to listOf(R.id.widget_title to 15f, R.id.widget_subtitle to 12f),
+                R.layout.widget_now_playing_tall_more to listOf(R.id.widget_title to 23f, R.id.widget_subtitle to 18f, R.id.widget_album to 17f, R.id.widget_next_title to 16f, R.id.widget_list to 16f, R.id.widget_elapsed to 16f, R.id.widget_length to 16f),
+            )
+        }
+
+        private fun builder(context: Context, art: Bitmap?, scaleOverride: Float?): (Int) -> RemoteViews {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val scale = scaleOverride ?: prefs.getFloat("textScale", 1f)
             val title = prefs.getString("title", null) ?: context.getString(R.string.app_name)
             val artist = prefs.getString("artist", null).orEmpty()
             val album = prefs.getString("album", null).orEmpty()
@@ -264,6 +291,16 @@ class NowPlayingWidget : AppWidgetProvider() {
             val bigCover = prefs.getString("big", Big.ORAMA.name) == Big.COVER.name
 
             fun views(layout: Int) = RemoteViews(context.packageName, layout).apply {
+                // The text at the size chosen; the large one's cover smaller as the text grows (the tall
+                // ones share their height between them by themselves).
+                if (scale != 1f) {
+                    TEXT_SIZES[layout]?.forEach { (id, sp) -> setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_SP, sp * scale) }
+                    if (layout == R.layout.widget_now_playing_large && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val side = 108f * (1f - 0.6f * (scale - 1f)).coerceIn(0.55f, 1.12f)
+                        setViewLayoutWidth(R.id.widget_cover, side, android.util.TypedValue.COMPLEX_UNIT_DIP)
+                        setViewLayoutHeight(R.id.widget_cover, side, android.util.TypedValue.COMPLEX_UNIT_DIP)
+                    }
+                }
                 // The square one is the cover itself under its box, as the big one is the landscape.
                 val square = layout == R.layout.widget_now_playing_square
                 val scene = layout == R.layout.widget_now_playing_orama || square
@@ -311,7 +348,9 @@ class NowPlayingWidget : AppWidgetProvider() {
                 setTextViewText(R.id.widget_subtitle, if (large) artist else listOf(artist, album).filter { it.isNotEmpty() }.joinToString(" · "))
                 if (large) {
                     setTextViewText(R.id.widget_album, album)
-                    setViewVisibility(R.id.widget_album, if (album.isEmpty()) View.GONE else View.VISIBLE)
+                    // With big text, the album makes room (the large one first; the tall one has more height).
+                    val albumOff = scale > (if (layout == R.layout.widget_now_playing_large) 1.45f else 1.6f)
+                    setViewVisibility(R.id.widget_album, if (album.isEmpty() || albumOff) View.GONE else View.VISIBLE)
                     setTextColor(R.id.widget_album, second)
                     // The list's name only where there is height for it (two rows high have the time on its own line instead).
                     if (layout == R.layout.widget_now_playing_tall_more) {
@@ -322,7 +361,9 @@ class NowPlayingWidget : AppWidgetProvider() {
                 }
                 if (large || (scene && !square)) {
                     setTextViewText(R.id.widget_next_title, next?.let { context.getString(R.string.widget_next, it) }.orEmpty())
-                    setViewVisibility(R.id.widget_next_title, if (next.isNullOrEmpty()) View.GONE else View.VISIBLE)
+                    // With big text, what comes next makes room first.
+                    val nextOff = scale > (if (layout == R.layout.widget_now_playing_large) 1.2f else 1.45f)
+                    setViewVisibility(R.id.widget_next_title, if (next.isNullOrEmpty() || nextOff) View.GONE else View.VISIBLE)
                     setTextColor(R.id.widget_next_title, second)
                 }
                 // The time counts by itself while playing (no updates needed for it).
@@ -346,6 +387,11 @@ class NowPlayingWidget : AppWidgetProvider() {
                 }
             }
 
+            return ::views
+        }
+
+        private fun render(context: Context, manager: AppWidgetManager, ids: IntArray, art: Bitmap? = null) {
+            val views = builder(context, art, null)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 // The launcher picks the largest layout that fits.
                 val remote = RemoteViews(

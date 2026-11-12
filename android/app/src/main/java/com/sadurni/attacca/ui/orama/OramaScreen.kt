@@ -147,11 +147,11 @@ fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Uni
         else -> null
     }
     val coverBitmap = cover.bitmap.takeIf { cover.mediaId == id }
-    val look by produceState<SongLook?>(null, id, coverBitmap) {
-        value = withContext(Dispatchers.IO) { lookOf(context, id, coverBitmap) }
+    val look by produceState<SongLook?>(null, id) {
+        value = songLook(context, id)
     }
     val nextLook by produceState<SongLook?>(null, nextId) {
-        value = withContext(Dispatchers.IO) { nextId?.let { lookOf(context, it, null) } }
+        value = nextId?.let { songLook(context, it) }
     }
     val coverImage by produceState<ImageBitmap?>(null, coverBitmap) {
         value = coverBitmap?.let { b -> withContext(Dispatchers.Default) { runCatching { Bitmap.createScaledBitmap(b, 160, 160, true).asImageBitmap() }.getOrNull() } }
@@ -213,20 +213,21 @@ fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Uni
 
 /** O'rama's landscape alone (for half of Attacca World's split screen). */
 @Composable
-internal fun OramaScene(viewModel: PlayerViewModel) {
-    OramaContent(viewModel, full = false, onFull = {}, onDismiss = {}, onOpenQueue = {}, embedded = true)
+internal fun OramaScene(viewModel: PlayerViewModel, full: Boolean = false, onFull: (Boolean) -> Unit = {}) {
+    OramaContent(viewModel, full = full, onFull = onFull, onDismiss = {}, onOpenQueue = {}, embedded = true)
 }
 
 @Composable
 fun OramaScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenWorld: (() -> Unit)? = null, onOpenQueue: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    // Back over the whole screen brings the controls back first.
+    var full by rememberSaveable { mutableStateOf(false) }
+    Dialog(onDismissRequest = { if (full) full = false else onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         // A moving picture: the screen stays on while it shows.
         val view = LocalView.current
         DisposableEffect(view) {
             view.keepScreenOn = true
             onDispose { view.keepScreenOn = false }
         }
-        var full by rememberSaveable { mutableStateOf(false) }
         // Over the whole screen the system bars hide too (a swipe from the edge shows them for a moment).
         val window = (view.parent as? DialogWindowProvider)?.window
         DisposableEffect(window, full) {
@@ -261,12 +262,12 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         else -> null
     }
     val coverBitmap = cover.bitmap.takeIf { cover.mediaId == id }
-    val look by produceState<SongLook?>(null, id, coverBitmap) {
-        value = withContext(Dispatchers.IO) { lookOf(context, id, coverBitmap) }
+    val look by produceState<SongLook?>(null, id) {
+        value = songLook(context, id)
     }
     // The next track's look (without its cover: only its world is wanted, for the gate at the end).
     val nextLook by produceState<SongLook?>(null, nextId) {
-        value = withContext(Dispatchers.IO) { nextId?.let { lookOf(context, it, null) } }
+        value = nextId?.let { songLook(context, it) }
     }
     val moodLine by produceState<String?>(null, id) {
         value = withContext(Dispatchers.IO) { moodLineOf(context, id) }
@@ -328,9 +329,12 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         val wide = maxWidth > maxHeight
         // In half of the split screen, upright, World's small player floats over this half's foot.
         val splitLift = with(androidx.compose.ui.platform.LocalDensity.current) { 104.dp.toPx() }
+        // Side by side, the stretched player floats across the bottom in the middle: the land over it.
+        val wideSplitLift = with(androidx.compose.ui.platform.LocalDensity.current) { 132.dp.toPx() }
         val lift by animateFloatAsState(
             when {
                 embedded && !wide -> splitLift
+                embedded -> wideSplitLift
                 !full && !wide && barTop > 0f -> (canvasHeight - barTop) * 0.85f
                 else -> 0f
             },
@@ -365,7 +369,8 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
             diorama.show(song, nextAnalysis?.let(::waveOf), t, now.nextTitle, nextPlace, nextLook)
             val heard = app.dspEngine.heardLevels(raw)
             canvasHeight = size.height
-            diorama.draw(list, size.width, size.height, position, now.isPlaying, if (heard) raw else null, t, lift)
+            // In half of the split screen the traveller a little further in, clear of the player.
+            diorama.draw(list, size.width, size.height, position, now.isPlaying, if (heard) raw else null, t, lift, travellerShare = if (embedded) 0.38f else 0.3f)
             paint(list, path, coverImage, measurer)
         }
         // Shown in half of Attacca World's screen: only the landscape (the title, buttons and player are World's).
@@ -491,8 +496,10 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
             }
             OramaBar(viewModel, now.isPlaying, position, analysis, now.clipStartMs, clipEnd, nextAnalysis, now.nextTitle, onOpenQueue, wide, barModifier.onGloballyPositioned { barTop = it.positionInParent().y })
         }
-        // Over the whole screen: the song's name as it starts, fading in and out.
-        if (!embedded) SongIntro(id, now.title, now.artist, full)
+        // Over the whole screen: a soft band along the bottom filling with the accent as the song goes
+        // on (only to look at: the controls come back with a tap), and the song's name as it starts.
+        if (full && !embedded) ProgressBand((position.toFloat() / (clipEnd - now.clipStartMs).coerceAtLeast(1L)).coerceIn(0f, 1f), vertical = false, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(26.dp))
+        if (!embedded) SongIntro(id, now.title, now.artist, full, now.album)
     }
 }
 
@@ -685,6 +692,27 @@ private fun DrawScope.paintShapes(list: DrawList, path: Path, cover: ImageBitmap
     }
 }
 
+private val songLooks = object : LinkedHashMap<String, SongLook>(32, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SongLook>?) = size > 24
+}
+
+/**
+ * The look of track [mediaId] from what is known of it and its own small cover, the same object
+ * every time (for O'rama and Attacca World alike, as the playing song or as the next one): what
+ * is seen coming at a song's end is then just what the song is when it comes.
+ */
+internal suspend fun songLook(context: android.content.Context, mediaId: String?): SongLook {
+    if (mediaId == null) return Diorama.NEUTRAL
+    synchronized(songLooks) { songLooks[mediaId] }?.let { return it }
+    return withContext(Dispatchers.IO) {
+        val cover = runCatching { com.sadurni.attacca.ui.common.Thumbnails.load(mediaId) }.getOrNull()
+        val look = lookOf(context, mediaId, cover)
+        // (Kept once its sound is known: before that it may still change.)
+        if (look.known) synchronized(songLooks) { songLooks[mediaId] = look }
+        look
+    }
+}
+
 /** The track's mood (or two) and sound family, as words: "Calm (or Melancholic) · bright, smooth". */
 internal fun moodLineOf(context: android.content.Context, mediaId: String?): String? {
     val local = mediaId?.takeIf { !it.contains("://") } ?: return null
@@ -743,6 +771,13 @@ internal fun lookOf(context: android.content.Context, mediaId: String?, cover: B
  */
 object OramaShared {
     val diorama = Diorama()
+
+    /** Attacca World's whole screen is open (the strip in Now playing rests meanwhile). */
+    val worldOpen = androidx.compose.runtime.mutableStateOf(false)
+
+    /** What opening O'rama shows (Settings): ORAMA, WORLD or SPLIT. */
+    @Volatile
+    var openMode = "ORAMA"
 
     /** Attacca World shows O'rama beside it, the screen split in two (kept while the app runs). */
     val split = androidx.compose.runtime.mutableStateOf(false)
@@ -805,17 +840,30 @@ internal fun worldNameRes(w: com.sadurni.attacca.diorama.World): Int = when (w) 
  * middle, fading in and out over a few seconds.
  */
 @Composable
-internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean) {
+internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean, album: String? = null) {
     val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    // The song's name when another song has come in (a moment after it, once it has settled), and
+    // when the whole screen is taken; not for the song already there when the view opens.
+    val first = remember { id }
+    val wasShown = remember { mutableStateOf(show) }
     LaunchedEffect(id, show) {
-        if (id == null || !show) {
-            alpha.snapTo(0f)
-            return@LaunchedEffect
-        }
+        val entering = show && !wasShown.value
+        wasShown.value = show
         alpha.snapTo(0f)
-        alpha.animateTo(1f, androidx.compose.animation.core.tween(900))
-        kotlinx.coroutines.delay(1900)
-        alpha.animateTo(0f, androidx.compose.animation.core.tween(1200))
+        if (id == null) return@LaunchedEffect
+        if (id != first || entering) {
+            if (!entering) kotlinx.coroutines.delay(1800)
+            alpha.animateTo(1f, androidx.compose.animation.core.tween(900))
+            kotlinx.coroutines.delay(1900)
+            alpha.animateTo(0f, androidx.compose.animation.core.tween(1200))
+        }
+        // Over the whole screen, now and then again: softly in, a moment (2-3 s), softly out.
+        while (show) {
+            kotlinx.coroutines.delay(40_000L + (Math.random() * 35_000).toLong())
+            alpha.animateTo(1f, androidx.compose.animation.core.tween(1600))
+            kotlinx.coroutines.delay(2600)
+            alpha.animateTo(0f, androidx.compose.animation.core.tween(1800))
+        }
     }
     if (alpha.value <= 0.01f || title.isBlank()) return
     val shadow = Shadow(Color.Black.copy(alpha = 0.75f), Offset(2f, 3f), 14f)
@@ -841,6 +889,52 @@ internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolea
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp),
                 )
             }
+            album?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it,
+                    style = TextStyle(
+                        color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp, shadow = shadow,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    ),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp),
+                )
+            }
         }
+    }
+}
+
+
+/**
+ * A soft dark band (where the halves of the split screen meet, or along the bottom), filling with
+ * the accent colour as the song goes on ([progress] 0 … 1; below 0 only the band): along it, or
+ * from the bottom up when [vertical]. Only to look at: it takes no touch.
+ */
+@Composable
+internal fun ProgressBand(progress: Float, vertical: Boolean, modifier: Modifier) {
+    val accent = com.sadurni.attacca.ui.theme.LocalAccent.current
+    val fade = listOf(Color.Transparent, Color.Black.copy(alpha = 0.34f), Color.Black.copy(alpha = 0.44f), Color.Black.copy(alpha = 0.34f), Color.Transparent)
+    val glow = listOf(Color.Transparent, accent.copy(alpha = 0.24f), accent.copy(alpha = 0.48f), accent.copy(alpha = 0.24f), Color.Transparent)
+    androidx.compose.foundation.Canvas(modifier) {
+        drawRect(if (vertical) androidx.compose.ui.graphics.Brush.horizontalGradient(fade) else androidx.compose.ui.graphics.Brush.verticalGradient(fade))
+        if (progress < 0f) return@Canvas
+        if (vertical) {
+            val h = size.height * progress
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(glow), topLeft = Offset(0f, size.height - h), size = androidx.compose.ui.geometry.Size(size.width, h))
+        } else {
+            val w = size.width * progress
+            drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(glow), size = androidx.compose.ui.geometry.Size(w, size.height))
+        }
+    }
+}
+
+/** A thin line along the bottom filling with the accent as the song goes on (the split screen's progress). */
+@Composable
+internal fun ProgressLine(progress: Float, modifier: Modifier) {
+    val accent = com.sadurni.attacca.ui.theme.LocalAccent.current
+    androidx.compose.foundation.Canvas(modifier) {
+        drawRect(Color.White.copy(alpha = 0.14f))
+        drawRect(accent.copy(alpha = 0.8f), size = androidx.compose.ui.geometry.Size(size.width * progress.coerceIn(0f, 1f), size.height))
     }
 }

@@ -507,6 +507,8 @@
     <string name="waveform_off">Dezactivată (bară de derulare simplă)</string>
     <string name="strip_show_orama">Arată aici O\'rama</string>
     <string name="strip_show_wave">Arată aici forma de undă</string>
+    <string name="strip_view">Ce se vede în Se redă</string>
+    <string name="orama_open">Ce deschide O\'rama</string>
     <string name="waveform_orama">Peisajul O\'rama (forma de undă, mică între timpi)</string>
     <string name="section_silence">Omiterea liniștii</string>
     <string name="silence_enabled">Omite liniștea de la începutul și sfârșitul pieselor</string>
@@ -1528,6 +1530,7 @@
     <string name="help_orama_worlds">• Mai multe lumi: un deșert cu oaze și cămile (o piramidă aurie în punctul culminant), Marele Zid (un dragon), o junglă a Indiei cu temple și elefanți (nori de culoare), Amazonul coborât cu canoea (un curcubeu deasupra unei cascade), un canion din vestul îndepărtat (un vultur la apus), Japonia cu cireșii în floare (artificii și petale), fundul mării cu submarinul (o balenă) și un vulcan (o erupție). Eticheta de gen ajută la alegerea lor (arab sau flamenco, chinezesc, indian, latino sau brazilian, country, japonez, ambient, metal). Butonul cu globul arată piesa în fiecare lume pe rând, la fel în O\'rama și în Attacca World, peisajul aceleiași piese în 3D (butonul cu cubul): îl parcurgi în urma călătorului și a celor patru câini, un deget rotește camera și două o apropie sau o ridică.</string>
     <string name="help_world">• Attacca World (butonul cubului din O\'rama): aceeași piesă ca un ținut în 3D de străbătut în urma călătorului și a celor patru câini, cu schimburi de ștafetă, obstacole și vremea lumii sale; ținutul merge cu muzica și continuă de la o piesă la următoarea, iar porțiunile lungi liniștite sau puternice aduc altă lume pentru o vreme. Un deget rotește camera, două o apropie sau o ridică; o atingere pe călător îl face să sară sau să se rotească. Butonul de ecran împărțit arată O\'rama și Attacca World împreună. Cuvinte din titlu pot alege lumea dacă sunetul se potrivește (Siren Song, liniștită: sub mare). Și pe calculator.</string>
     <string name="help_world_life">• În Attacca World drumul trece pe lângă locurile din O\'rama în aceleași momente (poduri, tuneluri cu torțe, gări cu trenul lor, sate cu hornuri care fumegă, o roată mare, ruine, arcade, o rachetă care urcă), iar lumea melodiei următoare se vede înainte să înceapă. Înainte de o schimbare de vehicul, călătorul coboară (și intră în submarin la mal, cu câinii privind pe hublourile lui). Trec păsări, baloane, animale care pasc și alți câini; o lanternă frontală luminează întunericul; camera se întoarce spre ce merită văzut și se ridică peste creste. Pe tot ecranul, numele melodiei apare când începe.</string>
+    <string name="help_world_views">• Banda din Redare în curs poate arăta O\'rama, Attacca World sau pe amândouă alăturate (Setări → Aspect), iar butonul O\'rama poate deschide O\'rama, Attacca World sau pe amândouă cu ecran împărțit (Setări). Pe tot ecranul, înapoi readuce comenzile; o linie subțire în culoarea de accent arată cât a înaintat piesa, iar numele ei revine din când în când. Mărimea textului widgetului este în Setări → Aspect. În Despre, „Păstrează jurnale pentru rapoarte” notează ieșirile și tranzițiile în fișiere lângă listele tale, doar cât timp e pornit.</string>
     <string name="help_orama_buttons">• În O\'rama, butoanele din dreapta (închide, ecran complet, cadre pe secundă) stau pe jumătate ascunse ca să se vadă cerul: o atingere le scoate, iar după câteva secunde se ascund din nou. Soarele și luna nu ajung în spatele titlului sau al butoanelor.</string>
     <string name="app_slogan">„Redescoperă-ți colecția de muzică: ascult-o în moduri noi, cu cel mai bun sunet.”</string>
     <string name="help_orama_surprises">• O\'rama ascunde și câteva mici surprize. Descoperă-le singur!</string>
@@ -1864,6 +1867,8 @@
     <string name="newyear_notice_text">La noapte, la miezul nopții, începe noul an și în O\'rama se întâmplă ceva mare: ține atunci Attacca deschisă pe ecran.</string>
     <string name="browser_as_grid">Arată ca coperte</string>
     <string name="browser_as_list">Arată ca listă</string>
+    <string name="widget_text_size">Mărimea textului widgetului</string>
+    <string name="widget_text_size_hint">Coperta se micșorează pe măsură ce textul crește. Mai sus, widgetul mare așa cum va arăta.</string>
     <string name="widget_big">Mărit, widgetul arată</string>
     <string name="widget_big_cover">Coperta, mare</string>
     <string name="widget_big_orama">Peisajul O\'rama</string>
@@ -1874,4 +1879,6 @@
     <string name="lock_wallpaper_hint">Se setează din nou cu fiecare piesă. La revenirea la „Așa cum este”, ecranul de blocare preia imaginea ecranului de pornire (cea de dinainte nu poate fi citită înapoi).</string>
     <string name="over_lock_screen">Arată peste ecranul de blocare în timpul redării</string>
     <string name="over_lock_screen_hint">Când Attacca este deschisă (Redare în curs, O\'rama…) în momentul în care ecranul se stinge, trezirea telefonului o arată peste ecranul de blocare cât timp se redă muzică; pentru orice altceva telefonul rămâne blocat.</string>
+    <string name="about_logs">Păstrează jurnale pentru rapoarte</string>
+    <string name="about_logs_hint">Notează închiderile aplicației, tranzițiile dintre piese și schimbările de piesă din Attacca World în fișiere lângă listele tale, pentru a le trimite când ceva nu merge. Dezactivat dacă nu îl activezi.</string>
 </resources>

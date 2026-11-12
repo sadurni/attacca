@@ -1,0 +1,5 @@
+• Attacca World: od utworu do następnego bez skoku; to, co widać z daleka, to świat następnego utworu.
+• Podzielony ekran: dwa krajobrazy przenikają się nawzajem; obok siebie, z odtwarzaczem pośrodku.
+• World: szklane hełmy w kosmosie, świecące obroże nocą, łagodniejsza kamera na szczycie, album w tytule.
+• Widżet: odtwarzanie pośrodku i własny rozmiar tekstu.
+• Lista wraca tam, gdzie ją zostawiono; dzienniki tylko po włączeniu (O aplikacji).

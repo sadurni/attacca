@@ -1,0 +1,5 @@
+• Attacca World: bir şarkıdan sonrakine atlamadan; gelmekte olduğunu gördüğün, sonraki şarkının dünyası.
+• Bölünmüş ekran: iki manzara birbirine karışır; yan yana, oynatıcı ortada.
+• World: uzayda cam fanuslar, gece ışıklı tasmalar, zirvede daha yumuşak kamera, başlıkta albüm.
+• Widget: ortada oynat düğmesi ve kendi yazı boyutun.
+• Liste bıraktığın yerden sürer; günlükler yalnızca açarsan (Hakkında).

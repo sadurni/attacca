@@ -508,6 +508,8 @@
     <string name="waveform_off">Imezimwa (upau wa kawaida)</string>
     <string name="strip_show_orama">Onyesha O\'rama hapa</string>
     <string name="strip_show_wave">Onyesha umbo la wimbi hapa</string>
+    <string name="strip_view">Kinachoonekana katika Kinachocheza</string>
+    <string name="orama_open">O\'rama hufungua nini</string>
     <string name="waveform_orama">Mandhari ya O\'rama (umbo la wimbi dogo kati ya nyakati)</string>
     <string name="section_silence">Kuruka ukimya</string>
     <string name="silence_enabled">Ruka ukimya mwanzoni na mwishoni mwa wimbo</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Ulimwengu zaidi: jangwa lenye oasisi na ngamia (piramidi ya dhahabu kwenye kilele), Ukuta Mkuu wa China (joka), msitu wa India wenye mahekalu na tembo (mawingu ya rangi), Amazon iliyoshukiwa kwa mtumbwi (upinde wa mvua juu ya maporomoko ya maji), bonde kuu la magharibi ya mbali (tai wakati wa machweo), Japani yenye maua ya cheri (fataki na petali), sakafu ya bahari kwa nyambizi (nyangumi) na volkano (mlipuko). Lebo ya aina ya muziki husaidia kuvichagua (Kiarabu au flamenco, Kichina, Kihindi, Kilatini au Kibrazili, country, Kijapani, ambient, metal). Kitufe cha dunia huonyesha wimbo katika kila ulimwengu kwa zamu, sawa katika O\'rama na katika Attacca World, mandhari ya wimbo huohuo katika 3D (kitufe cha mchemraba): unaipitia nyuma ya msafiri na mbwa wanne, kidole kimoja huzungusha kamera na viwili huileta karibu au kuipandisha.</string>
     <string name="help_world">• Attacca World (kitufe cha mchemraba katika O\'rama): wimbo uleule kama ardhi ya 3D ya kupita nyuma ya msafiri na mbwa wanne, pamoja na kupokezana, vikwazo na hali ya hewa ya ulimwengu wake; ardhi huenda na muziki na huendelea kutoka wimbo mmoja hadi unaofuata, na vipande virefu vya utulivu au vikali huleta ulimwengu mwingine kwa muda. Kidole kimoja huzungusha kamera, viwili huikaribisha au kuiinua; kumgusa msafiri humfanya aruke au azunguke. Kitufe cha skrini iliyogawanywa huonyesha O\'rama na Attacca World pamoja. Maneno ya kichwa yanaweza kuchagua ulimwengu sauti ikiendana (Siren Song, tulivu: chini ya bahari). Pia kwenye kompyuta.</string>
     <string name="help_world_life">• Katika Attacca World njia hupita mahali pa O\'rama kwa nyakati zilezile (madaraja, mahandaki yenye mienge, stesheni pamoja na treni yao, vijiji vyenye mabomba ya moshi yanayofuka, gurudumu kubwa, magofu, matao, roketi inayopaa), na ulimwengu wa wimbo unaofuata huonekana kabla haujaanza. Kabla ya kubadilisha chombo, msafiri hushuka (huingia kwenye nyambizi ufukweni, mbwa wakichungulia madirishani mwake). Ndege, puto, wanyama wanaolisha na mbwa wengine hupita; tochi ya kichwani huangaza giza; kamera hugeuka kuelekea kinachostahili kuonekana na hupanda juu ya vilele. Kwenye skrini nzima, jina la wimbo huonekana unapoanza.</string>
+    <string name="help_world_views">• Ukanda wa Inacheza sasa unaweza kuonyesha O\'rama, Attacca World au vyote viwili kando kwa kando (Mipangilio → Mwonekano), na kitufe cha O\'rama kinaweza kufungua O\'rama, Attacca World au vyote viwili kwenye skrini iliyogawanywa (Mipangilio). Kwenye skrini nzima, kurudi nyuma huleta vidhibiti tena; mstari mwembamba wa rangi ya msisitizo huonyesha wimbo umefika wapi, na jina lake hurudi mara kwa mara. Ukubwa wa maandishi ya wijeti uko katika Mipangilio → Mwonekano. Katika Kuhusu, «Hifadhi kumbukumbu kwa ripoti» huandika kutoka na mipito katika faili kando ya orodha zako, wakati tu imewashwa.</string>
     <string name="help_orama_buttons">• Kwenye O\'rama vitufe vilivyo kulia (funga, skrini nzima, kasi ya fremu) hubaki nusu vimefichwa ili anga lionekane: kugusa huvitoa, na hurudi sekunde chache baadaye. Jua na mwezi hukaa mbali na kichwa na vitufe.</string>
     <string name="app_slogan">“Gundua upya mkusanyiko wako wa muziki: usikie kwa njia mpya, kwa sauti bora zaidi.”</string>
     <string name="help_orama_surprises">• O\'rama pia huficha mambo machache ya kushangaza. Yatafute mwenyewe!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Leo usiku wa manane mwaka mpya unaanza na jambo kubwa linatokea katika O\'rama: wakati huo, acha Attacca wazi kwenye skrini.</string>
     <string name="browser_as_grid">Onyesha kama majalada</string>
     <string name="browser_as_list">Onyesha kama orodha</string>
+    <string name="widget_text_size">Ukubwa wa maandishi ya wijeti</string>
+    <string name="widget_text_size_hint">Jalada hupungua kadiri maandishi yanavyokua. Juu, wijeti kubwa itakavyoonekana.</string>
     <string name="widget_big">Ikikuzwa, wijeti huonyesha</string>
     <string name="widget_big_cover">Jalada, kubwa</string>
     <string name="widget_big_orama">Mandhari ya O\'rama</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Huwekwa upya kwa kila wimbo. Ukirudi kwenye “Kama ilivyo”, skrini ya kufunga huchukua picha ya skrini ya nyumbani (ile iliyokuwa nayo awali haiwezi kusomwa tena).</string>
     <string name="over_lock_screen">Onyesha juu ya skrini ya kufunga wakati wa kucheza</string>
     <string name="over_lock_screen_hint">Attacca ikiwa wazi (Inacheza sasa, O\'rama…) skrini inapozimika, kuamsha simu huionyesha juu ya skrini ya kufunga muziki unapocheza; kwa kitu kingine chochote simu hubaki imefungwa.</string>
+    <string name="about_logs">Hifadhi kumbukumbu kwa ripoti</string>
+    <string name="about_logs_hint">Huandika kufungwa kwa programu, mipito kati ya nyimbo na mabadiliko ya nyimbo katika Attacca World kwenye faili kando ya orodha zako, ili kuzituma kitu kikienda vibaya. Imezimwa usipoiwasha.</string>
 </resources>

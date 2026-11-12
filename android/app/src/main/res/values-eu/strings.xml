@@ -506,6 +506,8 @@
     <string name="waveform_off">Desaktibatuta (bilaketa-barra soila)</string>
     <string name="strip_show_orama">Erakutsi O\'rama hemen</string>
     <string name="strip_show_wave">Erakutsi uhin-forma hemen</string>
+    <string name="strip_view">Zer ikusten den Erreproduzitzen atalean</string>
+    <string name="orama_open">O\'rama irekitzean zer agertzen den</string>
     <string name="waveform_orama">O\'ramako paisaia (uhin-forma, txiki, denboren artean)</string>
     <string name="section_silence">Isiluneen saltoa</string>
     <string name="silence_enabled">Saltatu pisten hasierako eta amaierako isiluneak</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Mundu gehiago: oasiak eta gameluak dituen basamortu bat (piramide urre-kolorekoa gailurrean), Txinako Harresi Handia (herensuge bat), Indiako oihan bat tenpluekin eta elefanteekin (kolore-hodeiak), Amazonas kanoz jaitsia (ostadarra ur-jauzi baten gainean), mendebalde urruneko kanpo bat (arrano bat ilunabarrean), Japonia gerezi-loreetan (suzko jokoak eta petaloak), itsas hondoa itsaspekoan (balea bat) eta sumendi bat (erupzio bat). Generoaren etiketak aukeratzen laguntzen du (arabiarra edo flamenkoa, txinatarra, indiarra, latindarra edo brasildarra, country, japoniarra, ambient, metal). Globoaren botoiak abestia mundu bakoitzean erakusten du txandaka, berdin O\'raman eta Attacca World-en, abesti beraren paisaia 3D-n (kuboaren botoia): bidaiariaren eta lau txakurren atzetik zeharkatzen duzu, hatz batek kamera biratzen du eta bik hurbildu edo igo egiten dute.</string>
     <string name="help_world">• Attacca World (O\'ramako kuboaren botoia): abesti bera 3Dko lur gisa, bidaiariaren eta lau txakurren atzetik zeharkatzeko, txandakatzeekin, oztopoekin eta bere munduko eguraldiarekin; lurra musikarekin doa eta abesti batetik hurrengora jarraitzen du, eta zati luze lasai edo indartsuek beste mundu bat dakarte denbora batez. Hatz batek kamera biratzen du eta bik hurbildu edo igo; bidaiaria ukitzean jauzi edo bira egiten du. Pantaila zatituaren botoiak O\'rama eta Attacca World batera erakusten ditu. Izenburuko hitzek mundua aukera dezakete soinua bat badator (Siren Song, lasaia: itsaspean). Mahaigainean ere bai.</string>
     <string name="help_world_life">• Attacca World-en bidea O\'rama-ren lekuetatik igarotzen da une berberetan (zubiak, zuziak dituzten tunelak, beren trena duten geltokiak, tximinia ketsuak dituzten herriak, noria bat, hondakinak, arkuak, gora doan suziri bat), eta hurrengo abestiaren mundua ikusten da hasi aurretik. Ibilgailuz aldatu aurretik, bidaiaria jaitsi egiten da (itsasertzean itsaspekoan sartzen da, txakurrak haren leihoetatik begira). Txoriak, globoak, larrean dauden animaliak eta beste txakur batzuk igarotzen dira; buruko linterna batek iluntasuna argitzen du; kamera ikusteko merezi duenera biratzen da eta gailurren gainetik igotzen da. Pantaila osoan, abestiaren izena agertzen da hastean.</string>
+    <string name="help_world_views">• Orain erreproduzitzen pantailako zerrendak O\'rama, Attacca World edo biak elkarren ondoan erakuts ditzake (Ezarpenak → Itxura), eta O\'rama botoiak O\'rama, Attacca World edo biak pantaila zatituan ireki ditzake (Ezarpenak). Pantaila osoan, atzera egiteak kontrolak itzultzen ditu; nabarmentze-koloreko lerro mehe batek abestia zenbat aurreratu den erakusten du, eta haren izena noizean behin itzultzen da. Widgetaren letra-tamaina Ezarpenak → Itxura atalean dago. Honi buruz atalean, «Gorde erregistroak txostenetarako» aukerak irteerak eta trantsizioak zure zerrenden ondoko fitxategietan idazten ditu, aktibatuta dagoen bitartean soilik.</string>
     <string name="help_orama_buttons">• O\'raman eskuineko botoiak (itxi, pantaila osoa, fotogramak) erdi ezkutatuta geratzen dira zerua ikus dadin: ukitu batek ateratzen ditu, eta segundo batzuk geroago berriro ezkutatzen dira. Eguzkia eta ilargia ez dira izenburuaren eta botoien atzean jartzen.</string>
     <string name="app_slogan">«Berraurkitu zure musika-bilduma: entzun modu berrietan, soinurik onenarekin.»</string>
     <string name="help_orama_surprises">• O\'ramak sorpresa txiki batzuk ere gordetzen ditu. Aurki itzazu zuk zeuk!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Gaur gauerdian urte berria hasiko da eta O\'raman zerbait handia gertatuko da: izan Attacca pantailan irekita orduan.</string>
     <string name="browser_as_grid">Erakutsi azal gisa</string>
     <string name="browser_as_list">Erakutsi zerrenda gisa</string>
+    <string name="widget_text_size">Widgetaren letra-tamaina</string>
+    <string name="widget_text_size_hint">Azala txikiagoa da letra handiagoa den heinean. Goian, widget handia nola geratuko den.</string>
     <string name="widget_big">Handitzean, widgetak hau erakusten du</string>
     <string name="widget_big_cover">Azala, handi</string>
     <string name="widget_big_orama">O\'ramako paisaia</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Pista bakoitzarekin berriro jartzen da. Dagoen bezala aukerara itzultzean, blokeo-pantailak hasierako pantailaren irudia hartzen du (lehen zuena ezin da berreskuratu).</string>
     <string name="over_lock_screen">Erakutsi blokeo-pantailaren gainean erreproduzitzean</string>
     <string name="over_lock_screen_hint">Pantaila itzaltzean Attacca irekita badago (Orain erreproduzitzen, O\'rama…), telefonoa esnatzean blokeo-pantailaren gainean agertzen da musika jotzen den bitartean; beste edozertarako telefonoa blokeatuta geratzen da.</string>
+    <string name="about_logs">Gorde erregistroak txostenetarako</string>
+    <string name="about_logs_hint">Aplikazioaren itxierak, abestien arteko trantsizioak eta Attacca World-eko abesti-aldaketak idazten ditu zure zerrenden ondoko fitxategietan, zerbait gaizki doanean bidaltzeko. Desaktibatuta, aktibatzen ez baduzu.</string>
 </resources>

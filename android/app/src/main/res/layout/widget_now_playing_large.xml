@@ -32,10 +32,18 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
+
+            <!-- The texts take what height is left: with big text they are cut, never the buttons. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
 
             <TextView
                 android:id="@+id/widget_title"
@@ -45,7 +53,7 @@
                 android:maxLines="1"
                 android:text="@string/app_name"
                 android:textColor="#FFFFFFFF"
-                android:textSize="21sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -55,7 +63,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#D9FFFFFF"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/widget_album"
@@ -64,7 +72,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#B3FFFFFF"
-                android:textSize="15sp" />
+                android:textSize="17sp" />
 
             <TextView
                 android:id="@+id/widget_next_title"
@@ -74,7 +82,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#99FFFFFF"
-                android:textSize="14sp" />
+                android:textSize="16sp" />
 
             <LinearLayout
                 android:id="@+id/widget_time_row"
@@ -87,17 +95,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="14sp" />
+                    android:textSize="16sp" />
 
                 <TextView
                     android:id="@+id/widget_length"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="14sp" />
+                    android:textSize="16sp" />
+            </LinearLayout>
+
             </LinearLayout>
 
             <LinearLayout
+                android:layout_gravity="center_horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
@@ -105,6 +116,11 @@
                 android:orientation="horizontal">
 
 
+
+                <!-- As wide as the heart on the other side: the play button in the middle. -->
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="1dp" />
 
                 <ImageButton
                     android:id="@+id/widget_previous"

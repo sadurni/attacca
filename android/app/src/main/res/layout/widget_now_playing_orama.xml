@@ -33,7 +33,7 @@
             android:maxLines="1"
             android:text="@string/app_name"
             android:textColor="#FFFFFFFF"
-            android:textSize="20sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <TextView
@@ -44,7 +44,7 @@
             android:maxWidth="330dp"
             android:maxLines="1"
             android:textColor="#D9FFFFFF"
-            android:textSize="15sp" />
+            android:textSize="17sp" />
 
         <TextView
             android:id="@+id/widget_next_title"
@@ -54,7 +54,7 @@
             android:maxWidth="330dp"
             android:maxLines="1"
             android:textColor="#B3FFFFFF"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
     </LinearLayout>
 
@@ -92,7 +92,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#D9FFFFFF"
-                android:textSize="15sp" />
+                android:textSize="17sp" />
 
             <TextView
                 android:id="@+id/widget_length"
@@ -100,8 +100,13 @@
                 android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:textColor="#D9FFFFFF"
-                android:textSize="15sp" />
+                android:textSize="17sp" />
         </LinearLayout>
+
+        <!-- As wide as the heart on the other side: the play button in the middle. -->
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="1dp" />
 
         <ImageButton
             android:id="@+id/widget_previous"

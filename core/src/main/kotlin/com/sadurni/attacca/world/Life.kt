@@ -122,24 +122,37 @@ class Life(private val land: WorldLand, private val seed: Int) {
     }
 
     /** A grazing animal of [w]: the same bones as the dogs (body, four legs in two parts, tail). */
-    private class Beast(val rig: Rig, val legH: Float, val biped: Boolean)
+    /** How an animal moves: on four legs; waddling; hopping (monkeys); pecking (cranes); swimming (turtles); lying (seals); scuttling (crabs). */
+    private enum class Gait { QUAD, WADDLE, HOP, PECK, SWIM, LIE, SCUTTLE }
 
-    private val beasts = HashMap<World, Beast?>()
+    private class Beast(val rig: Rig, val legH: Float, val gait: Gait, val herd: IntRange = 3..5, val size: Float = 1f)
 
-    private fun beastOf(w: World): Beast? = beasts.getOrPut(w) {
+    private val beasts = HashMap<World, List<Beast>>()
+
+    /** The animals of [w] (a herd is one kind of them). */
+    private fun beastsOf(w: World): List<Beast> = beasts.getOrPut(w) {
+        val sheep by lazy { quadBeast(0.9f, 1.15f, 0.62f, 0xFFF2EEE4.toInt(), 0xFF2A2626.toInt(), fluffy = true) }
+        val cow by lazy { quadBeast(1.3f, 1.65f, 0.7f, 0xFFF4F2EC.toInt(), 0xFF2A2626.toInt(), patches = true) }
+        val horse by lazy { Beast(Quad.horse().first, 1.45f * 0.52f, Gait.QUAD, 2..4) }
+        val deer by lazy { quadBeast(1.25f, 1.25f, 0.42f, 0xFFA87048.toInt(), 0xFFE8D8C0.toInt(), antlers = true) }
+        val bison by lazy { quadBeast(1.5f, 1.8f, 0.9f, 0xFF4A3426.toInt(), 0xFF2A1E18.toInt(), hump = true) }
         when (w) {
-            World.MEADOW -> quadBeast(0.9f, 1.15f, 0.62f, 0xFFF2EEE4.toInt(), 0xFF2A2626.toInt(), fluffy = true)
-            World.CASTLE, World.JAPAN -> quadBeast(1.25f, 1.25f, 0.42f, 0xFFA87048.toInt(), 0xFFE8D8C0.toInt(), antlers = true)
-            World.WALL -> Beast(Quad.horse().first, 1.45f * 0.52f, false)
-            World.CANYON -> quadBeast(1.5f, 1.8f, 0.9f, 0xFF4A3426.toInt(), 0xFF2A1E18.toInt(), hump = true)
-            World.DESERT -> Beast(Mounts.camel().first, 1.15f, false)
-            World.JUNGLE -> Beast(Mounts.elephant(0xFFB03A3A.toInt()).first, 1.1f, false)
-            World.ICE -> penguin()
-            else -> null
+            World.MEADOW -> listOf(sheep, cow, horse)
+            World.COAST -> listOf(crab())
+            World.CASTLE -> listOf(deer)
+            World.WALL -> listOf(horse, bison)
+            World.JUNGLE -> listOf(Beast(Mounts.elephant(0xFFB03A3A.toInt()).first, 1.1f, Gait.QUAD, 2..2, 0.85f), monkey(), deer)
+            World.AMAZON -> listOf(quadBeast(0.55f, 0.9f, 0.45f, 0xFF8A6A48.toInt(), 0xFF5A4430.toInt()), monkey())
+            World.DESERT -> listOf(Beast(Mounts.camel().first, 1.15f, Gait.QUAD, 2..2))
+            World.CANYON -> listOf(bison, horse)
+            World.JAPAN -> listOf(deer, crane())
+            World.ICE -> listOf(penguin(), seal())
+            World.REEF -> listOf(turtle())
+            else -> emptyList()
         }
     }
 
-    private fun quadBeast(h: Float, l: Float, t: Float, coat: Int, dark: Int, fluffy: Boolean = false, antlers: Boolean = false, hump: Boolean = false): Beast {
+    private fun quadBeast(h: Float, l: Float, t: Float, coat: Int, dark: Int, fluffy: Boolean = false, antlers: Boolean = false, hump: Boolean = false, patches: Boolean = false): Beast {
         val b = RigBuilder()
         val legH = h * 0.5f
         val half = t / 2
@@ -153,6 +166,10 @@ class Life(private val land: WorldLand, private val seed: Int) {
                 }
             } else blob(-half, legH - 0.05f, -l / 2, half, h, l / 2, coat)
             if (hump) blob(-half * 0.9f, h - 0.3f, l / 2 - 0.9f, half * 0.9f, h + 0.35f, l / 2 - 0.1f, dark)
+            if (patches) {
+                blob(-half - 0.02f, h - 0.35f, -0.3f, half * 0.2f, h + 0.02f, 0.2f, dark)
+                blob(-half * 0.3f, legH + 0.05f, 0.25f, half + 0.02f, h - 0.15f, 0.62f, dark)
+            }
             val hz = l / 2
             blob(-half * 0.6f, h - 0.35f, hz - 0.1f, half * 0.6f, h + 0.05f, hz + 0.45f, if (fluffy) dark else coat)
             blob(-0.04f, h - 0.2f, hz + 0.42f, 0.04f, h - 0.12f, hz + 0.48f, 0xFF1A1414.toInt())
@@ -169,7 +186,81 @@ class Life(private val land: WorldLand, private val seed: Int) {
             b.bone(upper, x, legH * 0.5f, z) { tube(x, legH * 0.5f, z, x, 0.04f, z, 0.055f, dark) }
         }
         b.bone(Quad.BODY, 0f, h - 0.1f, -l / 2) { tube(0f, h - 0.1f, -l / 2, 0f, h - 0.4f, -l / 2 - 0.15f, 0.04f, coat) }
-        return Beast(b.rig(), legH, false)
+        return Beast(b.rig(), legH, Gait.QUAD)
+    }
+
+    /** A monkey: a round brown body, a light face, a curled tail; it hops about. */
+    private fun monkey(): Beast {
+        val b = RigBuilder()
+        val fur = 0xFF6E4A30.toInt()
+        val face = 0xFFE0B890.toInt()
+        b.bone(-1, 0f, 0f, 0f) {
+            blob(-0.22f, 0.15f, -0.2f, 0.22f, 0.6f, 0.2f, fur)
+            blob(-0.17f, 0.55f, -0.12f, 0.17f, 0.88f, 0.2f, fur)
+            blob(-0.12f, 0.6f, 0.08f, 0.12f, 0.8f, 0.22f, face)
+            for (s in floatArrayOf(-0.06f, 0.06f)) blob(s - 0.025f, 0.72f, 0.2f, s + 0.025f, 0.77f, 0.23f, 0xFF141010.toInt())
+            for (s in floatArrayOf(-0.16f, 0.16f)) blob(s - 0.05f, 0.7f, -0.04f, s + 0.05f, 0.8f, 0.06f, face)
+            tube(0f, 0.25f, -0.2f, 0f, 0.15f, -0.55f, 0.03f, fur)
+            tube(0f, 0.15f, -0.55f, 0f, 0.45f, -0.7f, 0.03f, fur)
+            for (s in floatArrayOf(-0.1f, 0.1f)) tube(s, 0.2f, 0f, s, 0f, 0.05f, 0.05f, fur)
+        }
+        for (s in intArrayOf(-1, 1)) b.bone(0, s * 0.2f, 0.52f, 0f) { tube(s * 0.2f, 0.52f, 0f, s * 0.3f, 0.2f, 0.12f, 0.045f, fur) }
+        return Beast(b.rig(), 0f, Gait.HOP, 2..3)
+    }
+
+    /** A crane: white, a long neck, a red crown, thin legs; it walks and pecks. */
+    private fun crane(): Beast {
+        val b = RigBuilder()
+        b.bone(-1, 0f, 0.9f, 0f) {
+            blob(-0.18f, 0.85f, -0.4f, 0.18f, 1.2f, 0.3f, 0xFFF4F4F2.toInt())
+            blob(-0.16f, 0.9f, -0.55f, 0.16f, 1.12f, -0.3f, 0xFF1E1E22.toInt())
+            tube(0f, 1.1f, 0.25f, 0f, 1.75f, 0.42f, 0.045f, 0xFFF4F4F2.toInt())
+            blob(-0.06f, 1.72f, 0.36f, 0.06f, 1.84f, 0.5f, 0xFF1E1E22.toInt())
+            blob(-0.04f, 1.8f, 0.38f, 0.04f, 1.86f, 0.46f, 0xFFD8322A.toInt())
+            tube(0f, 1.76f, 0.5f, 0f, 1.74f, 0.72f, 0.018f, 0xFF8A8A70.toInt())
+            for (s in floatArrayOf(-0.07f, 0.07f)) tube(s, 0.88f, 0f, s, 0f, 0f, 0.02f, 0xFF2A2A2A.toInt())
+        }
+        return Beast(b.rig(), 0f, Gait.PECK, 2..3)
+    }
+
+    /** A sea turtle swimming: a dome of a shell, its flippers rowing. */
+    private fun turtle(): Beast {
+        val b = RigBuilder()
+        b.bone(-1, 0f, 0f, 0f) {
+            blob(-0.5f, -0.12f, -0.6f, 0.5f, 0.28f, 0.6f, 0xFF4E7A4A.toInt())
+            blob(-0.42f, -0.16f, -0.52f, 0.42f, 0.02f, 0.52f, 0xFFD8C890.toInt())
+            blob(-0.13f, -0.05f, 0.55f, 0.13f, 0.15f, 0.85f, 0xFF8AA078.toInt())
+        }
+        for (s in intArrayOf(-1, 1)) b.bone(0, s * 0.4f, 0.02f, 0.25f) { blob(if (s < 0) -0.95f else 0.35f, -0.03f, 0.1f, if (s < 0) -0.35f else 0.95f, 0.06f, 0.45f, 0xFF8AA078.toInt()) }
+        return Beast(b.rig(), 0f, Gait.SWIM, 1..2)
+    }
+
+    /** A seal lying on the ice, raising its head now and then. */
+    private fun seal(): Beast {
+        val b = RigBuilder()
+        b.bone(-1, 0f, 0f, 0f) {
+            blob(-0.35f, 0f, -0.9f, 0.35f, 0.5f, 0.6f, 0xFF8A8C94.toInt())
+            blob(-0.2f, 0.25f, 0.45f, 0.2f, 0.62f, 0.82f, 0xFF9A9CA4.toInt())
+            for (s in floatArrayOf(-0.07f, 0.07f)) blob(s - 0.03f, 0.5f, 0.76f, s + 0.03f, 0.56f, 0.82f, 0xFF141414.toInt())
+            blob(-0.25f, 0f, -1.15f, 0.25f, 0.08f, -0.85f, 0xFF7A7C84.toInt())
+        }
+        return Beast(b.rig(), 0f, Gait.LIE, 2..3)
+    }
+
+    /** A little red crab scuttling sideways on the sand. */
+    private fun crab(): Beast {
+        val b = RigBuilder()
+        val red = 0xFFD8432E.toInt()
+        b.bone(-1, 0f, 0f, 0f) {
+            blob(-0.22f, 0.04f, -0.15f, 0.22f, 0.16f, 0.15f, red)
+            for (s in floatArrayOf(-1f, 1f)) {
+                tube(s * 0.2f, 0.1f, 0.1f, s * 0.32f, 0.12f, 0.28f, 0.03f, red)
+                blob(s * 0.32f - 0.07f, 0.08f, 0.24f, s * 0.32f + 0.07f, 0.18f, 0.38f, red)
+                for (k in 0 until 3) tube(s * 0.2f, 0.08f, -0.08f + k * 0.08f, s * 0.36f, 0f, -0.12f + k * 0.08f, 0.015f, red)
+            }
+            for (s in floatArrayOf(-0.06f, 0.06f)) blob(s - 0.02f, 0.16f, 0.1f, s + 0.02f, 0.22f, 0.14f, 0xFF141414.toInt())
+        }
+        return Beast(b.rig(), 0f, Gait.SCUTTLE, 4..6, 1.4f)
     }
 
     private fun penguin(): Beast {
@@ -182,7 +273,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
             for (s in floatArrayOf(-0.12f, 0.12f)) blob(s - 0.08f, -0.02f, 0f, s + 0.08f, 0.04f, 0.2f, 0xFFF0A030.toInt())
         }
         for (s in intArrayOf(-1, 1)) b.bone(0, s * 0.27f, 0.75f, 0f) { blob(if (s < 0) -0.34f else 0.22f, 0.3f, -0.1f, if (s < 0) -0.22f else 0.34f, 0.78f, 0.1f, 0xFF1E1E26.toInt()) }
-        return Beast(b.rig(), 0f, true)
+        return Beast(b.rig(), 0f, Gait.WADDLE)
     }
 
     private val strays = List(3) { k ->
@@ -212,7 +303,12 @@ class Life(private val land: WorldLand, private val seed: Int) {
     private val darkPuff: Rig by lazy { RigBuilder().apply { bone(-1, 0f, 0f, 0f) { blob(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0xFF8A8A90.toInt(), 10, 6) } }.rig() }
 
     private val poses = HashMap<Any, Pose>()
-    private fun poseOf(key: Any, rig: Rig) = poses.getOrPut(key) { rig.pose() }.also { it.reset() }
+    private fun poseOf(key: Any, rig: Rig): Pose {
+        // (A key may come to another rig, another animal across a change of world: a pose of its own size then.)
+        val p = run { poses[key]?.takeIf { it.pitch.size == rig.bones.size } ?: rig.pose().also { poses[key] = it } }
+        p.reset()
+        return p
+    }
 
     // ---- What happens now and then (each kept where it began) ----
 
@@ -234,6 +330,9 @@ class Life(private val land: WorldLand, private val seed: Int) {
     fun frame(tz: Float, ty: Float, nowMs: Long, playing: Boolean, out: MutableList<Draw>, smoke: List<Float>) {
         val t = nowMs / 1000.0
         val w = land.worldAt(land.centerAt(tz), tz)
+        eventSight = null
+        herdSight = null
+        if (w == World.VOLCANO) geysers(tz, nowMs, out)
         flocks(tz, ty, nowMs, t, w, out)
         balloons(tz, t, out)
         herds(tz, t, out)
@@ -246,6 +345,53 @@ class Life(private val land: WorldLand, private val seed: Int) {
             puffAt(smoke[i], smoke[i + 1], smoke[i + 2], smoke[i + 3], 1.3f, out)
             i += 4
         }
+    }
+
+    // ---- What the camera may turn to: something happening about the way ----
+
+    private var eventSight: FloatArray? = null
+    private var herdSight: FloatArray? = null
+
+    /** Something going on worth a look (a geyser, a flock going over, a dog running by, animals grazing near), or null. */
+    fun sight(): FloatArray? = eventSight ?: herdSight
+
+    private fun see(x: Float, y: Float, z: Float) {
+        if (eventSight == null) eventSight = floatArrayOf(x, y, z)
+    }
+
+    // ---- Lava geysers in the volcano ----
+
+    private var geyserCycle = -1L
+    private val geyser = FloatArray(3)
+    private val ember: Rig by lazy { RigBuilder().apply { bone(-1, 0f, 0f, 0f) { blob(-0.2f, -0.2f, -0.2f, 0.2f, 0.2f, 0.2f, Props.glow(0xFFFF7A1A.toInt()), 8, 5) } }.rig() }
+    private val emberHot: Rig by lazy { RigBuilder().apply { bone(-1, 0f, 0f, 0f) { blob(-0.2f, -0.2f, -0.2f, 0.2f, 0.2f, 0.2f, Props.glow(0xFFFFE08A.toInt()), 8, 5) } }.rig() }
+
+    private fun geysers(tz: Float, nowMs: Long, out: MutableList<Draw>) {
+        val period = 9_000L
+        val cycle = nowMs / period
+        val age = (nowMs % period) / 3_200f
+        if (cycle != geyserCycle) {
+            geyserCycle = cycle
+            val c = cycle.toInt()
+            val z = tz + 18f + 18f * hash(c, 761)
+            val side = if (hash(c, 762) < 0.5f) -1f else 1f
+            val x = Places.xAt(land, z, side * (6f + 8f * hash(c, 763)))
+            geyser[0] = x; geyser[1] = land.heightAt(x, z); geyser[2] = z
+        }
+        if (age >= 1f) return
+        val (x, y, z) = Triple(geyser[0], geyser[1], geyser[2])
+        val strength = sin(age * PI).toFloat()
+        val rise = 9f * strength
+        for (k in 0 until 22) {
+            val a = ((age * 3f + k / 22f) % 1f)
+            val dx = (hash(k, 764) - 0.5f) * 3f * a
+            val dz = (hash(k, 765) - 0.5f) * 3f * a
+            val py = y + rise * 4f * a * (1f - a) * (0.7f + 0.3f * hash(k, 766))
+            val rig = if (k % 3 == 0) emberHot else ember
+            out += Draw(rig, Mat4.model(x + dx, py, z + dz, 0f, s = (1.4f - a) * (0.6f + strength)), poseOf("ember", rig))
+        }
+        puffAt(x, y + rise * 0.9f, z, (age * 1.3f) % 1f, 2.4f, out)
+        see(x, y + rise * 0.5f, z)
     }
 
     private fun flocks(tz: Float, ty: Float, nowMs: Long, t: Double, w: World, out: MutableList<Draw>) {
@@ -282,6 +428,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
             } else if (under) pose.yaw[1] = sin(t * 10.0 + k).toFloat() * 0.5f
             out += Draw(f.rig, Mat4.model(x, y, z, heading + (if (w == World.SPACE) (t * 2).toFloat() else 0f), s = f.size), pose)
         }
+        if (age in 0.25f..0.7f) see(cx, height, flockZ)
     }
 
     private fun balloons(tz: Float, t: Double, out: MutableList<Draw>) {
@@ -322,17 +469,20 @@ class Life(private val land: WorldLand, private val seed: Int) {
         for (k in first..last) {
             if (hash(k, 721) > 0.7f) continue
             val z = k * every + 50f * hash(k, 722)
-            if (z < WorldLand.CONT + WorldLand.CONT_BLEND) continue
+            if (z < land.contEnd) continue
             val side = if (hash(k, 723) < 0.5f) -1f else 1f
             val across = side * (13f + 15f * hash(k, 724))
             val cx = Places.xAt(land, z, across)
             val w = land.worldAt(cx, z)
-            val beast = beastOf(w) ?: continue
+            val kinds = beastsOf(w)
+            if (kinds.isEmpty()) continue
+            val beast = kinds[(hash(k, 728) * kinds.size).toInt().coerceAtMost(kinds.size - 1)]
             val ground = land.heightAt(cx, z)
-            if (ground < WorldLand.WATER + 0.3f) continue
-            if (abs(land.heightAt(cx + 2f, z) - land.heightAt(cx - 2f, z)) > 1.6f) continue
+            if (ground < WorldLand.WATER + 0.3f && beast.gait != Gait.SWIM) continue
+            if (beast.gait != Gait.SWIM && abs(land.heightAt(cx + 2f, z) - land.heightAt(cx - 2f, z)) > 1.6f) continue
             if (!Places.clearAt(land, land.places, cx, z, across)) continue
-            val n = if (w == World.JUNGLE || w == World.DESERT) 2 else 3 + (hash(k, 725) * 3).toInt()
+            val n = beast.herd.first + (hash(k, 725) * (beast.herd.last - beast.herd.first + 1)).toInt().coerceAtMost(beast.herd.last - beast.herd.first)
+            if (z > tz + 6f && z < tz + 40f && (herdSight == null || z < herdSight!![2])) herdSight = floatArrayOf(cx, ground + 1f, z)
             for (i in 0 until n) {
                 val a = hash(k * 13 + i, 726) * 6.28f
                 val r = 1.5f + 2.5f * hash(k * 13 + i, 727)
@@ -340,15 +490,35 @@ class Life(private val land: WorldLand, private val seed: Int) {
                 val drift = (t * 0.03 + i).toFloat()
                 val x = cx + cos(a + drift) * r
                 val zz = z + sin(a + drift) * r
-                val y = land.heightAt(x, zz)
+                var y = land.heightAt(x, zz)
                 val pose = poseOf("beast$k-$i", beast.rig)
                 val grazing = sin(t * 0.4 + i * 1.9) > -0.2
-                val heading = a + drift + PI.toFloat() / 2
-                if (beast.biped) {
+                var heading = a + drift + PI.toFloat() / 2
+                if (beast.gait == Gait.WADDLE) {
                     // Penguins waddle.
                     pose.roll[0] = sin(t * 5.0 + i).toFloat() * 0.12f
                     pose.roll[1] = 0.3f + sin(t * 6.0 + i).toFloat() * 0.2f
                     pose.roll[2] = -0.3f - sin(t * 6.0 + i).toFloat() * 0.2f
+                } else if (beast.gait == Gait.HOP) {
+                    // Monkeys hop about, arms swinging.
+                    y += abs(sin(t * 3.0 + i * 1.3)).toFloat() * 0.45f
+                    pose.pitch[1] = sin(t * 6.0 + i).toFloat() * 0.8f
+                    pose.pitch[2] = -sin(t * 6.0 + i).toFloat() * 0.8f
+                } else if (beast.gait == Gait.PECK) {
+                    // Cranes walk slowly and peck at the ground.
+                    pose.pitch[0] = if (grazing) (0.5f + 0.25f * sin(t * 4.0 + i).toFloat()) else 0f
+                } else if (beast.gait == Gait.SWIM) {
+                    // Turtles swim above the sea's floor, rowing.
+                    y += 2.2f + 1.5f * hash(k * 13 + i, 729) + sin(t * 0.6 + i).toFloat() * 0.3f
+                    pose.roll[1] = sin(t * 2.0 + i).toFloat() * 0.5f
+                    pose.roll[2] = -sin(t * 2.0 + i).toFloat() * 0.5f
+                } else if (beast.gait == Gait.LIE) {
+                    // Seals lie still, raising the head now and then.
+                    pose.pitch[0] = -0.12f * abs(sin(t * 0.5 + i)).toFloat()
+                } else if (beast.gait == Gait.SCUTTLE) {
+                    // Crabs scuttle sideways, stopping and going again.
+                    heading = a + PI.toFloat()
+                    y += abs(sin(t * 14.0 + i)).toFloat() * 0.02f
                 } else {
                     // Head down grazing, or a slow step now and then.
                     if (grazing) pose.pitch[Quad.BODY] = 0.12f
@@ -361,7 +531,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
                     }
                     if (beast.rig.bones.size > Quad.TAIL) pose.yaw[Quad.TAIL] = sin(t * 2.0 + i).toFloat() * 0.3f
                 }
-                out += Draw(beast.rig, Mat4.model(x, y + 0.02f, zz, heading, s = if (w == World.JUNGLE) 0.85f else 1f), pose)
+                out += Draw(beast.rig, Mat4.model(x, y + 0.02f, zz, heading, s = beast.size), pose)
             }
         }
     }
@@ -394,6 +564,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
         }
         pose.yaw[Quad.TAIL] = sin(t * 12).toFloat() * 0.5f
         out += Draw(rig, Mat4.model(x, y, z, h + side * 0.5f * age), pose)
+        if (age > 0.4f) see(x, y + 0.5f, z)
     }
 
     private fun divers(tz: Float, nowMs: Long, t: Double, out: MutableList<Draw>) {
@@ -417,6 +588,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
         pose.pitch[Human.THIGH_L] = kick; pose.pitch[Human.THIGH_R] = -kick
         pose.pitch[Human.ARM_L] = -0.2f; pose.pitch[Human.ARM_R] = -0.2f
         out += Draw(diverRig, Mat4.model(x, y, diverZ, if (dir > 0) PI.toFloat() / 2 else -PI.toFloat() / 2), pose)
+        see(x, y, diverZ)
         // Bubbles going up.
         for (k in 0 until 4) {
             val a = ((t * 0.9 + k / 4.0) % 1.0).toFloat()
@@ -442,6 +614,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
         val pose = poseOf("martian", martian)
         pose.roll[if (side > 0) 1 else 2] = (if (side > 0) 1f else -1f) * (1.6f + sin(t * 8).toFloat() * 0.4f) * up
         out += Draw(martian, Mat4.model(x, y, martianZ, land.headingAt(martianZ) + PI.toFloat() + side * 0.6f), pose)
+        if (up > 0.5f) see(x, y + 1f, martianZ)
     }
 
     private fun chimneys(tz: Float, t: Double, out: MutableList<Draw>) {

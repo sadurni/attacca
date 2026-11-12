@@ -509,6 +509,8 @@
     <string name="waveform_off">A kashe (sandar neman wuri kawai)</string>
     <string name="strip_show_orama">Nuna O\'rama a nan</string>
     <string name="strip_show_wave">Nuna siffar sauti a nan</string>
+    <string name="strip_view">Abin da ake gani a Ana kunnawa</string>
+    <string name="orama_open">Abin da O\'rama ke buɗewa</string>
     <string name="waveform_orama">Shimfiɗar ƙasa ta O\'rama (siffar sauti ƙarama tsakanin lokutan)</string>
     <string name="section_silence">Tsallake shiru</string>
     <string name="silence_enabled">Tsallake shiru a farko da ƙarshen waƙa</string>
@@ -1522,6 +1524,7 @@
     <string name="help_orama_worlds">• Ƙarin duniyoyi: hamada mai rafukan ruwa da raƙuma (dala ta zinariya a kololuwa), Babban Katangar China (dodon ruwa), dajin Indiya mai gidajen ibada da giwaye (gizagizan launuka), Amazon da aka gangara da kwale-kwale (bakan gizo a kan ruwa mai faɗowa), kwazazzabo na yammacin nesa (gaggafa a faɗuwar rana), Japan cike da furen ceri (wasan wuta da ganyen fure), ƙarƙashin teku da jirgin ruwa na ƙarƙashin ruwa (kifin whale) da dutsen mai aman wuta (fashewa). Alamar salon waƙa tana taimakon zaɓen su (Larabci ko flamenco, Sinanci, Indiyanci, Latin ko Brazil, country, Jafananci, ambient, metal). Maɓallin duniya yana nuna waƙar a kowace duniya bi da bi, iri ɗaya a O\'rama da Attacca World, shimfiɗar waƙar nan a 3D (maɓallin kubu): kuna wucewa ta cikinta a bayan matafiyi da karnuka huɗu, yatsa ɗaya yana juya kyamara biyu kuma suna kawo ta kusa ko ɗaga ta.</string>
     <string name="help_world">• Attacca World (maɓallin kubu a cikin O\'rama): waƙar ɗaya a matsayin ƙasa ta 3D da ake bi a bayan matafiyi da karnuka huɗu, tare da musaya, cikas da yanayin duniyarta; ƙasar tana tafiya da kiɗan kuma tana ci gaba daga waƙa zuwa ta gaba, kuma dogayen sassa masu natsuwa ko ƙarfi suna kawo wata duniya na ɗan lokaci. Yatsa ɗaya yana juya kyamara, biyu suna kusantar da ita ko ɗaga ta; taɓa matafiyin yana sa ya yi tsalle ko juyawa. Maɓallin raba allo yana nuna O\'rama da Attacca World tare. Kalmomin take na iya zaɓar duniya idan sautin ya dace (Siren Song, mai natsuwa: ƙarƙashin teku). Har ma a kwamfuta.</string>
     <string name="help_world_life">• A cikin Attacca World hanyar tana wucewa ta wuraren O\'rama a lokuta guda (gadoji, ramuka masu fitilun wuta, tashoshi da jiragen ƙasansu, ƙauyuka masu bututun hayaƙi da ke fitar da hayaƙi, babbar dabara mai juyawa, kufai, bakuna, roka mai tashi sama), kuma duniyar waƙa ta gaba tana bayyana kafin ta fara. Kafin a canza abin hawa, matafiyin yana sauka (ya shiga jirgin ruwa na ƙarƙashin teku a bakin gaɓa, karnuka suna leƙowa ta tagoginsa). Tsuntsaye, balan-balan, dabbobi masu kiwo da wasu karnuka suna wucewa; fitilar kai tana haskaka duhu; kyamarar tana juyawa zuwa abin da ya cancanci gani kuma tana hawa sama da kololuwa. A cikakken allo, sunan waƙar yana bayyana idan ta fara.</string>
+    <string name="help_world_views">• Zirin Ana kunnawa zai iya nuna O\'rama, Attacca World ko duka biyu gefe da gefe (Saituna → Kamanni), kuma maɓallin O\'rama zai iya buɗe O\'rama, Attacca World ko duka biyu a raba allo (Saituna). A cikakken allo, baya yana dawo da maɓallan sarrafawa; siririn layi a launin fifiko yana nuna nisan da waƙar ta yi, kuma sunanta yana dawowa lokaci-lokaci. Girman rubutun widget yana cikin Saituna → Kamanni. A Game da, «Ajiye bayanan rajista don rahotanni» yana rubuta fitowa da sauye-sauye a fayiloli kusa da jerinka, sai lokacin da yake kunne kawai.</string>
     <string name="help_orama_buttons">• A O\'rama maɓallan da ke dama (rufe, dukan allo, saurin hoto) suna zama rabi a ɓoye don sararin sama ya bayyana: taɓawa tana fitar da su, kuma suna komawa bayan \'yan daƙiƙoƙi. Rana da wata suna nisantar take da maɓallan.</string>
     <string name="app_slogan">“Sake gano tarin kiɗanka: ji shi ta sabbin hanyoyi, da mafi kyawun sauti.”</string>
     <string name="help_orama_surprises">• O\'rama kuma tana ɓoye wasu ƙananan abubuwan mamaki. Nemo su da kanka!</string>
@@ -1858,6 +1861,8 @@
     <string name="newyear_notice_text">Yau da tsakar dare sabuwar shekara za ta fara kuma wani babban abu zai faru a O\'rama: a lokacin, bar Attacca a buɗe a kan allo.</string>
     <string name="browser_as_grid">Nuna a matsayin bangwaye</string>
     <string name="browser_as_list">Nuna a matsayin jeri</string>
+    <string name="widget_text_size">Girman rubutun widget</string>
+    <string name="widget_text_size_hint">Hoton kundi yana ƙarami yayin da rubutu ke ƙaruwa. A sama, babban widget kamar yadda zai kasance.</string>
     <string name="widget_big">Idan an ƙara girma, widget yana nuna</string>
     <string name="widget_big_cover">Bango, babba</string>
     <string name="widget_big_orama">Shimfiɗar ƙasa ta O\'rama</string>
@@ -1868,4 +1873,6 @@
     <string name="lock_wallpaper_hint">Ana sake saita shi da kowace waƙa. Idan aka koma “Kamar yadda yake”, allon kulle yana ɗaukar hoton allon gida (ba za a iya karanto wanda yake da shi a da ba).</string>
     <string name="over_lock_screen">Nuna a kan allon kulle yayin kunnawa</string>
     <string name="over_lock_screen_hint">Idan Attacca a buɗe take (Ana kunnawa, O\'rama…) lokacin da allo ya kashe, tayar da wayar yana nuna ta a kan allon kulle yayin da kiɗa ke kunnawa; ga kowane abu dabam wayar tana zama a kulle.</string>
+    <string name="about_logs">Ajiye bayanan rajista don rahotanni</string>
+    <string name="about_logs_hint">Yana rubuta rufewar manhajar, sauye-sauye tsakanin waƙoƙi da canjin waƙa a Attacca World a cikin fayiloli kusa da jerinka, don aikawa idan wani abu ya lalace. A kashe sai dai idan ka kunna.</string>
 </resources>

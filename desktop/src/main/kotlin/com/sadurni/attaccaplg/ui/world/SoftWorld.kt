@@ -34,6 +34,8 @@ class WorldInput {
     @Volatile var wave: SongWave? = null
     @Volatile var peakMs: Double = -1.0
     @Volatile var positionMs: Long = 0L
+    /** The song [positionMs] belongs to (null: not known): a place of another song is not taken. */
+    @Volatile var positionFor: String? = null
     @Volatile var positionAtNs: Long = 0L
     @Volatile var playing: Boolean = false
     @Volatile var heard: Boolean = false
@@ -59,6 +61,19 @@ class WorldInput {
     /** The pictures on the boards by the way: the cover, and the sign with the next song (ARGB, width × height). */
     @Volatile var cover: Picture? = null
     @Volatile var sign: Picture? = null
+
+    /** The festive days' look (null: none), with the Three Kings; [vikram]: the Hindu new year's show going on. */
+    @Volatile var festive: com.sadurni.attacca.festive.Festivity? = null
+    @Volatile var kings: Boolean = false
+    @Volatile var vikram: Boolean = false
+
+    /** Where the sun (or moon) is on the picture (px; -1 out of sight) and how far a click on it may be. */
+    @Volatile var sunX = -1f
+    @Volatile var sunY = -1f
+    @Volatile var sunR = 0f
+
+    /** The song whose sun turned into a record (clicked five times quickly). */
+    @Volatile var recordOf: String? = null
 }
 
 /** A picture's points (ARGB) and size. */
@@ -136,6 +151,29 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
     )
 
     private val chunks = ConcurrentHashMap<Int, Chunk>()
+
+    /** The sky's colours and night as shown, easing towards the land's (see [eased]). */
+    private val skyEase = FloatArray(16)
+    /** The weather now (clouds, storm, rain, snow) and the look the clouds are made from, as the land shows them. */
+    private var skyNow = FloatArray(4)
+    private var skyLookNow: SongLook? = null
+    private var skyEaseNs = 0L
+
+    /** How far to ease this frame (about 1.2 s to most of the way). */
+    private fun skyEaseStep(): Float {
+        val now = System.nanoTime()
+        val dt = if (skyEaseNs == 0L) -1.0 else (now - skyEaseNs) / 1e6
+        skyEaseNs = now
+        return if (dt < 0) 1f else (1 - kotlin.math.exp(-dt.coerceIn(0.0, 250.0) / 450.0)).toFloat()
+    }
+
+    private fun eased(slot: Int, v: Float, k: Float): Float {
+        skyEase[slot] += (v - skyEase[slot]) * k
+        return skyEase[slot]
+    }
+    /** The last land's pieces (moved [staleDz] rows), drawn where the new land's are not made yet. */
+    private val stale = HashMap<Int, Chunk>()
+    private var staleDz = 0f
     private val pending = ConcurrentHashMap.newKeySet<Int>()
     private val ready = ConcurrentLinkedQueue<Triple<WorldLand, Int, Chunk>>()
     private val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 8)
@@ -179,6 +217,9 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
     private var eye = floatArrayOf(0f, 0f, 0f)
     private var vp = Mat4.identity()
     private var timeS = 0f
+    private var recordShown = 0f
+    private var placeGuardUntil = 0L
+    private var christmas = false
     private var tzNow = 0f
     private var terrainSwell = true
 
@@ -199,15 +240,30 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         val dtMs = if (lastFrameNs == 0L) 16L else ((nowNs - lastFrameNs) / 1_000_000L).coerceIn(1L, 100L)
         lastFrameNs = nowNs
         val nowMs = nowNs / 1_000_000L
-        val look = input.look ?: com.sadurni.attacca.diorama.Diorama.NEUTRAL
+        // The song as the page gave it, all of it at once (never half of one song and half of another).
+        val songId: String?
+        val feedLook: SongLook?
+        val songWave: SongWave?
+        val nextLook: SongLook?
+        val origin: Double
+        val sectioned: Boolean
+        synchronized(input) {
+            songId = input.songId; feedLook = input.look; songWave = input.wave
+            nextLook = input.nextLook; origin = input.originMs; sectioned = input.sectioned
+        }
+        // Nothing until the song's look is known (no default world first).
+        val look = feedLook ?: run {
+            pixels.fill(0xFF000000.toInt())
+            return
+        }
 
         // A new land when the song, its look or its wave changes; another song goes on from the last one's land.
-        val key = Triple(input.songId, input.look, input.wave)
-        val nextLook = input.nextLook
-        val origin = input.originMs
+        val key = Triple(songId, feedLook, songWave)
         if (key != landFor || nextLook !== land?.next || origin != land?.originMs) {
             val old = land
-            val sameSong = landFor?.first == input.songId
+            val sameSong = landFor?.first == songId
+            // Only the next song's look changed: what is in sight now stays as it is.
+            val onlyNext = key == landFor && origin == old?.originMs
             val before = when {
                 old == null || landFor?.first == null -> null
                 sameSong -> old.before
@@ -222,18 +278,40 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
                 oldDz = -(before?.atZ ?: 0f)
             }
             arrivedOn = arrives
-            land = WorldLand(input.wave, look, (input.songId ?: "").hashCode(), input.sectioned, before, nextLook, origin, arrives)
-            if (!sameSong) posMs = (input.wave?.startMs ?: 0L).toDouble()
-            chunks.clear()
+            // A new song starts in what was seen arriving at the end of the last one.
+            val cameIn = if (!sameSong && before != null) old?.lookAt(lastTz) else if (sameSong) old?.cameIn else null
+            land = WorldLand(songWave, look, (songId ?: "").hashCode(), sectioned, before, nextLook, origin, arrives, cameIn)
+            if (!sameSong) {
+                posMs = (songWave?.startMs ?: 0L).toDouble()
+                placeGuardUntil = nowMs + 2500
+            }
+            // The land in sight is kept until the new one's pieces are made (no gap, no flicker):
+            // the old pieces, moved to the new song's rows.
+            stale.clear()
+            val keepTo = if (onlyNext && old != null) minOf(old.endZ, land!!.endZ) - WorldLand.ARRIVE - 8f else Float.NEGATIVE_INFINITY
+            val dz = when {
+                sameSong -> 0f
+                before != null -> -before.atZ
+                else -> Float.NaN
+            }
+            for ((k, c) in chunks) {
+                if ((k + 1) * LandMesher.CHUNK < keepTo) continue
+                if (!dz.isNaN()) stale[k] = if (dz == 0f) c else Chunk(c.step, c.x, c.y, FloatArray(c.z.size) { c.z[it] + dz }, c.lit, c.water, c.glow, c.index, c.base, c.nrm, c.sway)
+            }
+            staleDz = if (dz.isNaN()) 0f else dz
+            chunks.keys.removeAll { (it + 1) * LandMesher.CHUNK >= keepTo }
             pending.clear()
             ready.clear()
-            cast = Cast(land!!, look.traveller, person, (input.songId ?: "").hashCode(), arrives)
-            extras = com.sadurni.attacca.world.Extras(land!!, (input.songId ?: "").hashCode())
+            cast = Cast(land!!, look.traveller, person, (songId ?: "").hashCode(), arrives).also { it.carryDogsFrom(prevCast) }
+            extras = com.sadurni.attacca.world.Extras(land!!, (songId ?: "").hashCode())
         }
         val land = land ?: return
 
         val target = input.positionMs + if (input.playing) (nowNs - input.positionAtNs) / 1_000_000.0 else 0.0
-        if (abs(target - posMs) > 1500) posMs = target
+        // (Just after a new song came in the player may still give the last one's place: not taken.)
+        val otherSong = input.positionFor.let { it != null && it != landFor?.first }
+        if (otherSong || (nowMs < placeGuardUntil && target - posMs > 2500)) posMs += if (input.playing) dtMs.toDouble() else 0.0
+        else if (abs(target - posMs) > 1500) posMs = target
         else posMs += (if (input.playing) dtMs.toDouble() else 0.0) + (target - posMs) * 0.08
         val tz = land.zAt(posMs)
         lastTz = tz
@@ -296,7 +374,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         camera.update(
             dtMs, nowMs, tx, ty, tz, heading, intensity, peak, { x, z -> land.heightAt(x, z) }, openness,
             { x, z -> maxOf(Props.topNear(land, x, z), cast?.topNear(x, z) ?: Float.NEGATIVE_INFINITY, ex?.topNear(x, z) ?: Float.NEGATIVE_INFINITY) },
-            sight, if (tunnel) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
+            sight, if (ex?.tunnelNear(tz) == true) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
             { z -> land.centerAt(z) },
         )
         wave = max(wave * 0.97f, pulse.coerceAtMost(1.3f) * (0.4f + 0.6f * intensity))
@@ -329,22 +407,34 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         // Colours: the stretch's sky, a warm haze towards the horizon, darker at night.
         val (skyA, skyB, skyT) = land.lookBlend(tz)
         fun blend(a: Int, b: Int) = rgb(a).let { x -> if (skyT <= 0f) x else rgb(b).let { y -> FloatArray(3) { x[it] + (y[it] - x[it]) * skyT } } }
-        val night = skyA.night + (skyB.night - skyA.night) * skyT
+        // (The sky's colours are eased over a moment: a song skipped halfway never turns night into day at once.)
+        val easeK = skyEaseStep()
+        val night = eased(9, skyA.night + (skyB.night - skyA.night) * skyT, easeK)
+        // The weather and the sun as the land shows them here (blended, eased): never a jump as a song comes in.
+        fun blendF(a: Float, b: Float) = a + (b - a) * skyT
+        val skyOf = if (skyT < 0.5f) skyA else skyB
+        val skySun = eased(10, blendF(skyA.sun, skyB.sun), easeK)
+        val skyStorm = eased(11, blendF(skyA.storm, skyB.storm), easeK)
+        val skyClouds = eased(12, blendF(skyA.clouds, skyB.clouds), easeK)
+        val skyRain = eased(13, blendF(skyA.rain, skyB.rain), easeK)
+        val skySnow = eased(14, blendF(skyA.snow, skyB.snow), easeK)
+        skyNow = floatArrayOf(skyClouds, skyStorm, skyRain, skySnow)
+        skyLookNow = skyOf
         // Under the water (the eye below its surface): the sea's own blues instead of the sky's.
         under = camera.eyeY < WorldLand.WATER - 0.2f
-        val top = if (under) floatArrayOf(0.04f, 0.2f, 0.34f) else blend(skyA.palette.skyTop, skyB.palette.skyTop)
-        val bottom = if (under) floatArrayOf(0.1f, 0.42f, 0.55f) else blend(skyA.palette.skyBottom, skyB.palette.skyBottom)
-        val sunColour = blend(skyA.palette.light, skyB.palette.light)
+        val top = if (under) floatArrayOf(0.04f, 0.2f, 0.34f) else blend(skyA.palette.skyTop, skyB.palette.skyTop).let { c -> FloatArray(3) { eased(it, c[it], easeK) } }
+        val bottom = if (under) floatArrayOf(0.1f, 0.42f, 0.55f) else blend(skyA.palette.skyBottom, skyB.palette.skyBottom).let { c -> FloatArray(3) { eased(3 + it, c[it], easeK) } }
+        val sunColour = blend(skyA.palette.light, skyB.palette.light).let { c -> FloatArray(3) { eased(6 + it, c[it], easeK) } }
         val haze = if (under) floatArrayOf(0.1f, 0.4f, 0.52f) else FloatArray(3) { bottom[it] * 0.8f + sunColour[it] * 0.2f }
         // Storms: now and then a flash of lightning.
-        if (look.storm > 0.3f && nowMs > nextFlash && input.playing) {
+        if (skyStorm > 0.3f && nowMs > nextFlash && input.playing) {
             flashUntil = nowMs + 120
-            nextFlash = nowMs + (2500 + Math.random() * 9000 / look.storm).toLong()
+            nextFlash = nowMs + (2500 + Math.random() * 9000 / skyStorm).toLong()
         }
         flash = if (nowMs < flashUntil) 1f else 0f
         nightNow = night
         sunColourNow = sunColour
-        sunSky[1] = 0.07f + 0.2f * look.sun
+        sunSky[1] = 0.07f + 0.2f * skySun
         peakNow = peak
         moonRed = if (look.world == World.CASTLE) peak else 0f
         // The peak in the sky as on the phone (and O'rama): fireworks over a city at night,
@@ -367,7 +457,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         }
         skyTop = top
         fog = haze
-        brightness = ((1f - 0.5f * night) * (1f - 0.35f * look.storm) * (0.9f + 0.18f * level + 0.08f * pulse.coerceAtMost(1f)) + flash * 0.8f) * (1f - 0.65f * (ex?.tunnelDepth(tz) ?: 0f))
+        brightness = ((1f - 0.5f * night) * (1f - 0.35f * skyStorm) * (0.9f + 0.18f * level + 0.08f * pulse.coerceAtMost(1f)) + flash * 0.8f) * (1f - 0.65f * (ex?.tunnelDepth(tz) ?: 0f))
         sunLight = FloatArray(3) { (sunColour[it] * 0.55f + WARM[it] * 0.45f) * (1.05f - 0.4f * night) }
         skyLight = FloatArray(3) { top[it] * 0.55f + 0.45f * COOL[it] }
         val underSea = camera.eyeY < WorldLand.WATER - 0.2f
@@ -385,6 +475,12 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             input.tapMove = false
             cast?.tap(nowMs, tz, Math.random().toFloat())
         }
+        // The sun on the picture, for clicks on it (five quick ones turn it into a record).
+        project(camera.eyeX - 0.2f * 500, camera.eyeY + sunSky[1] * 500, camera.eyeZ + 500f)?.let { (sx, sy) ->
+            input.sunX = sx; input.sunY = sy; input.sunR = 0.12f * h
+        } ?: run { input.sunX = -1f }
+        recordShown += ((if (input.recordOf != null && input.recordOf == input.songId) 1f else 0f) - recordShown) * 0.12f
+        christmas = input.festive == com.sadurni.attacca.festive.Festivity.CHRISTMAS || input.festive == com.sadurni.attacca.festive.Festivity.ORTHODOX_CHRISTMAS
 
         val t0 = System.nanoTime()
         skyBands(top, haze, sunColour, night, peak, look)
@@ -392,15 +488,29 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
 
         // The figures (and what lives and stands about), before the land: the light they carry lights it.
         val draws = ArrayList<Draw>()
+        cast?.santa = christmas
         cast?.frame(tz, posMs / beatMs, input.playing, nowMs, draws, ex?.darkAt(tz, night) == true, tunnel)
         oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
+        ex?.let { it.festivity = input.festive; it.kings = input.kings; it.vikram = input.vikram }
         ex?.frame(tz, ty, nowMs, input.playing, peak, if (input.peakMs >= 0) land.zAt(input.peakMs) else null, look.palette.accent, input.hasNext, draws)
         cast?.lamp?.copyInto(lamp) ?: lamp.fill(0f)
         beatNow = ((posMs / beatMs) % 64.0).toFloat()
-        weather(look, tz, nowMs, draws)
+        weather(skyLookNow ?: look, tz, nowMs, draws)
 
-        // The land, chunk by chunk on the threads.
-        val list = chunks.values.toList()
+        // The land, chunk by chunk on the threads (where the new land has no piece yet, the old one's).
+        val list = ArrayList(chunks.values)
+        if (stale.isNotEmpty()) {
+            val shown = HashSet<Int>()
+            var missing = false
+            for (k in floor((tz - 40) / LandMesher.CHUNK).toInt()..floor((tz + FAR) / LandMesher.CHUNK).toInt()) {
+                if (chunks.containsKey(k)) continue
+                missing = true
+                val a = floor((k * LandMesher.CHUNK - staleDz) / LandMesher.CHUNK).toInt()
+                val b = floor(((k + 1) * LandMesher.CHUNK - staleDz) / LandMesher.CHUNK).toInt()
+                for (j in a..b) if (j in stale) shown += j
+            }
+            if (!missing) stale.clear() else for (j in shown) list += stale[j]!!
+        }
         terrainSwell = true
         val made = pool.invokeAll(list.map { c -> Callable { Tris().also { landTris(c, it, nowMs) } } }).map { it.get() }
         val t2 = System.nanoTime()
@@ -455,7 +565,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         val fz = camera.atZ - camera.eyeZ
         val fl = sqrt(fx * fx + fz * fz).coerceAtLeast(0.001f)
         val horizon = clipY(camera.eyeX + fx / fl * 1000f, camera.eyeY, camera.eyeZ + fz / fl * 1000f) ?: -1f
-        val sunAt = clip(camera.eyeX - 0.2f * 500, camera.eyeY + (0.07f + 0.2f * look.sun) * 500, camera.eyeZ + 500f)
+        val sunAt = clip(camera.eyeX - 0.2f * 500, camera.eyeY + sunSky[1] * 500, camera.eyeZ + 500f)
         val sunStrength = (0.6f + 0.4f * (1 - night)) * (1f + peak * 0.6f) * (0.85f + 0.3f * level + 0.25f * pulse.coerceAtMost(1f))
         val aspect = w.toFloat() / h
         val yaw = kotlin.math.atan2(fx, fz)
@@ -487,6 +597,10 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
                     val c = peakShow(nx, ny, horizon, aspect, fwd, right, upv, tanY, time, r, g, b)
                     r = c[0]; g = c[1]; b = c[2]
                 }
+                if (input.kings && !under && t > 0.0f) {
+                    val c = kingsStar(nx, ny, aspect, fwd, right, upv, tanY, time, r, g, b)
+                    r = c[0]; g = c[1]; b = c[2]
+                }
                 if (sunAt != null && !under) {
                     val dx = (nx - sunAt[0]) * aspect
                     val dy = ny - sunAt[1]
@@ -498,9 +612,13 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
                         val disc = 1f - smooth(moonSize, moonSize + 0.015f, d)
                         val glow = (exp(-d * 4f) * 0.55f + exp(-d * 1.2f) * 0.18f) * sunStrength * (1f + moonRed)
                         r += sunC[0] * glow; g += sunC[1] * glow; b += sunC[2] * glow
-                        val k2 = (disc * sunStrength).coerceIn(0f, 1f)
+                        val k2 = (disc * sunStrength * (1f - recordShown)).coerceIn(0f, 1f)
                         val bright = 1f + 0.4f * (1f - moonRed)
                         r += (sunC[0] * bright - r) * k2; g += (sunC[1] * bright - g) * k2; b += (sunC[2] * bright - b) * k2
+                        if (recordShown > 0.01f) {
+                            val c = record(dx, dy, d, time, sunC, r, g, b)
+                            r = c[0]; g = c[1]; b = c[2]
+                        }
                     }
                 }
                 if (flash > 0f) { r += 0.75f * flash; g += 0.78f * flash; b += 0.95f * flash }
@@ -800,17 +918,18 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             } else emptyList()
         }
         if (cloudRigs.isNotEmpty()) {
-            val n = (look.clouds * 14).toInt().coerceAtMost(14)
+            val n = (skyNow[0] * 14).toInt().coerceAtMost(14)
             for (c in 0 until n) {
                 val drift = (nowMs / 1000f * 1.2f + c * 37f) % 300f
                 val cz = (tz - 40f) + ((c * 53) % 260)
                 val cx = -150f + drift + (c * 71 % 60)
-                val cy = 46f + (c * 13 % 18) - look.storm * 12f
+                val cy = 46f + (c * 13 % 18) - skyNow[1] * 12f
                 draws += Draw(cloudRigs[c % 3], Mat4.model(cx, cy, cz, c * 1.3f, s = 1f + (c % 3) * 0.4f), cloudPose)
             }
         }
-        val rain = look.rain.coerceAtLeast(look.storm)
-        val snow = look.snow
+        val rain = skyNow[2].coerceAtLeast(skyNow[1])
+        // Christmas days: snow falling (but in space).
+        val snow = if (christmas) max(skyNow[3], 0.45f) else skyNow[3]
         val bubbles = under
         if (!bubbles && !((rain > 0.1f || snow > 0.1f) && look.world != World.SPACE && look.world != World.REEF)) return
         val isSnow = snow >= rain || bubbles
@@ -946,6 +1065,26 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
                     val d = sqrt(dx * dx + dy * dy)
                     if (d > rr) continue
                     if (k % 3 < 1) mix(1f, 0.8f, 0.25f, (1f - smooth(rr * 0.7f, rr, d)) * p) else mix(0.85f, 0.15f, 0.12f, (1f - smooth(rr * 0.7f, rr, d)) * p)
+                }
+                // Its head in front: red with a golden snout, horns, an eye and a waving whisker.
+                val hy = 0.55f + sin(time * 2.2f - 0.25f) * 0.1f
+                fun seg(ax: Float, ay: Float, bx: Float, by: Float): Float {
+                    val px = qx - ax; val py = qy - ay; val ux = bx - ax; val uy = by - ay
+                    val t = ((px * ux + py * uy) / (ux * ux + uy * uy)).coerceIn(0f, 1f)
+                    return sqrt((px - ux * t) * (px - ux * t) + (py - uy * t) * (py - uy * t))
+                }
+                fun ell(cx: Float, cy: Float, rx: Float, ry: Float): Float = sqrt(((qx - cx) / rx) * ((qx - cx) / rx) + ((qy - cy) / ry) * ((qy - cy) / ry))
+                if (abs(qx - (headX - 0.05f)) < 0.2f && abs(qy - hy) < 0.15f) {
+                    val hax = headX - 0.01f; val hay = hy + 0.028f
+                    for (s in 0 until 2) mix(1f, 0.82f, 0.3f, (1f - smooth(0.004f, 0.007f, seg(hax, hay, hax + 0.05f + s * 0.02f, hay + 0.05f - s * 0.012f))) * p)
+                    val wax = headX - 0.1f; val way = hy - 0.018f
+                    mix(1f, 0.8f, 0.25f, (1f - smooth(0.002f, 0.004f, seg(wax, way, wax - 0.05f, way - 0.03f + sin(time * 3f) * 0.02f))) * p)
+                    mix(0.9f, 0.18f, 0.12f, (1f - smooth(0.85f, 1f, ell(headX - 0.035f, hy, 0.062f, 0.045f))) * p)
+                    mix(1f, 0.8f, 0.25f, (1f - smooth(0.85f, 1f, ell(headX - 0.09f, hy - 0.01f, 0.042f, 0.026f))) * p)
+                    mix(0.2f, 0.05f, 0.03f, (1f - smooth(0.003f, 0.006f, ell(headX - 0.115f, hy - 0.002f, 1f, 1f))) * p)
+                    val ex = headX - 0.05f; val ey = hy + 0.017f
+                    mix(1f, 0.97f, 0.8f, (1f - smooth(0.008f, 0.011f, ell(ex, ey, 1f, 1f))) * p)
+                    mix(0.05f, 0.05f, 0.05f, (1f - smooth(0.004f, 0.006f, ell(ex - 0.003f, ey, 1f, 1f))) * p)
                 }
             }
             kind > 5.5f && kind < 6.5f -> for (k in 0 until 6) {
@@ -1103,8 +1242,16 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             f *= 0.7f
             // Flames flicker (torches, lava); lights glow up a little on the beat.
             var k = 1f + 0.15f * pulse.coerceAtMost(1.5f)
-            if (r0 > 0.95f && g0 > 0.5f && g0 < 0.78f && b0 < 0.4f) k *= 0.82f + 0.12f * sin(timeS * 13f + x * 3.1f + z * 1.7f) + 0.08f * sin(timeS * 23f + z * 2.3f)
-            val r = r0 * k; val g = g0 * k; val b = b0 * k
+            var r = r0 * k; var g = g0 * k; var b = b0 * k
+            if (r0 > 0.95f && g0 > 0.5f && g0 < 0.78f && b0 < 0.4f) {
+                // Brightness and colour waver, now and then a flare: orange to yellow and back.
+                val ph = x * 3.1f + z * 1.7f
+                val n = 0.5f + 0.25f * sin(timeS * 13f + ph) + 0.15f * sin(timeS * 23.7f + ph * 1.9f) + 0.1f * sin(timeS * 41f + ph * 0.7f)
+                val flare = Math.pow(max(sin(timeS * 2.3f + ph * 0.4f), 0f).toDouble(), 12.0).toFloat() * 0.35f
+                val m = (n * 0.6f + flare).coerceIn(0f, 1f)
+                val bright = 0.75f + 0.45f * n + flare
+                r = (r * 0.7f + (1f - r * 0.7f) * m) * bright; g = (g * 0.7f + (0.86f - g * 0.7f) * m) * bright; b = (b * 0.7f + (0.45f - b * 0.7f) * m) * bright
+            }
             v[o + 4] = r + (fog[0] - r) * f; v[o + 5] = g + (fog[1] - g) * f; v[o + 6] = b + (fog[2] - b) * f
             return
         }
@@ -1227,6 +1374,81 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
     }
 
     private fun clipY(x: Float, y: Float, z: Float): Float? = clip(x, y, z)?.get(1)
+
+    /** The star the Kings follow, fixed in the sky high over the way ahead, its tail trailing down (as on the phone). */
+    private fun kingsStar(nx: Float, ny: Float, aspect: Float, fwd: FloatArray, right: FloatArray, up: FloatArray, tanY: Float, time: Float, r0: Float, g0: Float, b0: Float): FloatArray {
+        val dx = fwd[0] + (right[0] * nx * aspect + up[0] * ny) * tanY
+        val dy = fwd[1] + (right[1] * nx * aspect + up[1] * ny) * tanY
+        val dz = fwd[2] + (right[2] * nx * aspect + up[2] * ny) * tanY
+        val l = sqrt(dx * dx + dy * dy + dz * dz)
+        val sl = sqrt(0.3f * 0.3f + 0.2f * 0.2f + 1f)
+        val sx = 0.3f / sl; val sy = 0.2f / sl; val sz = 1f / sl
+        val ex = dx / l; val ey = dy / l; val ez = dz / l
+        if (ex * sx + ey * sy + ez * sz < 0.9f) return floatArrayOf(r0, g0, b0)
+        // Its own axes: R across, U up.
+        val rl = sqrt(sz * sz + sx * sx)
+        val rx = -sz / rl; val rz = sx / rl
+        val ux = 0f * sz - rz * sy; val uy = rz * sx - rx * sz; val uz = rx * sy - 0f * sx
+        val px = ex * rx + ez * rz
+        val py = ex * ux + ey * uy + ez * uz
+        val len = sqrt(px * px + py * py)
+        val tw = 0.85f + 0.15f * sin(time * 3f)
+        var star = exp(-len * 90f) * 0.7f + (1f - smooth(0.004f, 0.007f, len))
+        star += (1f - smooth(0f, 0.0025f, abs(px))) * (1f - smooth(0f, 0.05f, abs(py))) * tw
+        star += (1f - smooth(0f, 0.0025f, abs(py))) * (1f - smooth(0f, 0.05f, abs(px))) * tw
+        val qx = (px + py) * 0.7071f; val qy = (px - py) * 0.7071f
+        star += (1f - smooth(0f, 0.002f, abs(qx))) * (1f - smooth(0f, 0.022f, abs(qy))) * 0.6f
+        star += (1f - smooth(0f, 0.002f, abs(qy))) * (1f - smooth(0f, 0.022f, abs(qx))) * 0.6f
+        val tdx = 0.8619f; val tdy = -0.507f
+        val along = px * tdx + py * tdy
+        val across = abs(px * tdy - py * tdx)
+        val tail = if (along >= 0f) (1f - smooth(0f, 0.28f, along)) * (1f - smooth(0f, 0.003f + along * 0.05f, across)) * 0.5f * (1f - along / 0.28f) else 0f
+        val a = star + tail
+        return floatArrayOf(r0 + 1f * a, g0 + 0.95f * a, b0 + 0.75f * a)
+    }
+
+    /** The sun as a record turning in the sky (as on the phone): grooves catching the light, the cover on its label, notes falling. */
+    private fun record(dx: Float, dy: Float, d: Float, time: Float, sunC: FloatArray, r0: Float, g0: Float, b0: Float): FloatArray {
+        var r = r0; var g = g0; var b = b0
+        val p = recordShown
+        val big = 0.16f
+        val spin = time * 3.4f
+        if (d < big + 0.008f) {
+            val a = (1f - smooth(big, big + 0.008f, d)) * p
+            var cr: Float; var cg: Float; var cb: Float
+            if (d < big * 0.36f) {
+                val pic = input.cover
+                if (pic != null) {
+                    val la = kotlin.math.atan2(dy, dx) - spin
+                    val u = (cos(la) * d / (big * 0.36f) * 0.5f + 0.5f).coerceIn(0f, 0.999f)
+                    val v = (sin(la) * d / (big * 0.36f) * 0.5f + 0.5f).coerceIn(0f, 0.999f)
+                    val px = pic.pixels[(((1f - v) * pic.height).toInt().coerceIn(0, pic.height - 1)) * pic.width + (u * pic.width).toInt()]
+                    cr = ((px shr 16) and 0xFF) / 255f; cg = ((px shr 8) and 0xFF) / 255f; cb = (px and 0xFF) / 255f
+                } else {
+                    cr = sunC[0] * 0.9f + 0.1f; cg = sunC[1] * 0.9f + 0.1f; cb = sunC[2] * 0.9f + 0.1f
+                }
+            } else {
+                val groove = 0.05f + 0.06f * (0.5f + 0.5f * sin(d * 520f))
+                val sheen = 0.22f * Math.pow(max(0f, cos((kotlin.math.atan2(dy, dx) + spin) * 2f)).toDouble(), 18.0).toFloat() * smooth(big * 0.4f, big * 0.9f, d)
+                cr = groove + sheen; cg = groove + sheen; cb = groove + 0.01f + sheen
+            }
+            val hole = 1f - smooth(big * 0.03f, big * 0.045f, d)
+            cr += (0.02f - cr) * hole; cg += (0.02f - cg) * hole; cb += (0.02f - cb) * hole
+            r += (cr - r) * a; g += (cg - g) * a; b += (cb - b) * a
+        }
+        for (k in 0 until 6) {
+            val age = fract(time * 0.35f + k / 6f)
+            val ax = (hash1(floor(time * 0.35f + k / 6f) + k) - 0.5f) * big * 3f
+            val ay = -big - age * 0.5f
+            val nx = dx - ax; val ny = dy - ay
+            val head = 1f - smooth(0.012f, 0.016f, sqrt((nx / 1.25f) * (nx / 1.25f) + ny * ny))
+            val stem = if (ny >= 0f && ny <= 0.05f) 1f - smooth(0.002f, 0.004f, abs(nx - 0.014f)) else 0f
+            val flag = if (nx >= 0.014f && nx <= 0.032f) 1f - smooth(0.003f, 0.005f, abs(ny - 0.05f + (nx - 0.014f) * 0.6f)) else 0f
+            val a = max(head, max(stem, flag)) * (1f - age) * p
+            r += (sunC[0] * 1.1f + 0.15f - r) * a; g += (sunC[1] * 1.1f + 0.15f - g) * a; b += (sunC[2] * 1.1f + 0.15f - b) * a
+        }
+        return floatArrayOf(r, g, b)
+    }
 
     private fun project(x: Float, y: Float, z: Float): Pair<Float, Float>? =
         clip(x, y, z)?.let { (it[0] * 0.5f + 0.5f) * width to (0.5f - it[1] * 0.5f) * height }

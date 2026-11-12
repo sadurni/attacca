@@ -505,6 +505,8 @@
     <string name="waveform_off">끄기 (일반 탐색 막대)</string>
     <string name="strip_show_orama">여기에 O\'rama 보기</string>
     <string name="strip_show_wave">여기에 파형 보기</string>
+    <string name="strip_view">재생 중 화면에 보일 것</string>
+    <string name="orama_open">O\'rama를 열면 보일 것</string>
     <string name="waveform_orama">O\'rama 풍경 (파형은 시간 사이에 작게)</string>
     <string name="section_silence">무음 건너뛰기</string>
     <string name="silence_enabled">곡 시작과 끝의 무음 건너뛰기</string>
@@ -1514,6 +1516,7 @@
     <string name="help_orama_worlds">• 더 많은 세계: 오아시스와 낙타가 있는 사막(정점에서 황금 피라미드), 만리장성(용), 사원과 코끼리가 있는 인도의 정글(색의 구름), 카누로 내려가는 아마존(폭포 위의 무지개), 먼 서부의 협곡(석양 속의 독수리), 벚꽃이 핀 일본(불꽃놀이와 꽃잎), 잠수함으로 가는 바닷속(고래), 그리고 화산(분화). 장르 태그가 고르는 데 도움이 됩니다(아랍 음악이나 플라멩코, 중국, 인도, 라틴이나 브라질, 컨트리, 일본, 앰비언트, 메탈). 지구본 버튼은 곡을 세계마다 차례로 보여 주며, O\'rama와 Attacca World에서 똑같습니다. 같은 곡의 풍경을 3D로 볼 수도 있습니다(큐브 버튼). 여행자와 개 네 마리 뒤를 따라 지나가며, 손가락 하나로 카메라를 돌리고 두 개로 가까이 가져오거나 올립니다.</string>
     <string name="help_world">• Attacca World (O\'rama의 큐브 버튼): 같은 곡을 여행자와 네 마리 개 뒤를 따라 지나가는 3D 땅으로. 교대, 장애물, 그 세계의 날씨가 있습니다. 땅은 음악과 함께 움직이고 한 곡에서 다음 곡으로 이어지며, 길게 조용하거나 강한 부분은 잠시 다른 세계를 데려옵니다. 손가락 하나로 카메라를 돌리고 둘로 가까이하거나 올립니다. 여행자를 누르면 점프하거나 돕니다. 화면 분할 버튼은 O\'rama와 Attacca World를 함께 보여 줍니다. 소리가 맞으면 제목의 단어가 세계를 고를 수 있습니다(Siren Song, 조용한 곡: 바닷속). 컴퓨터에서도.</string>
     <string name="help_world_life">• Attacca World에서는 길이 O\'rama의 장소들을 같은 순간에 지나갑니다(다리, 횃불이 있는 터널, 기차가 서는 역, 굴뚝에서 연기가 피어오르는 마을, 대관람차, 유적, 아치, 솟아오르는 로켓). 다음 곡의 세계는 곡이 시작되기 전에 눈에 들어옵니다. 탈것을 바꾸기 전에는 여행자가 내립니다(물가에서 잠수함에 타고, 강아지들이 창문으로 밖을 내다봅니다). 새, 열기구, 풀을 뜯는 동물, 다른 강아지들이 지나가고, 헤드랜턴이 어둠을 밝히며, 카메라는 볼 만한 곳으로 돌아보고 능선 위로 올라갑니다. 전체 화면에서는 곡이 시작될 때 곡 이름이 나타납니다.</string>
+    <string name="help_world_views">• 지금 재생 중의 띠에는 O\'rama, Attacca World 또는 둘을 나란히 표시할 수 있고(설정 → 외관), O\'rama 버튼으로 O\'rama, Attacca World 또는 둘을 분할 화면으로 열 수 있습니다(설정). 전체 화면에서는 뒤로 가기로 조작 버튼이 돌아옵니다. 강조 색상의 가는 선이 곡이 얼마나 진행됐는지 보여 주고, 곡 이름도 가끔 다시 나타납니다. 위젯 글자 크기는 설정 → 외관에 있습니다. 정보의 «보고용 로그 남기기»는 켜져 있는 동안에만 종료와 전환을 목록 옆 파일에 기록합니다.</string>
     <string name="help_orama_buttons">• O\'rama에서 오른쪽 버튼(닫기, 전체 화면, 프레임 속도)은 하늘이 보이도록 반쯤 숨어 있습니다. 탭하면 나오고 몇 초 뒤 다시 숨습니다. 해와 달은 제목이나 버튼 뒤로 가지 않습니다.</string>
     <string name="app_slogan">“음악 컬렉션을 다시 발견하세요. 새로운 방식으로, 최고의 소리로.”</string>
     <string name="help_orama_surprises">• O\'rama에는 작은 깜짝 선물도 몇 가지 숨어 있습니다. 직접 찾아보세요!</string>
@@ -1850,6 +1853,8 @@
     <string name="newyear_notice_text">오늘 밤 자정에 새해가 시작되고 O\'rama에서 큰일이 일어나요. 그때 Attacca를 화면에 열어 두세요.</string>
     <string name="browser_as_grid">커버로 보기</string>
     <string name="browser_as_list">목록으로 보기</string>
+    <string name="widget_text_size">위젯 글자 크기</string>
+    <string name="widget_text_size_hint">글자가 커질수록 커버가 작아집니다. 위는 큰 위젯이 보일 모습입니다.</string>
     <string name="widget_big">크게 하면 위젯에 표시할 것</string>
     <string name="widget_big_cover">큰 커버</string>
     <string name="widget_big_orama">O\'rama 풍경</string>
@@ -1860,4 +1865,6 @@
     <string name="lock_wallpaper_hint">트랙마다 다시 설정돼요. 그대로로 되돌리면 잠금 화면에 홈 화면의 그림이 쓰여요(이전 그림은 다시 읽어 올 수 없어요).</string>
     <string name="over_lock_screen">재생 중 잠금 화면 위에 표시</string>
     <string name="over_lock_screen_hint">화면이 꺼질 때 Attacca가 열려 있으면(지금 재생 중, O\'rama…) 음악이 재생되는 동안 휴대폰을 깨우면 잠금 화면 위에 나타나요. 그 밖의 경우 휴대폰은 잠긴 상태로 있어요.</string>
+    <string name="about_logs">보고용 로그 남기기</string>
+    <string name="about_logs_hint">앱 종료, 곡 사이 전환, Attacca World의 곡 전환을 목록 옆 파일에 기록해 문제가 생겼을 때 보낼 수 있게 합니다. 켜지 않으면 꺼져 있습니다.</string>
 </resources>

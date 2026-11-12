@@ -106,6 +106,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _positionMs = MutableStateFlow(0L)
     val positionMs: StateFlow<Long> = _positionMs.asStateFlow()
 
+    /** The track [positionMs] belongs to (it may change a moment before [nowPlaying] does). */
+    private val _positionItem = MutableStateFlow<String?>(null)
+    val positionItem: StateFlow<String?> = _positionItem.asStateFlow()
+
     private val _queue = MutableStateFlow<List<QueueEntry>>(emptyList())
     val queue: StateFlow<List<QueueEntry>> = _queue.asStateFlow()
 
@@ -665,6 +669,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun seekTo(positionMs: Long) {
         controller?.seekTo(positionMs)
+        _positionItem.value = controller?.currentMediaItem?.mediaId
         _positionMs.value = positionMs
     }
 
@@ -995,6 +1000,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val raw = if (ended) 0L else positionOf(c)
         val shown = _positionMs.value
         // Other events (play state, metadata…) bring the same small corrections as the ticker.
+        _positionItem.value = c.currentMediaItem?.mediaId
         _positionMs.value = if (!jumped && c.currentMediaItemIndex == tickedItem && raw < shown && shown - raw < MAX_HELD_STEP_BACK_MS) shown else raw
         tickedItem = c.currentMediaItemIndex
         updatePositionTicker(c.isPlaying)
@@ -1056,6 +1062,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         val raw = positionOf(c)
                         val item = c.currentMediaItemIndex
                         val shown = _positionMs.value
+                        _positionItem.value = c.currentMediaItem?.mediaId
                         _positionMs.value = if (item == tickedItem && raw < shown && shown - raw < MAX_HELD_STEP_BACK_MS) shown else raw
                         tickedItem = item
                     }

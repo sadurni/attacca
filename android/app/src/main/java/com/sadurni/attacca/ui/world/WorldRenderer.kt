@@ -38,6 +38,8 @@ class WorldFeed {
     @Volatile var wave: SongWave? = null
     @Volatile var peakMs: Double = -1.0
     @Volatile var positionMs: Long = 0L
+    /** The song [positionMs] belongs to (null: not known): a place of another song is not taken. */
+    @Volatile var positionFor: String? = null
     @Volatile var positionAtNs: Long = 0L
     @Volatile var playing: Boolean = false
     /** Level, low and high of what is heard now (0 … 1), and whether they are known. */
@@ -58,6 +60,19 @@ class WorldFeed {
 
     /** Where the song starts on the land's own timeline (ms), as in O'rama: its places fall at the same moments. */
     @Volatile var originMs: Double = 0.0
+
+    /** The festive days' look (null: none), with the Three Kings; [vikram]: the Hindu new year's show going on. */
+    @Volatile var festive: com.sadurni.attacca.festive.Festivity? = null
+    @Volatile var kings: Boolean = false
+    @Volatile var vikram: Boolean = false
+
+    /** Where the sun (or moon) is on the screen now (px; -1 when out of sight), for touches on it. */
+    @Volatile var sunX = -1f
+    @Volatile var sunY = -1f
+    @Volatile var sunR = 0f
+
+    /** The song whose sun turned into a record (touched five times quickly). */
+    @Volatile var recordOf: String? = null
 }
 
 /** Draws Attacca World: the song's land, the traveller with the four dogs, the sky, from [camera]. */
@@ -67,6 +82,26 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     private var lastTz = 0f
     private var landFor: Triple<String?, SongLook?, SongWave?>? = null
     private val chunks = HashMap<Int, Gpu>()
+
+    /** The sky's colours and night as shown, easing towards the land's (see [eased]). */
+    private val skyEase = FloatArray(16)
+    private var skyEaseNs = 0L
+
+    /** How far to ease this frame (about 1.2 s to most of the way). */
+    private fun skyEaseStep(): Float {
+        val now = System.nanoTime()
+        val dt = if (skyEaseNs == 0L) -1.0 else (now - skyEaseNs) / 1e6
+        skyEaseNs = now
+        return if (dt < 0) 1f else (1 - kotlin.math.exp(-dt.coerceIn(0.0, 250.0) / 450.0)).toFloat()
+    }
+
+    private fun eased(slot: Int, v: Float, k: Float): Float {
+        skyEase[slot] += (v - skyEase[slot]) * k
+        return skyEase[slot]
+    }
+    /** The last land's pieces, drawn (moved by [staleDz] rows) where the new land's are not made yet. */
+    private val stale = HashMap<Int, Gpu>()
+    private var staleDz = 0f
     // Who goes through the land (traveller, vehicle, dogs, people at relays) and their meshes on the GPU.
     private var cast: com.sadurni.attacca.world.Cast? = null
     private val rigGpu = java.util.IdentityHashMap<com.sadurni.attacca.world.Rig, List<Gpu>>()
@@ -79,6 +114,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     private var tex = 0
     private var texBuffer = 0
     private var coverTex = 0
+    private var recordShown = 0f
     private var coverOf: android.graphics.Bitmap? = null
     private var signTex = 0
     private var signOf: String? = null
@@ -90,6 +126,103 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
 
     /** Whether this song's traveller came aboard from the one before. */
     private var arrivedOn = false
+
+    /** What a new land is made from (taken on the screen's thread), and what was made. */
+    private class Plan(
+        val n: Int, val key: Triple<String?, SongLook?, SongWave?>, val old: WorldLand?, val sameSong: Boolean, val onlyNext: Boolean,
+        val before: WorldLand.Before?, val kind: com.sadurni.attacca.diorama.Traveller, val arrives: Boolean,
+        val prevCast: com.sadurni.attacca.world.Cast?, val wave: SongWave?, val look: SongLook, val songId: String?,
+        val sectioned: Boolean, val next: SongLook?, val origin: Double, val cameIn: SongLook?, val person: Int, val atZ: Float,
+        val atMs: Long,
+    )
+    private class Built(
+        val plan: Plan, val land: WorldLand, val cast: com.sadurni.attacca.world.Cast, val extras: com.sadurni.attacca.world.Extras,
+        val meshes: Map<Int, Mesh>,
+    )
+    // (Read by the builder too: a plan overtaken by a newer one is dropped at once.)
+    @Volatile private var planCount = 0
+    private var placeGuardUntil = 0L
+    private var plannedNext: SongLook? = null
+    private var plannedOrigin = Double.NaN
+    /** The plan being made now, if any. */
+    private var waitingPlan: Plan? = null
+    private val built = java.util.concurrent.atomic.AtomicReference<Built?>(null)
+    /** A new song's land is being made: the old one goes on in its own time meanwhile. */
+    private var holdOld = false
+    private val builder = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "Attacca World new land").apply { isDaemon = true } }
+
+    /** Makes the land of [plan] (on the builder's thread): land, cast, extras, a first frame and the pieces about the start. */
+    private fun build(plan: Plan, nowMs: Long): Built? {
+        if (plan.n != planCount) return null
+        val land = WorldLand(plan.wave, plan.look, (plan.songId ?: "").hashCode(), plan.sectioned, plan.before, plan.next, plan.origin, plan.arrives, plan.cameIn)
+        val cast = com.sadurni.attacca.world.Cast(land, plan.kind, plan.person, (plan.songId ?: "").hashCode(), plan.arrives)
+        val extras = com.sadurni.attacca.world.Extras(land, (plan.songId ?: "").hashCode())
+        if (plan.n != planCount) return null
+        val z = if (plan.sameSong) plan.atZ else land.zAt((plan.wave?.startMs ?: 0L).toDouble())
+        // A first frame made here, so the figures' and the things' shapes are ready.
+        val warm = ArrayList<com.sadurni.attacca.world.Draw>()
+        runCatching {
+            cast.frame(z, 0.0, false, nowMs, warm)
+            extras.frame(z, land.pathAt(z), nowMs, false, 0f, null, plan.look.palette.accent, plan.next != null, warm)
+            extras.sight(z)
+        }
+        val here = floor(z / LandMesher.CHUNK).toInt()
+        val meshes = HashMap<Int, Mesh>()
+        for (k in here - 1..here + 2) {
+            if (plan.n != planCount) return null
+            meshes[k] = LandMesher.chunk(land, k)
+        }
+        return Built(plan, land, cast, extras, meshes)
+    }
+
+    /** Puts the land made in place (on the screen's thread). */
+    private fun take(b: Built, nowMs: Long) {
+        val plan = b.plan
+        val old = land
+        if (!plan.sameSong) {
+            oldCast = plan.prevCast?.takeIf { plan.before != null && it.leaves }
+            oldDz = -(plan.before?.atZ ?: 0f)
+        }
+        arrivedOn = plan.arrives
+        land = b.land
+        // A new song starts at its start (the player's position for it follows in a moment).
+        // (As far into it as the time it took to make: the traveller goes on, no step back.)
+        if (!plan.sameSong) {
+            posMs = (plan.wave?.startMs ?: 0L).toDouble() + (nowMs - plan.atMs).coerceIn(0L, 4000L)
+            placeGuardUntil = nowMs + 2500
+            // What World decided at this change, for the log the user can send.
+            val line = "${plan.songId?.substringAfterLast('/')}: ${b.land.describeStart()}"
+            builder.execute { WorldLog.note(line) }
+        }
+        holdOld = false
+        // The land in sight is kept until the new one's pieces are made (no gap, no flicker):
+        // the old pieces are drawn where they were, moved to the new song's rows.
+        for (g in stale.values) delete(g)
+        stale.clear()
+        val keepTo = if (plan.onlyNext && old != null) minOf(old.endZ, b.land.endZ) - WorldLand.ARRIVE - 8f else Float.NEGATIVE_INFINITY
+        for ((k, g) in chunks) {
+            if ((k + 1) * LandMesher.CHUNK < keepTo) continue
+            stale[k] = g
+        }
+        chunks.keys.removeAll { it in stale }
+        staleDz = when {
+            plan.sameSong -> 0f
+            plan.before != null -> -plan.before.atZ
+            else -> Float.NaN
+        }
+        if (staleDz.isNaN()) {
+            for (g in stale.values) delete(g)
+            stale.clear()
+        }
+        pending.clear()
+        for ((k, m) in b.meshes) if (k !in chunks) chunks[k] = gpu(m)
+        for (list in rigGpu.values) list.forEach(::delete)
+        rigGpu.clear()
+        b.cast.carryDogsFrom(plan.prevCast)
+        b.cast.shownFrom(nowMs)
+        cast = b.cast
+        extras = b.extras
+    }
     private val inverse = FloatArray(16)
     private val boneMatrices = ArrayList<FloatArray>()
     /** The traveller met last (people change at relays and go on from song to song). */
@@ -151,6 +284,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         skyBuffer = upload(quad)
         // A new surface: everything uploaded before is gone.
         chunks.clear()
+        stale.clear()
         landFor = null
         rigGpu.clear()
         GLES30.glEnable(GLES30.GL_DEPTH_TEST)
@@ -168,48 +302,75 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         val dtMs = if (lastFrameNs == 0L) 16L else ((nowNs - lastFrameNs) / 1_000_000L).coerceIn(1L, 100L)
         lastFrameNs = nowNs
         val nowMs = nowNs / 1_000_000L
-        val look = feed.look ?: com.sadurni.attacca.diorama.Diorama.NEUTRAL
+        // The song as the screen gave it, all of it at once (never half of one song and half of another).
+        val songId: String?
+        val feedLook: SongLook?
+        val songWave: SongWave?
+        val nextLook: SongLook?
+        val origin: Double
+        val sectioned: Boolean
+        synchronized(feed) {
+            songId = feed.songId; feedLook = feed.look; songWave = feed.wave
+            nextLook = feed.nextLook; origin = feed.originMs; sectioned = feed.sectioned
+        }
+        // Nothing until the song's look is known (no default world first).
+        val look = feedLook ?: run {
+            GLES30.glClearColor(0f, 0f, 0f, 1f)
+            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+            return
+        }
         // A new land when the song, its look or its wave (which may come a moment later) changes.
-        val key = Triple(feed.songId, feed.look, feed.wave)
-        val nextLook = feed.nextLook
-        val origin = feed.originMs
-        if (key != landFor || nextLook !== land?.next || origin != land?.originMs) {
+        val key = Triple(songId, feedLook, songWave)
+        // (Against what was last asked for, made or still being made.)
+        if (key != landFor || nextLook !== plannedNext || origin != plannedOrigin) {
+            plannedNext = nextLook
+            plannedOrigin = origin
             // Another song from its start: its land goes on from where the last one was left (the
             // same song again, with its wave or another world, keeps what it went on from).
-            val old = land
-            val sameSong = landFor?.first == feed.songId
+            // (Still being made for this very song: the new one is made from the same start.)
+            val waiting = waitingPlan?.takeIf { it.songId == songId }
+            val old = waiting?.old ?: land
+            val sameSong = waiting?.sameSong ?: (landFor?.first == songId)
+            // Only the next song's look changed: what is in sight now stays as it is.
+            val onlyNext = waiting == null && key == landFor && origin == old?.originMs
             // (Opened in the middle of a song, the last one's rows are far behind and never seen.)
-            val before = when {
+            val before = waiting?.before ?: when {
                 old == null || landFor?.first == null -> null
                 sameSong -> old.before
                 else -> WorldLand.Before(old, lastTz)
             }
             landFor = key
             // Still aboard from the song before when the same vehicle goes on (nobody got off at its end).
-            val prevCast = cast
+            val prevCast = waiting?.prevCast ?: cast
             val kind = feed.forceTraveller ?: look.traveller
-            val arrives = if (sameSong) arrivedOn else prevCast != null && before != null && prevCast.kind == kind && !prevCast.leaves
-            if (!sameSong) {
-                oldCast = prevCast?.takeIf { before != null && it.leaves }
-                oldDz = -(before?.atZ ?: 0f)
-            }
-            arrivedOn = arrives
-            land = WorldLand(feed.wave, look, (feed.songId ?: "").hashCode(), feed.sectioned, before, nextLook, origin, arrives)
-            // A new song starts at its start (the player's position for it follows in a moment).
-            if (!sameSong) posMs = (feed.wave?.startMs ?: 0L).toDouble()
-            for (g in chunks.values) delete(g)
-            chunks.clear()
-            pending.clear()
-            for (list in rigGpu.values) list.forEach(::delete)
-            rigGpu.clear()
-            cast = com.sadurni.attacca.world.Cast(land!!, kind, person, (feed.songId ?: "").hashCode(), arrives)
-            extras = com.sadurni.attacca.world.Extras(land!!, (feed.songId ?: "").hashCode())
+            // A new song starts in what was seen arriving at the end of the last one.
+            val cameIn = waiting?.cameIn ?: if (!sameSong && before != null) old?.lookAt(lastTz) else if (sameSong) old?.cameIn else null
+            val arrives = waiting?.arrives ?: if (sameSong) arrivedOn else prevCast != null && before != null && prevCast.kind == kind && !prevCast.leaves
+            // The new land, its cast and what stands by the way are made by another thread (with the
+            // pieces about the start and a first frame of figures), so the screen never stops: the
+            // old land goes on being drawn (on its own time) until the new one is ready.
+            val plan = Plan(++planCount, key, old, sameSong, onlyNext, before, kind, arrives, prevCast,
+                songWave, look, songId, sectioned, nextLook, origin, cameIn, person, lastTz, nowMs)
+            waitingPlan = plan
+            holdOld = old != null && !sameSong
+            builder.execute { build(plan, nowMs)?.let { built.set(it) } }
         }
-        val land = land ?: return
+        // The new land, once made: in its place now.
+        built.getAndSet(null)?.let { b -> if (b.plan.n == planCount) { take(b, nowMs); waitingPlan = null } }
+        val land = land ?: run {
+            // The first land is still being made.
+            GLES30.glClearColor(0f, 0f, 0f, 1f)
+            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+            return
+        }
 
         // Where the song is: the player's position, run on between its updates, eased into.
         val target = feed.positionMs + if (feed.playing) (nowNs - feed.positionAtNs) / 1_000_000.0 else 0.0
-        if (abs(target - posMs) > 1500) posMs = target
+        // (Just after a new song came in the player may still give the last one's place: not taken.)
+        val otherSong = feed.positionFor.let { it != null && it != landFor?.first }
+        val stalePlace = otherSong || (nowMs < placeGuardUntil && target - posMs > 2500)
+        if (holdOld || stalePlace) posMs += if (feed.playing) dtMs.toDouble() else 0.0
+        else if (abs(target - posMs) > 1500) posMs = target
         else posMs += (if (feed.playing) dtMs.toDouble() else 0.0) + (target - posMs) * 0.08
         val tz = land.zAt(posMs)
         lastTz = tz
@@ -267,6 +428,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         }
         openness += (openTarget - openness) * 0.02f
         val ex = extras
+        val christmas = feed.festive == com.sadurni.attacca.festive.Festivity.CHRISTMAS || feed.festive == com.sadurni.attacca.festive.Festivity.ORTHODOX_CHRISTMAS
         if (nowMs - sightAt > 400) {
             sightAt = nowMs
             sight = ex?.sight(tz)
@@ -275,7 +437,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         camera.update(
             dtMs, nowMs, tx, ty, tz, heading, intensity, peak, { x, z -> land.heightAt(x, z) }, openness,
             { x, z -> maxOf(com.sadurni.attacca.world.Props.topNear(land, x, z), cast?.topNear(x, z) ?: Float.NEGATIVE_INFINITY, ex?.topNear(x, z) ?: Float.NEGATIVE_INFINITY) },
-            sight, if (tunnel) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
+            sight, if (ex?.tunnelNear(tz) == true) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
             { z -> land.centerAt(z) },
         )
 
@@ -306,27 +468,40 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         // Colours: the sky's, a warm haze towards the horizon, darker at night.
         val (skyA, skyB, skyT) = land.lookBlend(tz)
         fun blend(a: Int, b: Int) = rgb(a).let { x -> if (skyT <= 0f) x else rgb(b).let { y -> FloatArray(3) { x[it] + (y[it] - x[it]) * skyT } } }
-        val night = skyA.night + (skyB.night - skyA.night) * skyT
+        // (The sky's colours are eased over a moment: a song skipped halfway never turns night into day at once.)
+        val easeK = skyEaseStep()
+        val night = eased(9, skyA.night + (skyB.night - skyA.night) * skyT, easeK)
+        // The weather and the sun as the land shows them here (blended, eased): never a jump as a song comes in.
+        fun blendF(a: Float, b: Float) = a + (b - a) * skyT
+        val skyOf = if (skyT < 0.5f) skyA else skyB
+        val skySun = eased(10, blendF(skyA.sun, skyB.sun), easeK)
+        val skyStorm = eased(11, blendF(skyA.storm, skyB.storm), easeK)
+        val skyClouds = eased(12, blendF(skyA.clouds, skyB.clouds), easeK)
+        val skyRain = eased(13, blendF(skyA.rain, skyB.rain), easeK)
+        val skySnow = eased(14, blendF(skyA.snow, skyB.snow), easeK)
         // Under the water (the eye below its surface), the sea's own blues instead of the sky's.
         val under = camera.eyeY < WorldLand.WATER - 0.2f
-        val top = if (under) floatArrayOf(0.04f, 0.2f, 0.34f) else blend(skyA.palette.skyTop, skyB.palette.skyTop)
-        val bottom = if (under) floatArrayOf(0.1f, 0.42f, 0.55f) else blend(skyA.palette.skyBottom, skyB.palette.skyBottom)
-        val sunColour = blend(skyA.palette.light, skyB.palette.light)
+        val top = if (under) floatArrayOf(0.04f, 0.2f, 0.34f) else blend(skyA.palette.skyTop, skyB.palette.skyTop).let { c -> FloatArray(3) { eased(it, c[it], easeK) } }
+        val bottom = if (under) floatArrayOf(0.1f, 0.42f, 0.55f) else blend(skyA.palette.skyBottom, skyB.palette.skyBottom).let { c -> FloatArray(3) { eased(3 + it, c[it], easeK) } }
+        val sunColour = blend(skyA.palette.light, skyB.palette.light).let { c -> FloatArray(3) { eased(6 + it, c[it], easeK) } }
         val haze = if (under) floatArrayOf(0.1f, 0.4f, 0.52f) else FloatArray(3) { bottom[it] * 0.8f + sunColour[it] * 0.2f }
         // Storms: now and then a flash of lightning, on a strong beat if there is one.
-        if (look.storm > 0.3f && nowMs > nextFlash && feed.playing) {
+        if (skyStorm > 0.3f && nowMs > nextFlash && feed.playing) {
             flashUntil = nowMs + 120
-            nextFlash = nowMs + (2500 + Math.random() * 9000 / look.storm).toLong()
+            nextFlash = nowMs + (2500 + Math.random() * 9000 / skyStorm).toLong()
         }
         val flash = if (nowMs < flashUntil) 1f else 0f
         // The light breathes with how loud it is now; darker under a storm.
         // Darker deep in a tunnel.
         val inside = ex?.tunnelDepth(tz) ?: 0f
         tunnelDark += (inside - tunnelDark) * 0.08f
-        val brightness = ((1f - 0.5f * night) * (1f - 0.35f * look.storm) * (0.9f + 0.18f * level + 0.08f * pulse.coerceAtMost(1f)) + flash * 0.8f) * (1f - 0.72f * tunnelDark)
+        val brightness = ((1f - 0.5f * night) * (1f - 0.35f * skyStorm) * (0.9f + 0.18f * level + 0.08f * pulse.coerceAtMost(1f)) + flash * 0.8f) * (1f - 0.72f * tunnelDark)
 
         val view = Mat4.lookAt(camera.eyeX, camera.eyeY, camera.eyeZ, camera.atX, camera.atY, camera.atZ)
-        val projection = Mat4.perspective(Math.toRadians(if (width > height) 55.0 else 68.0).toFloat(), width.toFloat() / height, 0.3f, FAR + 60f)
+        // (A wide strip keeps to about 100 degrees across, so the land is not stretched at its sides.)
+        val aspect = width.toFloat() / height
+        val fovY = minOf(Math.toRadians(if (width > height) 55.0 else 68.0), 2 * kotlin.math.atan(kotlin.math.tan(Math.toRadians(50.0)) / aspect))
+        val projection = Mat4.perspective(fovY.toFloat(), aspect, 0.3f, FAR + 60f)
         val viewProjection = Mat4.mul(projection, view)
         // Where the traveller is on the screen, for a tap on it; a tap asked for a move.
         transform(viewProjection, tx, ty + 1.2f, tz).let { c ->
@@ -347,10 +522,10 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
 
         // The sky, with the sun's glow where it is.
-        val sunDir = floatArrayOf(-0.45f, 0.12f + 0.45f * look.sun, 1f)
+        val sunDir = floatArrayOf(-0.45f, 0.12f + 0.45f * skySun, 1f)
         // The sun (or the moon) as drawn: lower and nearer straight ahead than the light comes
         // from, so it is in sight from the camera's usual height.
-        val sunSky = floatArrayOf(-0.2f, 0.07f + 0.2f * look.sun, 1f)
+        val sunSky = floatArrayOf(-0.2f, 0.07f + 0.2f * skySun, 1f)
         val sx = camera.eyeX + sunSky[0] * 500
         val sy = camera.eyeY + sunSky[1] * 500
         val sz = camera.eyeZ + sunSky[2] * 500
@@ -362,6 +537,23 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         GLES30.glUniform3f(GLES30.glGetUniformLocation(sky, "uSun"), sunColour[0], sunColour[1], sunColour[2])
         val horizon = transform(viewProjection, camera.eyeX, camera.eyeY, camera.eyeZ + 1000f).let { if (it[3] > 0) it[1] / it[3] else -1f }
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uHorizon"), horizon)
+        if (clip[3] > 0 && !under) {
+            feed.sunX = (clip[0] / clip[3] * 0.5f + 0.5f) * width
+            feed.sunY = (0.5f - clip[1] / clip[3] * 0.5f) * height
+            feed.sunR = 0.12f * height
+        } else {
+            feed.sunX = -1f
+        }
+        // Touched five times quickly, the sun turns into a record for the rest of the song, its cover on the label.
+        val record = feed.recordOf != null && feed.recordOf == feed.songId
+        recordShown += ((if (record) 1f else 0f) - recordShown) * 0.06f
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uRecord"), recordShown)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uStar"), if (feed.kings && !under) 1f else 0f)
+        val labelTex = if (recordShown > 0.01f) coverTexture() else 0
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, labelTex)
+        GLES30.glUniform1i(GLES30.glGetUniformLocation(sky, "uCover"), 0)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uHasCover"), if (labelTex != 0) 1f else 0f)
         if (clip[3] > 0 && !under) {
             GLES30.glUniform3f(GLES30.glGetUniformLocation(sky, "uSunAt"), clip[0] / clip[3], clip[1] / clip[3], (0.6f + 0.4f * (1 - night)) * (1f + peak * 0.6f) * (0.85f + 0.3f * level + 0.25f * pulse.coerceAtMost(1f)))
         } else {
@@ -461,27 +653,49 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         GLES30.glUniform1f(alphaLoc, 1f)
         GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
         for (g in chunks.values) draw(g)
+        if (stale.isNotEmpty()) {
+            // Where the new land has no piece yet, the old one's (none once all are made).
+            val shown = HashSet<Int>()
+            var missing = false
+            for (k in first..last) {
+                if (k in chunks) continue
+                missing = true
+                val a = floor((k * LandMesher.CHUNK - staleDz) / LandMesher.CHUNK).toInt()
+                val b = floor(((k + 1) * LandMesher.CHUNK - staleDz) / LandMesher.CHUNK).toInt()
+                for (j in a..b) if (j in stale) shown += j
+            }
+            if (!missing) {
+                for (g in stale.values) delete(g)
+                stale.clear()
+            } else if (shown.isNotEmpty()) {
+                GLES30.glUniformMatrix4fv(modelLoc, 1, false, Mat4.model(0f, 0f, staleDz), 0)
+                for (j in shown) draw(stale[j]!!)
+                GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
+            }
+        }
 
         // The traveller, the vehicle, the dogs and the people at relays (no beat in their shape).
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 0f)
         draws.clear()
         val dark = ex?.darkAt(tz, night) == true
+        cast?.santa = christmas
         cast?.frame(tz, posMs / beatMs, feed.playing, nowMs, draws, dark, tunnel)
         // Who was left at the end of the song before: the vehicle stays where they got off.
         oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
+        ex?.let { it.festivity = feed.festive; it.kings = feed.kings; it.vikram = feed.vikram }
         ex?.frame(tz, ty, nowMs, feed.playing, peak, if (feed.forcePeak) tz else if (feed.peakMs >= 0) land.zAt(feed.peakMs) else null, look.palette.accent, feed.nextTitle != null, draws)
         // Clouds: soft heaps drifting high over the land, as many as the song's sky has.
-        if (cloudFor !== look) {
-            cloudFor = look
+        if (cloudFor !== skyOf) {
+            cloudFor = skyOf
             cloudGpu.forEach(::delete)
-            cloudGpu = if (look.clouds > 0.05f && look.world != com.sadurni.attacca.diorama.World.SPACE) List(3) { gpu(cloudMesh(it, look)) } else emptyList()
+            cloudGpu = if (skyOf.clouds > 0.05f && skyOf.world != com.sadurni.attacca.diorama.World.SPACE) List(3) { gpu(cloudMesh(it, skyOf)) } else emptyList()
         }
-        val cloudCount = (look.clouds * 14).toInt().coerceAtMost(14)
+        val cloudCount = (skyClouds * 14).toInt().coerceAtMost(14)
         for (c in 0 until cloudCount) {
             val drift = (nowMs / 1000f * 1.2f + c * 37f) % 300f
             val cz = (tz - 40f) + ((c * 53) % 260) + 0f
             val cx = -150f + drift + (c * 71 % 60)
-            val cy = 46f + (c * 13 % 18) - look.storm * 12f
+            val cy = 46f + (c * 13 % 18) - skyStorm * 12f
             GLES30.glUniformMatrix4fv(modelLoc, 1, false, Mat4.model(cx, cy, cz, c * 1.3f, s = 1f + (c % 3) * 0.4f), 0)
             draw(cloudGpu.getOrNull(c % 3) ?: continue)
         }
@@ -514,10 +728,11 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
 
         // Rain or snow about the camera: small quads made here each frame and drawn as the land
         // is (glowing, so unlit), which every GPU draws alike.
-        val rain = look.rain.coerceAtLeast(look.storm)
-        val snow = look.snow
+        val rain = skyRain.coerceAtLeast(skyStorm)
+        // Christmas days: snow falling (but in space).
+        val snow = if (christmas) max(skySnow, 0.45f) else skySnow
         val bubbles = underSea
-        if (bubbles || ((rain > 0.1f || snow > 0.1f) && look.world != com.sadurni.attacca.diorama.World.SPACE && !underSea && tunnelDark < 0.5f)) {
+        if (bubbles || ((rain > 0.1f || snow > 0.1f) && skyOf.world != com.sadurni.attacca.diorama.World.SPACE && !underSea && tunnelDark < 0.5f)) {
             val isSnow = snow >= rain || bubbles
             val count = if (bubbles) 260 else (DROPS * max(rain, snow)).toInt().coerceIn(150, DROPS)
             val time = (nowMs % 100_000L) / 1000f
@@ -578,16 +793,22 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
 
     private fun wrap(v: Float, m: Float): Float = v - m * floor(v / m)
 
-    /** The cover and the next song's sign on their boards: textured quads, hazed as the land is. */
-    private fun drawBoards(ex: com.sadurni.attacca.world.Extras, viewProjection: FloatArray, haze: FloatArray, underSea: Boolean, light: Float) {
-        if (ex.billboards.isEmpty()) return
-        // The pictures, made again when they change.
+    /** The song's cover as a texture (0: none), made again when it changes. */
+    private fun coverTexture(): Int {
         val cover = feed.cover
         if (cover !== coverOf) {
             coverOf = cover
             if (coverTex != 0) GLES30.glDeleteTextures(1, intArrayOf(coverTex), 0)
             coverTex = cover?.takeIf { !it.isRecycled }?.let { texture(it) } ?: 0
         }
+        return coverTex
+    }
+
+    /** The cover and the next song's sign on their boards: textured quads, hazed as the land is. */
+    private fun drawBoards(ex: com.sadurni.attacca.world.Extras, viewProjection: FloatArray, haze: FloatArray, underSea: Boolean, light: Float) {
+        if (ex.billboards.isEmpty()) return
+        // The pictures, made again when they change.
+        coverTexture()
         val signText = feed.nextTitle?.let { (feed.nextPlace?.let { p -> "$p  " } ?: "") + it }
         if (signText != signOf) {
             signOf = signText
@@ -809,6 +1030,14 @@ void main() {
         world.x += sin(uBeat * 3.1416 + ph) * amp;
         world.z += cos(uBeat * 3.1416 * 0.5 + ph) * amp * 0.6;
     }
+    // Flames (warm glowing colours: torches, lava) lick and waver.
+    if (aColor.r > 2.95 && aColor.g > 2.5 && aColor.g < 2.78 && aColor.b < 2.4) {
+        float fl = uWaveTime;
+        float ph = world.x * 7.1 + world.z * 5.3;
+        world.x += sin(fl * 11.0 + world.y * 14.0 + ph) * 0.035;
+        world.z += cos(fl * 9.0 + world.y * 12.0 + ph) * 0.03;
+        world.y += (0.5 + 0.5 * sin(fl * 15.0 + ph)) * 0.05;
+    }
     // The beat lifts the land near the traveller, the higher the more.
     // (pow with a negative base is undefined on some GPUs: square by hand.)
     float dz = (world.z - uZ) / 26.0;
@@ -883,7 +1112,11 @@ void main() {
         vec3 gc = vColor - 2.0;
         // Flames flicker (torches, lava); lights glow up a little on the beat.
         if (gc.r > 0.95 && gc.g > 0.5 && gc.g < 0.78 && gc.b < 0.4) {
-            gc *= 0.82 + 0.12 * sin(uTime * 13.0 + vWorld.x * 3.1 + vWorld.z * 1.7) + 0.08 * sin(uTime * 23.0 + vWorld.z * 2.3);
+            // Brightness and colour waver, now and then a flare: orange to yellow and back.
+            float ph = vWorld.x * 3.1 + vWorld.z * 1.7;
+            float n = 0.5 + 0.25 * sin(uTime * 13.0 + ph) + 0.15 * sin(uTime * 23.7 + ph * 1.9) + 0.1 * sin(uTime * 41.0 + ph * 0.7);
+            float flare = pow(max(sin(uTime * 2.3 + ph * 0.4), 0.0), 12.0) * 0.35;
+            gc = mix(gc * 0.7, vec3(1.0, 0.86, 0.45), clamp(n * 0.6 + flare, 0.0, 1.0)) * (0.75 + 0.45 * n + flare);
         }
         gc *= 1.0 + 0.15 * uPulse;
         color = vec4(mix(gc, uFog, fg * 0.7), uAlpha);
@@ -999,6 +1232,10 @@ uniform float uTime;
 uniform float uMoonRed;
 uniform mat4 uInverse;
 uniform float uPump;
+uniform float uRecord;
+uniform float uStar;
+uniform sampler2D uCover;
+uniform float uHasCover;
 out vec4 color;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float hash1(float n) { return fract(sin(n * 91.7) * 43758.5453); }
@@ -1071,6 +1308,27 @@ void main() {
                 vec3 tint = mod(float(k), 3.0) < 1.0 ? vec3(1.0, 0.8, 0.25) : vec3(0.85, 0.15, 0.12);
                 c = mix(c, tint, (1.0 - smoothstep(r * 0.7, r, length(q - vec2(bx, by)))) * uPeak);
             }
+            // Its head in front: red with a golden snout, horns, an eye and a waving whisker.
+            float hy = 0.55 + sin(uTime * 2.2 - 0.25) * 0.1;
+            vec2 h0 = vec2(headX - 0.035, hy);
+            vec2 hornA = vec2(headX - 0.01, hy + 0.028);
+            for (int s = 0; s < 2; s++) {
+                vec2 hornB = hornA + vec2(0.05 + float(s) * 0.02, 0.05 - float(s) * 0.012);
+                vec2 pa = q - hornA, ba = hornB - hornA;
+                float d = length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
+                c = mix(c, vec3(1.0, 0.82, 0.3), (1.0 - smoothstep(0.004, 0.007, d)) * uPeak);
+            }
+            vec2 wA = vec2(headX - 0.1, hy - 0.018);
+            vec2 wB = wA + vec2(-0.05, -0.03 + sin(uTime * 3.0) * 0.02);
+            vec2 wa = q - wA, wb = wB - wA;
+            float wd = length(wa - wb * clamp(dot(wa, wb) / dot(wb, wb), 0.0, 1.0));
+            c = mix(c, vec3(1.0, 0.8, 0.25), (1.0 - smoothstep(0.002, 0.004, wd)) * uPeak);
+            c = mix(c, vec3(0.9, 0.18, 0.12), (1.0 - smoothstep(0.85, 1.0, length((q - h0) / vec2(0.062, 0.045)))) * uPeak);
+            c = mix(c, vec3(1.0, 0.8, 0.25), (1.0 - smoothstep(0.85, 1.0, length((q - vec2(headX - 0.09, hy - 0.01)) / vec2(0.042, 0.026)))) * uPeak);
+            c = mix(c, vec3(0.2, 0.05, 0.03), (1.0 - smoothstep(0.003, 0.006, length(q - vec2(headX - 0.115, hy - 0.002)))) * uPeak);
+            vec2 eye = vec2(headX - 0.05, hy + 0.017);
+            c = mix(c, vec3(1.0, 0.97, 0.8), (1.0 - smoothstep(0.008, 0.011, length(q - eye))) * uPeak);
+            c = mix(c, vec3(0.05), (1.0 - smoothstep(0.004, 0.006, length(q - eye - vec2(-0.003, 0.0)))) * uPeak);
         } else if (uPeakKind > 5.5 && uPeakKind < 6.5) {
             // Clouds of coloured powder and little lamps rising.
             for (int k = 0; k < 6; k++) {
@@ -1139,6 +1397,29 @@ void main() {
             }
         }
     }
+    if (uStar > 0.01) {
+        // The star the Kings follow, fixed in the sky high over the way ahead, its tail trailing down.
+        vec3 S = normalize(vec3(0.3, 0.2, 1.0));
+        float facing = dot(dir, S);
+        if (facing > 0.9) {
+            vec3 R = normalize(vec3(-S.z, 0.0, S.x));
+            vec3 U = cross(R, S);
+            vec2 p = vec2(dot(dir, R), dot(dir, U));
+            float l = length(p);
+            float tw = 0.85 + 0.15 * sin(uTime * 3.0);
+            float star = exp(-l * 90.0) * 0.7 + (1.0 - smoothstep(0.004, 0.007, l));
+            star += (1.0 - smoothstep(0.0, 0.0025, abs(p.x))) * (1.0 - smoothstep(0.0, 0.05, abs(p.y))) * tw;
+            star += (1.0 - smoothstep(0.0, 0.0025, abs(p.y))) * (1.0 - smoothstep(0.0, 0.05, abs(p.x))) * tw;
+            vec2 q2 = vec2(p.x + p.y, p.x - p.y) * 0.7071;
+            star += (1.0 - smoothstep(0.0, 0.002, abs(q2.x))) * (1.0 - smoothstep(0.0, 0.022, abs(q2.y))) * 0.6;
+            star += (1.0 - smoothstep(0.0, 0.002, abs(q2.y))) * (1.0 - smoothstep(0.0, 0.022, abs(q2.x))) * 0.6;
+            vec2 td = normalize(vec2(0.85, -0.5));
+            float along = dot(p, td);
+            float across = abs(p.x * td.y - p.y * td.x);
+            float tail = step(0.0, along) * (1.0 - smoothstep(0.0, 0.28, along)) * (1.0 - smoothstep(0.0, 0.003 + along * 0.05, across));
+            c += vec3(1.0, 0.95, 0.75) * (star + tail * 0.5 * (1.0 - along / 0.28)) * uStar;
+        }
+    }
     vec2 d = vec2((vAt.x - uSunAt.x) * uAspect, vAt.y - uSunAt.y);
     float r = length(d);
     // At the castles' peak the moon grows great and red, where it is.
@@ -1146,8 +1427,34 @@ void main() {
     float disc = (1.0 - smoothstep(size, size + 0.015, r));
     float glow = exp(-r * 4.0) * 0.55 + exp(-r * 1.2) * 0.18;
     vec3 sunC = mix(uSun, vec3(0.9, 0.2, 0.12), uMoonRed);
-    c += sunC * glow * uSunAt.z * (1.0 + uMoonRed);
-    c = mix(c, sunC * (1.0 + 0.4 * (1.0 - uMoonRed)), clamp(disc * uSunAt.z, 0.0, 1.0));
+    c += sunC * glow * uSunAt.z * (1.0 + uMoonRed) * (1.0 - 0.6 * uRecord);
+    c = mix(c, sunC * (1.0 + 0.4 * (1.0 - uMoonRed)), clamp(disc * uSunAt.z * (1.0 - uRecord), 0.0, 1.0));
+    if (uRecord > 0.01 && uSunAt.z > 0.0) {
+        // The sun as a record turning in the sky: black grooves catching the light, the cover on its label, notes falling.
+        float big = 0.16 * (1.0 + 0.08 * uPump);
+        float spin = uTime * 3.4;
+        float ang = atan(d.y, d.x) + spin;
+        vec3 vinyl = vec3(0.05, 0.05, 0.06) + vec3(0.06) * (0.5 + 0.5 * sin(r * 520.0));
+        vinyl += vec3(0.22) * pow(max(0.0, cos(ang * 2.0)), 18.0) * smoothstep(big * 0.4, big * 0.9, r);
+        vec3 label = sunC * 0.9 + vec3(0.1);
+        if (uHasCover > 0.5) {
+            float la = atan(d.y, d.x) - spin;
+            vec2 uv = vec2(cos(la), sin(la)) * r / (big * 0.36) * 0.5 + 0.5;
+            label = texture(uCover, vec2(uv.x, 1.0 - uv.y)).rgb;
+        }
+        vec3 rec = r < big * 0.36 ? label : vinyl;
+        rec = mix(rec, vec3(0.02), 1.0 - smoothstep(big * 0.03, big * 0.045, r));
+        c = mix(c, rec, (1.0 - smoothstep(big, big + 0.008, r)) * uRecord);
+        for (int k = 0; k < 6; k++) {
+            float age = fract(uTime * 0.35 + float(k) / 6.0);
+            vec2 at = vec2((hash1(floor(uTime * 0.35 + float(k) / 6.0) + float(k)) - 0.5) * big * 3.0, -big - age * 0.5);
+            vec2 nd = d - at;
+            float head = 1.0 - smoothstep(0.012, 0.016, length(nd / vec2(1.25, 1.0)));
+            float stem = (1.0 - smoothstep(0.002, 0.004, abs(nd.x - 0.014))) * step(0.0, nd.y) * step(nd.y, 0.05);
+            float flag = (1.0 - smoothstep(0.003, 0.005, abs(nd.y - 0.05 + (nd.x - 0.014) * 0.6))) * step(0.014, nd.x) * step(nd.x, 0.032);
+            c = mix(c, sunC * 1.1 + vec3(0.15), max(head, max(stem, flag)) * (1.0 - age) * uRecord);
+        }
+    }
     color = vec4(c, 1.0);
 }
 """

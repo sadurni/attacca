@@ -483,6 +483,8 @@
     <string name="waveform_off">Yensa (afeggag n unadi aseṭṭaḥ)</string>
     <string name="strip_show_orama">Sken O\'rama da</string>
     <string name="strip_show_wave">Sken talɣa n tmewjt da</string>
+    <string name="strip_view">Ayen ara d-iban deg Tiɣri tura</string>
+    <string name="orama_open">Ayen ara d-yeldi O\'rama</string>
     <string name="waveform_orama">Tamnaḍt n O\'rama (talɣa n tmewjt d tamecṭuḥt gar wakuden)</string>
     <string name="section_silence">Aɛeddi n tsusmi</string>
     <string name="silence_enabled">Ɛeddi tasusmi deg tazwara d taggara n tezlit</string>
@@ -1490,6 +1492,7 @@
     <string name="help_orama_worlds">• Ugar n yiɣer: asaḥra s tewwurin d yilmawen (tapiramit tawurant deg ugmuḍ), Aɣrib Ameqqran n Ccin (adrak), tagut n Lhind s lmeεbed d yilefḍen (ayen n yidigan n yiniten), Amazun yettwakkes s uqarqur (aqeṭṭar n wedfel ɣef usennan), kanyun n uzɣerbi yeɛdan (ighil di tnekkra n yiṭij), Jjapun s tfurawin n lkarz (tiziri d yiseklan), ddaw lebḥer s ujeggal ddaw waman (aselmun) d albukan (tuffɣa). Tabzimt n umagrad tɛawen ad d-tferneḍ (taεrabt neɣ flamenco, tacinwit, tahindit, tallatinit neɣ tabrazilit, country, tajapunit, ambient, metal). Taqeffalt n tmurt tbeqqi-d tazlit deg yal amaḍal s tira, am akken deg O\'rama d deg Attacca World, tamnaḍt n tezlit-nni s 3D (taqeffalt n tkubt): tettɛeddiḍ deg-s deffir n umsafer d sin n yiqjan, ifadden yiwen ittwaɣeṛ aqamera, sin ad t-qrebn neɣ ad t-ssalin.</string>
     <string name="help_world">• Attacca World (taqeffalt n ukubu deg O\'rama): tizlit-nni yiwet am wakal s 3D ara tzegreḍ deffir n umsikel d yiḍan-nni ukuẓ, s ubeddel, s yiɣallen d tegnawt n umaḍal-is; akal iteddu d uẓawan, ikemmel seg yiwet n tizlit ɣer tayeḍ, ma d ifeṛdisen yeɣzifen iḥninen neɣ iǧehden ttawin-d amaḍal-nniḍen kra n wakud. Yiwen n uḍad yezzi takamiṛat, sin qeṛṛben-tt neɣ ssalin-tt; asiti ɣef umsikel ad t-yerr ad ijelleb neɣ ad yezzi. Taqeffalt n ugdil yebḍan tesken-d O\'rama d Attacca World akk. Awalen n uzwel zemren ad fernen amaḍal ma yemṣada yimesli (Siren Song, iḥnin: ddaw n yill). Ula deg uselkim.</string>
     <string name="help_world_life">• Deg Attacca World, abrid yettɛeddi ɣef yimukan n O\'rama deg yiwet n tegnit (tiqenṭrin, idehlizen s tiftilin n tmes, tiɣsar s tmacint-nsent, tudrin anda yettali-d wabbu seg yixxamen, taṛuḍa tameqqrant, lexṛayeb, iqwas, ṣṣarux i d-yettalin ɣer igenni), u amaḍal n tezlit i d-iteddun yettban-d uqbel ad tebdu. Uqbel ad ibeddel takeṛṛust, amsafar ad d-iṣubb (ad yekcem ɣer usubmarin ɣer tama n yill, iqjan ttmuqulen-d seg ttiqan-is). Ttɛeddin-d yefrax, ibalunen, lmal yettkessin d iqjan nniḍen; tiftilt n uqerru tettak-d tafat deg tallast; takamiṛat tettezzi ɣer wayen yuklalen ad yettwali, tettali sennig yixfawen n yidurar. Deg ugdil meṛṛa, isem n tezlit yettban-d mi ara tebdu.</string>
+    <string name="help_world_views">• Tasfift n Itteddu tura tezmer ad d-tesken O\'rama, Attacca World neɣ i sin rrif ɣer rrif (Iɣewwaṛen → Udem), taqeffalt n O\'rama tezmer ad teldi O\'rama, Attacca World neɣ i sin s ugdil yebḍan (Iɣewwaṛen). Deg ugdil meṛṛa, tuɣalin tettarra-d tiqeffalin; izirig arqaq s yini agejdan yesskanay anida tewweḍ tezlit, isem-is yettuɣal-d tikwal. Tiddi n uḍris n uwiǧit tella deg Iɣewwaṛen → Udem. Deg Ɣef, «Ḥrez iɣmisen i yineqqisen» yettaru tuffɣiwin d yiɛeddiyen deg ifuyla ɣer tama n tebdarin-ik, ala mi yermed.</string>
     <string name="help_orama_buttons">• Deg O\'rama tiqeffalin ɣer uyeffus (mdel, agdil merra, arured n tugniwin) qqimen azgen-nsent yeffer akken ad iban igenni: asiti yessufuɣ-itent, ttuɣalent kra n tsinin deffir. Iṭij d wayyur beɛɛden ɣef uzwel d tqeffalin.</string>
     <string name="app_slogan">“Ales af-d tagrumma-k n uẓawan: sel-as s yiberdan imaynuten, s yimesli yifen.”</string>
     <string name="help_orama_surprises">• O\'rama yeffer daɣen kra n tɣawsiwin timecṭuḥin ara k-yesswehmen. Af-itent s yiman-ik!</string>
@@ -1826,6 +1829,8 @@
     <string name="newyear_notice_text">Ass-a deg wammas n yiḍ ad yebdu useggas amaynut, ad yeḍru kra n umeqqran deg O\'rama: eǧǧ Attacca yeldi ɣef ugdil deg wakud-nni.</string>
     <string name="browser_as_grid">Sken-d d tiɣlafin</string>
     <string name="browser_as_list">Sken-d d tabdart</string>
+    <string name="widget_text_size">Tiddi n uḍris n uwiǧit</string>
+    <string name="widget_text_size_hint">Tagnit tettemẓi mi ara yimɣur uḍris. Ufella, awiǧit ameqran akken ara yili.</string>
     <string name="widget_big">Mi ara yimɣur, awiǧit yesskan</string>
     <string name="widget_big_cover">Taɣlaft, s teɣzi meqqren</string>
     <string name="widget_big_orama">Tamnaḍt n O\'rama</string>
@@ -1836,4 +1841,6 @@
     <string name="lock_wallpaper_hint">Tettwasbadu tikkelt nniḍen s yal tizlit. Mi ara tuɣaleḍ ɣer “Akken yella”, agdil n usekkeṛ ad yeṭṭef tugna n ugdil agejdan (tin i yesɛa uqbel ur tettwaɣra ara tikkelt nniḍen).</string>
     <string name="over_lock_screen">Sken-d nnig ugdil n usekkeṛ mi ara yettwaurar uẓawan</string>
     <string name="over_lock_screen_hint">Ma yella Attacca yeldi (Itteddu tura, O\'rama…) mi ara yensa ugdil, asaki n tiliɣri ad t-id-yesken nnig ugdil n usekkeṛ ma yella uẓawan itteddu; i wayen nniḍen, tiliɣri ad teqqim tettwasekker.</string>
+    <string name="about_logs">Ḥrez iɣmisen i yineqqisen</string>
+    <string name="about_logs_hint">Yettaru amdal n usnas, iɛeddiyen gar tezlatin d ubeddel n tezlatin deg Attacca World deg ifuyla ɣer yidis n tebdarin-ik, i tuzna mi ara yili kra n wugur. Yensa ma ur t-tessekreḍ ara.</string>
 </resources>

@@ -505,6 +505,8 @@
     <string name="waveform_off">关闭（普通进度条）</string>
     <string name="strip_show_orama">在此显示 O\'rama</string>
     <string name="strip_show_wave">在此显示波形</string>
+    <string name="strip_view">“正在播放”里显示</string>
+    <string name="orama_open">打开 O\'rama 时显示</string>
     <string name="waveform_orama">O\'rama 风景（波形缩小显示在时间之间）</string>
     <string name="section_silence">跳过静音</string>
     <string name="silence_enabled">跳过曲目开头和结尾的静音</string>
@@ -1514,6 +1516,7 @@
     <string name="help_orama_worlds">• 更多世界:有绿洲和骆驼的沙漠(高潮处出现金色金字塔)、长城(一条龙)、有寺庙和大象的印度丛林(彩色云朵)、乘独木舟顺流而下的亚马逊(瀑布上的彩虹)、遥远西部的峡谷(日落时的老鹰)、樱花盛开的日本(烟花和花瓣)、乘潜艇到达的海底(一头鲸鱼)和火山(一次喷发)。流派标签有助于选择它们(阿拉伯音乐或弗拉门戈、中国、印度、拉丁或巴西、乡村、日本、氛围音乐、金属)。地球按钮会依次在每个世界中显示这首歌,在 O\'rama 和 Attacca World 中都一样,同一首歌的风景也可以用 3D 查看(立方体按钮):你跟在旅行者和四只狗身后穿行,一根手指转动镜头,两根手指拉近或升高镜头。</string>
     <string name="help_world">• Attacca World(O\'rama 里的立方体按钮):同一首歌化作一片 3D 大地,跟在旅人和四只狗身后穿行,有接力、障碍和它那个世界的天气;大地随音乐起伏,并从一首歌延续到下一首,长段的安静或激烈部分会暂时带来另一个世界。一根手指转动镜头,两根手指拉近或升高;点一下旅人,他会跳跃或旋转。分屏按钮同时显示 O\'rama 和 Attacca World。如果声音相符,标题里的词可以选择世界(Siren Song,安静的歌:海底)。电脑上也有。</string>
     <string name="help_world_life">• 在 Attacca World 中，道路会在相同的时刻经过 O\'rama 里的地方（桥、点着火把的隧道、停着火车的车站、烟囱冒烟的村庄、摩天轮、遗迹、拱门、升空的火箭），下一首歌的世界会在它开始前就进入视野。换乘交通工具前，旅人会先下来（在岸边钻进潜水艇，狗狗们从舷窗往外看）。鸟儿、热气球、吃草的动物和别的狗狗从旁经过；头灯照亮黑暗；镜头会转向值得一看的地方，并升到山脊上方。全屏时，歌曲一开始就会显示歌名。</string>
+    <string name="help_world_views">• 正在播放的横条可以显示 O\'rama、Attacca World，或两者并排（设置 → 外观）；O\'rama 按钮可以打开 O\'rama、Attacca World，或两者分屏（设置）。全屏时，按返回会让控制按钮回来；一条强调色的细线显示歌曲播放到了哪里，歌名也会不时再次出现。小部件文字大小在“设置 → 外观”中。在“关于”里，「保留日志用于报告」只在开启时，把退出和过渡记录到你的列表旁边的文件里。</string>
     <string name="help_orama_buttons">• 在 O\'rama 中，右侧的按钮（关闭、全屏、帧率）会半藏起来，好让天空露出来：轻点一下就会滑出，几秒后又会收回。太阳和月亮不会跑到标题或按钮后面。</string>
     <string name="app_slogan">“重新发现你的音乐收藏：以全新的方式、最好的音质去聆听。”</string>
     <string name="help_orama_surprises">• O\'rama 里还藏着几个小惊喜，自己去发现吧！</string>
@@ -1850,6 +1853,8 @@
     <string name="newyear_notice_text">今晚午夜新年开始，O\'rama 中会发生一件大事：届时请让 Attacca 在屏幕上保持打开。</string>
     <string name="browser_as_grid">以封面显示</string>
     <string name="browser_as_list">以列表显示</string>
+    <string name="widget_text_size">小部件文字大小</string>
+    <string name="widget_text_size_hint">文字越大，封面越小。上方是大小部件的效果。</string>
     <string name="widget_big">放大后微件显示</string>
     <string name="widget_big_cover">大封面</string>
     <string name="widget_big_orama">O\'rama 风景</string>
@@ -1860,4 +1865,6 @@
     <string name="lock_wallpaper_hint">每首曲目都会重新设置。改回“保持原样”时，锁屏会使用主屏幕的图片（之前的图片无法读回）。</string>
     <string name="over_lock_screen">播放时显示在锁屏之上</string>
     <string name="over_lock_screen_hint">屏幕熄灭时如果 Attacca 处于打开状态（正在播放、O\'rama…），在播放音乐期间唤醒手机会将其显示在锁屏之上；其他情况下手机保持锁定。</string>
+    <string name="about_logs">保留日志用于报告</string>
+    <string name="about_logs_hint">将应用的退出、歌曲之间的过渡以及 Attacca World 的歌曲切换记录到你的列表旁的文件中，以便出问题时发送。除非你打开，否则保持关闭。</string>
 </resources>

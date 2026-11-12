@@ -30,6 +30,8 @@ class WorldCamera {
     private var userLift = 0f
     private var touchedAt = -1L
     private var orbit = 0f
+    private var orbitSpeed = 0f
+    private var eyeYSmooth = Float.NaN
     private var lookUp = 0f
     private var bump = 0f
     private var crest = 0f
@@ -155,13 +157,16 @@ class WorldCamera {
         var autoDistance = (24f - 9f * intensity + 4f * sin(nowMs / 17000.0).toFloat()) * (1 - peak) + peakDistance * peak
         // Beside the traveller a little closer; in a tunnel close behind.
         autoDistance *= 1f - 0.2f * kotlin.math.abs(sideYaw)
-        autoDistance += (5.5f - autoDistance) * inTunnel
+        autoDistance += (4.6f - autoDistance) * inTunnel
         // Low enough that the sky with the sun (or the moon) is in sight.
         var autoPitch = (0.26f - 0.1f * intensity + drift * 0.6f) * (1 - peak) + (0.04f + 0.08f * (1 - open)) * peak
         autoPitch += (0.12f - autoPitch) * inTunnel
-        // At the peak it goes round; after it, on to the nearest whole turn (behind again).
-        if (peak > 0.05f && inTunnel < 0.5f) orbit += (dtMs / 5000.0 * 2 * PI * peak).toFloat()
-        else orbit += ((Math.round(orbit / (2 * PI)) * 2 * PI).toFloat() - orbit) * (1 - exp(-dtMs / 1500.0)).toFloat()
+        // At the peak it goes round, slowly and gently (speeding up and slowing down softly);
+        // after it, on to the nearest whole turn (behind again).
+        val spin = peak > 0.05f && inTunnel < 0.5f
+        orbitSpeed += ((if (spin) (2 * PI / ORBIT_MS * peak).toFloat() else 0f) - orbitSpeed) * (1 - exp(-dtMs / 1800.0)).toFloat()
+        orbit += orbitSpeed * dtMs
+        if (!spin) orbit += ((Math.round(orbit / (2 * PI)) * 2 * PI).toFloat() - orbit) * (1 - exp(-dtMs / 2600.0)).toFloat()
         // Behind the traveller as the way turns (a little late, as a camera held by hand).
         val autoYaw = heading + (sin(nowMs / 9000.0) * 0.18).toFloat() * (1 - inTunnel) + orbit + (sideYaw + focusYaw) * (1 - inTunnel)
         // A while after a touch, the hand's part fades away.
@@ -197,7 +202,9 @@ class WorldCamera {
             }
             if (clear) break
         }
-        pull += (want - pull) * (1 - exp(-dtMs / (if (want < pull) 180.0 else 1400.0))).toFloat()
+        // (Going round, it comes closer and goes back gently too.)
+        val swirl = (orbitSpeed / (2 * PI / ORBIT_MS).toFloat()).coerceIn(0f, 1f)
+        pull += (want - pull) * (1 - exp(-dtMs / (if (want < pull) 180.0 + 500.0 * swirl else 1400.0))).toFloat()
         val horizontal = d * cos(p) * pull
         atX = tx + sin(y) * 3f
         atY = ty + 1.4f + 4.5f * lookUp + focusLift
@@ -206,8 +213,10 @@ class WorldCamera {
         eyeZ = tz - cos(y) * horizontal
         eyeY = ty + 1.4f + d * pull * sin(p) + userLift
         if (wayX != null && inTunnel > 0.01f) {
-            // In a tunnel, on the way behind the traveller, looking along it.
+            // In a tunnel, on the way straight behind the traveller, looking along it, whatever its bends.
+            eyeZ += (tz - horizontal - eyeZ) * inTunnel
             eyeX += (wayX(eyeZ) - eyeX) * inTunnel
+            atZ += (tz + 3f - atZ) * inTunnel
             atX += (wayX(atZ) - atX) * inTunnel
         }
         // Never inside the land.
@@ -234,8 +243,17 @@ class WorldCamera {
         val over = (things(eyeX, eyeZ) + 1f - eyeY).coerceAtLeast(0f)
         bump += (over - bump) * (1 - exp(-dtMs / (if (over > bump) 110.0 else 900.0))).toFloat()
         eyeY += bump
+        // Going round, its height follows the land softly (no sudden ups and downs that make one dizzy).
+        if (eyeYSmooth.isNaN()) eyeYSmooth = eyeY
+        eyeYSmooth += (eyeY - eyeYSmooth) * (1 - exp(-dtMs / (if (eyeY > eyeYSmooth) 420.0 else 1100.0))).toFloat()
+        eyeY += (eyeYSmooth - eyeY) * swirl
         // Under a tunnel's roof (or the water's surface), but never under the ground.
         eyeY = max(kotlin.math.min(eyeY, ceiling(eyeX, eyeZ)), ground(eyeX, eyeZ) + 1.0f)
         lift = userLift
+    }
+
+    private companion object {
+        /** One whole turn round the traveller at the song's peak (ms). */
+        const val ORBIT_MS = 12000.0
     }
 }

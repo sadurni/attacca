@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
@@ -178,7 +179,7 @@ private val SettingsPage.searchTerms: List<Int>
         )
         SettingsPage.APPEARANCE -> listOf(
             R.string.dynamic_accent, R.string.blurred_background, R.string.cover_behind_screens, R.string.section_player_screen,
-            R.string.remaining_time, R.string.widget_section, R.string.section_tips, R.string.tips_show,
+            R.string.remaining_time, R.string.widget_section, R.string.widget_text_size, R.string.section_tips, R.string.tips_show,
             R.string.section_keep_screen_on, R.string.section_waveform,
         )
         SettingsPage.GESTURES -> emptyList()
@@ -912,6 +913,26 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
                 com.sadurni.attacca.playback.NowPlayingWidget.setBig(widgetContext, big)
             }
         }
+        // The text's size, the cover making room for it; the large widget shown as it will look while sliding.
+        var widgetScale by remember { mutableStateOf(com.sadurni.attacca.playback.NowPlayingWidget.textScale(widgetContext)) }
+        Text(stringResource(R.string.widget_text_size) + ": " + kotlin.math.round(widgetScale * 100).toInt() + " %", modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+        androidx.compose.material3.Slider(
+            value = widgetScale,
+            onValueChange = { widgetScale = it },
+            valueRange = com.sadurni.attacca.playback.NowPlayingWidget.SCALE_MIN..com.sadurni.attacca.playback.NowPlayingWidget.SCALE_MAX,
+            steps = 8,
+            onValueChangeFinished = { com.sadurni.attacca.playback.NowPlayingWidget.setTextScale(widgetContext, widgetScale) },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { android.widget.FrameLayout(it) },
+            update = { frame ->
+                frame.removeAllViews()
+                runCatching { frame.addView(com.sadurni.attacca.playback.NowPlayingWidget.preview(frame.context, widgetScale).apply(frame.context.applicationContext, frame)) }.onFailure { android.util.Log.w("AttaccaWidget", "preview", it) }
+            },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth().height(140.dp),
+        )
+        Hint(stringResource(R.string.widget_text_size_hint))
     }
 
     SectionTitle(stringResource(R.string.section_tips))
@@ -955,6 +976,14 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     }
     // O'rama in the waveform's place; the waveform keeps its own look, small between the times.
     SwitchRow(stringResource(R.string.waveform_orama), ui.oramaStrip, { on -> settings.updateUi { it.copy(oramaStrip = on) } })
+    val views = listOf("ORAMA" to R.string.orama_name, "WORLD" to R.string.world_name, "SPLIT" to R.string.world_split)
+    if (ui.oramaStrip) {
+        Text(stringResource(R.string.strip_view), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+        for ((v, label) in views) RadioRow(stringResource(label), ui.stripView == v) { settings.updateUi { it.copy(stripView = v) } }
+    }
+    // What opening O'rama shows (from its button, the cover, the strip…).
+    Text(stringResource(R.string.orama_open), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+    for ((v, label) in views) RadioRow(stringResource(label), ui.oramaOpen == v) { settings.updateUi { it.copy(oramaOpen = v) } }
 }
 
 /** Base folder of the music, which makes exported lists portable between devices. */

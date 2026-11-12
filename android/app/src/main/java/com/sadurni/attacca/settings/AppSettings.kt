@@ -39,6 +39,10 @@ data class UiSettings(
     val waveformMode: WaveformMode = WaveformMode.TOP_HALF,
     /** A strip of O'rama in the waveform's place in Now playing, the waveform (as [waveformMode] says) then small between the times. */
     val oramaStrip: Boolean = false,
+    /** What the strip in Now playing shows: ORAMA, WORLD or SPLIT (both side by side). */
+    val stripView: String = "ORAMA",
+    /** What opening O'rama shows: ORAMA, WORLD or SPLIT (both, the screen split). */
+    val oramaOpen: String = "ORAMA",
     val keepScreenOn: KeepScreenOn = KeepScreenOn.OFF,
     /** Tips over each screen the first time it opens after installing a new version. */
     val showTips: Boolean = true,
@@ -411,6 +415,8 @@ class AppSettings(context: Context) {
             showRemainingTime = prefs.getBoolean("remaining", d.showRemainingTime),
             waveformMode = prefs.getEnum("waveform", d.waveformMode),
             oramaStrip = prefs.getBoolean("orama_strip", d.oramaStrip),
+            stripView = prefs.getString("strip_view", d.stripView) ?: d.stripView,
+            oramaOpen = prefs.getString("orama_open", d.oramaOpen) ?: d.oramaOpen,
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
@@ -429,6 +435,8 @@ class AppSettings(context: Context) {
             .putBoolean("remaining", s.showRemainingTime)
             .putString("waveform", s.waveformMode.name)
             .putBoolean("orama_strip", s.oramaStrip)
+            .putString("strip_view", s.stripView)
+            .putString("orama_open", s.oramaOpen)
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)

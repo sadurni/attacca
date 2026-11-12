@@ -3,6 +3,90 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.4.1
+
+### Attacca (Android)
+
+- About: "Keep logs for reports", off unless turned on: the app's exits, song transitions and
+  Attacca World's song changes are noted in files beside the lists only while it is on.
+- Opening the app again goes on with what was playing when it was left on the same device (a list
+  made on the spot, another list chosen), even when the device has a list of its own without
+  "follow the last list": the device's list is for coming to it from another device.
+- **Widget**: the play button in the middle; a text size for it in Settings → Appearance, with the
+  large widget shown as it will look while sliding (the cover making room for bigger text).
+- Taking up the list again after the app was closed: from outside (the widget's play button, the
+  system's media card, headphones) the saved place is used when the device's list is the one that
+  was playing; every way of taking it up is noted in the exits log.
+- **Now playing**: the strip can show O'rama, Attacca World, or both side by side (Settings →
+  Appearance); opening O'rama can open O'rama, Attacca World or both split (Settings).
+- **Over the whole screen**: back brings the controls back first (and a tap on either half when
+  split); a soft band fills with the accent colour as the song goes on (where the halves meet, or
+  along the bottom). The song's name shows as each song comes in, with or without the controls.
+- **Attacca World**: never a default world before the song's own (opening it or changing songs);
+  the traveller in the accent colour, as in O'rama; flames that flicker and lick; lava geysers in
+  the volcano (in O'rama too); the dogs never off a bridge or into water or lava; the podenco's
+  white feet; people and dogs less stiff; relays where the one waiting walks onto the way and the
+  other walks off; piers to get on and off boats, icebergs and the submarine, stairs for the ship;
+  glass domes on the submarine's windows; more animals (cows, horses, monkeys, cranes, seals,
+  turtles, crabs…) and the camera turning to what happens about the way; the camera closer and
+  steadier in tunnels.
+- **Attacca World**: houses, ruins and the like never stand on the way; the camera goes under
+  arches and the high rope bridge instead of through them. The title box shows the song's mood,
+  sound family and chosen world as in O'rama (in the split screen too).
+- The desert's peak pyramid stands far back, in the background behind the dunes, never on the
+  way. The band over the whole screen is lighter and its accent fill soft.
+- The Great Wall's peak dragon has its head (golden snout, horns, an eye and a whisker).
+- Softer changes from one world to the next (over a longer stretch, the water's colour too); the
+  camera comes close before a tunnel's mouth and stays close until well out of it.
+- Relays only where the one waiting stands on dry, firm ground (never in the water, on a bridge or
+  in a tunnel), and none aboard the iceberg, a canoe, the ship or the submarine.
+- From one song to the next without a flicker: the land in sight stays until the new one is made,
+  and the new song starts in the world that was seen coming, turning into its own later; its look
+  waits for its cover (no colours changing a moment after); the sky changes over a moment, never
+  at once. A song skipped halfway leaves the last world quickly. Quiet or loud stretches never take the land under the sea without the
+  submarine. The cover boards and the next song's sign stand on dry ground, and the camera goes
+  over them.
+- The new song's land is made aside while the last one goes on, so the change never stalls; the
+  same world as O'rama for each song (O'rama decides, World follows).
+- What is seen coming at a song's end is worked out just as the next song will be (its own cover,
+  its first stretch's world), so nothing changes once it has come (in O'rama too).
+- The new song's land goes on as the last one was further than the eye reaches (its shape, houses
+  and trees), and turns into its own far ahead; the traveller never steps back as it comes in.
+  The sun's light, the clouds, rain and snow follow the land's own blend (no jump as a song comes
+  in), the dogs go on where they were, the new song's vehicle comes in softly, and a song starting
+  quiet or loud no longer cuts the land carried on short (no water appearing all at once).
+  A song is taken as skipped only when it was left before the next world began to come in; what
+  came in always goes on (whatever the vehicle), and the last song's place, still given by the
+  player for a moment, no longer throws the view elsewhere for an instant. Each change is noted
+  in attacca-world.txt (beside attacca-exits.txt).
+  The player's place comes with the song it belongs to: the next song's start, given a moment
+  before the song shown changes, no longer sends World back to the last song's beginning.
+- At the peak the camera goes round slowly and gently, its height following the land softly.
+- The song's name over the picture shows its album too, smaller.
+- Split side by side: the title box in the middle at the top and the small player in the middle at
+  the bottom, stretched over both halves (time and next song, then the controls and the wave);
+  O'rama's half raises its land over it and brings the traveller a little further in.
+- Split, the two landscapes melt into each other where they meet (no band between them); over
+  the whole screen the song's progress is a thin line in the accent colour along the bottom.
+- Glass bowls on everyone's head in space (the dogs too); in the dark the dogs' collars light up
+  with little coloured lights.
+- Over the whole screen (split or not) the song's name comes back now and then: softly in, a
+  moment, softly out. The band at the bottom (or the seam) shows a little more.
+- O'rama's submarine lights the water ahead.
+
+### Attacca Desktop
+
+- The same in Attacca World (but the strip in Now playing), and the band over the whole screen.
+
+### Rockbox plugin
+
+- Version (formerly Library info): the plugin's version, and the library's (when it was made, with
+  which Attacca, and its songs); the libraries made from now on note the Attacca that made them.
+- Fine tuning by ear: the deep tones, the bass line and the noise for the sides are heard on the
+  players (they played silently once the music had stopped); the settings it leaves are ones
+  Rockbox takes (bass harmonics in its steps of 25 %, with a precut; the compressor's threshold in
+  its steps of 3 dB).
+
 ## 1.4.0
 
 ### Attacca (Android)

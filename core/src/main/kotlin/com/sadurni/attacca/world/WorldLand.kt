@@ -28,6 +28,11 @@ class WorldLand(
     val originMs: Double = 0.0,
     /** The traveller comes already aboard from the song before (the same vehicle goes on). */
     val arrives: Boolean = false,
+    /**
+     * The look the song before was showing as it ended (what was seen arriving): this song starts
+     * in it and turns into its own over a while, never at once into something else.
+     */
+    val cameIn: SongLook? = null,
 ) {
 
     /**
@@ -46,11 +51,31 @@ class WorldLand(
         beforeKept = null
     }
 
+    /**
+     * How long the one before goes on (rows, then rows turning into this one): as long as usual when
+     * it was in this song's world already (what was seen arriving), briefly when it was another
+     * (a song skipped halfway: no camel on the sea's floor for long).
+     */
+    private val otherBefore: Boolean by lazy {
+        val b = before ?: return@lazy false
+        // A song skipped halfway: left before this one's world had begun to come in at its end
+        // (then what was there is not what this song is; whatever came in at an end goes on).
+        b.land.endZ == Float.MAX_VALUE || b.atZ < b.land.endZ - ARRIVE
+    }
+    internal val contRows: Float get() = if (otherBefore) 4f else CONT
+    internal val contBlendRows: Float get() = if (otherBefore) 14f else CONT_BLEND
+
+    /** Where the land is wholly this song's own (0 without one before). */
+    val contEnd: Float get() = if (beforeKept == null) 0f else contRows + contBlendRows
+
+    /** Up to where the things standing are the last song's (its houses, trees…), from where this one's. */
+    val contHalf: Float get() = if (beforeKept == null) 0f else contRows + contBlendRows / 2
+
     /** How much of row [z] is this land's own (0: still the one before, 1: its own). */
-    fun ownAt(z: Float): Float = if (beforeKept == null) 1f else smoothstep(CONT, CONT + CONT_BLEND, z)
+    fun ownAt(z: Float): Float = if (beforeKept == null) 1f else smoothstep(contRows, contRows + contBlendRows, z)
 
     /** The one before as it is at row [z] of this land, while it still shows there. */
-    private fun beforeAt(z: Float): Before? = beforeKept?.takeIf { z < CONT + CONT_BLEND }
+    private fun beforeAt(z: Float): Before? = beforeKept?.takeIf { z < contRows + contBlendRows }
 
     private val sections = if (sectioned) wave?.let { com.sadurni.attacca.diorama.Sections.of(it) } else null
 
@@ -58,7 +83,7 @@ class WorldLand(
      * Where the song's vehicle waits (row): a little ahead; past the stretch that still goes on from
      * the last song when it waits at a shore of this land's own (a canoe, an iceberg, the submarine).
      */
-    val startZ: Float = if (before != null && look.traveller.let { it == com.sadurni.attacca.diorama.Traveller.SUBMARINE || it == com.sadurni.attacca.diorama.Traveller.CANOE || it == com.sadurni.attacca.diorama.Traveller.ICEBERG }) CONT + CONT_BLEND + 8f else Cast.START
+    val startZ: Float by lazy { if (before != null && look.traveller.let { it == com.sadurni.attacca.diorama.Traveller.SUBMARINE || it == com.sadurni.attacca.diorama.Traveller.CANOE || it == com.sadurni.attacca.diorama.Traveller.ICEBERG }) contRows + contBlendRows * 0.6f + 8f else Cast.START }
 
     /** The row where the song ends. */
     val endZ: Float = wave?.let { zAt(it.endMs.toDouble()) } ?: Float.MAX_VALUE
@@ -68,12 +93,34 @@ class WorldLand(
 
     private fun sectionLookAt(z: Float): SongLook {
         val s = sections ?: return look
-        return look.variant(s.modeAt(z * 1000.0 / BLOCKS_PER_SECOND))
+        val v = look.variant(s.modeAt(z * 1000.0 / BLOCKS_PER_SECOND))
+        // Never under the sea for a while without the submarine (nor out of it with it): the
+        // traveller's vehicle and the world go together, and the sea's water is the song's own.
+        return if ((v.world == World.REEF) != (look.world == World.REEF)) look else v
     }
+
+    /** What this song starts in (the look that arrived), when it is not its own first look. */
+    // (Only with this song's own traveller: the vehicle and its world go together.)
+    // (Whatever vehicle: what was seen coming is what is there; never into or out of the sea, though.)
+    private val startLook: SongLook? by lazy {
+        cameIn?.takeIf { it != sectionLookAt(0f) && !otherBefore && (it.world == World.REEF) == (look.world == World.REEF) }
+    }
+
+    /** How this song's land starts (for the log of World's song changes). */
+    fun describeStart(): String {
+        val b = before
+        fun d(l: SongLook?) = l?.let { "${it.world}/${it.traveller}/${it.mode}" } ?: "-"
+        return "own ${d(look)} first ${d(sectionLookAt(0f))} cameIn ${d(cameIn)} held ${startLook != null} " +
+            "skip $otherBefore cont ${contRows.toInt()}+${contBlendRows.toInt()} left ${b?.let { "%.0f of %.0f".format(it.atZ, it.land.endZ) } ?: "-"} next ${d(next)}"
+    }
+
+    /** Where (row) the look that arrived has turned halfway into this song's own. */
+    private val ownFrom = CONT + CONT_BLEND + SECTION_BLEND / 2
 
     /** The look at row [z]: the song's own, a quiet or loud stretch's (another world for a while, as in O'rama), or near the end the next song's. */
     fun lookAt(z: Float): SongLook {
         if (next != null && z >= endZ - ARRIVE / 2) return next
+        if (startLook != null && z < ownFrom) return startLook!!
         return sectionLookAt(z)
     }
 
@@ -83,9 +130,13 @@ class WorldLand(
     private val changes: List<Change> by lazy {
         val list = ArrayList<Change>()
         val stop = if (next != null) endZ - ARRIVE / 2 else endZ
+        // From the look that arrived into this song's own.
+        val came = startLook
+        val from0 = if (came != null && ownFrom < stop) ownFrom else 0f
+        if (came != null && ownFrom < stop) list += Change(ownFrom, came, sectionLookAt(ownFrom), SECTION_BLEND)
         if (sections != null) {
-            var prev = sectionLookAt(0f)
-            var z = 1f
+            var prev = sectionLookAt(from0)
+            var z = from0 + 1f
             while (z < stop) {
                 val l = sectionLookAt(z)
                 if (l !== prev) {
@@ -104,6 +155,8 @@ class WorldLand(
      * in over some rows, seen coming from afar, not all at once.
      */
     fun lookBlend(z: Float): Triple<SongLook, SongLook, Float> {
+        // Where the last song's land goes on, so does its blend (its end into this one's world).
+        beforeKept?.let { b -> if (!otherBefore && z + b.atZ < b.land.endZ + 1f) return b.land.lookBlend(z + b.atZ) }
         for (c in changes) {
             val from = c.z - c.rows / 2
             if (z >= from && z <= c.z + c.rows / 2) return Triple(c.from, c.to, smoothstep(from, c.z + c.rows / 2, z))
@@ -136,15 +189,18 @@ class WorldLand(
         const val BEND = 52f
         const val BEND_REACH = 15f
 
-        /** Rows a new song's land keeps the last one's shape, then rows it turns into its own. */
-        const val CONT = 20f
-        const val CONT_BLEND = 20f
+        /**
+         * Rows a new song's land keeps the last one's shape (and its things), then rows it turns
+         * into its own: further than the eye reaches, so what was seen coming is what is there.
+         */
+        const val CONT = 115f
+        const val CONT_BLEND = 40f
 
         /** Rows over which a stretch's world comes in. */
-        const val SECTION_BLEND = 40f
+        const val SECTION_BLEND = 80f
 
         /** Rows over which the next song's world comes in before the end. */
-        const val ARRIVE = 56f
+        const val ARRIVE = 90f
     }
 
     /** Where in the song (the file's ms) row [z] is. */
@@ -334,8 +390,11 @@ class WorldLand(
 
     /** The water's colour at row [z] (each stretch's world its own). */
     fun waterColorAt(z: Float): Int {
-        beforeAt(z)?.let { if (ownAt(z) < 0.5f) return it.land.waterColorAt(z + it.atZ) }
-        return Bands.water(lookAt(z).world)
+        // Changing slowly from one world's water to the next's, never at once.
+        val (a, b, t) = lookBlend(z)
+        val own = if (t <= 0f) Bands.water(a.world) else mix(Bands.water(a.world), Bands.water(b.world), t)
+        val before = beforeAt(z) ?: return own
+        return mix(before.land.waterColorAt(z + before.atZ), own, ownAt(z))
     }
 
     private fun colorIn(world: World, x: Float, z: Float, h: Float, ny: Float): Int {

@@ -50,10 +50,16 @@
             android:textSize="11sp" />
 
         <LinearLayout
+            android:layout_gravity="center_horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
+
+            <!-- As wide as the heart on the other side: the play button in the middle. -->
+            <FrameLayout
+                android:layout_width="30dp"
+                android:layout_height="1dp" />
 
             <ImageButton
                 android:id="@+id/widget_previous"

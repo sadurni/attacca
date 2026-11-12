@@ -28,6 +28,7 @@ object TransitionLog {
     }
 
     fun note(text: String) {
+        if (!com.sadurni.attacca.Logs.on) return
         val target = file ?: return
         val at = System.currentTimeMillis()
         writer.execute {

@@ -26,7 +26,8 @@ internal fun Scene.festiveSky() {
     when (festive ?: return) {
         Festivity.CHRISTMAS, Festivity.ORTHODOX_CHRISTMAS -> {
             if (kings) {
-                kingsStar()
+                // (Over Attacca World its own sky has the star, fixed in it.)
+                if (!overlay) kingsStar()
             } else {
                 sleigh()
             }
@@ -41,7 +42,7 @@ internal fun Scene.festiveSky() {
             skyLanterns(0xFFE53935.toInt())
         }
         Festivity.SHOGATSU -> {
-            risingSun()
+            if (!overlay) risingSun()
             cranes()
         }
     }
@@ -352,7 +353,7 @@ internal fun Scene.celebration() {
         }
         NewYear.HIJRI -> crescent()
         NewYear.ENKUTATASH -> flowersFalling(f)
-        NewYear.VIKRAM -> diyas()
+        NewYear.VIKRAM -> if (!overlay) diyas()
         else -> Unit
     }
     c.dots?.let { drones(it, t, f, colors) }

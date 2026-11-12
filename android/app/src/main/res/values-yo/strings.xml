@@ -509,6 +509,8 @@
     <string name="waveform_off">Pa á (ọ̀pá wíwá lásán)</string>
     <string name="strip_show_orama">Fi O\'rama hàn níbí</string>
     <string name="strip_show_wave">Fi ìrísí ìgbì ohùn hàn níbí</string>
+    <string name="strip_view">Ohun tó ń hàn nínú Ń dún báyìí</string>
+    <string name="orama_open">Ohun tí O\'rama ń ṣí</string>
     <string name="waveform_orama">Ilẹ̀ O\'rama (ìrísí ìgbì ohùn kékeré láàrin àwọn àkókò)</string>
     <string name="section_silence">Fífo ìdákẹ́jẹ́ẹ́</string>
     <string name="silence_enabled">Fo ìdákẹ́jẹ́ẹ́ ní ìbẹ̀rẹ̀ àti òpin orin</string>
@@ -1522,6 +1524,7 @@
     <string name="help_orama_worlds">• Àwọn ayé míì: aṣálẹ̀ tó ní oásisì àti ràkúnmí (pírámídì wúrà ní téńté), Odi Ńlá ilẹ̀ Ṣáínà (diragọ́nì), igbó India pẹ̀lú tẹ́ńpìlì àti erin (ìkùukùu àwọ̀), Amazon tí a fi ọkọ̀ ìgbàlẹ̀ sọ̀kalẹ̀ (òṣùmàrè lórí omi tó ń ṣubú), àfonífojì jíjìn ní ìwọ̀-oòrùn òkèèrè (ẹyẹ idì ní ìwọ̀-oòrùn), Japan nínú òdòdó ṣẹ́rì (iṣẹ́ ìmọ́lẹ̀ àti petals), ìsàlẹ̀ òkun pẹ̀lú ọkọ̀ abẹ́ omi (ẹja ńlá) àti òkè ńlá ajónirúrù (ìbúgbàmù). Àmì irú orin ń ranni lọ́wọ́ láti yàn wọ́n (Lárúbáwá tàbí flamenco, Ṣáínà, India, Látìn tàbí Brazil, country, Japan, ambient, metal). Bọ́tìnì àgbáyé ń fi orin náà hàn ní ayé kọ̀ọ̀kan lẹ́sẹẹsẹ, bákan náà ní O\'rama àti ní Attacca World, ilẹ̀ orin kan náà ní 3D (bọ́tìnì kúùbù): ẹ ń kọjá nínú rẹ̀ lẹ́yìn arìnrìn-àjò àti ajá mẹ́rin, ìka kan ń yí kámẹ́rà, méjì sì ń mú un súnmọ́ tàbí gbé e sókè.</string>
     <string name="help_world">• Attacca World (bọ́tìnnì kúbù nínú O\'rama): orin kan náà bí ilẹ̀ 3D tí a ń gbà kọjá lẹ́yìn arìnrìn-àjò àti àwọn ajá mẹ́rin, pẹ̀lú ìyípadà, ìdènà àti ojú ọjọ́ ayé rẹ̀; ilẹ̀ náà ń bá orin lọ ó sì ń tẹ̀síwájú láti orin kan sí èyí tó tẹ̀lé e, àwọn apá gígùn tó dákẹ́ tàbí tó le sì ń mú ayé mìíràn wá fún ìgbà díẹ̀. Ìka kan ń yí kámẹ́rà padà, méjì ń sún un mọ́ tàbí gbé e sókè; fífọwọ́kan arìnrìn-àjò ń mú kí ó fò tàbí yí po. Bọ́tìnnì ìbòjú pínpín ń fi O\'rama àti Attacca World hàn papọ̀. Àwọn ọ̀rọ̀ àkọlé lè yan ayé bí ohùn bá bá a mu (Siren Song, tó dákẹ́: lábẹ́ òkun). Lórí kọ̀ǹpútà pẹ̀lú.</string>
     <string name="help_world_life">• Nínú Attacca World, ọ̀nà náà ń kọjá láàárín àwọn ibi O\'rama ní àkókò kan náà (àwọn afárá, àwọn ihò abẹ́lẹ̀ tí ó ní ògùṣọ̀, àwọn ibùdó pẹ̀lú ọkọ̀ ojú irin wọn, àwọn abúlé tí èéfín ń jáde láti inú ihò èéfín wọn, kẹ̀kẹ́ ńlá kan tí ń yí, àwọn àwókù, àwọn ẹnu ọ̀nà tí ó tẹ̀, rọ́kẹ́ẹ̀tì tí ń gòkè), ayé orin tó kàn sì ń hàn kí ó tó bẹ̀rẹ̀. Kí ó tó yí ọkọ̀ padà, arìnrìn-àjò náà máa ń sọ̀kalẹ̀ (ó wọ ọkọ̀ abẹ́ omi ní etí òkun, àwọn ajá sì ń wo ìta láti ojú fèrèsé rẹ̀). Àwọn ẹyẹ, fọ̀nràn, àwọn ẹranko tí ń jẹ koríko àti àwọn ajá mìíràn ń kọjá; iná orí ń tan ìmọ́lẹ̀ sínú òkùnkùn; kámẹ́rà ń yíjú sí ohun tó yẹ ní wíwò, ó sì ń gòkè lórí àwọn òkè. Lórí gbogbo ìbòjú, orúkọ orin náà ń hàn bí ó ṣe ń bẹ̀rẹ̀.</string>
+    <string name="help_world_views">• Ìlà Tó ń dún báyìí lè fi O\'rama, Attacca World tàbí méjèèjì hàn ní ẹ̀gbẹ́ ara wọn (Ètò → Ìrísí), bọ́tìnnì O\'rama sì lè ṣí O\'rama, Attacca World tàbí méjèèjì ní ìbòjú pínpín (Ètò). Lórí gbogbo ìbòjú, padà ń mú àwọn ìdarí padà wá; ìlà tínrín ní àwọ̀ àfihàn ń fi bí orin ti lọ jìnnà tó hàn, orúkọ rẹ̀ sì ń padà hàn lẹ́ẹ̀kọ̀ọ̀kan. Ìwọ̀n ọ̀rọ̀ wíjẹ́ẹ̀tì wà ní Ètò → Ìrísí. Nínú Nípa, «Tọ́jú àkọsílẹ̀ fún ìjábọ̀» ń kọ àwọn ìjáde àti ìyípadà sínú fáìlì lẹ́gbẹ̀ẹ́ àwọn àkójọ rẹ, nígbà tí ó bá wà ní títàn nìkan.</string>
     <string name="help_orama_buttons">• Nínú O\'rama, àwọn bọ́tìnnì ní ọ̀tún (pa dé, gbogbo ojú-ìbojú, ìyára férémù) ń wà ní ìdajì ní fífarapamọ́ kí ojú ọ̀run lè hàn: títẹ̀ ń mú wọn jáde, wọ́n sì ń padà lẹ́yìn ìṣẹ́jú-àáyá díẹ̀. Oòrùn àti òṣùpá ń yàgò fún àkọlé àti àwọn bọ́tìnnì.</string>
     <string name="app_slogan">“Tún ṣàwárí àkójọpọ̀ orin rẹ: gbọ́ ọ ní ọ̀nà tuntun, pẹ̀lú ohùn tó dára jù.”</string>
     <string name="help_orama_surprises">• O\'rama tún fi àwọn ìyàlẹ́nu kéékèèké díẹ̀ pamọ́. Wá wọn fúnra rẹ!</string>
@@ -1858,6 +1861,8 @@
     <string name="newyear_notice_text">Ní ọ̀gànjọ́ òru òní ọdún tuntun máa bẹ̀rẹ̀, ohun ńlá kan sì máa ṣẹlẹ̀ nínú O\'rama: fi Attacca sílẹ̀ ní ṣíṣí lójú-ìbojú nígbà náà.</string>
     <string name="browser_as_grid">Fi hàn bí àwòrán èèpo</string>
     <string name="browser_as_list">Fi hàn bí àkójọ</string>
+    <string name="widget_text_size">Ìwọ̀n ọ̀rọ̀ wíjẹ́ẹ̀tì</string>
+    <string name="widget_text_size_hint">Àwòrán ìbòrí máa ń kéré bí ọ̀rọ̀ ṣe ń tóbi. Lókè, wíjẹ́ẹ̀tì ńlá bí yóò ṣe rí.</string>
     <string name="widget_big">Nígbà tí a bá sọ ọ́ di ńlá, widget ń fi hàn</string>
     <string name="widget_big_cover">Àwòrán èèpo, ní ńlá</string>
     <string name="widget_big_orama">Ilẹ̀ O\'rama</string>
@@ -1868,4 +1873,6 @@
     <string name="lock_wallpaper_hint">A ń tún un ṣètò pẹ̀lú orin kọ̀ọ̀kan. Tí a bá padà sí “Bí ó ṣe wà”, ojú-ìbojú títìpa máa mú àwòrán ojú-ìwé ilé (a kò lè ka èyí tó ní tẹ́lẹ̀ padà).</string>
     <string name="over_lock_screen">Fi hàn lórí ojú-ìbojú títìpa nígbà tí orin ń dún</string>
     <string name="over_lock_screen_hint">Tí Attacca bá wà ní ṣíṣí (Tó ń dún báyìí, O\'rama…) nígbà tí ojú-ìbojú bá kú, jíjí fóònù máa fi í hàn lórí ojú-ìbojú títìpa nígbà tí orin ń dún; fún ohunkóhun mìíràn fóònù máa wà ní títìpa.</string>
+    <string name="about_logs">Tọ́jú àkọsílẹ̀ fún ìjábọ̀</string>
+    <string name="about_logs_hint">Ó máa kọ ìpa ààpù, ìyípadà láàárín orin àti ìyípadà orin nínú Attacca World sínú fáìlì lẹ́gbẹ̀ẹ́ àwọn àtòjọ rẹ, láti fi ránṣẹ́ nígbà tí nǹkan bá bàjẹ́. Ó wà ní pípa àyàfi tí o bá tàn án.</string>
 </resources>

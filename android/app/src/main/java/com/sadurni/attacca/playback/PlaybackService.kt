@@ -500,8 +500,15 @@ class PlaybackService : MediaLibraryService() {
         if (listOfNotNull(rule?.resumeList, saved?.source).distinctBy { it.key }.count(::forgetIfDeleted) > 0) {
             saved = app.queueStore.load()
         }
-        val deviceList = app.settings.profiles.state.value.rule(app.outputMonitor.current.value?.key)?.resumeList
-        if (deviceList != null && deviceList.key != saved?.source?.key) {
+        val here = app.outputMonitor.current.value?.key
+        val deviceList = app.settings.profiles.state.value.rule(here)?.resumeList
+        // What was playing when the app was left, on this same device, goes on (another list chosen
+        // since, a list made on the spot…): the device's list is for coming to it from another one.
+        val sameDevice = saved != null && saved.device != null && saved.device == here
+        if (deviceList != null && deviceList.key != saved?.source?.key && sameDevice) {
+            com.sadurni.attacca.ExitLog.note(this, "device's list (${deviceList.name}) not taken up at start: the saved queue was playing on this device")
+        }
+        if (deviceList != null && deviceList.key != saved?.source?.key && !sameDevice) {
             app.setCurrentList(deviceList.name, deviceList)
             scope.launch {
                 val loaded = loadWithResumePoint(deviceList)
@@ -514,6 +521,7 @@ class PlaybackService : MediaLibraryService() {
                 }
                 player.setMediaItems(loaded.mediaItems, loaded.startIndex, loaded.startPositionMs)
                 player.prepare()
+                com.sadurni.attacca.ExitLog.note(this@PlaybackService, "device's list taken up at start (${deviceList.name}): track ${loaded.startIndex + 1} of ${loaded.mediaItems.size} at ${loaded.startPositionMs / 1000} s")
             }
             return
         }
@@ -525,7 +533,10 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             val items = withContext(Dispatchers.IO) { analysis.withCachedTrims(saved.toMediaItems()) }
             // A controller may have started something else meanwhile.
-            if (player.mediaItemCount > 0) return@launch
+            if (player.mediaItemCount > 0) {
+                com.sadurni.attacca.ExitLog.note(this@PlaybackService, "saved queue not taken up: something else was already playing (track ${player.currentMediaItemIndex + 1} of ${player.mediaItemCount} at ${player.currentPosition / 1000} s)")
+                return@launch
+            }
             // Shuffle and repeat come from the list's own settings (PlaybackExtras).
             player.setMediaItems(items, saved.index.coerceIn(0, saved.locations.lastIndex), saved.positionMs)
             player.prepare()
@@ -539,7 +550,7 @@ class PlaybackService : MediaLibraryService() {
         // belong to the current list.
         if (awaitingItems) return
         runCatching {
-            app.queueStore.save(player, app.currentListName.value, app.currentListSource.value)
+            app.queueStore.save(player, app.currentListName.value, app.currentListSource.value, app.outputMonitor.current.value?.key)
             saveResumePoint()
             rememberListForDevice()
         }
@@ -617,6 +628,7 @@ class PlaybackService : MediaLibraryService() {
             app.setCurrentList(source.name, source)
             player.setMediaItems(loaded.mediaItems, loaded.startIndex, loaded.startPositionMs)
             player.prepare()
+            com.sadurni.attacca.ExitLog.note(this@PlaybackService, "device connected, its list taken up (${source.name}): track ${loaded.startIndex + 1} of ${loaded.mediaItems.size} at ${loaded.startPositionMs / 1000} s")
         }
         if (play) player.play()
     }
@@ -921,11 +933,17 @@ class PlaybackService : MediaLibraryService() {
             app.outputMonitor.refresh()
             val device = app.outputMonitor.current.value
             val deviceList = app.settings.profiles.state.value.rule(device?.key)?.resumeList
+            val savedNow = app.queueStore.load()
+            val savedSource = savedNow?.source
+            // (What was playing on this same device when the app was left goes on, as at start.)
+            val sameDevice = savedNow?.device != null && savedNow.device == device?.key
             return scope.future {
-                // The device's list, unless it is gone or empty: then the saved queue.
-                deviceList?.let { list ->
+                // The device's list, unless it is gone or empty: then the saved queue. When the
+                // device's list is the saved queue's own, the saved queue (its exact track and place).
+                deviceList?.takeIf { it.key != savedSource?.key && !sameDevice }?.let { list ->
                     loadWithResumePoint(list)?.let { loaded ->
                         app.setCurrentList(list.name, list)
+                        com.sadurni.attacca.ExitLog.note(this@PlaybackService, "resumed from outside (${controller.packageName}), device's list (${list.name}): track ${loaded.startIndex + 1} of ${loaded.mediaItems.size} at ${loaded.startPositionMs / 1000} s")
                         return@future loaded
                     }
                 }
@@ -933,6 +951,7 @@ class PlaybackService : MediaLibraryService() {
                 app.setCurrentList(saved.listName, saved.source)
                 val items = withContext(Dispatchers.IO) { analysis.withCachedTrims(saved.toMediaItems()) }
                 if (items.isEmpty()) throw UnsupportedOperationException("Nothing to resume")
+                com.sadurni.attacca.ExitLog.note(this@PlaybackService, "resumed from outside (${controller.packageName}): track ${saved.index + 1} of ${items.size} at ${saved.positionMs / 1000} s")
                 MediaItemsWithStartPosition(items, saved.index.coerceIn(0, items.lastIndex), saved.positionMs)
             }
         }

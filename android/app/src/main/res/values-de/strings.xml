@@ -506,6 +506,8 @@
     <string name="waveform_off">Aus (einfache Suchleiste)</string>
     <string name="strip_show_orama">O\'rama hier anzeigen</string>
     <string name="strip_show_wave">Wellenform hier anzeigen</string>
+    <string name="strip_view">Was in „Wiedergabe“ zu sehen ist</string>
+    <string name="orama_open">Was O\'rama öffnet</string>
     <string name="waveform_orama">Die Landschaft von O\'rama (die Wellenform klein zwischen den Zeiten)</string>
     <string name="section_silence">Stille überspringen</string>
     <string name="silence_enabled">Stille am Anfang und Ende von Titeln überspringen</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Weitere Welten: eine Wüste mit Oasen und Kamelen (eine goldene Pyramide auf dem Höhepunkt), die Chinesische Mauer (ein Drache), ein Dschungel Indiens mit Tempeln und Elefanten (Farbwolken), der Amazonas im Kanu hinab (ein Regenbogen über einem Wasserfall), ein Canyon im Wilden Westen (ein Adler bei Sonnenuntergang), Japan in der Kirschblüte (Feuerwerk und Blütenblätter), der Meeresgrund im U-Boot (ein Wal) und ein Vulkan (ein Ausbruch). Das Genre-Tag hilft bei der Wahl (Arabisch oder Flamenco, Chinesisch, Indisch, Latin oder Brasilianisch, Country, Japanisch, Ambient, Metal). Die Weltkugel-Taste zeigt das Lied der Reihe nach in jeder Welt, gleich in O\'rama und in Attacca World, die Landschaft desselben Lieds in 3D (die Würfel-Taste): Du gehst hinter dem Reisenden und den vier Hunden hindurch, ein Finger dreht die Kamera und zwei holen sie näher heran oder heben sie an.</string>
     <string name="help_world">• Attacca World (der Würfel-Knopf in O\'rama): derselbe Titel als Land in 3D, durch das man hinter dem Reisenden und den vier Hunden zieht, mit Staffelwechseln, Hindernissen und dem Wetter seiner Welt; das Land folgt der Musik und geht von einem Titel zum nächsten weiter, lange ruhige oder laute Abschnitte bringen eine Weile eine andere Welt. Ein Finger dreht die Kamera, zwei holen sie näher oder heben sie; ein Tippen auf den Reisenden lässt ihn springen oder sich drehen. Der Knopf für den geteilten Bildschirm zeigt O\'rama und Attacca World zugleich. Wörter im Titel können die Welt wählen, wenn der Klang passt (Siren Song, ruhig: unter dem Meer). Auch am Computer.</string>
     <string name="help_world_life">• In Attacca World führt der Weg in denselben Momenten an den Orten von O\'rama vorbei (Brücken, Tunnel mit Fackeln, Bahnhöfe mit ihrem Zug, Dörfer mit rauchenden Schornsteinen, ein Riesenrad, Ruinen, Bögen, eine aufsteigende Rakete), und die Welt des nächsten Lieds kommt in Sicht, bevor es beginnt. Vor einem Fahrzeugwechsel steigt der Reisende aus (am Ufer ins U-Boot, und die Hunde schauen aus seinen Fenstern). Vögel, Ballons, grasende Tiere und andere Hunde ziehen vorbei; eine Stirnlampe erhellt das Dunkel; die Kamera dreht sich zu dem, was sehenswert ist, und hebt sich über Kämme. Im Vollbild erscheint der Name des Lieds, wenn es beginnt.</string>
+    <string name="help_world_views">• Der Streifen in Läuft gerade kann O\'rama, Attacca World oder beide nebeneinander zeigen (Einstellungen → Darstellung), und der O\'rama-Knopf kann O\'rama, Attacca World oder beide geteilt öffnen (Einstellungen). Im Vollbild holt Zurück die Bedienelemente wieder; eine dünne Linie in der Akzentfarbe zeigt, wie weit der Titel ist, und sein Name kommt ab und zu wieder. Die Textgröße des Widgets steht unter Einstellungen → Darstellung. Unter Über notiert „Protokolle für Berichte führen“ Beenden und Übergänge in Dateien neben deinen Listen, nur solange es eingeschaltet ist.</string>
     <string name="help_orama_buttons">• In O\'rama bleiben die Schaltflächen rechts (Schließen, Vollbild, Bildrate) halb versteckt, damit der Himmel zu sehen ist: Ein Tippen holt sie hervor, nach ein paar Sekunden verschwinden sie wieder. Sonne und Mond stehen nie hinter dem Titel oder den Schaltflächen.</string>
     <string name="app_slogan">„Entdecke deine Musiksammlung neu: hör sie auf neue Weise, mit dem besten Klang.“</string>
     <string name="help_orama_surprises">• O\'rama versteckt außerdem ein paar kleine Überraschungen. Finde sie selbst!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Heute um Mitternacht beginnt das neue Jahr und in O\'rama passiert etwas Großes: Hab Attacca dann auf dem Bildschirm offen.</string>
     <string name="browser_as_grid">Als Cover anzeigen</string>
     <string name="browser_as_list">Als Liste anzeigen</string>
+    <string name="widget_text_size">Textgröße des Widgets</string>
+    <string name="widget_text_size_hint">Das Cover wird kleiner, je größer der Text ist. Darüber das große Widget, wie es aussehen wird.</string>
     <string name="widget_big">Groß gezogen zeigt das Widget</string>
     <string name="widget_big_cover">Das Cover, groß</string>
     <string name="widget_big_orama">Die Landschaft von O\'rama</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Wird mit jedem Titel neu gesetzt. Zurück auf Wie es ist, übernimmt der Sperrbildschirm das Bild des Startbildschirms (das vorherige lässt sich nicht zurückholen).</string>
     <string name="over_lock_screen">Bei Wiedergabe über dem Sperrbildschirm zeigen</string>
     <string name="over_lock_screen_hint">Ist Attacca offen (Läuft gerade, O\'rama…), wenn der Bildschirm ausgeht, erscheint es beim Aufwecken des Handys über dem Sperrbildschirm, solange Musik läuft; für alles andere bleibt das Handy gesperrt.</string>
+    <string name="about_logs">Protokolle für Berichte führen</string>
+    <string name="about_logs_hint">Schreibt Beendigungen der App, Übergänge zwischen Titeln und die Titelwechsel in Attacca World in Dateien neben deinen Listen, zum Senden, wenn etwas schiefgeht. Aus, solange du es nicht einschaltest.</string>
 </resources>

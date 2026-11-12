@@ -506,6 +506,8 @@
     <string name="waveform_off">Kapalı (düz ilerleme çubuğu)</string>
     <string name="strip_show_orama">O\'rama\'yı burada göster</string>
     <string name="strip_show_wave">Dalga biçimini burada göster</string>
+    <string name="strip_view">Çalıyor ekranında ne görünsün</string>
+    <string name="orama_open">O\'rama açılınca ne görünsün</string>
     <string name="waveform_orama">O\'rama manzarası (dalga biçimi süreler arasında küçük)</string>
     <string name="section_silence">Sessizlik atlama</string>
     <string name="silence_enabled">Parça başı ve sonundaki sessizliği atla</string>
@@ -1521,6 +1523,7 @@
     <string name="help_orama_worlds">• Daha fazla dünya: vahaları ve develeri olan bir çöl (doruk noktasında altın bir piramit), Çin Seddi (bir ejderha), tapınakları ve filleri olan bir Hindistan ormanı (renk bulutları), kanoyla inilen Amazon (bir şelalenin üzerinde gökkuşağı), uzak batıdan bir kanyon (gün batımında bir kartal), kiraz çiçeği açmış Japonya (havai fişekler ve taç yapraklar), denizaltıyla deniz dibi (bir balina) ve bir yanardağ (bir patlama). Tür etiketi bunları seçmeye yardımcı olur (Arapça veya flamenko, Çince, Hintçe, Latin veya Brezilya, country, Japonca, ambient, metal). Dünya düğmesi şarkıyı her dünyada sırayla gösterir, O\'rama\'da ve Attacca World\'de aynı; aynı şarkının manzarası 3B olarak (küp düğmesi): yolcunun ve dört köpeğin arkasından içinde gezersiniz, bir parmak kamerayı döndürür, iki parmak yaklaştırır ya da yükseltir.</string>
     <string name="help_world">• Attacca World (O\'rama\'daki küp düğmesi): aynı şarkı, yolcunun ve dört köpeğin ardından geçilen 3B bir toprak olarak; bayrak değişimleri, engeller ve dünyasının havasıyla. Toprak müzikle birlikte gider ve bir şarkıdan diğerine sürer; uzun sakin ya da güçlü bölümler bir süre başka bir dünya getirir. Bir parmak kamerayı döndürür, iki parmak yaklaştırır ya da yükseltir; yolcuya dokunmak onu zıplatır ya da döndürür. Bölünmüş ekran düğmesi O\'rama ile Attacca World\'ü birlikte gösterir. Ses uygunsa başlıktaki sözcükler dünyayı seçebilir (Siren Song, sakin: denizin altı). Bilgisayarda da.</string>
     <string name="help_world_life">• Attacca World\'de yol, O\'rama\'nın yerlerinden aynı anlarda geçer (köprüler, meşaleli tüneller, trenleriyle istasyonlar, bacaları tüten köyler, bir dönme dolap, harabeler, kemerler, yükselen bir roket) ve sonraki şarkının dünyası şarkı başlamadan görünür. Araç değiştirmeden önce yolcu iner (kıyıda denizaltıya biner, köpekler pencerelerinden dışarı bakar). Kuşlar, balonlar, otlayan hayvanlar ve başka köpekler geçer; bir kafa lambası karanlığı aydınlatır; kamera görülmeye değer olana döner ve sırtların üzerine yükselir. Tam ekranda, şarkının adı başlarken görünür.</string>
+    <string name="help_world_views">• Şimdi çalıyor şeridi O\'rama\'yı, Attacca World\'ü ya da ikisini yan yana gösterebilir (Ayarlar → Görünüm); O\'rama düğmesi de O\'rama\'yı, Attacca World\'ü ya da ikisini bölünmüş ekranda açabilir (Ayarlar). Tam ekranda geri tuşu denetimleri geri getirir; vurgu renginde ince bir çizgi şarkının ne kadar ilerlediğini gösterir ve adı ara sıra yeniden görünür. Widget yazı boyutu Ayarlar → Görünüm altındadır. Hakkında bölümündeki «Raporlar için günlük tut» yalnızca açıkken, çıkışları ve geçişleri listelerinin yanındaki dosyalara not eder.</string>
     <string name="help_orama_buttons">• O\'rama\'da sağdaki düğmeler (kapat, tam ekran, kare hızı) gökyüzü görünsün diye yarı gizli durur: bir dokunuş onları çıkarır, birkaç saniye sonra yeniden gizlenirler. Güneş ve ay, başlığın ya da düğmelerin arkasına girmez.</string>
     <string name="app_slogan">“Müzik koleksiyonunu yeniden keşfet: onu yeni şekillerde, en iyi sesle dinle.”</string>
     <string name="help_orama_surprises">• O\'rama birkaç küçük sürpriz de saklıyor. Kendin keşfet!</string>
@@ -1857,6 +1860,8 @@
     <string name="newyear_notice_text">Bu gece yarısı yeni yıl başlıyor ve O\'rama\'da büyük bir şey oluyor: o saatte Attacca\'yı ekranda açık tutun.</string>
     <string name="browser_as_grid">Kapak olarak göster</string>
     <string name="browser_as_list">Liste olarak göster</string>
+    <string name="widget_text_size">Widget yazı boyutu</string>
+    <string name="widget_text_size_hint">Yazı büyüdükçe kapak küçülür. Yukarıda büyük widget\'ın görüneceği hali.</string>
     <string name="widget_big">Büyütüldüğünde widget şunu gösterir</string>
     <string name="widget_big_cover">Kapak, büyük</string>
     <string name="widget_big_orama">O\'rama manzarası</string>
@@ -1867,4 +1872,6 @@
     <string name="lock_wallpaper_hint">Her parçayla yeniden ayarlanır. Olduğu gibi seçeneğine dönüldüğünde kilit ekranı ana ekranın resmini alır (önceki resim geri okunamaz).</string>
     <string name="over_lock_screen">Çalarken kilit ekranının üzerinde göster</string>
     <string name="over_lock_screen_hint">Ekran kapanırken Attacca açıksa (Şimdi çalıyor, O\'rama…), müzik çalarken telefon uyandırıldığında kilit ekranının üzerinde gösterilir; diğer her şey için telefon kilitli kalır.</string>
+    <string name="about_logs">Raporlar için günlük tut</string>
+    <string name="about_logs_hint">Uygulamanın kapanışlarını, şarkılar arası geçişleri ve Attacca World\'deki şarkı değişimlerini listelerinizin yanındaki dosyalara yazar; bir sorun olduğunda göndermek için. Açmadığınız sürece kapalı.</string>
 </resources>

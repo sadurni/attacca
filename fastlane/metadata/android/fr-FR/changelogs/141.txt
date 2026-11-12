@@ -1,0 +1,5 @@
+• Attacca World : d'un morceau au suivant sans saut ; ce que vous voyez venir est le monde du morceau suivant.
+• Écran partagé : les deux paysages se fondent l'un dans l'autre ; côte à côte, le lecteur au milieu.
+• World : bulles de verre dans l'espace, colliers lumineux la nuit, caméra plus douce au sommet, l'album dans le titre.
+• Widget : lecture au milieu et votre taille de texte.
+• La liste reprend là où vous l'aviez laissée ; journaux seulement si vous les activez (À propos).

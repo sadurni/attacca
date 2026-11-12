@@ -91,6 +91,7 @@ class AttaccaApp : Application() {
         com.sadurni.attacca.festive.FestiveState.init(this)
         com.sadurni.attacca.festive.NewYearNotice.schedule(this)
         // Why it closed, when nobody closed it: for the user to send (Music/Attacca/attacca-exits.txt).
+        Logs.init(this)
         ExitLog.watchFailures(this)
         // The sound network's mood classes, read from its weights when moods are first needed.
         com.sadurni.attacca.chain.MoodHead.source = { assets.open("sound/soundnet.bin") }

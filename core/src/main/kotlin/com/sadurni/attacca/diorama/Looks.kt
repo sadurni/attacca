@@ -137,12 +137,18 @@ class SongLook(
     fun variant(mode: Int): SongLook {
         val f = facts ?: return this
         if (mode == this.mode) return this
-        return when {
+        val v = when {
             mode < 0 -> quiet ?: Looks.of(f, -1).also { quiet = it }
             mode > 0 -> loud ?: Looks.of(f, 1).also { loud = it }
             else -> Looks.of(f, 0)
         }
+        // A stretch never goes under the sea (or out of it) for a while: the traveller's vehicle
+        // and the world go together (no camel on the sea's floor), in O'rama and in World alike.
+        return if ((v.world == World.REEF) != (world == World.REEF)) this else v
     }
+
+    /** Whether the song's sound was known (analysed) when this look was made. */
+    val known: Boolean get() = facts?.features != null
 
     /** Another look for the same track (another traveller, time of day, shade): for one alike just before. */
     fun reseeded(): SongLook = facts?.let { Looks.of(it.reseeded(), mode) } ?: this

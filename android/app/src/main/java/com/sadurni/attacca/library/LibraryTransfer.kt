@@ -308,7 +308,7 @@ object LibraryTransfer {
         }
         val temp = File(context.cacheDir, "export.${PlayerDbFormat.EXTENSION}").apply { delete() }
         try {
-            val written = PlayerDbFormat.write(tracks, classification, base, chain.artistSpacing, chain.edgeSeconds, temp, sets.map { it.name })
+            val written = PlayerDbFormat.write(tracks, classification, base, chain.artistSpacing, chain.edgeSeconds, temp, sets.map { it.name }, "Attacca ${com.sadurni.attacca.BuildConfig.VERSION_NAME}")
             context.contentResolver.openOutputStream(uri, "wt")?.use { out -> temp.inputStream().use { it.copyTo(out) } } ?: return null
             return written
         } finally {

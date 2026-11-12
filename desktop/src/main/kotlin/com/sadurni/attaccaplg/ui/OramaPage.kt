@@ -153,7 +153,9 @@ fun OramaPage(state: AppState, embedded: Boolean = false) {
     var canvasHeight by remember { mutableFloatStateOf(0f) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth > maxHeight
-        val lift by animateFloatAsState(if (!full && !wide && !embedded && barTop > 0f) (canvasHeight - barTop) * 0.85f else 0f, label = "lift")
+        // In half of the split screen the land rises over World's player floating at the bottom.
+        val embeddedLift = with(androidx.compose.ui.platform.LocalDensity.current) { 140.dp.toPx() }
+        val lift by animateFloatAsState(if (embedded) embeddedLift else if (!full && !wide && barTop > 0f) (canvasHeight - barTop) * 0.85f else 0f, label = "lift")
         Canvas(
             Modifier.fillMaxSize().clipToBounds()
                 // A click on something in the landscape makes it react; elsewhere, over the whole screen, it brings the rest back.
@@ -185,7 +187,7 @@ fun OramaPage(state: AppState, embedded: Boolean = false) {
             diorama.show(song, next, now, nextItem?.title, nextPlace, nextLook)
             val heard = p.heardLevels(raw)
             canvasHeight = size.height
-            diorama.draw(list, size.width, size.height, (p.positionMs - p.cutStartMs).coerceAtLeast(0), p.playing, if (heard) raw else null, now, lift)
+            diorama.draw(list, size.width, size.height, (p.positionMs - p.cutStartMs).coerceAtLeast(0), p.playing, if (heard) raw else null, now, lift, travellerShare = if (embedded) 0.38f else 0.3f)
             paint(list, path, cover, measurer)
         }
         // In half of World's page: only the landscape (the title, buttons and player are World's).
@@ -306,8 +308,9 @@ fun OramaPage(state: AppState, embedded: Boolean = false) {
             }
             OramaBar(state, item, nextItem, cutEnd, wide, barModifier.onGloballyPositioned { barTop = it.positionInParent().y })
         }
-        // Over the whole screen: the song's name as it starts, fading in and out.
-        if (!embedded) SongIntro(item?.path, item?.title ?: "", item?.artist, full)
+        // Over the whole screen: a soft band along the bottom filling with the accent as the song goes on, and the song's name as it starts.
+        if (full) ProgressBand(((p.positionMs - p.cutStartMs).toFloat() / (cutEnd - p.cutStartMs).coerceAtLeast(1L)).coerceIn(0f, 1f), false, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(26.dp))
+        if (!embedded) SongIntro(item?.path, item?.title ?: "", item?.artist, full, item?.album)
     }
 }
 
@@ -316,14 +319,30 @@ fun OramaPage(state: AppState, embedded: Boolean = false) {
  * middle, fading in and out over a few seconds.
  */
 @Composable
-internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean) {
+internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean, album: String? = null) {
     val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    // The song's name when another song has come in (a moment after it, once it has settled), and
+    // when the whole screen is taken; not for the song already there when the view opens.
+    val first = remember { id }
+    val wasShown = remember { mutableStateOf(show) }
     LaunchedEffect(id, show) {
+        val entering = show && !wasShown.value
+        wasShown.value = show
         alpha.snapTo(0f)
-        if (id == null || !show) return@LaunchedEffect
-        alpha.animateTo(1f, androidx.compose.animation.core.tween(900))
-        kotlinx.coroutines.delay(1900)
-        alpha.animateTo(0f, androidx.compose.animation.core.tween(1200))
+        if (id == null) return@LaunchedEffect
+        if (id != first || entering) {
+            if (!entering) kotlinx.coroutines.delay(1800)
+            alpha.animateTo(1f, androidx.compose.animation.core.tween(900))
+            kotlinx.coroutines.delay(1900)
+            alpha.animateTo(0f, androidx.compose.animation.core.tween(1200))
+        }
+        // Over the whole screen, now and then again: softly in, a moment (2-3 s), softly out.
+        while (show) {
+            kotlinx.coroutines.delay(40_000L + (Math.random() * 35_000).toLong())
+            alpha.animateTo(1f, androidx.compose.animation.core.tween(1600))
+            kotlinx.coroutines.delay(2600)
+            alpha.animateTo(0f, androidx.compose.animation.core.tween(1800))
+        }
     }
     if (alpha.value <= 0.01f || title.isBlank()) return
     val shadow = Shadow(Color.Black.copy(alpha = 0.75f), Offset(2f, 3f), 14f)
@@ -350,6 +369,40 @@ internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolea
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp),
                 )
             }
+            album?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it,
+                    style = TextStyle(
+                        color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp, shadow = shadow,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    ),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 5.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A soft dark band (where the halves of the split window meet, or along the bottom), filling with
+ * the accent as the song goes on ([progress] 0 … 1; below 0 only the band); from the bottom up
+ * when [vertical]. Only to look at.
+ */
+@Composable
+internal fun ProgressBand(progress: Float, vertical: Boolean, modifier: Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+    val fade = listOf(Color.Transparent, Color.Black.copy(alpha = 0.34f), Color.Black.copy(alpha = 0.44f), Color.Black.copy(alpha = 0.34f), Color.Transparent)
+    val glow = listOf(Color.Transparent, accent.copy(alpha = 0.24f), accent.copy(alpha = 0.48f), accent.copy(alpha = 0.24f), Color.Transparent)
+    Canvas(modifier) {
+        drawRect(if (vertical) androidx.compose.ui.graphics.Brush.horizontalGradient(fade) else androidx.compose.ui.graphics.Brush.verticalGradient(fade))
+        if (progress < 0f) return@Canvas
+        if (vertical) {
+            val h = size.height * progress
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(glow), topLeft = Offset(0f, size.height - h), size = androidx.compose.ui.geometry.Size(size.width, h))
+        } else {
+            drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(glow), size = androidx.compose.ui.geometry.Size(size.width * progress, size.height))
         }
     }
 }
@@ -640,7 +693,23 @@ internal fun moodLineOf(lib: Library?, item: PlayItem?): String? {
 }
 
 /** What the library knows of [item] (measures, mood, family) and its cover's colours, as a look. */
+private val songLooks = object : LinkedHashMap<String, SongLook>(32, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SongLook>?) = size > 24
+}
+
+/**
+ * The look of [item], the same object every time (O'rama and Attacca World alike, as the playing
+ * song or as the next one): what is seen coming at a song's end is just what the song is.
+ */
 internal fun lookOf(lib: Library?, item: PlayItem?): SongLook {
+    if (item == null) return Diorama.NEUTRAL
+    synchronized(songLooks) { songLooks[item.path] }?.let { return it }
+    val look = freshLookOf(lib, item)
+    if (look.known) synchronized(songLooks) { songLooks[item.path] = look }
+    return look
+}
+
+private fun freshLookOf(lib: Library?, item: PlayItem?): SongLook {
     if (item == null) return Diorama.NEUTRAL
     val rel = lib?.root?.let { root -> runCatching { File(item.path).relativeTo(root).invariantSeparatorsPath }.getOrNull() }
     val track = rel?.let { lib.byPath[it] }
@@ -697,5 +766,15 @@ object OramaShared {
             shownWorld = name
         }
         return shownLook!!
+    }
+}
+
+/** A thin line along the bottom filling with the accent as the song goes on (the split screen's progress). */
+@Composable
+internal fun ProgressLine(progress: Float, modifier: Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+    Canvas(modifier) {
+        drawRect(Color.White.copy(alpha = 0.14f))
+        drawRect(accent.copy(alpha = 0.8f), size = androidx.compose.ui.geometry.Size(size.width * progress.coerceIn(0f, 1f), size.height))
     }
 }

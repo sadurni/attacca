@@ -604,6 +604,25 @@ private fun Scene.lavaMid() {
         out.polyline(Colors.alpha(lava, 0.8f * pulse), h * 0.008f)
         out.point(cx, y); out.point(cx + h * 0.02f, y + h * 0.05f); out.point(cx - h * 0.01f, y + h * 0.1f); out.point(cx + h * 0.015f, bottom)
     }
+    // Now and then a geyser of lava: a glow at its foot, then burning drops shooting up and falling.
+    slots(Scene.ZOOM_MID, h * 0.55f) { i, x0, x1 ->
+        if (hash(i, 1013) > 0.5f) return@slots
+        val cx = x0 + (x1 - x0) * (0.2f + 0.6f * hash(i, 1014))
+        val y = midY(cx)
+        val period = 7000.0 + 5000.0 * hash(i, 1015)
+        val t = (((now + hash(i, 1016) * period) % period) / 2600.0).toFloat()
+        if (t > 1f) return@slots
+        val rise = h * (0.16f + 0.1f * hash(i, 1017))
+        out.circle(Colors.alpha(0xFFFF8A2A.toInt(), 0.35f * sin(t * PI).toFloat()), cx, y, h * 0.03f)
+        for (k in 0 until 18) {
+            val a = ((t * 2.2f + k / 18f) % 1f)
+            val spread = (hash(k + i * 31, 1018) - 0.5f) * h * 0.06f
+            val px = cx + spread * a
+            val py = y - rise * (4f * a * (1f - a)) * (0.7f + 0.3f * hash(k, 1019))
+            val c = if (k % 3 == 0) 0xFFFFE08A.toInt() else 0xFFFF6A1A.toInt()
+            out.circle(Colors.alpha(c, 0.9f * (1f - a * 0.6f) * sin(t * PI).toFloat().coerceAtLeast(0f)), px, py, h * (0.006f + 0.004f * (1f - a)))
+        }
+    }
 }
 
 private fun Scene.ashNear() {

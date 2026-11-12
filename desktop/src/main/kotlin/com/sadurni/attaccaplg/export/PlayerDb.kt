@@ -42,6 +42,6 @@ object PlayerDb {
                 },
             )
         }
-        return PlayerDbFormat.write(tracks, library.generator.classification, base, spacing, edgeSeconds, file, kept.map { it.first })
+        return PlayerDbFormat.write(tracks, library.generator.classification, base, spacing, edgeSeconds, file, kept.map { it.first }, "Attacca Desktop ${com.sadurni.attaccaplg.ui.VERSION}")
     }
 }

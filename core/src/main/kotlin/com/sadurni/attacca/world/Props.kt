@@ -511,7 +511,7 @@ object Props {
     /** What stands at the grid point ([gx], [gz]), if anything (the same every time it is asked). */
     private fun spotAt(land: WorldLand, gx: Int, gz: Int): Spot? {
         // Where the land is still the last song's, its things are (see [place]); none while it turns.
-        if (land.before != null && gz < WorldLand.CONT + WorldLand.CONT_BLEND) return null
+        if (land.before != null && gz < land.contHalf) return null
         val w = land.worldAt(gx.toFloat(), gz.toFloat())
         val h = land.noise(gx * 1.37f + 0.5f, gz * 1.13f + 0.5f)
         val x = gx + (land.noise(gx * 3.1f, gz * 2.7f) - 0.5f) * STEP
@@ -533,6 +533,17 @@ object Props {
         val lone = k > 0.94f && f < 0.4f && !near
         val kind = (if ((village && k < (if (inVillage) 0.8f else 0.6f)) || lone) houseOf(w, k) ?: pick(w, f, k, near) else pick(w, f, k, near)) ?: return null
         val s = kind.minScale + (kind.maxScale - kind.minScale) * land.noise(gx * 7.1f, gz * 6.3f)
+        // Nothing with any part on the way (a building's corner, a tower's stretch of wall, a mesa),
+        // its whole width looked at, also where the way bends.
+        val reach = kind.radius * s
+        if (across < WorldLand.PATH_HALF + 1.2f + reach) {
+            for (k in 0 until 12) {
+                val a = k * 0.5236f
+                val px = x + cos(a) * reach
+                val pz = z + sin(a) * reach
+                if (abs(land.acrossAt(px, pz)) < WorldLand.PATH_HALF + 0.8f) return null
+            }
+        }
         // Houses turn their door to the way; the rest any way.
         val yaw = if (kind.house) (if (land.centerAt(z) > x) 1.5708f else -1.5708f) + (k - 0.5f) * 0.5f else k * 6.28f
         // Whatever takes some room (houses, pyramids, mesas) stands on the lowest ground under it,
@@ -553,9 +564,9 @@ object Props {
     fun place(land: WorldLand, z0: Int, z1: Int, out: FloatList, dz: Float = 0f, minSize: Float = 0f) {
         // The first rows of a song that goes on from the last one: that one's things, where they were.
         land.before?.let { b ->
-            if (z0 < WorldLand.CONT) {
+            if (z0 < land.contHalf) {
                 val from = kotlin.math.floor(z0 + b.atZ).toInt()
-                val to = kotlin.math.ceil(minOf(z1.toFloat(), WorldLand.CONT) + b.atZ).toInt()
+                val to = kotlin.math.ceil(minOf(z1.toFloat(), land.contHalf) + b.atZ).toInt()
                 place(b.land, from, to, out, dz - b.atZ, minSize)
             }
         }
@@ -578,7 +589,7 @@ object Props {
      */
     fun topNear(land: WorldLand, x: Float, z: Float, margin: Float = 1.2f): Float {
         var top = Float.NEGATIVE_INFINITY
-        land.before?.let { b -> if (z < WorldLand.CONT + 14f) top = topNear(b.land, x, z + b.atZ, margin) }
+        land.before?.let { b -> if (z < land.contHalf + 14f) top = topNear(b.land, x, z + b.atZ, margin) }
         val reach = 14f
         var gz = kotlin.math.floor((z - reach) / STEP).toInt() * STEP
         while (gz <= z + reach) {

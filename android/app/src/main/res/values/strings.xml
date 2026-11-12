@@ -509,6 +509,8 @@
     <string name="waveform_off">Off (plain seek bar)</string>
     <string name="strip_show_orama">Show O\'rama here</string>
     <string name="strip_show_wave">Show the waveform here</string>
+    <string name="strip_view">What shows in Now playing</string>
+    <string name="orama_open">What opening O\'rama shows</string>
     <string name="waveform_orama">The landscape of O\'rama (the waveform small between the times)</string>
     <string name="section_silence">Silence skipping</string>
     <string name="silence_enabled">Skip silence at track start and end</string>
@@ -1525,6 +1527,7 @@
     <string name="help_orama_worlds">• More worlds: a desert with oases and camels (a golden pyramid at the peak), the Great Wall of China (a dragon), a jungle of India with temples and elephants (clouds of colour), the Amazon gone down by canoe (a rainbow over a waterfall), a canyon of the far west (an eagle at sunset), Japan in cherry blossom (fireworks and petals), the bottom of the sea by submarine (a whale) and a volcano (an eruption). The genre tag helps choose them (Arabic or flamenco, Chinese, Indian, Latin or Brazilian, country, Japanese, ambient, metal). The globe button shows the song in each world in turn, the same in O\'rama and in Attacca World, the same song\'s landscape in 3D (the cube button): you go through it behind the traveller and the four dogs, a finger turns the camera and two bring it closer or raise it.</string>
     <string name="help_world">• Attacca World (O\'rama\'s cube button): the same song as a land in 3D to go through behind the traveller and the four dogs, with relays, obstacles and the weather of its world; the land goes with the music and on from one song to the next, and long quiet or loud stretches bring another world for a while. One finger turns the camera, two bring it closer or raise it; a tap on the traveller makes a jump or a spin. The split button shows O\'rama and Attacca World at once. Words of the title can choose the world when the sound agrees (Siren Song, a quiet song: under the sea). Also on the desktop.</string>
     <string name="help_world_life">• In Attacca World the way passes O\'rama\'s places at the same moments (bridges, tunnels with torches, stations with their train, villages with smoking chimneys, a big wheel, ruins, arches, a rocket going up), and the next song\'s world comes into sight before it starts. Before a change of vehicle the traveller gets off (into the submarine at the shore, the dogs looking out of its windows). Birds, balloons, grazing animals and other dogs pass by; a head torch lights the dark; the camera turns to what is worth seeing and rises over crests. On the whole screen, the song\'s name shows as it starts.</string>
+    <string name="help_world_views">• Now playing\'s strip can show O\'rama, Attacca World or both side by side (Settings → Appearance), and the O\'rama button can open O\'rama, Attacca World or both split (Settings). Over the whole screen, back brings the controls back; a thin line in the accent colour shows how far the song has gone, and its name comes back now and then. The widget\'s text size is in Settings → Appearance. In About, «Keep logs for reports» notes exits and transitions in files beside your lists, only while it is on.</string>
     <string name="help_orama_buttons">• In O\'rama the buttons on the right (close, whole screen, frame rate) stay half tucked away so the sky shows: a tap brings them out, and they go back a few seconds later. The sun and the moon keep clear of the title and the buttons.</string>
     <string name="app_slogan">“Rediscover your music collection: hear it in new ways, with the best sound.”</string>
     <string name="help_orama_surprises">• O\'rama also hides a few little surprises. Find them yourself!</string>
@@ -1861,6 +1864,8 @@
     <string name="newyear_notice_text">Tonight at midnight the new year begins and something big happens in O\'rama: have Attacca open on the screen then.</string>
     <string name="browser_as_grid">Show as covers</string>
     <string name="browser_as_list">Show as a list</string>
+    <string name="widget_text_size">Widget text size</string>
+    <string name="widget_text_size_hint">The cover gets smaller as the text grows. Above, the large widget as it will look.</string>
     <string name="widget_big">Made big, the widget shows</string>
     <string name="widget_big_cover">The cover, large</string>
     <string name="widget_big_orama">The landscape of O\'rama</string>
@@ -1871,4 +1876,6 @@
     <string name="lock_wallpaper_hint">Set again with each track. Back to As it is, the lock screen takes the home screen\'s picture (the one it had before cannot be read back).</string>
     <string name="over_lock_screen">Show over the lock screen while playing</string>
     <string name="over_lock_screen_hint">When Attacca is open (Now playing, O\'rama…) as the screen goes off, waking the phone shows it over the lock screen while music plays; for anything else the phone stays locked.</string>
+    <string name="about_logs">Keep logs for reports</string>
+    <string name="about_logs_hint">Notes the app\'s exits, song transitions and Attacca World\'s song changes in files beside your lists, to send when something goes wrong. Off unless you turn it on.</string>
 </resources>

@@ -3,6 +3,8 @@ package com.sadurni.attacca.world
 import com.sadurni.attacca.diorama.World
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.floor
 
 /** A picture on a board in the land: the song's cover ([COVER]) or the sign with the next song ([NEXT]); corners as [Places.corners] gives them. */
@@ -21,6 +23,12 @@ class Billboard(val corners: FloatArray, val kind: Int) {
 class Extras(private val land: WorldLand, seed: Int) {
 
     private val life = Life(land, seed)
+    private val festivities = Festivities(land)
+
+    /** The festive days' look (null: none), with the Three Kings; [vikram]: the Hindu new year's show going on. */
+    var festivity: com.sadurni.attacca.festive.Festivity? = null
+    var kings = false
+    var vikram = false
     private val smoke = ArrayList<Float>()
 
     /** The boards in sight this frame (the screen draws their pictures). */
@@ -61,15 +69,38 @@ class Extras(private val land: WorldLand, seed: Int) {
         while (z < land.endZ - WorldLand.ARRIVE - 20f) {
             val side = if (k % 2 == 0) 1f else -1f
             val x = Places.xAt(land, z, side * 5.2f)
-            if (z > WorldLand.CONT + WorldLand.CONT_BLEND && Places.clearAt(land, land.places, x, z, side * 5.2f)) out += z to side
+            if (z > land.contEnd && Places.clearAt(land, land.places, x, z, side * 5.2f) && dry(z, side * 5.2f)) out += z to side
             z += coverEvery
             k++
         }
         out
     }
 
-    /** Where the sign with the next song stands. */
-    private val signZ = land.endZ - WorldLand.ARRIVE / 2 - 8f
+    /** Whether a board at row [z], [across] from the way's middle, stands on dry ground (under the sea all is water). */
+    private fun dry(z: Float, across: Float): Boolean {
+        if (land.lookAt(z).world == World.REEF) return true
+        for (d in floatArrayOf(-1.6f, 0f, 1.6f)) {
+            val x = Places.xAt(land, z + d, across)
+            if (land.heightAt(x, z + d) < WorldLand.WATER + 0.3f) return false
+        }
+        return true
+    }
+
+    /** Where the sign with the next song stands (row, side): before the end, on dry ground by the way. */
+    private val signAt: Pair<Float, Float> = run {
+        val base = land.endZ - WorldLand.ARRIVE / 2 - 8f
+        if (land.endZ == Float.MAX_VALUE) return@run base to 1f
+        var d = 0f
+        while (d <= 60f) {
+            for (side in floatArrayOf(1f, -1f)) {
+                val z = base - d
+                if (dry(z, side * 3.1f) && Places.clearAt(land, land.places, Places.xAt(land, z, side * 3.1f), z, side * 3.1f)) return@run z to side
+            }
+            d += 2f
+        }
+        base to 1f
+    }
+    private val signZ = signAt.first
 
     /**
      * The figures and boards of this frame with the traveller at row [tz] (way height [ty]);
@@ -81,6 +112,7 @@ class Extras(private val land: WorldLand, seed: Int) {
         smoke.clear()
         Places.frame(land, land.places, tz, nowMs, accent, out, smoke)
         life.frame(tz, ty, nowMs, playing, out, smoke)
+        festivities.frame(tz, nowMs, festivity, kings, vikram, out)
         // The boards with the cover by the way.
         for ((z, side) in covers) {
             if (z < tz - 30f || z > tz + WorldRendererLimits.FAR) continue
@@ -95,8 +127,8 @@ class Extras(private val land: WorldLand, seed: Int) {
         }
         // The sign with the next song, before the end.
         if (hasNext && signZ > tz - 20f && signZ < tz + WorldRendererLimits.FAR && land.endZ < Float.MAX_VALUE) {
-            val x = Places.xAt(land, signZ, 3.1f)
-            val base = Mat4.model(x, land.heightAt(x, signZ), signZ, land.headingAt(signZ) + PI.toFloat() - 0.45f)
+            val x = Places.xAt(land, signZ, signAt.second * 3.1f)
+            val base = Mat4.model(x, land.heightAt(x, signZ), signZ, land.headingAt(signZ) + PI.toFloat() - signAt.second * 0.45f)
             out += Draw(signRig, base, signRig.pose())
             billboards += Billboard(Places.corners(base, -1.62f, 1.55f, 1.62f, 2.85f, 0.06f), Billboard.NEXT)
         }
@@ -105,15 +137,56 @@ class Extras(private val land: WorldLand, seed: Int) {
         if (land.look.world == World.DESERT && peakZ != null) {
             pyramidRise = maxOf(pyramidRise, peak)
             if (pyramidRise > 0.01f) {
-                val pz = peakZ + 34f
-                val side = if ((land.centerAt(pz) - land.centerAt(pz - 20f)) > 0) -1f else 1f
-                val px = land.centerAt(pz) + side * 30f
-                val ground = minOf(land.heightAt(px - 12f, pz), land.heightAt(px + 12f, pz), land.heightAt(px, pz - 12f), land.heightAt(px, pz + 12f))
+                val (px, pz) = pyramidSpot(peakZ)
+                val ground = minOf(land.heightAt(px - 18f, pz), land.heightAt(px + 18f, pz), land.heightAt(px, pz - 18f), land.heightAt(px, pz + 18f))
                 val rise = pyramidRise * pyramidRise * (3 - 2 * pyramidRise)
-                out += Draw(Props.peakPyramid, Mat4.model(px, ground - 0.5f - (1 - rise) * 40f, pz, 0.6f, s = 4.2f), pyramidPose)
+                out += Draw(Props.peakPyramid, Mat4.model(px, ground - 0.5f - (1 - rise) * 48f, pz, 0.6f, s = 5f), pyramidPose)
             }
         }
     }
+
+    private var pyramidAt: Pair<Float, FloatArray>? = null
+
+    /**
+     * Where the desert's peak pyramid stands for a peak at row [peakZ]: well back from the way, in
+     * the background, with nothing of its base on the way however it winds; found once and kept,
+     * so it stays where it is.
+     */
+    private fun pyramidSpot(peakZ: Float): FloatArray {
+        pyramidAt?.let { if (it.first == peakZ) return it.second }
+        val pz = peakZ + 40f
+        val turn = if ((land.centerAt(pz) - land.centerAt(pz - 20f)) > 0) -1f else 1f
+        // The base is 60 wide (turned): clear of the way within its whole round, with room to spare.
+        val reach = 44f
+        fun clear(x: Float, z: Float): Boolean {
+            for (ring in floatArrayOf(0f, reach * 0.5f, reach)) for (k in 0 until 16) {
+                val a = k * 0.3927f
+                val qx = x + cos(a) * ring
+                val qz = z + sin(a) * ring
+                if (abs(land.acrossAt(qx, qz)) < WorldLand.PATH_HALF + 6f) return false
+            }
+            return true
+        }
+        var spot: FloatArray? = null
+        var d = 100f
+        while (spot == null && d <= 175f) {
+            for (side in floatArrayOf(turn, -turn)) {
+                val x = land.centerAt(pz) + side * d
+                if (clear(x, pz)) { spot = floatArrayOf(x, pz); break }
+            }
+            d += 10f
+        }
+        val at = spot ?: floatArrayOf(land.centerAt(pz) + turn * 185f, pz)
+        pyramidAt = peakZ to at
+        return at
+    }
+
+    /**
+     * Whether the camera should follow close behind for a tunnel at the traveller's row [z]: a few
+     * rows before its mouth (so it is already close and low as they go in, not hidden by the rock
+     * above the mouth) until a few after it comes out (so it leaves the tunnel too before it opens up).
+     */
+    fun tunnelNear(z: Float): Boolean = land.places.any { it.kind == PlaceKind.TUNNEL && z > it.z0 - 14f && z < it.z1 + 9f }
 
     /** Whether row [z] is in a tunnel (the traveller lights a torch; the camera comes close). */
     fun tunnelAt(z: Float): Boolean = Places.tunnelAt(land.places, z) != null
@@ -127,16 +200,47 @@ class Extras(private val land: WorldLand, seed: Int) {
 
     /** How high the camera may be at ([x], [z]): under a tunnel's roof, else no limit. */
     fun ceilingAt(x: Float, z: Float): Float {
-        val p = Places.tunnelAt(land.places, z) ?: return Float.POSITIVE_INFINITY
-        if (abs(land.acrossAt(x, z)) > Places.TUNNEL_R + 0.5f) return Float.POSITIVE_INFINITY
-        return land.pathAt(z) + Places.TUNNEL_R - 0.6f
+        var ceiling = Float.POSITIVE_INFINITY
+        val across = abs(land.acrossAt(x, z))
+        Places.tunnelAt(land.places, z)?.let { if (across <= Places.TUNNEL_R + 0.5f) ceiling = land.pathAt(z) + Places.TUNNEL_R - 0.6f }
+        for (p in land.places) {
+            val dz = abs(z - p.mid)
+            if (dz > 9f) continue
+            // Under an arch over the way (or the high bridge over a river), never through it: lower
+            // as it comes near, so the eye slips under its curve.
+            val under = when (p.kind) {
+                PlaceKind.ARCH -> {
+                    val r = 8.6f
+                    if (across >= r) continue
+                    val up = kotlin.math.sqrt(r * r - across * across)
+                    land.pathAt(p.mid) + up * 1.05f - (1.35f + 0.9f * (1f - up / r)) - 0.9f
+                }
+                PlaceKind.OVERPASS -> if (across < 17.5f) WorldLand.WATER + 9.3f else continue
+                else -> continue
+            }
+            ceiling = minOf(ceiling, under + (dz - 2.8f).coerceAtLeast(0f) * 1.6f)
+        }
+        return ceiling
     }
 
     /** The top of a place's solid part near ([x], [z]) (for the camera), or minus infinity. */
-    fun topNear(x: Float, z: Float): Float = Places.topNear(land, land.places, x, z)
+    fun topNear(x: Float, z: Float): Float {
+        var top = Places.topNear(land, land.places, x, z)
+        // The boards with the cover and the sign: the camera goes over them, never through.
+        for ((bz, side) in covers) {
+            if (abs(z - bz) > 3f) continue
+            val bx = Places.xAt(land, bz, side * 5.2f)
+            if (kotlin.math.hypot(x - bx, z - bz) < 2.6f) top = maxOf(top, land.heightAt(bx, bz) + 5f)
+        }
+        if (abs(z - signZ) < 3f && land.endZ < Float.MAX_VALUE) {
+            val sx = Places.xAt(land, signZ, signAt.second * 3.1f)
+            if (kotlin.math.hypot(x - sx, z - signZ) < 2.6f) top = maxOf(top, land.heightAt(sx, signZ) + 3.2f)
+        }
+        return top
+    }
 
     /** Something to turn to as it is passed (a big wheel, a rocket, a train, a pyramid…), or null. */
-    fun sight(tz: Float): FloatArray? = Places.sight(land, land.places, tz) ?: Props.sight(land, tz)
+    fun sight(tz: Float): FloatArray? = Places.sight(land, land.places, tz) ?: life.sight() ?: Props.sight(land, tz)
 
     /** Whether it is dark at row [z] for a night of [night] (0 … 1): a light comes out. */
     fun darkAt(z: Float, night: Float): Boolean = night > 0.55f || land.lookAt(z).world == World.VOLCANO

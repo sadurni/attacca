@@ -193,11 +193,14 @@ fun PlayerScreen(
 ) {
     // Kept when the screen turns (O'rama is shown upright and wide).
     var dialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<PlayerDialog?>(null) }
+    // What opening O'rama shows (Settings), at hand for every way of opening it.
+    val openUi by androidx.compose.ui.platform.LocalContext.current.app.settings.ui.collectAsStateWithLifecycle()
+    com.sadurni.attacca.ui.orama.OramaShared.openMode = openUi.oramaOpen
     // The new year's show: O'rama opens by itself.
     val oramaAsked by viewModel.oramaRequest.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(oramaAsked) {
         if (oramaAsked) {
-            dialog = PlayerDialog.ORAMA
+            dialog = oramaDialog(com.sadurni.attacca.ui.orama.OramaShared.openMode)
             viewModel.oramaRequest.value = false
         }
     }
@@ -236,7 +239,7 @@ fun PlayerScreen(
             CoverAction.GO_TO_ALBUM -> viewModel.nowPlaying.value.mediaId?.takeIf { !it.contains("://") }?.let { onGoToMusic(it, false) }
             CoverAction.GO_TO_ARTIST -> viewModel.nowPlaying.value.mediaId?.takeIf { !it.contains("://") }?.let { onGoToMusic(it, true) }
             CoverAction.SHOW_COVER -> viewModel.nowPlaying.value.mediaId?.takeIf { !it.contains("://") }?.let { coverShown = it }
-            CoverAction.OPEN_ORAMA -> dialog = PlayerDialog.ORAMA
+            CoverAction.OPEN_ORAMA -> dialog = oramaDialog(com.sadurni.attacca.ui.orama.OramaShared.openMode)
         }
     }
     val handlers = PlayerHandlers(
@@ -491,7 +494,8 @@ private fun Part(block: PlayerBlock, parts: Parts, modifier: Modifier, nested: B
         BlockType.BOX -> Container(block, parts, modifier, bounded)
         BlockType.PROGRESS -> Progress(
             viewModel, parts.uiSettings, handlers.onToggleRemainingTime, seekBarHeight = if (compact || nested) 56.dp else 72.dp,
-            onOpenOrama = { handlers.openDialog(PlayerDialog.ORAMA) },
+            onOpenOrama = { handlers.openDialog(oramaDialog(parts.uiSettings.oramaOpen)) },
+            onOpenWorld = { com.sadurni.attacca.ui.orama.OramaShared.split.value = false; handlers.openDialog(PlayerDialog.WORLD) },
         )
         BlockType.BUTTONS -> ButtonRow(viewModel, block.actions, handlers, block.icons)
         BlockType.TEXT -> InfoLine(block, parts.values)
@@ -1016,7 +1020,7 @@ private fun TrackMenu(
             })
             DropdownMenuItem(text = { Text(stringResource(R.string.orama_name)) }, onClick = {
                 open = false
-                openDialog(PlayerDialog.ORAMA)
+                openDialog(oramaDialog(com.sadurni.attacca.ui.orama.OramaShared.openMode))
             })
             DropdownMenuItem(text = { Text(stringResource(R.string.tags_title)) }, onClick = {
                 open = false
@@ -1272,6 +1276,7 @@ private fun Progress(
     onToggleRemainingTime: () -> Unit,
     seekBarHeight: androidx.compose.ui.unit.Dp,
     onOpenOrama: () -> Unit = {},
+    onOpenWorld: () -> Unit = {},
 ) {
     val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
     val position by viewModel.positionMs.collectAsStateWithLifecycle()
@@ -1300,11 +1305,20 @@ private fun Progress(
         // Lower when the phone lies on its side, so the title above and the buttons below keep their room.
         val wide = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
         Box(Modifier.fillMaxWidth()) {
-            com.sadurni.attacca.ui.orama.OramaStrip(
-                viewModel,
-                Modifier.fillMaxWidth().aspectRatio(if (wide) 6f else 3.6f).clip(com.sadurni.attacca.ui.theme.AttaccaShapes.small),
-                onOpenOrama,
-            )
+            // O'rama, Attacca World, or both side by side (as chosen in Settings).
+            val stripShape = Modifier.fillMaxWidth().aspectRatio(if (wide) 6f else 3.6f).clip(com.sadurni.attacca.ui.theme.AttaccaShapes.small)
+            when (uiSettings.stripView) {
+                "WORLD" -> com.sadurni.attacca.ui.world.WorldStrip(viewModel, stripShape, onOpenWorld)
+                "SPLIT" -> Row(stripShape) {
+                    com.sadurni.attacca.ui.world.WorldStrip(viewModel, Modifier.weight(1f).fillMaxHeight(), {
+                        com.sadurni.attacca.ui.orama.OramaShared.split.value = true
+                        onOpenWorld()
+                        com.sadurni.attacca.ui.orama.OramaShared.split.value = true
+                    })
+                    com.sadurni.attacca.ui.orama.OramaStrip(viewModel, Modifier.weight(1f).fillMaxHeight(), onOpenOrama)
+                }
+                else -> com.sadurni.attacca.ui.orama.OramaStrip(viewModel, stripShape, onOpenOrama)
+            }
             StripSwitch(toOrama = false, Modifier.align(Alignment.TopEnd))
         }
         val timeText = if (uiSettings.showRemainingTime && shownDuration > 0) "-" + formatTime(shownDuration - shownPosition) else formatTime(shownPosition)
@@ -1624,7 +1638,7 @@ private fun PlayerButton(viewModel: PlayerViewModel, action: PlayerAction, handl
             )
         }
         PlayerAction.QUEUE -> ToolButton(Icons.AutoMirrored.Rounded.QueueMusic, description, handlers.onOpenQueue, size = size)
-        PlayerAction.ORAMA -> ToolButton(Icons.Rounded.Landscape, description, { handlers.openDialog(PlayerDialog.ORAMA) }, size = size, modifier = Modifier.tipAnchor("player.orama"))
+        PlayerAction.ORAMA -> ToolButton(Icons.Rounded.Landscape, description, { handlers.openDialog(oramaDialog(com.sadurni.attacca.ui.orama.OramaShared.openMode)) }, size = size, modifier = Modifier.tipAnchor("player.orama"))
         PlayerAction.WORLD -> ToolButton(Icons.Rounded.ViewInAr, description, { handlers.openDialog(PlayerDialog.WORLD) }, size = size)
         PlayerAction.LISTS -> ToolButton(Icons.Rounded.LibraryMusic, description, handlers.onOpenLists, size = size)
         PlayerAction.LYRICS -> ToolButton(Icons.Rounded.Lyrics, description, handlers.toggleLyrics, size = size)
@@ -1881,3 +1895,11 @@ private val PLAY_SIZE = 64.dp
 
 /** The frame of the title and list boxes: a quiet line in the text color. */
 private const val BOX_BORDER_ALPHA = 0.18f
+
+
+/** The dialog opening O'rama shows, as chosen in Settings: O'rama, Attacca World, or both split. */
+private fun oramaDialog(open: String): PlayerDialog = when (open) {
+    "WORLD" -> { com.sadurni.attacca.ui.orama.OramaShared.split.value = false; PlayerDialog.WORLD }
+    "SPLIT" -> { com.sadurni.attacca.ui.orama.OramaShared.split.value = true; PlayerDialog.WORLD }
+    else -> PlayerDialog.ORAMA
+}
