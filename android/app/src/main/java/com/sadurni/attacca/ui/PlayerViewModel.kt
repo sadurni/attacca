@@ -247,13 +247,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         startPositionMs: Long = 0L,
         /** A list made from the playing track: when it starts on that track, the track goes on where it is. */
         continueCurrent: Boolean = false,
+        /** For a list Attacca made: the inclusion it was made with (its endless tracks keep it). */
+        madeWith: com.sadurni.attacca.settings.ListInclusion? = null,
     ) {
         if (items.isEmpty()) return
         val c = controller ?: run {
-            pendingPlay = { playItems(listName, source, items, startIndex, startPositionMs, continueCurrent) }
+            pendingPlay = { playItems(listName, source, items, startIndex, startPositionMs, continueCurrent, madeWith) }
             return
         }
         if (source == null) app.ungroupUnsavedList()
+        app.noteListInclusion(source, madeWith)
         app.setCurrentList(listName, source)
         val start = startIndex.coerceIn(0, items.lastIndex)
         val now = c.currentMediaItemIndex
@@ -499,9 +502,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         startingList.value = true
         viewModelScope.launch {
             try {
+                val madeWith = app.chainLists.inclusionOfMade(ids)
                 val items = withContext(Dispatchers.IO) { com.sadurni.attacca.library.MediaItems.fromFiles(ids.map { java.io.File(it) }) }
                 val saved = if (items.isNotEmpty() && app.settings.chain.value.saveMadeLists) saveMade(name, items) else null
-                if (saved != null) playItems(saved.name, saved, items, continueCurrent = true) else playItems(name, null, items, continueCurrent = true)
+                if (saved != null) {
+                    playItems(saved.name, saved, items, continueCurrent = true, madeWith = madeWith)
+                } else {
+                    playItems(name, null, items, continueCurrent = true, madeWith = madeWith)
+                }
                 onPlayed(saved?.name ?: name)
             } finally {
                 startingList.value = false
@@ -836,7 +844,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (generated && app.settings.chain.value.saveMadeLists && items.isNotEmpty()) {
             viewModelScope.launch {
                 val saved = saveMade(source.name, items)
-                if (saved != null) playItems(saved.name, saved, items, index) else playItems(source.name, source, items, index)
+                // The saved copy goes on with the inclusion the generated list was made with.
+                val madeWith = com.sadurni.attacca.settings.ListSettingsStore(app).get(source.key).inclusion
+                if (saved != null) playItems(saved.name, saved, items, index, madeWith = madeWith) else playItems(source.name, source, items, index)
                 _viewedList.value = null
             }
             return

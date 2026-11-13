@@ -3,6 +3,47 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.5.0
+
+### Attacca (Android)
+
+- **Attacca World through the traveller's eyes**: the eye button in the controls shows the way as
+  the traveller sees it, and again brings the camera behind back. The look stays steady along the
+  way and turns to what is worth a look as it comes: the cover boards and the next song's sign,
+  the dogs aboard the vehicle or the iceberg, up a rise; at the song's peak it looks towards what
+  it shows (the desert's pyramid, the Great Wall's dragon as it flies). Mounted or in a vehicle,
+  the head, the handlebars or the steering wheel are ahead, rising and tilting with it; the dogs
+  run further ahead, in sight, and sit at the back of the car. Settings → Appearance can make
+  World open this way (off unless chosen: the camera behind the traveller).
+- The car has a steering wheel and the bike shiny handlebars with black grips.
+- O'rama and Attacca World: a tap on the landscape takes the whole screen (as the button does);
+  over it, a tap shows the song's name for a moment, and a tap while it shows (or back) brings
+  the controls back.
+- The boards with the cover and the next song's sign face the way (they were turned away from it).
+- Sharp bends in the way (a Z, a 4) are rounded softly by the traveller, the vehicle and the dogs.
+- When the beat sends a wave over the land, the traveller, the dogs and the people waiting ride
+  it instead of sinking into it.
+- The dogs never pass through one another or jump from one spot to another; the podenco is slimmer,
+  the podenco and the little pointer have slimmer legs, the pointer's tail curls and the podenco's
+  is a short stub.
+- Horses and camels turn their heads now and then, and into the bends.
+- Hind legs bend at the hock as they should (dogs, horses, camels and the other animals).
+- **Endless lists**: a list Attacca made (generated, from a track, quick, random, the other kinds)
+  remembers the inclusion it was made with (the inclusion list in use then, or every track), and
+  the tracks added as it ends keep to it, whatever list is in use later: a list for someone or for
+  an occasion goes on with its own choice. Other lists keep to the one in use, as before.
+- A list made from a track opened from another app no longer has that track twice (the same file
+  reached by another path, /sdcard/…, is taken as the library's own; endless lists too).
+
+### Attacca Desktop
+
+- The same in Attacca World (the eye button among its controls; Settings → Window to open it
+  this way).
+
+### Attacca for Rockbox
+
+- Version 1.5.0, with the rest (no changes of its own).
+
 ## 1.4.1
 
 ### Attacca (Android)

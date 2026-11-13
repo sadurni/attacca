@@ -122,6 +122,8 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     private val texFloats = ByteBuffer.allocateDirect(6 * 5 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private var sightAt = 0L
     private var sight: FloatArray? = null
+    private var dragonTurn = 0f
+    private var dragonTan = 0.5f
     private var tunnelDark = 0f
 
     /** Whether this song's traveller came aboard from the one before. */
@@ -434,11 +436,19 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
             sight = ex?.sight(tz)
         }
         val tunnel = ex?.tunnelAt(tz) == true
+        // Through the traveller's eyes: not drawn, the dogs ahead.
+        cast?.throughEyes = camera.firstPerson
+        // The Great Wall's dragon over the sky, for the eyes to follow (where it would be looking straight on).
+        val viewTan = kotlin.math.tan(minOf(Math.toRadians(if (width > height) 55.0 else 68.0), 2 * kotlin.math.atan(kotlin.math.tan(Math.toRadians(50.0)) / (width.toFloat() / height))) / 2).toFloat()
+        dragonTurn = com.sadurni.attacca.world.SkyShow.turnOf(com.sadurni.attacca.world.SkyShow.dragonX((nowMs % 100_000L) / 1000f, width.toFloat() / height), viewTan)
+        dragonTan = viewTan
         camera.update(
             dtMs, nowMs, tx, ty, tz, heading, intensity, peak, { x, z -> land.heightAt(x, z) }, openness,
             { x, z -> maxOf(com.sadurni.attacca.world.Props.topNear(land, x, z), cast?.topNear(x, z) ?: Float.NEGATIVE_INFINITY, ex?.topNear(x, z) ?: Float.NEGATIVE_INFINITY) },
             sight, if (ex?.tunnelNear(tz) == true) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
-            { z -> land.centerAt(z) },
+            { z -> land.centerAt(z) }, cast?.eye, ex?.peakSight(),
+            if (look.world == com.sadurni.attacca.diorama.World.WALL && peak > 0.05f) dragonTurn else null, cast?.dogsNear, cast?.dogsNearCount ?: 0,
+            ex?.boardSight(tz),
         )
 
         // Chunks in sight: some behind, many ahead; at most two new ones a frame, nearest first.
@@ -584,6 +594,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uPeak"), peak)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uPeakKind"), peakKind)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uTime"), (nowMs % 100_000L) / 1000f)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uDragonX"), com.sadurni.attacca.world.SkyShow.screenX(dragonTurn, camera.skyTurn, dragonTan))
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uFlash"), flash)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uYaw"), kotlin.math.atan2(camera.atX - camera.eyeX, camera.atZ - camera.eyeZ))
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uMoonRed"), if (look.world == com.sadurni.attacca.diorama.World.CASTLE) peak else 0f)
@@ -682,6 +693,8 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         cast?.frame(tz, posMs / beatMs, feed.playing, nowMs, draws, dark, tunnel)
         // Who was left at the end of the song before: the vehicle stays where they got off.
         oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
+        // On the beat's wave, not sunk in it: the figures (and the traveller's eyes) rise with the land.
+        com.sadurni.attacca.world.Swell.liftFigures(land, draws, 0, rings, pulse, tz, cast?.eye)
         ex?.let { it.festivity = feed.festive; it.kings = feed.kings; it.vikram = feed.vikram }
         ex?.frame(tz, ty, nowMs, feed.playing, peak, if (feed.forcePeak) tz else if (feed.peakMs >= 0) land.zAt(feed.peakMs) else null, look.palette.accent, feed.nextTitle != null, draws)
         // Clouds: soft heaps drifting high over the land, as many as the song's sky has.
@@ -1228,6 +1241,7 @@ uniform float uFlash;
 uniform float uYaw;
 uniform float uPeak;
 uniform float uPeakKind;
+uniform float uDragonX;
 uniform float uTime;
 uniform float uMoonRed;
 uniform mat4 uInverse;
@@ -1300,7 +1314,7 @@ void main() {
             c += vec3(0.6, 0.1, 0.05) * exp(-r * 3.0) * 0.5 * uPeak;
         } else if (uPeakKind > 4.5 && uPeakKind < 5.5) {
             // A dragon flying across, its body waving.
-            float headX = (1.2 - fract(uTime / 9.0) * 2.4) * uAspect;
+            float headX = uDragonX;
             for (int k = 0; k < 18; k++) {
                 float bx = headX + float(k) * 0.07;
                 float by = 0.55 + sin(uTime * 2.2 + float(k) * 0.45) * 0.1;

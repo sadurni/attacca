@@ -28,7 +28,8 @@ plays them so one song flows into the next.
   go through behind the traveller and four dogs: the way rises with the music, the land goes on
   from one song to the next and comes into the next one's world, O'rama's bridges, tunnels,
   stations and villages come by, and someone waits along the way to take over. On the phone (also
-  beside O'rama, the screen split in two) and on the desktop.
+  beside O'rama, the screen split in two) and on the desktop, behind the
+  traveller or through its own eyes.
 - 🎭 **Moods and sound families, found by ear.** A sound-recognition network runs on the phone
   itself and groups your music by how it sounds: lists by mood and family, without anyone
   else's tags.

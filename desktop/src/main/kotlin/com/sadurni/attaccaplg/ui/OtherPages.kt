@@ -271,6 +271,16 @@ fun SettingsPage(state: AppState) {
                     },
                 )
                 ThemeChoice(state)
+                // How Attacca World opens: behind the traveller (the default) or through its eyes.
+                var worldEyes by remember { mutableStateOf(state.prefs["world_eyes"] == "true") }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Switch(worldEyes, { on -> worldEyes = on; state.prefs["world_eyes"] = on.toString() })
+                    Text("  " + tr("Attacca World through the eyes of the traveller", "Attacca World con los ojos del viajero"))
+                }
+                Hint(tr(
+                    "Off, Attacca World opens with the camera behind the traveller. Its eye button changes it for the moment.",
+                    "Apagado, Attacca World se abre con la cámara detrás del viajero. Su botón del ojo lo cambia en el momento.",
+                ))
             }
             PlaybackSection(state)
             BeetsSection(state)

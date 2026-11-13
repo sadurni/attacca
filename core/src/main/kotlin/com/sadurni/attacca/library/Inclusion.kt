@@ -54,11 +54,20 @@ class Inclusion(private val mode: InclusionMode, private val read: () -> Collect
         fun of(path: String?, mode: InclusionMode): Inclusion? =
             path?.let(::File)?.takeIf { it.isFile }?.let { Inclusion(it, mode) }
 
-        /** The same file under its usual name (the storage is reachable by two paths). */
-        fun normalize(path: String): String =
-            if (path.startsWith(SDCARD)) STORAGE + path.substring(SDCARD.length) else path
+        /** The same file under its usual name (the storage is reachable by several paths). */
+        fun normalize(path: String): String {
+            val root = ROOTS.firstOrNull { path.startsWith(it) } ?: return path
+            return STORAGE + path.substring(root.length)
+        }
 
-        private const val SDCARD = "/sdcard/"
+        /** The other paths of the same file on the phone's storage (none for a file elsewhere). */
+        fun aliases(path: String): List<String> {
+            val root = (ROOTS + STORAGE).firstOrNull { path.startsWith(it) } ?: return emptyList()
+            val rest = path.substring(root.length)
+            return (ROOTS + STORAGE).filter { it != root }.map { it + rest }
+        }
+
         private const val STORAGE = "/storage/emulated/0/"
+        private val ROOTS = listOf("/sdcard/", "/storage/self/primary/", "/mnt/sdcard/")
     }
 }

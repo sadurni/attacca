@@ -324,6 +324,9 @@ class WorldLand(
     /** The way's heading at [z] (radians; 0 straight ahead, positive towards +x). */
     fun headingAt(z: Float): Float = kotlin.math.atan2(centerAt(z + 2.5f) - centerAt(z - 2.5f), 5f)
 
+    /** The way's heading at [z] over a longer stretch: for the figures, who round a sharp turn rather than snap to it. */
+    fun softHeadingAt(z: Float): Float = kotlin.math.atan2(centerAt(z + 5f) - centerAt(z - 5f), 10f)
+
     /** How much of the land (rather than the way) is at [x] across from the way's middle: 0 on the way, 1 off it. */
     fun offPath(across: Float): Float = smoothstep(PATH_HALF, PATH_HALF + 2.5f, abs(across))
 

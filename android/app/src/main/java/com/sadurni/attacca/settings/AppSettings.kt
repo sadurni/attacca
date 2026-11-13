@@ -43,6 +43,8 @@ data class UiSettings(
     val stripView: String = "ORAMA",
     /** What opening O'rama shows: ORAMA, WORLD or SPLIT (both, the screen split). */
     val oramaOpen: String = "ORAMA",
+    /** Attacca World opens through the traveller's eyes instead of behind (its eye button changes it for the moment). */
+    val worldEyes: Boolean = false,
     val keepScreenOn: KeepScreenOn = KeepScreenOn.OFF,
     /** Tips over each screen the first time it opens after installing a new version. */
     val showTips: Boolean = true,
@@ -417,6 +419,7 @@ class AppSettings(context: Context) {
             oramaStrip = prefs.getBoolean("orama_strip", d.oramaStrip),
             stripView = prefs.getString("strip_view", d.stripView) ?: d.stripView,
             oramaOpen = prefs.getString("orama_open", d.oramaOpen) ?: d.oramaOpen,
+            worldEyes = prefs.getBoolean("world_eyes", d.worldEyes),
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
@@ -437,6 +440,7 @@ class AppSettings(context: Context) {
             .putBoolean("orama_strip", s.oramaStrip)
             .putString("strip_view", s.stripView)
             .putString("orama_open", s.oramaOpen)
+            .putBoolean("world_eyes", s.worldEyes)
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)

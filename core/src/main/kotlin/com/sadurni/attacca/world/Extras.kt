@@ -113,11 +113,11 @@ class Extras(private val land: WorldLand, seed: Int) {
         Places.frame(land, land.places, tz, nowMs, accent, out, smoke)
         life.frame(tz, ty, nowMs, playing, out, smoke)
         festivities.frame(tz, nowMs, festivity, kings, vikram, out)
-        // The boards with the cover by the way.
+        // The boards with the cover by the way, turned a little towards it (facing who comes along).
         for ((z, side) in covers) {
             if (z < tz - 30f || z > tz + WorldRendererLimits.FAR) continue
             val x = Places.xAt(land, z, side * 5.2f)
-            val base = Mat4.model(x, land.heightAt(x, z), z, land.headingAt(z) + PI.toFloat() - side * 0.35f)
+            val base = Mat4.model(x, land.heightAt(x, z), z, land.headingAt(z) + PI.toFloat() + side * 0.35f)
             out += Draw(frameRig, base, frameRig.pose())
             billboards += Billboard(Places.corners(base, -1.5f, 1.6f, 1.5f, 4.6f, 0.08f), Billboard.COVER)
         }
@@ -128,7 +128,7 @@ class Extras(private val land: WorldLand, seed: Int) {
         // The sign with the next song, before the end.
         if (hasNext && signZ > tz - 20f && signZ < tz + WorldRendererLimits.FAR && land.endZ < Float.MAX_VALUE) {
             val x = Places.xAt(land, signZ, signAt.second * 3.1f)
-            val base = Mat4.model(x, land.heightAt(x, signZ), signZ, land.headingAt(signZ) + PI.toFloat() - signAt.second * 0.45f)
+            val base = Mat4.model(x, land.heightAt(x, signZ), signZ, land.headingAt(signZ) + PI.toFloat() + signAt.second * 0.45f)
             out += Draw(signRig, base, signRig.pose())
             billboards += Billboard(Places.corners(base, -1.62f, 1.55f, 1.62f, 2.85f, 0.06f), Billboard.NEXT)
         }
@@ -146,6 +146,25 @@ class Extras(private val land: WorldLand, seed: Int) {
     }
 
     private var pyramidAt: Pair<Float, FloatArray>? = null
+
+    /** The nearest board ahead in sight (the next song's sign, a cover), its middle (x, y, z), or null. */
+    fun boardSight(tz: Float): FloatArray? {
+        var best: FloatArray? = null
+        for (b in billboards) {
+            val c = b.corners
+            val z = (c[2] + c[5] + c[8] + c[11]) / 4f
+            if (z < tz + 4f || z > tz + 45f || (best != null && z > best[2])) continue
+            best = floatArrayOf((c[0] + c[3] + c[6] + c[9]) / 4f, (c[1] + c[4] + c[7] + c[10]) / 4f, z)
+        }
+        return best
+    }
+
+    /** What the song's peak shows on the land (the desert's pyramid, halfway up its height), or null: the sky's show. */
+    fun peakSight(): FloatArray? {
+        val at = pyramidAt?.second ?: return null
+        if (pyramidRise < 0.01f) return null
+        return floatArrayOf(at[0], land.heightAt(at[0], at[1]) + 30f * pyramidRise, at[1])
+    }
 
     /**
      * Where the desert's peak pyramid stands for a peak at row [peakZ]: well back from the way, in

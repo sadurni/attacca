@@ -22,6 +22,8 @@ data class ListSettings(
     val groupBy: SortField? = null,
     /** Goes on with similar tracks when it ends; null = global setting. */
     val endless: Boolean? = null,
+    /** For a list Attacca made: the inclusion it was made with, which its endless tracks keep; null = not known (the one in use). */
+    val inclusion: ListInclusion? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("shuffle", shuffle.name)
@@ -31,6 +33,7 @@ data class ListSettings(
         .put("crossfade", crossfadeMs ?: JSONObject.NULL)
         .put("groupBy", groupBy?.name ?: JSONObject.NULL)
         .put("endless", endless ?: JSONObject.NULL)
+        .put("inclusion", inclusion?.toJson() ?: JSONObject.NULL)
 
     companion object {
         fun fromJson(json: JSONObject): ListSettings = ListSettings(
@@ -41,6 +44,32 @@ data class ListSettings(
             crossfadeMs = if (json.isNull("crossfade") || !json.has("crossfade")) null else json.optInt("crossfade"),
             groupBy = SortField.entries.firstOrNull { it.name == json.optString("groupBy") },
             endless = if (json.isNull("endless") || !json.has("endless")) null else json.optBoolean("endless"),
+            inclusion = json.optJSONObject("inclusion")?.let(ListInclusion::fromJson),
+        )
+    }
+}
+
+/**
+ * The inclusion a list was made with: every track ([all]), or the inclusion set [set] (its list
+ * [list] read as [mode], kept in case the set is gone), so a list made for an occasion ("With the
+ * children") goes on with the same choice whatever is in use later.
+ */
+data class ListInclusion(
+    val all: Boolean,
+    val set: String? = null,
+    val list: String? = null,
+    val mode: com.sadurni.attacca.library.InclusionMode = com.sadurni.attacca.library.InclusionMode.ALLOW,
+) {
+    fun toJson(): JSONObject = JSONObject().put("all", all).put("set", set ?: JSONObject.NULL)
+        .put("list", list ?: JSONObject.NULL).put("mode", mode.name)
+
+    companion object {
+        fun fromJson(o: JSONObject) = ListInclusion(
+            all = o.optBoolean("all"),
+            set = o.optString("set").takeIf { !o.isNull("set") && it.isNotEmpty() },
+            list = o.optString("list").takeIf { !o.isNull("list") && it.isNotEmpty() },
+            mode = com.sadurni.attacca.library.InclusionMode.entries.firstOrNull { it.name == o.optString("mode") }
+                ?: com.sadurni.attacca.library.InclusionMode.ALLOW,
         )
     }
 }

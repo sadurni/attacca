@@ -636,14 +636,18 @@ class PlaybackExtras(
         val inList = List(player.mediaItemCount) { player.getMediaItemAt(it).mediaId }.toHashSet()
         extendJob = scope.launch {
             val added = withContext(com.sadurni.attacca.Background.dispatcher) {
-                val collection = runCatching { app.chainLists.collection(extra = seed) }.getOrNull() ?: return@withContext emptyList()
+                // The same file by another path (opened from another app) is the library's own.
+                val known = app.chainLists.libraryId(seed)
+                val collection = runCatching { app.chainLists.collection(extra = known) }.getOrNull() ?: return@withContext emptyList()
                 val g = collection.generator
-                val index = g.indexOf(seed).takeIf { it >= 0 } ?: return@withContext emptyList()
-                // Not what the list has, nor what was heard today.
-                val excluded = inList + app.listening.playedSince(System.currentTimeMillis() - EXTEND_FRESH_MS)
+                val index = g.indexOf(known).takeIf { it >= 0 } ?: return@withContext emptyList()
+                // Not what the list has (by any of its paths), nor what was heard today.
+                val excluded = inList + inList.flatMap(com.sadurni.attacca.library.Inclusion::aliases) +
+                    app.listening.playedSince(System.currentTimeMillis() - EXTEND_FRESH_MS)
                 val filters = com.sadurni.attacca.chain.ChainFilters(
                     excluded = excluded,
-                    inclusion = app.settings.chain.value.takeIf { it.listsOnlyIncluded }?.inclusion(),
+                    // A list made for an occasion goes on with the inclusion it was made with.
+                    inclusion = app.chainLists.inclusionFor(_listSettings.value.inclusion),
                 )
                 val spacing = app.settings.chain.value.artistSpacing
                 // Same mood and sound family first; wider when that leaves too few.

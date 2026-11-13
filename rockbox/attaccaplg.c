@@ -8451,7 +8451,7 @@ static void choose_library(size_t mark)
 }
 
 /* The plugin's own version: the same as Attacca's (desktop/build.gradle.kts), set with it. */
-#define PLUGIN_VERSION "1.4.1"
+#define PLUGIN_VERSION "1.5.0"
 
 /* Version: the plugin's, and the library's (when and with which Attacca it was made, its songs). */
 static void info(void)

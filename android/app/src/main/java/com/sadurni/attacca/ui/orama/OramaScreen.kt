@@ -35,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -342,11 +343,12 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         )
         Canvas(
             Modifier.fillMaxSize().clipToBounds()
-                // A tap on something in the landscape makes it react; elsewhere, over the whole screen, it brings the rest back.
+                // A tap on something in the landscape makes it react; elsewhere it takes the whole screen
+                // (and over it, shows the song's title; again while it shows, the rest back).
                 .pointerInput(full) {
                     detectTapGestures { at ->
                         val hit = diorama.tap(list, at.x, at.y, System.nanoTime() / 1_000_000L)
-                        if (!hit && full) onFull(false)
+                        if (!hit) OramaShared.tapLandscape(full, onFull)
                     }
                 },
         ) {
@@ -782,6 +784,24 @@ object OramaShared {
     /** Attacca World shows O'rama beside it, the screen split in two (kept while the app runs). */
     val split = androidx.compose.runtime.mutableStateOf(false)
 
+    /** Times the song's title was asked for with a tap over the whole screen (see [SongIntro]). */
+    val titleAsks = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** The song's title shows over the whole screen now. */
+    val titleShowing = androidx.compose.runtime.mutableStateOf(false)
+
+    /**
+     * A tap on the landscape (on nothing that reacts to it): the whole screen; over it, the song's
+     * title for a moment, and a tap while it shows brings the rest back.
+     */
+    fun tapLandscape(full: Boolean, onFull: (Boolean) -> Unit) {
+        when {
+            !full -> onFull(true)
+            titleShowing.value -> onFull(false)
+            else -> titleAsks.intValue++
+        }
+    }
+
     /** The whole O'rama is open (and moves the landscape on). */
     @Volatile
     var fullOpen = false
@@ -837,7 +857,7 @@ internal fun worldNameRes(w: com.sadurni.attacca.diorama.World): Int = when (w) 
 
 /**
  * Over the whole screen with nothing else on it ([show]): the name of the song starting, in the
- * middle, fading in and out over a few seconds.
+ * middle, fading in and out over a few seconds; also when a tap asks for it ([OramaShared.titleAsks]).
  */
 @Composable
 internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolean, album: String? = null) {
@@ -865,10 +885,26 @@ internal fun SongIntro(id: String?, title: String, artist: String?, show: Boolea
             alpha.animateTo(0f, androidx.compose.animation.core.tween(1800))
         }
     }
-    if (alpha.value <= 0.01f || title.isBlank()) return
+    // Asked for with a tap: in quickly, a few seconds, out (on its own, so the song's own showings go on).
+    val asked = remember { androidx.compose.animation.core.Animatable(0f) }
+    val asks = OramaShared.titleAsks.intValue
+    val seenAsks = remember { asks }
+    LaunchedEffect(asks) {
+        if (asks == seenAsks || !show) return@LaunchedEffect
+        asked.animateTo(1f, androidx.compose.animation.core.tween(350))
+        kotlinx.coroutines.delay(3500)
+        asked.animateTo(0f, androidx.compose.animation.core.tween(900))
+    }
+    LaunchedEffect(show) { if (!show) asked.snapTo(0f) }
+    val shown = maxOf(alpha.value, asked.value)
+    // While it shows, a tap brings the rest back.
+    val visible = show && shown > 0.01f && title.isNotBlank()
+    SideEffect { OramaShared.titleShowing.value = visible }
+    DisposableEffect(Unit) { onDispose { OramaShared.titleShowing.value = false } }
+    if (!visible) return
     val shadow = Shadow(Color.Black.copy(alpha = 0.75f), Offset(2f, 3f), 14f)
     Box(Modifier.fillMaxSize().padding(horizontal = 28.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.graphicsLayer { this.alpha = alpha.value }) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.graphicsLayer { this.alpha = shown }) {
             Text(
                 title,
                 style = TextStyle(

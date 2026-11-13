@@ -114,7 +114,8 @@ fun WorldPage(state: AppState) {
     }
     val cutEnd = p.cutEndMs.takeIf { it > p.cutStartMs } ?: p.durationMs
     val input = remember { WorldInput() }
-    val camera = remember { WorldCamera() }
+    // Behind the traveller, or through its eyes when chosen in Settings (the eye button changes it for the moment).
+    val camera = remember { WorldCamera().also { it.firstPerson = state.prefs["world_eyes"] == "true" } }
     val world = remember { SoftWorld(input, camera) }
     DisposableEffect(Unit) { onDispose { world.close() } }
     // The next song's look (its world and traveller: the land comes into its world before the end).
@@ -182,6 +183,8 @@ fun WorldPage(state: AppState) {
     var size by remember { mutableStateOf(IntSize.Zero) }
     var picture by remember { mutableStateOf<ImageBitmap?>(null) }
     var manual by remember { mutableStateOf(false) }
+    // Through the traveller's own eyes (a first try).
+    var eyes by remember { mutableStateOf(camera.firstPerson) }
     // Frame after frame, drawn away from the window's thread.
     LaunchedEffect(fps60) {
         val raw = FloatArray(3)
@@ -379,6 +382,10 @@ fun WorldPage(state: AppState) {
                     // O'rama and Attacca World at once.
                     IconButton(onClick = { used(); com.sadurni.attaccaplg.ui.OramaShared.split.value = !split }) {
                         Icon(PlayerIcons.VerticalSplit, tr("O'rama and Attacca World together", "O'rama y Attacca World a la vez"), tint = Color.White)
+                    }
+                    // Through the traveller's own eyes, or the camera behind.
+                    IconButton(onClick = { used(); eyes = !eyes; camera.firstPerson = eyes }) {
+                        Icon(PlayerIcons.Visibility, tr("Through the traveller's eyes", "Con los ojos del viajero"), tint = if (eyes) Color.White else Color.White.copy(alpha = 0.6f))
                     }
                     if (manual) {
                         IconButton(onClick = { used(); camera.reset() }) {

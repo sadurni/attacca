@@ -61,6 +61,59 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
 
     private fun inclusionIf(onlyIncluded: Boolean) = if (onlyIncluded) app.settings.chain.value.inclusion() else null
 
+    /** The inclusion a list made now with [onlyIncluded] is made with (the set in use, or every track). */
+    private fun inclusionNow(onlyIncluded: Boolean): com.sadurni.attacca.settings.ListInclusion {
+        val chain = app.settings.chain.value
+        return if (onlyIncluded && chain.inclusion() != null) {
+            com.sadurni.attacca.settings.ListInclusion(false, chain.activeSet, chain.inclusionList, chain.inclusionMode)
+        } else {
+            com.sadurni.attacca.settings.ListInclusion(true)
+        }
+    }
+
+    /**
+     * [id] as the music folder's collection holds it: the same file reached by another path (a
+     * file opened from another app, as /sdcard/…) is the one already there, so a list from it
+     * never has it twice. Blocking (may make the collection).
+     */
+    suspend fun libraryId(id: String): String {
+        val aliases = com.sadurni.attacca.library.Inclusion.aliases(id)
+        if (aliases.isEmpty()) return id
+        val g = runCatching { collection() }.getOrNull()?.generator ?: return id
+        if (g.indexOf(id) >= 0) return id
+        return aliases.firstOrNull { g.indexOf(it) >= 0 } ?: id
+    }
+
+    /** [ids] with each of [asked] back as it was asked (the track playing keeps its id) where the library knows it by another path. */
+    private fun asAsked(ids: List<String>?, asked: List<String>, known: List<String>): List<String>? {
+        if (ids == null) return null
+        val back = HashMap<String, String>()
+        for (i in asked.indices) if (known[i] != asked[i]) back[known[i]] = asked[i]
+        return if (back.isEmpty()) ids else ids.map { back[it] ?: it }
+    }
+
+    /** The last list made (its tracks) and the inclusion it was made with. */
+    @Volatile private var lastMade: Pair<List<String>, com.sadurni.attacca.settings.ListInclusion>? = null
+
+    /** The inclusion the list of [ids] was made with, when it is the last one made here; null otherwise. */
+    fun inclusionOfMade(ids: List<String>): com.sadurni.attacca.settings.ListInclusion? = lastMade?.takeIf { it.first == ids }?.second
+
+    /**
+     * What a list's endless tracks may be: those of the inclusion it was made with ([made]: its
+     * set as it is now, or its list if the set is gone), or as for any list (the one in use,
+     * when lists take only included tracks) when that is not known or no longer there.
+     */
+    fun inclusionFor(made: com.sadurni.attacca.settings.ListInclusion?): com.sadurni.attacca.library.Inclusion? {
+        val chain = app.settings.chain.value
+        val current = chain.takeIf { it.listsOnlyIncluded }?.inclusion()
+        if (made == null) return current
+        if (made.all) return null
+        val set = made.set?.let { id -> chain.inclusionSets.firstOrNull { it.id == id } }
+        return (if (set != null) com.sadurni.attacca.library.Inclusion.of(set.list, set.mode) else null)
+            ?: com.sadurni.attacca.library.Inclusion.of(made.list, made.mode)
+            ?: current
+    }
+
     private var job: Job? = null
 
     /**
@@ -88,6 +141,7 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
     private fun <T> making(onlyIncluded: Boolean, onDone: (T?) -> Unit, work: suspend (isCancelled: () -> Boolean) -> T?) {
         if (job?.isActive == true) return
         val mine = ++current
+        val madeWith = inclusionNow(onlyIncluded)
         job = scope.launch {
             started(onlyIncluded)
             val result = try {
@@ -102,9 +156,20 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
             } finally {
                 if (mine == current) finished()
             }
-            if (mine == current) onDone(result)
+            if (mine == current) {
+                @Suppress("UNCHECKED_CAST")
+                val ids = when (result) {
+                    is List<*> -> result as List<String>
+                    is Pair<*, *> -> result.second as? List<String>
+                    else -> null
+                }
+                if (ids != null) lastMade = ids to madeWith
+                onDone(result)
+            }
         }
     }
+    private val listStore by lazy { com.sadurni.attacca.settings.ListSettingsStore(app) }
+
     @Volatile private var cached: Pair<String, Collection>? = null
     @Volatile private var withSeed: Pair<String, Collection>? = null
 
@@ -211,6 +276,7 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         name: (GeneratedList, Collection) -> String,
         onDone: (Int?) -> Unit,
     ) {
+        val madeWith = inclusionNow(filters.inclusion != null)
         making(filters.inclusion != null, onDone) { isCancelled ->
             val collection = collection() ?: return@making null
             val lists = collection.generator.general(filters, app.settings.chain.value.artistSpacing, count, isCancelled = isCancelled)
@@ -223,7 +289,11 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
                 var base = sanitize(name(list, collection))
                 var n = 2
                 while (!used.add(base.lowercase())) base = "${sanitize(name(list, collection))} ($n)".also { n++ }
-                M3uParser.write(File(dir, "$base.m3u8"), list.ids.map { PlaylistEntry(it) })
+                val file = File(dir, "$base.m3u8")
+                M3uParser.write(file, list.ids.map { PlaylistEntry(it) })
+                // Each list keeps the inclusion it was made with (for its endless tracks).
+                val key = com.sadurni.attacca.library.ListSource.Playlist(file.absolutePath).key
+                listStore.put(key, listStore.get(key).copy(inclusion = madeWith))
             }
             lists.size
         }
@@ -242,10 +312,11 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         onDone: (List<String>?) -> Unit,
     ) {
         making(filters.inclusion != null, onDone) { isCancelled ->
-            val collection = collection(extra = seed) ?: return@making null
-            val index = collection.generator.indexOf(seed)
+            val known = libraryId(seed)
+            val collection = collection(extra = known) ?: return@making null
+            val index = collection.generator.indexOf(known)
             if (index < 0) return@making null
-            collection.generator.fromSeed(index, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled)
+            asAsked(collection.generator.fromSeed(index, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), listOf(seed), listOf(known))
         }
     }
 
@@ -256,10 +327,11 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      */
     fun quickFromSeed(seed: String, count: Int, onlyIncluded: Boolean = onlyIncludedByDefault(), onDone: (List<String>?) -> Unit) {
         making(onlyIncluded, onDone) { isCancelled ->
-            val collection = collection(extra = seed) ?: return@making null
-            val index = collection.generator.indexOf(seed)
+            val known = libraryId(seed)
+            val collection = collection(extra = known) ?: return@making null
+            val index = collection.generator.indexOf(known)
             if (index < 0) return@making null
-            quickIds(collection.generator, index, count, inclusion = inclusionIf(onlyIncluded), isCancelled = isCancelled)
+            asAsked(quickIds(collection.generator, index, count, inclusion = inclusionIf(onlyIncluded), isCancelled = isCancelled), listOf(seed), listOf(known))
         }
     }
 
@@ -310,7 +382,8 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
             val played = playedLately()
             val inclusion = inclusionIf(onlyIncluded)
             // Not a track played lately either, when set to (unless all of them were).
-            val all = g.candidates.indices.filter { g.candidates[it].id != avoid && (inclusion == null || inclusion.includes(g.candidates[it].id)) }
+            val avoided = avoid?.let { libraryId(it) }
+            val all = g.candidates.indices.filter { g.candidates[it].id != avoided && (inclusion == null || inclusion.includes(g.candidates[it].id)) }
                 .let { all -> if (played == null) all else all.filter { g.candidates[it].id !in played }.ifEmpty { all } }
             val pool = all.filter { mood == null || g.classification.hasMood(it, setOf(mood)) }.ifEmpty { all }
             // A file still there (only those tried are looked at).
@@ -333,9 +406,10 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
     ) {
         making(filters.inclusion != null, onDone) { isCancelled ->
             val collection = collection() ?: return@making null
-            val indices = collection.generator.indicesOf(seeds)
+            val known = seeds.map { libraryId(it) }
+            val indices = collection.generator.indicesOf(known)
             if (indices.isEmpty()) return@making null
-            collection.generator.fromSeeds(indices, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled)
+            asAsked(collection.generator.fromSeeds(indices, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), seeds, known)
         }
     }
 
@@ -350,8 +424,9 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      */
     fun make(kind: Kind, seeds: List<String>, value: Int, count: Int, onlyIncluded: Boolean = onlyIncludedByDefault(), onDone: (List<String>?) -> Unit) {
         making(onlyIncluded, onDone) { isCancelled ->
-            val collection = collection(extras = if (kind == Kind.BRIDGE || seeds.size == 1) seeds else emptyList()) ?: return@making null
-            build(collection.generator, kind, seeds, value, count, inclusionIf(onlyIncluded), isCancelled)
+            val known = seeds.map { libraryId(it) }
+            val collection = collection(extras = if (kind == Kind.BRIDGE || seeds.size == 1) known else emptyList()) ?: return@making null
+            asAsked(build(collection.generator, kind, known, value, count, inclusionIf(onlyIncluded), isCancelled), seeds, known)
         }
     }
 

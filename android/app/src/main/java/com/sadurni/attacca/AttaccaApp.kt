@@ -272,6 +272,22 @@ class AttaccaApp : Application() {
         }
     }
 
+    /**
+     * Notes the inclusion the list about to play ([source], null: unsaved) was made with; an
+     * unsaved list not made by Attacca ([made] null) forgets the last one's.
+     */
+    fun noteListInclusion(source: ListSource?, made: com.sadurni.attacca.settings.ListInclusion?) {
+        if (source != null && made == null) return
+        val store = com.sadurni.attacca.settings.ListSettingsStore(this)
+        val key = source?.key ?: com.sadurni.attacca.settings.ListSettingsStore.NO_SOURCE_KEY
+        val stored = store.get(key)
+        if (stored.inclusion != made) store.put(key, stored.copy(inclusion = made))
+        // The same list again: no change of list will reload its settings, so change them live.
+        if ((currentListSource.value?.key ?: com.sadurni.attacca.settings.ListSettingsStore.NO_SOURCE_KEY) == key) {
+            extras.value?.let { e -> if (e.listSettings.value.inclusion != made) e.updateListSettings { it.copy(inclusion = made) } }
+        }
+    }
+
     fun setCurrentList(name: String, source: ListSource?) {
         beforeListChange?.invoke(source)
         currentListName.value = name

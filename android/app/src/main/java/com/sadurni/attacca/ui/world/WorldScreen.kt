@@ -34,6 +34,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Videocam
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.VerticalSplit
 import androidx.compose.material.icons.rounded.MusicNote
@@ -158,7 +160,8 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
     val prefs = remember { context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE) }
     var fps60 by remember { mutableStateOf(prefs.getBoolean("fps60", false)) }
     val feed = rememberWorldFeed(viewModel)
-    val camera = remember { WorldCamera() }
+    // Behind the traveller, or through its eyes when chosen in Settings (the eye button changes it for the moment).
+    val camera = remember { WorldCamera().also { it.firstPerson = context.app.settings.ui.value.worldEyes } }
     val chosen by com.sadurni.attacca.ui.orama.OramaShared.chosenWorld
     var manual by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -402,6 +405,9 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
         }
         // Gestures: one finger turns the camera, two bring it closer or further and raise or lower it.
         val sunTaps = remember { LongArray(5) { Long.MIN_VALUE / 2 } }
+        // The gestures stay for the view's life: they read the whole screen as it is now.
+        val fullNow by androidx.compose.runtime.rememberUpdatedState(full)
+        val onFullNow by androidx.compose.runtime.rememberUpdatedState(onFull)
         Box(
             Modifier.fillMaxSize().pointerInput(Unit) {
                 awaitEachGesture {
@@ -437,10 +443,11 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
                     }
                     if (moved < 12f) {
                         // A tap on the traveller: a jump, a spin, a flip…; on the sun, five quick ones
-                        // turn it into a record; elsewhere over the whole screen, the rest back.
+                        // turn it into a record; elsewhere, the whole screen (and over it, the song's title;
+                        // again while it shows, the rest back).
                         val dx = first.position.x - feed.travellerX
                         val dy = first.position.y - feed.travellerY
-                        val reach = minOf(size.width, size.height) * (if (full) 0.06f else 0.12f)
+                        val reach = minOf(size.width, size.height) * (if (fullNow) 0.06f else 0.12f)
                         val sx = first.position.x - feed.sunX
                         val sy = first.position.y - feed.sunY
                         if (onTap != null) onTap()
@@ -450,7 +457,7 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
                             for (k in 0 until sunTaps.size - 1) sunTaps[k] = sunTaps[k + 1]
                             sunTaps[sunTaps.size - 1] = t
                             if (t - sunTaps[0] < 4000) feed.recordOf = feed.songId
-                        } else if (full) onFull(false)
+                        } else com.sadurni.attacca.ui.orama.OramaShared.tapLandscape(fullNow, onFullNow)
                     }
                 }
             },
@@ -481,6 +488,8 @@ private fun WorldOverlay(
     onOpenQueue: () -> Unit,
     split: Boolean = false,
 ) {
+    // Through the traveller's own eyes (a first try).
+    var eyes by remember { mutableStateOf(camera.firstPerson) }
     // Split, everything smaller: more of both landscapes shows.
     val coverSize = if (split) 38.dp else 52.dp
     val titleSize = if (split) 16.sp else 20.sp
@@ -559,6 +568,10 @@ private fun WorldOverlay(
                         // O'rama and Attacca World at once, the screen split in two.
                         IconButton(modifier = button, onClick = { used(); com.sadurni.attacca.ui.orama.OramaShared.split.value = !com.sadurni.attacca.ui.orama.OramaShared.split.value }) {
                             Icon(androidx.compose.material.icons.Icons.Rounded.VerticalSplit, stringResource(R.string.world_split), tint = Color.White)
+                        }
+                        // Through the traveller's own eyes, or the camera behind.
+                        IconButton(modifier = button, onClick = { used(); eyes = !eyes; camera.firstPerson = eyes }) {
+                            Icon(if (eyes) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, stringResource(R.string.world_first_person), tint = Color.White)
                         }
                         if (manual) {
                             IconButton(modifier = button, onClick = { used(); camera.reset() }) { Icon(Icons.Rounded.Videocam, stringResource(R.string.world_camera_auto), tint = Color.White) }

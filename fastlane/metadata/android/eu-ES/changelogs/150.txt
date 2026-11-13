@@ -1,0 +1,5 @@
+• Attacca World bidaiariaren begiekin (begi-botoia edo Ezarpenak): begirada lasaia, merezi duenera biratzen.
+• Zaldiz edo ibilgailuan burua, eskulekua edo bolantea aurrean; txakurrak aurretik.
+• Irudiak eta txakurrak erritmo-uhinen gainean doaz, bihurgune estuak leun hartuz.
+• Txakurrak ez dira elkar zeharkatzen ez jauzika; podenko eta pointer meheagoak; zaldiek eta gameluek burua biratzen dute, atzeko hankak ondo tolestuz.
+• Zerrenda amaigabeek egin ziren inklusioarekin jarraitzen dute.

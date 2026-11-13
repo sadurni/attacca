@@ -122,7 +122,7 @@ object PlayerDbFormat {
         file: File,
         /** The names of the inclusion sets (all different), in the order of [Track.sets]' bits (at most 32). */
         setNames: List<String> = emptyList(),
-        /** What made it ("Attacca 1.4.1"), shown by the players with its date. */
+        /** What made it ("Attacca 1.5.0"), shown by the players with its date. */
         madeBy: String? = null,
     ): Int {
         require(tracks.size == classification.moods.size)

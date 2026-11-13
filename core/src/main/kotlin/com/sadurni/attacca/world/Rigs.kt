@@ -87,6 +87,9 @@ object Quad {
     fun lower(leg: Int) = 2 + leg * 2
     const val TAIL = 9
 
+    /** The horse's and the camel's neck with the head (turning it): after the tail. */
+    const val NECK = 10
+
     /** Height of the back (where a dog sits up, or a rider sits on a horse). */
     class Shape(val h: Float, val l: Float, val t: Float, val coat: Int, val light: Int, val nose: Int, val legs: Int, val ears: Float, val tail: Int)
 
@@ -95,7 +98,7 @@ object Quad {
         val k = when (dog) {
             Dog.GOLDIE -> Shape(0.5f, 0.82f, 0.34f, 0xFFD6A050.toInt(), 0xFFF0CD8C.toInt(), 0xFFE58F98.toInt(), 0xFFD6A050.toInt(), 0.12f, 0xFFE0B060.toInt())
             Dog.MALAMUTE -> Shape(0.72f, 1.1f, 0.44f, 0xFF2F2D31.toInt(), 0xFFE9DCC4.toInt(), 0xFF1A1818.toInt(), 0xFFE9DCC4.toInt(), 0.13f, 0xFFE9DCC4.toInt())
-            Dog.GALGO -> Shape(0.84f, 1.14f, 0.3f, 0xFFC98E52.toInt(), 0xFFF3E8DA.toInt(), 0xFFE0939A.toInt(), 0xFFC98E52.toInt(), 0.19f, 0xFFC98E52.toInt())
+            Dog.GALGO -> Shape(0.84f, 1.14f, 0.21f, 0xFFC98E52.toInt(), 0xFFF3E8DA.toInt(), 0xFFE0939A.toInt(), 0xFFC98E52.toInt(), 0.19f, 0xFFC98E52.toInt())
             Dog.BRACO -> Shape(0.5f, 0.8f, 0.28f, 0xFFF4F2EE.toInt(), 0xFF1E1E22.toInt(), 0xFF2A2224.toInt(), 0xFFF4F2EE.toInt(), 0.13f, 0xFFF4F2EE.toInt())
         }
         return quad(k, dog, helmet, santa = santa, leds = leds) to k
@@ -133,13 +136,9 @@ object Quad {
             val hz = k.l / 2
             val neckTop = if (horse) k.h + 0.55f else k.h + 0.12f
             val headZ = if (horse) hz + 0.25f else hz + 0.05f
-            tube(0f, k.h - 0.1f, hz - 0.1f, 0f, neckTop, headZ, if (horse) 0.17f else half * 0.55f, k.coat)
+            // (The horse's neck and head are a bone of their own, made after the tail: it turns its head.)
+            if (!horse) tube(0f, k.h - 0.1f, hz - 0.1f, 0f, neckTop, headZ, half * 0.55f, k.coat)
             if (horse) {
-                tube(0f, k.h - 0.05f, hz - 0.35f, 0f, neckTop + 0.08f, headZ - 0.05f, 0.07f, k.light) // mane
-                blob(-0.15f, neckTop - 0.15f, headZ - 0.15f, 0.15f, neckTop + 0.15f, headZ + 0.2f, k.coat)
-                blob(-0.11f, neckTop - 0.32f, headZ + 0.1f, 0.11f, neckTop - 0.02f, headZ + 0.62f, k.coat)
-                blob(-0.06f, neckTop - 0.3f, headZ + 0.55f, 0.06f, neckTop - 0.18f, headZ + 0.66f, k.nose)
-                for (s in intArrayOf(-1, 1)) blob(s * 0.1f - 0.03f, neckTop + 0.08f, headZ - 0.05f, s * 0.1f + 0.03f, neckTop + 0.3f, headZ + 0.03f, k.coat)
                 // Saddle.
                 blob(-half - 0.03f, k.h - 0.08f, -0.35f, half + 0.03f, k.h + 0.1f, 0.25f, 0xFF4A2A18.toInt())
             } else {
@@ -181,16 +180,22 @@ object Quad {
         }
         val fz = k.l / 2 - (if (horse) 0.22f else 0.12f)
         val bz = -k.l / 2 + (if (horse) 0.22f else 0.12f)
-        val legR = if (horse) 0.08f else 0.055f
+        // (The galgo-podenco and the pointer on slender legs.)
+        val legR = if (horse) 0.08f else if (dog == Dog.GALGO || dog == Dog.BRACO) 0.038f else 0.055f
         for ((leg, z) in listOf(0 to fz, 1 to fz, 2 to bz, 3 to bz)) {
             val x = if (leg % 2 == 0) -half + legR * 1.2f else half - legR * 1.2f
-            val upper = r.bone(Quad.BODY, x, legH + 0.04f, z) { tube(x, legH + 0.04f, z, x, legH * 0.5f, z, legR * 1.15f, k.legs) }
-            r.bone(upper, x, legH * 0.5f, z) {
-                tube(x, legH * 0.5f, z, x, 0.05f, z, legR, k.legs)
+            // Hind legs as they are: down and back from the hip to the hock (pointing back), then
+            // down to the foot; the front ones straight.
+            val hind = leg >= 2
+            val jz = if (hind) z - legH * 0.2f else z
+            val footZ = if (hind) z - legH * 0.08f else z
+            val upper = r.bone(Quad.BODY, x, legH + 0.04f, z) { tube(x, legH + 0.04f, z, x, legH * 0.5f, jz, legR * 1.15f, k.legs) }
+            r.bone(upper, x, legH * 0.5f, jz) {
+                tube(x, legH * 0.5f, jz, x, 0.05f, footZ, legR, k.legs)
                 // The galgo-podenco's white feet: a white paw and sock, easy to tell.
                 val white = dog == Dog.GALGO
-                if (white) tube(x, legH * 0.24f, z, x, 0.06f, z, legR * 1.12f, k.light)
-                blob(x - legR * 1.3f, 0f, z - legR * 1.1f, x + legR * 1.3f, legR * 1.8f, z + legR * 2.3f, if (horse) 0xFF2A1A12.toInt() else if (white) k.light else k.legs)
+                if (white) tube(x, legH * 0.24f, footZ + (jz - footZ) * 0.4f, x, 0.06f, footZ, legR * 1.12f, k.light)
+                blob(x - legR * 1.3f, 0f, footZ - legR * 1.1f, x + legR * 1.3f, legR * 1.8f, footZ + legR * 2.3f, if (horse) 0xFF2A1A12.toInt() else if (white) k.light else k.legs)
             }
         }
         r.bone(Quad.BODY, 0f, k.h - 0.06f, -k.l / 2) {
@@ -198,8 +203,41 @@ object Quad {
             when {
                 horse -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.85f, tz - 0.3f, 0.09f, k.tail)
                 dog == Dog.MALAMUTE -> blob(-0.09f, k.h - 0.05f, tz - 0.14f, 0.09f, k.h + 0.3f, tz + 0.08f, k.tail)
-                dog == Dog.GALGO -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.12f, tz - 0.14f, 0.04f, k.tail)
+                // Docked: a stump of a few centimetres.
+                dog == Dog.GALGO -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.08f, tz - 0.07f, 0.03f, k.tail)
+                // The pointer's, as in O'rama: out behind, then rolled up in a curl.
+                dog == Dog.BRACO -> {
+                    val y0 = k.h - 0.06f
+                    tube(0f, y0, tz, 0f, y0 + 0.02f, tz - 0.16f, 0.032f, k.tail)
+                    val cy = y0 + 0.1f
+                    val cz = tz - 0.16f
+                    val rr = 0.085f
+                    val n = 10
+                    var py = y0 + 0.02f
+                    var pz = tz - 0.16f
+                    for (m in 1..n) {
+                        // From the bottom of the ring round the back and over the top, ending forward.
+                        val a = -kotlin.math.PI / 2 - 1.7 * kotlin.math.PI * m / n
+                        val qy = cy + (kotlin.math.sin(a) * rr).toFloat()
+                        val qz = cz + (kotlin.math.cos(a) * rr).toFloat()
+                        tube(0f, py, pz, 0f, qy, qz, 0.03f - 0.012f * m / n, k.tail)
+                        py = qy; pz = qz
+                    }
+                }
                 else -> tube(0f, k.h - 0.06f, tz, 0f, k.h - 0.18f, tz - 0.3f, 0.05f, k.tail)
+            }
+        }
+        if (horse) {
+            val hz = k.l / 2
+            val neckTop = k.h + 0.55f
+            val headZ = hz + 0.25f
+            r.bone(Quad.BODY, 0f, k.h - 0.1f, hz - 0.1f) {
+                tube(0f, k.h - 0.1f, hz - 0.1f, 0f, neckTop, headZ, 0.17f, k.coat)
+                tube(0f, k.h - 0.05f, hz - 0.35f, 0f, neckTop + 0.08f, headZ - 0.05f, 0.07f, k.light) // mane
+                blob(-0.15f, neckTop - 0.15f, headZ - 0.15f, 0.15f, neckTop + 0.15f, headZ + 0.2f, k.coat)
+                blob(-0.11f, neckTop - 0.32f, headZ + 0.1f, 0.11f, neckTop - 0.02f, headZ + 0.62f, k.coat)
+                blob(-0.06f, neckTop - 0.3f, headZ + 0.55f, 0.06f, neckTop - 0.18f, headZ + 0.66f, k.nose)
+                for (s in intArrayOf(-1, 1)) blob(s * 0.1f - 0.03f, neckTop + 0.08f, headZ - 0.05f, s * 0.1f + 0.03f, neckTop + 0.3f, headZ + 0.03f, k.coat)
             }
         }
         if (santa && !helmet) {
@@ -233,14 +271,17 @@ object Mounts {
             blob(-0.36f, legH - 0.05f, -0.9f, 0.36f, 1.75f, 0.9f, coat)
             blob(-0.3f, 1.55f, -0.45f, 0.3f, 2.25f, 0.35f, coat) // the hump
             blob(-0.36f, 2.05f, -0.42f, 0.36f, 2.15f, 0.32f, 0xFFB03A2E.toInt()) // a saddle cloth
+        }
+        legs(r, legH, 0.22f, 0.7f, -0.7f, 0.075f, coat, dark)
+        r.bone(Quad.BODY, 0f, 1.6f, -0.9f) { tube(0f, 1.6f, -0.9f, 0f, 1.05f, -1.05f, 0.05f, dark) }
+        // The long neck and the head, a bone of their own (it turns its head): after the tail.
+        r.bone(Quad.BODY, 0f, 1.55f, 0.8f) {
             tube(0f, 1.55f, 0.8f, 0f, 1.45f, 1.35f, 0.17f, coat)
             tube(0f, 1.45f, 1.35f, 0f, 2.3f, 1.55f, 0.15f, coat)
             blob(-0.15f, 2.2f, 1.4f, 0.15f, 2.5f, 1.95f, coat)
             blob(-0.04f, 2.3f, 1.92f, 0.04f, 2.36f, 1.98f, 0xFF3A2A20.toInt())
             for (s in intArrayOf(-1, 1)) blob(s * 0.12f - 0.03f, 2.45f, 1.45f, s * 0.12f + 0.03f, 2.58f, 1.52f, dark)
         }
-        legs(r, legH, 0.22f, 0.7f, -0.7f, 0.075f, coat, dark)
-        r.bone(Quad.BODY, 0f, 1.6f, -0.9f) { tube(0f, 1.6f, -0.9f, 0f, 1.05f, -1.05f, 0.05f, dark) }
         return r.rig() to k
     }
 
@@ -261,18 +302,22 @@ object Mounts {
             blob(-0.8f, 2.35f, -0.6f, 0.8f, 2.6f, 0.55f, accent or (0xFF shl 24)) // the cloth
             blob(-0.5f, 2.55f, -0.35f, 0.5f, 2.75f, 0.3f, 0xFFF5C542.toInt()) // the seat
         }
-        legs(r, legH, 0.55f, 0.8f, -0.8f, 0.24f, skin, dark)
+        legs(r, legH, 0.55f, 0.8f, -0.8f, 0.24f, skin, dark, hock = false)
         r.bone(Quad.BODY, 0f, 2.0f, -1.15f) { tube(0f, 2.0f, -1.15f, 0f, 1.2f, -1.35f, 0.05f, dark) }
         return r.rig() to k
     }
 
-    private fun legs(r: RigBuilder, legH: Float, half: Float, fz: Float, bz: Float, rad: Float, c: Int, foot: Int) {
+    private fun legs(r: RigBuilder, legH: Float, half: Float, fz: Float, bz: Float, rad: Float, c: Int, foot: Int, hock: Boolean = true) {
         for ((leg, z) in listOf(0 to fz, 1 to fz, 2 to bz, 3 to bz)) {
             val x = if (leg % 2 == 0) -half + rad else half - rad
-            val upper = r.bone(Quad.BODY, x, legH, z) { tube(x, legH, z, x, legH * 0.5f, z, rad * 1.1f, c) }
-            r.bone(upper, x, legH * 0.5f, z) {
-                tube(x, legH * 0.5f, z, x, 0.06f, z, rad, c)
-                blob(x - rad * 1.2f, 0f, z - rad * 1.2f, x + rad * 1.2f, rad * 0.9f, z + rad * 1.4f, foot)
+            // Hind legs down and back to the hock (pointing back), then down to the foot.
+            val hind = leg >= 2 && hock
+            val jz = if (hind) z - legH * 0.16f else z
+            val footZ = if (hind) z - legH * 0.06f else z
+            val upper = r.bone(Quad.BODY, x, legH, z) { tube(x, legH, z, x, legH * 0.5f, jz, rad * 1.1f, c) }
+            r.bone(upper, x, legH * 0.5f, jz) {
+                tube(x, legH * 0.5f, jz, x, 0.06f, footZ, rad, c)
+                blob(x - rad * 1.2f, 0f, footZ - rad * 1.2f, x + rad * 1.2f, rad * 0.9f, footZ + rad * 1.4f, foot)
             }
         }
     }
@@ -292,7 +337,14 @@ object Vehicles {
             tube(0f, rr, -0.1f, 0f, 1.0f, 0.42f, 0.045f, colour)     // down tube
             tube(0f, rr, -0.1f, 0f, rr, -0.55f, 0.035f, colour)      // chain stay
             tube(0f, 1.0f, 0.42f, 0f, rr, 0.6f, 0.035f, metal)        // fork
-            tube(-0.3f, 1.12f, 0.4f, 0.3f, 1.12f, 0.4f, 0.03f, metal) // bars
+            // The stem up from the fork, the bars (bright, swept back a little) and black grips at their ends.
+            val chrome = 0xFFC8CCD4.toInt()
+            tube(0f, 1.0f, 0.42f, 0f, 1.1f, 0.4f, 0.03f, chrome)        // stem
+            tube(-0.16f, 1.12f, 0.4f, 0.16f, 1.12f, 0.4f, 0.022f, chrome) // bars
+            for (s in intArrayOf(-1, 1)) {
+                tube(s * 0.16f, 1.12f, 0.4f, s * 0.27f, 1.12f, 0.34f, 0.022f, chrome)
+                tube(s * 0.27f, 1.12f, 0.34f, s * 0.34f, 1.12f, 0.3f, 0.032f, 0xFF16161A.toInt()) // grip
+            }
             blob(-0.08f, 0.96f, -0.28f, 0.08f, 1.04f, -0.06f, 0xFF1E1E22.toInt()) // saddle
         }
         val wheels = ArrayList<Int>()
@@ -316,6 +368,21 @@ object Vehicles {
             blob(-0.66f, 0.78f, 0.3f, 0.66f, 1.08f, 0.42f, 0xFF9CC8E8.toInt())  // windscreen
             blob(-0.5f, 0.4f, 1.28f, -0.3f, 0.56f, 1.36f, 0xFFFFF4C8.toInt())   // lights
             blob(0.3f, 0.4f, 1.28f, 0.5f, 0.56f, 1.36f, 0xFFFFF4C8.toInt())
+            // The steering wheel (seen from the driver's seat too), leaning back on its column.
+            val wheelRim = 0xFF26262C.toInt()
+            val cy = 1.2f
+            val cz = 0.42f
+            val n = 12
+            for (k in 0 until n) {
+                val a0 = 2 * kotlin.math.PI * k / n
+                val a1 = 2 * kotlin.math.PI * (k + 1) / n
+                fun px(a: Double) = (kotlin.math.sin(a) * 0.19).toFloat()
+                fun py(a: Double) = cy + (kotlin.math.cos(a) * 0.19 * 0.9).toFloat()
+                fun pz(a: Double) = cz - (kotlin.math.cos(a) * 0.19 * 0.42).toFloat()
+                tube(px(a0), py(a0), pz(a0), px(a1), py(a1), pz(a1), 0.025f, wheelRim)
+            }
+            tube(-0.18f, cy, cz, 0.18f, cy, cz, 0.018f, wheelRim)
+            tube(0f, cy, cz, 0f, 0.86f, 0.62f, 0.03f, wheelRim)
         }
         val wheels = ArrayList<Int>()
         for (x in floatArrayOf(-0.78f, 0.78f)) for (z in floatArrayOf(-0.85f, 0.85f)) {

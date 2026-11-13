@@ -48,6 +48,12 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         /** Each dog's place about the traveller (sideways, ahead or behind), in pairs. */
         private val PLACES = floatArrayOf(-0.95f, -1.7f, 1.05f, -2.7f, -0.75f, -3.9f, 0.95f, 1.5f)
 
+        /** How far ahead the dogs go when seen through the traveller's eyes (rows). */
+        private const val DOGS_LEAD = 7f
+
+        /** How close two dogs come at most (rows): they never go through one another. */
+        private const val DOG_ROOM = 0.8f
+
         /** Rows the people at a relay walk onto and off the way. */
         private const val RELAY_WALK = 4f
 
@@ -260,9 +266,48 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         var yaw = 0f
         var speed = 0f
         var lateral = 0f
+        /** The heading it goes by (eased: a sharp turn is rounded, not snapped to). */
+        var heading = Float.NaN
+        /** Where it is drawn about the traveller: after its place, never faster than a dog runs (no leaps from one spot to another). */
+        var sx = Float.NaN
+        var sz = Float.NaN
     }
 
+    /** [now] turned towards [want] by [k] (0 … 1) the short way round; [want] itself at first. */
+    private fun turnTo(now: Float, want: Float, k: Float): Float {
+        if (now.isNaN()) return want
+        var d = want - now
+        while (d > PI) d -= (2 * PI).toFloat()
+        while (d < -PI) d += (2 * PI).toFloat()
+        return now + d * k
+    }
+
+    // The traveller's and the vehicle's headings, eased the same way.
+    private var walkHeading = Float.NaN
+    private var rideHeading = Float.NaN
+    private var neckYaw = 0f
+
     private val pups = List(4) { i -> Pup(PLACES[i * 2], PLACES[i * 2 + 1]) }
+
+    /**
+     * Seen through the traveller's own eyes: the traveller is not drawn (nor the head torch), the
+     * dogs go on ahead, in sight, and [eye] is where the traveller's eyes are.
+     */
+    var throughEyes = false
+
+    /**
+     * The traveller's eyes (x, y, z) after [frame], 1 in [3] when known (0 inside the submarine),
+     * and in [4] where the mount or the vehicle points (NaN on foot).
+     */
+    val eye = FloatArray(5)
+
+    /** The dogs aboard with the traveller after [frame] ((x, y, z) of each head), [dogsNearCount] of them. */
+    val dogsNear = FloatArray(12)
+    var dogsNearCount = 0
+        private set
+
+    /** How far ahead the dogs go now (eased towards [DOGS_LEAD] in first person, 0 otherwise). */
+    private var lead = 0f
 
     /** When this cast was first shown, and how far its waiting vehicle has come in (0 … 1). */
     private var shownMs = Long.MIN_VALUE
@@ -281,6 +326,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             val b = pups[i]
             b.ox = a.ox; b.oz = a.oz; b.tx = a.tx; b.tz = a.tz
             b.mode = a.mode; b.until = a.until; b.phase = a.phase; b.yaw = a.yaw; b.speed = a.speed; b.lateral = a.lateral
+            b.sx = a.sx; b.sz = a.sz; b.heading = a.heading
         }
     }
     private val rnd = java.util.Random(seed * 31L + 7)
@@ -596,7 +642,8 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             val phase = (beats / 2).toFloat() * go
             gait(p, phase, run, go)
             var y = max(land.heightAt(walkerX, walkerZ) + 0.04f, pierAt(walkerZ) + 0.02f) + abs(sin(phase * 2 * PI.toFloat())) * 0.05f * go
-            var yaw = land.headingAt(walkerZ)
+            walkHeading = turnTo(walkHeading, land.softHeadingAt(walkerZ), min(1f, dt * 4f))
+            var yaw = walkHeading
             if (onFoot || gotOff) {
                 y += over * 1.0f
                 if (over > 0f) tuck(p, over)
@@ -607,7 +654,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                 // Leaning forward up a slope, back down one.
                 val base = Mat4.model(walkerX, y, walkerZ, yaw, kotlin.math.atan(slope(walkerZ)) * 0.45f)
                 personBase = base; personPose = p; personRigNow = rig
-                out += Draw(rig, base, p)
+                if (!throughEyes) out += Draw(rig, base, p)
             }
         }
 
@@ -619,7 +666,8 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             else -> tz
         }
         val vx = land.centerAt(vz)
-        val vh = land.headingAt(vz)
+        rideHeading = turnTo(rideHeading, land.softHeadingAt(vz), min(1f, dt * 4f))
+        val vh = rideHeading
         val moving = if ((!startAboard && tz < start) || (leaves && tz > offZ)) 0f else go
         val boarded = if (onFoot || startAboard) 1f else ((tz - start) / BOARD).coerceIn(0f, 1f)
         // Getting off: 0 still aboard … 1 down on the ground.
@@ -645,6 +693,17 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             if (mv == Move.JUMP && !gotOff) y += sin(mu * PI).toFloat() * 1.1f
             if (kind == Traveller.ELEPHANT) p.pitch[Quad.BODY] += sin(t * 2.0).toFloat() * 0.02f
             p.yaw[Quad.TAIL] = sin(t * 3.0).toFloat() * 0.25f
+            if ((kind == Traveller.RIDER || kind == Traveller.CAMEL) && rig.bones.size > Quad.NECK) {
+                // The head turns into a bend before the body does, and now and then to look aside.
+                var bend = land.softHeadingAt(vz + 6f) - vh
+                while (bend > PI) bend -= (2 * PI).toFloat()
+                while (bend < -PI) bend += (2 * PI).toFloat()
+                val g = sin(t * 0.23 + seed).toFloat()
+                val aside = if (g > 0.8f) (g - 0.8f) / 0.2f * 0.4f * (if (sin(t * 0.041 + seed * 0.7) > 0) 1f else -1f) else 0f
+                val want = (bend * 1.6f).coerceIn(-0.55f, 0.55f) + aside
+                neckYaw += (want - neckYaw) * min(1f, dt * 2.5f)
+                p.yaw[Quad.NECK] = neckYaw
+            }
             val base = Mat4.model(vx, y, vz, vh, r[1])
             out += Draw(rig, base, p, if (tz < start) appear else 1f)
             if (leaves && tz > offZ) { parkedBase = base; parkedRig = rig; parkedPose = p }
@@ -687,7 +746,8 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                 if (kind == Traveller.SUBMARINE) p.roll[w] = t.toFloat() * 9f * moving
                 else p.pitch[w] = dist / (if (kind == Traveller.CAR) 0.32f else 0.36f)
             }
-            if (!(leaves && tz > offZ)) when (mv) {
+            // (Seen through the traveller's eyes, no tricks: they would make one dizzy.)
+            if (!(leaves && tz > offZ) && !throughEyes) when (mv) {
                 Move.WHEELIE -> p.pitch[0] = -0.45f * sin(mu * PI).toFloat()
                 Move.HOP -> y += sin(mu * PI).toFloat() * 0.7f
                 Move.FLIP -> { p.pitch[0] = -mu * 2 * PI.toFloat(); y += sin(mu * PI).toFloat() * 1.6f }
@@ -762,7 +822,7 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             }
             // In the submarine they are inside once aboard (seen only climbing in and out).
             if (!inside || boarded < 1f || off > 0f) {
-                out += Draw(rig, base, p)
+                if (!throughEyes) out += Draw(rig, base, p)
                 personBase = base; personPose = p; personRigNow = rig
             }
         }
@@ -770,6 +830,9 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         // The dogs: around the traveller, or aboard (car, ship, iceberg…) once the traveller is.
         val v = if (playing) WorldLand.BLOCKS_PER_SECOND else 0f
         val anchor = if (walking) walkerZ else tz
+        // Seen through the traveller's eyes, the dogs go on ahead (in sight), coming back softly after.
+        lead += ((if (throughEyes) DOGS_LEAD else 0f) - lead) * min(1f, dt * 0.6f)
+        dogsNearCount = 0
         for ((i, pair) in dogs.withIndex()) {
             val (rig, _) = pair
             val p = poseOf("dog$i", rig)
@@ -782,17 +845,50 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             if (!aboard) {
                 think(pup, dt, if (walking && tz >= start && !onFoot && !gotOff) 0f else v, nowMs)
                 // Never off a bridge, into water or lava, or down a drop: as far out as is safe there.
-                val reach = safeReach(anchor + pup.oz, pup.ox)
+                val reach = safeReach(anchor + pup.oz + lead, pup.ox)
                 if (kotlin.math.abs(pup.ox) > reach) pup.ox = kotlin.math.sign(pup.ox) * reach
                 if (kotlin.math.abs(pup.tx) > reach) pup.tx = kotlin.math.sign(pup.tx) * reach
+                // Not through one another: each keeps a little room from the others.
+                for (o in pups) {
+                    if (o === pup) continue
+                    val dx = pup.ox - o.ox
+                    val dz = pup.oz - o.oz
+                    val d = kotlin.math.hypot(dx, dz)
+                    if (d >= DOG_ROOM) continue
+                    val push = (DOG_ROOM - d) * min(1f, dt * 5f)
+                    if (d < 1e-3f) pup.ox += if (i % 2 == 0) push else -push
+                    else { pup.ox += dx / d * push; pup.oz += dz / d * push }
+                }
+                pup.ox = pup.ox.coerceIn(-4.6f, 4.6f)
             }
-            val gz = anchor + pup.oz
-            val gh = land.headingAt(gz)
-            val gx = land.centerAt(gz) + pup.ox * cos(gh)
+            // Drawn where it is, at a dog's pace at most: whatever sends it elsewhere (kept off the
+            // traveller's feet, back from the water's edge…), it runs there, never leaps.
+            if (pup.sx.isNaN() || aboard) {
+                pup.sx = pup.ox
+                pup.sz = pup.oz
+            } else {
+                val dx = pup.ox - pup.sx
+                val dz = pup.oz - pup.sz
+                val d = kotlin.math.hypot(dx, dz)
+                val most = 9f * dt
+                if (d <= most) { pup.sx = pup.ox; pup.sz = pup.oz } else { pup.sx += dx / d * most; pup.sz += dz / d * most }
+            }
+            val along = anchor + pup.sz + (if (aboard) 0f else lead)
+            // Its heading eased, and its place square to the way (not only across in x): in a
+            // sharp turn they round it at their side, never bunched on the line or swung about.
+            pup.heading = turnTo(pup.heading, land.softHeadingAt(along), min(1f, dt * 4f))
+            val gh = pup.heading
+            val gx = land.centerAt(along) + pup.sx * cos(gh)
+            val gz = along - pup.sx * sin(gh)
             val gr = rest(gx, gz, gh, 0.4f)
             var gy = max(gr[0] - 0.04f, pierAt(gz) + 0.02f)
             if (aboard) {
-                val s = dogSpots[i]
+                // (Seen from the driver's seat, the dogs in front sit at the back instead: the way in sight.)
+                val s = dogSpots[i].let {
+                    if (!throughEyes || kind != Traveller.CAR) it
+                    else if (it[2] > -0.3f) floatArrayOf(it[0] * 0.8f, it[1] + 0.1f, -1.25f)
+                    else floatArrayOf(it[0], it[1], -0.95f)
+                }
                 sitDog(p)
                 var base = Mat4.mul(vehicleBody!!, Mat4.model(s[0], s[1], s[2], (i - 1.5f) * 0.4f))
                 val b = if (startAboard) 1f else ((tz - start - i * 0.6f) / BOARD).coerceIn(0f, 1f)
@@ -811,6 +907,12 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                 }
                 if (!inside || b < 1f || o > 0f) {
                     out += Draw(rig, base, p)
+                    if (b >= 1f && o <= 0f && dogsNearCount < 4) {
+                        dogsNear[dogsNearCount * 3] = base[12] + base[8] * 0.4f
+                        dogsNear[dogsNearCount * 3 + 1] = base[13] + 0.55f
+                        dogsNear[dogsNearCount * 3 + 2] = base[14] + base[10] * 0.4f
+                        dogsNearCount++
+                    }
                 } else {
                     // Inside the submarine: its face at a window, looking out.
                     shuffleWindows(nowMs)
@@ -852,6 +954,39 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
         val pb = personBase
         val pp = personPose
         val pr = personRigNow
+        // The traveller's eyes (a little before the face), for a camera that sees through them.
+        eye[3] = 0f
+        eye[4] = Float.NaN
+        if (pb != null && pp != null && pr != null) {
+            val m = Array(pr.bones.size) { FloatArray(16) }
+            pr.matrices(pb, pp, m)
+            val b = m[Human.BODY]
+            eye[0] = b[4] * 1.66f + b[8] * 0.3f + b[12]
+            eye[1] = b[5] * 1.66f + b[9] * 0.3f + b[13]
+            eye[2] = b[6] * 1.66f + b[10] * 0.3f + b[14]
+            eye[3] = 1f
+        }
+        // At the wheel: the driver's seat, the wheel and the bonnet in sight before the eyes.
+        val car = vehicleBody
+        if (kind == Traveller.CYCLIST && car != null && pb != null && !walking) {
+            // On a bike: over the saddle, the bars a strip low in sight (from the bike itself: the
+            // rider's lean forward would put the eyes over them).
+            eye[0] = car[4] * 1.45f + car[8] * -0.2f + car[12]
+            eye[1] = car[5] * 1.45f + car[9] * -0.2f + car[13]
+            eye[2] = car[6] * 1.45f + car[10] * -0.2f + car[14]
+            eye[3] = 1f
+        }
+        if (kind == Traveller.CAR && car != null && pb != null && !walking) {
+            // (In the seat, leaning with the car up and down a slope: the wheel stays where it is
+            // before the eyes. Its tricks are left out when seen from here.)
+            eye[0] = car[4] * 1.55f + car[8] * -0.35f + car[12]
+            eye[1] = car[5] * 1.55f + car[9] * -0.35f + car[13]
+            eye[2] = car[6] * 1.55f + car[10] * -0.35f + car[14]
+            eye[3] = 1f
+        }
+        // Mounted or in a vehicle, the eyes look where it points (the head, the wheel, the bow ahead).
+        val ridden = vehicleBody
+        if (ridden != null && eye[3] > 0f && !walking) eye[4] = kotlin.math.atan2(ridden[8], ridden[10])
         if (lamp[6] == 0f && pb != null && pp != null && pr != null && (dark || tunnel)) {
             val m = Array(pr.bones.size) { FloatArray(16) }
             if (tunnel && (walking || kind == Traveller.RIDER || kind == Traveller.CAMEL || kind == Traveller.ELEPHANT)) {
@@ -871,8 +1006,10 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
                 pr.matrices(pb, pp, m)
                 val b = m[Human.BODY]
                 setLamp(b, 0f, 1.72f, 0.2f, 0f, -0.3f, 1f, 1f)
-                out += Draw(headLamp, Mat4.mul(b, Mat4.model(0f, 1.72f, 0.19f)), poseOf("headlamp", headLamp))
-                out += Draw(beam, Mat4.mul(b, Mat4.mul(Mat4.model(0f, 1.72f, 0.22f), Mat4.model(0f, 0f, 0f, 0f, 0.29f))), poseOf("beam", beam))
+                if (!throughEyes) {
+                    out += Draw(headLamp, Mat4.mul(b, Mat4.model(0f, 1.72f, 0.19f)), poseOf("headlamp", headLamp))
+                    out += Draw(beam, Mat4.mul(b, Mat4.mul(Mat4.model(0f, 1.72f, 0.22f), Mat4.model(0f, 0f, 0f, 0f, 0.29f))), poseOf("beam", beam))
+                }
             }
         }
     }

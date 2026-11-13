@@ -113,6 +113,8 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
     private var arrivedOn = false
     private var sightAt = 0L
     private var sight: FloatArray? = null
+    private var dragonTurn = 0f
+    private var dragonTan = 0.5f
 
     // Weather: clouds, rain or snow (or bubbles under the sea), lightning.
     private var cloudRigs: List<com.sadurni.attacca.world.Rig> = emptyList()
@@ -371,11 +373,18 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             sight = ex?.sight(tz)
         }
         val tunnel = ex?.tunnelAt(tz) == true
+        // Through the traveller's eyes: not drawn, the dogs ahead.
+        cast?.throughEyes = camera.firstPerson
+        // The Great Wall's dragon over the sky, for the eyes to follow (where it would be looking straight on).
+        dragonTan = kotlin.math.tan(Math.toRadians(if (w > h) 55.0 else 68.0) / 2).toFloat()
+        dragonTurn = com.sadurni.attacca.world.SkyShow.turnOf(com.sadurni.attacca.world.SkyShow.dragonX((nowMs % 100_000L) / 1000f, w.toFloat() / h), dragonTan)
         camera.update(
             dtMs, nowMs, tx, ty, tz, heading, intensity, peak, { x, z -> land.heightAt(x, z) }, openness,
             { x, z -> maxOf(Props.topNear(land, x, z), cast?.topNear(x, z) ?: Float.NEGATIVE_INFINITY, ex?.topNear(x, z) ?: Float.NEGATIVE_INFINITY) },
             sight, if (ex?.tunnelNear(tz) == true) 1f else 0f, { x, z -> minOf(ex?.ceilingAt(x, z) ?: Float.POSITIVE_INFINITY, if (cast?.underwater == true) WorldLand.WATER - 0.8f else Float.POSITIVE_INFINITY) },
-            { z -> land.centerAt(z) },
+            { z -> land.centerAt(z) }, cast?.eye, ex?.peakSight(),
+            if (look.world == World.WALL && peak > 0.05f) dragonTurn else null, cast?.dogsNear, cast?.dogsNearCount ?: 0,
+            ex?.boardSight(tz),
         )
         wave = max(wave * 0.97f, pulse.coerceAtMost(1.3f) * (0.4f + 0.6f * intensity))
 
@@ -491,6 +500,8 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         cast?.santa = christmas
         cast?.frame(tz, posMs / beatMs, input.playing, nowMs, draws, ex?.darkAt(tz, night) == true, tunnel)
         oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
+        // On the beat's wave, not sunk in it: the figures (and the traveller's eyes) rise with the land.
+        com.sadurni.attacca.world.Swell.liftFigures(land, draws, 0, ripples, pulse, tz, cast?.eye)
         ex?.let { it.festivity = input.festive; it.kings = input.kings; it.vikram = input.vikram }
         ex?.frame(tz, ty, nowMs, input.playing, peak, if (input.peakMs >= 0) land.zAt(input.peakMs) else null, look.palette.accent, input.hasNext, draws)
         cast?.lamp?.copyInto(lamp) ?: lamp.fill(0f)
@@ -1056,7 +1067,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             }
             kind > 4.5f && kind < 5.5f -> {
                 // A dragon flying across.
-                val headX = (1.2f - fract(time / 9f) * 2.4f) * aspect
+                val headX = com.sadurni.attacca.world.SkyShow.screenX(dragonTurn, camera.skyTurn, dragonTan)
                 for (k in 0 until 18) {
                     val bx = headX + k * 0.07f
                     val by = 0.55f + sin(time * 2.2f + k * 0.45f) * 0.1f

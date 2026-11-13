@@ -984,6 +984,9 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     // What opening O'rama shows (from its button, the cover, the strip…).
     Text(stringResource(R.string.orama_open), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
     for ((v, label) in views) RadioRow(stringResource(label), ui.oramaOpen == v) { settings.updateUi { it.copy(oramaOpen = v) } }
+    // How Attacca World opens: behind the traveller (the default) or through its eyes.
+    SwitchRow(stringResource(R.string.world_eyes_setting), ui.worldEyes, { on -> settings.updateUi { it.copy(worldEyes = on) } })
+    Hint(stringResource(R.string.world_eyes_hint))
 }
 
 /** Base folder of the music, which makes exported lists portable between devices. */

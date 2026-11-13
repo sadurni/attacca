@@ -98,6 +98,23 @@ fun main(args: Array<String>) {
         soft.close()
         return
     }
+    if (args[1] == "KNEES") {
+        // Each leg bent as the gaits bend it (front +, hind -): where the joint and the foot go (z forward).
+        for ((name, rig) in listOf("dog" to com.sadurni.attacca.world.Quad.dog(com.sadurni.attacca.diorama.Dog.GOLDIE).first, "horse" to com.sadurni.attacca.world.Quad.horse().first, "camel" to com.sadurni.attacca.world.Mounts.camel().first)) {
+            for (leg in 0..3) {
+                val pose = rig.pose()
+                pose.pitch[com.sadurni.attacca.world.Quad.lower(leg)] = if (leg < 2) 0.8f else -0.8f
+                val m = Array(rig.bones.size) { FloatArray(16) }
+                rig.matrices(com.sadurni.attacca.world.Mat4.model(0f, 0f, 0f), pose, m)
+                val lo = m[com.sadurni.attacca.world.Quad.lower(leg)]
+                // The lower bone's pivot (the joint) and a point well down it (towards the foot).
+                val jz = lo[14]; val jy = lo[13]
+                val fz = lo[4] * -1f + lo[14]; val fy = lo[5] * -1f + lo[13]
+                println("$name leg $leg joint y=$jy z=$jz  1 down the lower bone: y=$fy z=$fz  -> foot ${if (fz > jz) "FORWARD (joint points back)" else "BACK (joint points forward)"}")
+            }
+        }
+        return
+    }
     if (args[1] == "DRAGONCHECK") {
         // The Great Wall's peak dragon alone on a plain sky, its head in the middle.
         val soft = SoftWorld(WorldInput(), WorldCamera())
@@ -137,7 +154,7 @@ fun main(args: Array<String>) {
     val wave = SongWave(bins, 300_000L, 0L, 300_000L)
     val base = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.5f, positivity = 0.6f, voice = 0.4f, seed = world.name.hashCode())), world)
     val look = if (flags.isEmpty()) base else com.sadurni.attacca.diorama.SongLook(
-        world, if ("walker" in flags) com.sadurni.attacca.diorama.Traveller.WALKER else base.traveller, base.palette,
+        world, if ("walker" in flags) com.sadurni.attacca.diorama.Traveller.WALKER else if ("car" in flags) com.sadurni.attacca.diorama.Traveller.CAR else if ("bike" in flags) com.sadurni.attacca.diorama.Traveller.CYCLIST else if ("horse" in flags) com.sadurni.attacca.diorama.Traveller.RIDER else base.traveller, base.palette,
         if ("night" in flags) 0.05f else base.sun, if ("cloud" in flags || "storm" in flags) 0.8f else base.clouds,
         if ("rain" in flags) 0.9f else 0f, if ("storm" in flags) 0.9f else 0f, if ("snow" in flags) 0.9f else 0f,
         base.bpm, base.pulse, base.energy,
@@ -184,17 +201,22 @@ fun main(args: Array<String>) {
         input.kings = "kings" in flags
         if ("record" in flags) input.recordOf = input.songId
         val camera = WorldCamera()
+        camera.firstPerson = "fp" in flags
+        // From the side and close (the dogs' shapes).
+        if ("side" in flags) { camera.drag(-196f, -150f, System.currentTimeMillis()); camera.zoom(1.6f, System.currentTimeMillis()) }
         val soft = SoftWorld(input, camera)
         val (w, h) = 800 to 450
         val from = (sec * 1000).toLong() - 2500L
-        for (k in 0 until 80) {
-            input.positionMs = from + k * 33L
+        for (k in 0 until (if ("fp" in flags) 200 else 80)) {
+            input.positionMs = from + k * 33L - (if ("fp" in flags) 4000L else 0L)
             input.positionAtNs = System.nanoTime()
             soft.frame(w, h)
             Thread.sleep(4)
         }
         fun field(n: String) = SoftWorld::class.java.getDeclaredField(n).also { it.isAccessible = true }.get(soft)
         println("peak ${field("peakNow")} kind ${field("peakKind")} under ${field("under")}")
+        (field("cast") as? com.sadurni.attacca.world.Cast)?.let { c -> println("cast ${c.kind} eye ${c.eye.joinToString()} dogs ${c.dogsNearCount} ${c.dogsNear.joinToString()}")
+        println("inTunnel ${WorldCamera::class.java.getDeclaredField("inTunnel").also { it.isAccessible = true }.get(camera)} fpEye ${(WorldCamera::class.java.getDeclaredField("fpEye").also { it.isAccessible = true }.get(camera) as FloatArray).joinToString()}") }
         println("at $sec s: eye ${camera.eyeX} ${camera.eyeY} ${camera.eyeZ} at ${camera.atX} ${camera.atY} ${camera.atZ} px ${Integer.toHexString(soft.pixels[10])} ${Integer.toHexString(soft.pixels[w * h / 2 + w / 2])} tris ${soft.triangles}")
         val img = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)
         img.setRGB(0, 0, w, h, soft.pixels, 0, w)
