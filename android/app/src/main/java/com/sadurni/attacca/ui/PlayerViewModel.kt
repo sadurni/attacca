@@ -353,6 +353,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         count: Int = app.chainLists.listCount,
         onlyIncluded: Boolean = app.chainLists.onlyIncludedByDefault(),
         withOptions: Boolean = false,
+        choices: com.sadurni.attacca.settings.ListChoices = app.chainLists.choicesByDefault(),
     ) {
         val id = mediaId?.takeIf { !it.contains("://") } ?: return
         if (listBusy.value) return
@@ -366,7 +367,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val name = context.getString(com.sadurni.attacca.R.string.seed_list_name, title)
         android.widget.Toast.makeText(context, context.getString(com.sadurni.attacca.R.string.quick_list_making, title), android.widget.Toast.LENGTH_SHORT).show()
         startingList.value = true
-        app.chainLists.quickFromSeed(id, count, onlyIncluded) { ids ->
+        app.chainLists.quickFromSeed(id, count, onlyIncluded, choices) { ids ->
             when {
                 ids == null -> android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.seed_not_analysable, android.widget.Toast.LENGTH_SHORT).show()
                 ids.size < 2 -> android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.seed_list_empty, android.widget.Toast.LENGTH_SHORT).show()
@@ -390,7 +391,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     /** A list about to be made whose options (tracks, only included) are being chosen. */
     sealed interface OptionsRequest {
         data class Quick(val mediaId: String) : OptionsRequest
-        data class Bridge(val from: String, val to: String) : OptionsRequest
+        data class Bridge(val stops: List<String>) : OptionsRequest
     }
 
     val optionsRequest = MutableStateFlow<OptionsRequest?>(null)
@@ -401,13 +402,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (!listBusy.value) optionsRequest.value = OptionsRequest.Quick(id)
     }
 
-    /** A bridge from [from] to [to]: its ends (swappable) and options are shown first. */
-    fun requestBridge(from: String, to: String) {
-        if (listBusy.value || from.contains("://") || to.contains("://")) return
+    /** A bridge between two tracks, or a trip through more ([stops], in order): its stops (to reorder) and options are shown first. */
+    fun requestBridge(stops: List<String>) {
+        if (listBusy.value || stops.size < 2 || stops.any { it.contains("://") }) return
         viewModelScope.launch {
-            // The panel shows the two ends by their tags.
-            withContext(Dispatchers.IO) { com.sadurni.attacca.library.TrackSort.warm(listOf(from, to)) }
-            optionsRequest.value = OptionsRequest.Bridge(from, to)
+            // The panel shows the stops by their tags.
+            withContext(Dispatchers.IO) { com.sadurni.attacca.library.TrackSort.warm(stops) }
+            optionsRequest.value = OptionsRequest.Bridge(stops)
         }
     }
 
@@ -425,6 +426,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         seeds: List<String>? = null,
         onlyIncluded: Boolean = app.chainLists.onlyIncludedByDefault(),
         count: Int = app.chainLists.listCount,
+        choices: com.sadurni.attacca.settings.ListChoices = app.chainLists.choicesByDefault(),
+        extra: com.sadurni.attacca.chain.ChainLists.MakeExtra = com.sadurni.attacca.chain.ChainLists.MakeExtra(),
     ) {
         if (listBusy.value) return
         val context = getApplication<android.app.Application>()
@@ -433,6 +436,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val needsTrack = kind in setOf(com.sadurni.attacca.chain.ChainLists.Kind.CONTRAST, com.sadurni.attacca.chain.ChainLists.Kind.FOR_TIME, com.sadurni.attacca.chain.ChainLists.Kind.ALBUMS_LIKE)
         if (needsTrack && playing == null && seeds == null) {
             android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.list_needs_track, android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        val queued = queue.value.map { it.mediaId }.filter { !it.contains("://") }
+        if (kind == com.sadurni.attacca.chain.ChainLists.Kind.VARIANT && queued.size < 2 && seeds == null) {
+            android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.list_needs_queue, android.widget.Toast.LENGTH_SHORT).show()
             return
         }
         startingList.value = true
@@ -444,7 +452,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     if (db == null || tags == null) listOfNotNull(playing)
                     else db.pathsOfAlbum(tags.albumArtist.ifEmpty { tags.artist }, tags.album).ifEmpty { listOfNotNull(playing) }
                 }
-                com.sadurni.attacca.chain.ChainLists.Kind.SAMPLER, com.sadurni.attacca.chain.ChainLists.Kind.REDISCOVER -> emptyList()
+                com.sadurni.attacca.chain.ChainLists.Kind.SAMPLER, com.sadurni.attacca.chain.ChainLists.Kind.REDISCOVER,
+                com.sadurni.attacca.chain.ChainLists.Kind.FOR_TWO, com.sadurni.attacca.chain.ChainLists.Kind.THIS_HOUR, com.sadurni.attacca.chain.ChainLists.Kind.WAKE,
+                com.sadurni.attacca.chain.ChainLists.Kind.SLEEP, com.sadurni.attacca.chain.ChainLists.Kind.DRAWN,
+                -> emptyList()
+                com.sadurni.attacca.chain.ChainLists.Kind.VARIANT -> queued
                 else -> listOfNotNull(playing)
             }
             // The names come from the tags (tracks picked in Music or Folders may not be read yet).
@@ -461,14 +473,31 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     com.sadurni.attacca.R.string.list_kind_albums,
                     chosen.firstOrNull()?.let { com.sadurni.attacca.library.TrackSort.cachedTags(it)?.album?.ifBlank { null } } ?: title(chosen.first()),
                 )
-                com.sadurni.attacca.chain.ChainLists.Kind.BRIDGE -> context.getString(com.sadurni.attacca.R.string.list_kind_bridge, title(chosen.first()), title(chosen.last()))
+                com.sadurni.attacca.chain.ChainLists.Kind.BRIDGE ->
+                    if (chosen.size > 2) context.getString(com.sadurni.attacca.R.string.list_kind_trip, title(chosen.first()), title(chosen.last()), chosen.size - 2)
+                    else context.getString(com.sadurni.attacca.R.string.list_kind_bridge, title(chosen.first()), title(chosen.last()))
+                com.sadurni.attacca.chain.ChainLists.Kind.DRAWN -> context.getString(com.sadurni.attacca.R.string.list_kind_drawn)
+                com.sadurni.attacca.chain.ChainLists.Kind.FOR_TWO -> {
+                    val chain = app.settings.chain.value
+                    fun setName(id: String?) = com.sadurni.attacca.settings.InclusionSets.nameOf(chain, id) ?: context.getString(com.sadurni.attacca.R.string.list_two_everything)
+                    context.getString(com.sadurni.attacca.R.string.list_kind_for_two, setName(extra.first), setName(extra.second))
+                }
+                com.sadurni.attacca.chain.ChainLists.Kind.VARIANT -> context.getString(com.sadurni.attacca.R.string.list_kind_variant, listName.value.ifBlank { context.getString(com.sadurni.attacca.R.string.list_kind_queue) })
+                com.sadurni.attacca.chain.ChainLists.Kind.THIS_HOUR -> context.getString(com.sadurni.attacca.R.string.list_kind_this_hour, android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date()))
+                com.sadurni.attacca.chain.ChainLists.Kind.SLEEP -> context.getString(com.sadurni.attacca.R.string.list_kind_sleep, value)
+                com.sadurni.attacca.chain.ChainLists.Kind.WAKE -> context.getString(com.sadurni.attacca.R.string.list_kind_wake)
             }
-            app.chainLists.make(kind, chosen, value, count, onlyIncluded) { ids ->
+            app.chainLists.make(kind, chosen, value, count, onlyIncluded, choices, extra) { ids ->
                 when {
+                    // Nothing heard around this hour yet: say so, not that it cannot be analysed.
+                    ids == null && kind == com.sadurni.attacca.chain.ChainLists.Kind.THIS_HOUR ->
+                        android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.list_needs_history, android.widget.Toast.LENGTH_LONG).show()
                     ids == null -> android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.seed_not_analysable, android.widget.Toast.LENGTH_SHORT).show()
                     ids.size < 2 -> android.widget.Toast.makeText(context, com.sadurni.attacca.R.string.seed_list_empty, android.widget.Toast.LENGTH_SHORT).show()
                     else -> {
                         if (kind == com.sadurni.attacca.chain.ChainLists.Kind.ALBUMS_LIKE) groupWhenLoaded(ids.first(), ids.size, byAlbums = true)
+                        if (kind == com.sadurni.attacca.chain.ChainLists.Kind.SLEEP) whenLoaded(ids.first(), ids.size) { it.fallAsleep(value * 60_000L) }
+                        if (kind == com.sadurni.attacca.chain.ChainLists.Kind.WAKE) whenLoaded(ids.first(), ids.size) { it.wakeUp(value.coerceAtLeast(1) * 60_000L) }
                         playIds(name, ids)
                         return@make
                     }
@@ -489,9 +518,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         mood: com.sadurni.attacca.chain.Mood?,
         onlyIncluded: Boolean = app.chainLists.onlyIncludedByDefault(),
         count: Int = app.chainLists.listCount,
+        choices: com.sadurni.attacca.settings.ListChoices = app.chainLists.choicesByDefault(),
     ) {
         if (listBusy.value) return
-        com.sadurni.attacca.chain.RandomList.start(app, mood, nowPlaying.value.mediaId, onlyIncluded, count) { name, ids -> playIds(name, ids) }
+        com.sadurni.attacca.chain.RandomList.start(app, mood, nowPlaying.value.mediaId, onlyIncluded, count, choices) { name, ids -> playIds(name, ids) }
     }
 
     /**
@@ -538,6 +568,22 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     if (extras != null && extras.holds(firstId, count)) {
                         val group = if (!byAlbums) null else if (AlbumShuffle.byFolder) SortField.PATH else SortField.ALBUM
                         extras.updateListSettings { it.copy(groupBy = group) }
+                        break
+                    }
+                    delay(200)
+                }
+            }
+        }
+    }
+
+    /** Does [then] with the player as soon as it holds the list ([count] tracks, on [firstId]). */
+    fun whenLoaded(firstId: String, count: Int, then: (com.sadurni.attacca.playback.PlaybackExtras) -> Unit) {
+        viewModelScope.launch {
+            withTimeoutOrNull(LOAD_TIMEOUT_MS) {
+                while (true) {
+                    val extras = app.extras.value
+                    if (extras != null && extras.holds(firstId, count)) {
+                        then(extras)
                         break
                     }
                     delay(200)

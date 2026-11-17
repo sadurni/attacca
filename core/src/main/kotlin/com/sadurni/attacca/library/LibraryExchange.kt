@@ -11,15 +11,18 @@ import java.nio.ByteOrder
  * - `meta`: format, app, edge length, silence threshold, inclusion mode, creation date.
  * - `tracks`: one row per track, by path relative to the music folder ('/' separators) and size;
  *   tags; the pre-play analysis (silences, loudness, peak, waveform); the chaining edges, the
- *   features and the sound profile (format 2 on). Parts that were not measured are null.
+ *   features and the sound profile (format 2 on); the audience heard at its ends (format 3 on:
+ *   two floats, start and end, -1 for an end not heard). Parts that were not measured are null.
  * - `inclusion`: the tracks the inclusion list holds (with `meta.inclusion_mode`: allow or block).
+ * - `same` (format 3 on): pairs of tracks whose sound was compared ([SameSong]), by relative path,
+ *   and whether they are one recording.
  *
  * Importing matches each row to a local file by path ([PathMatcher]) and takes it only when the
  * sizes are equal (the same file). Pure Kotlin: each side reads and writes it with its own SQLite.
  */
 object LibraryExchange {
 
-    const val FORMAT = 2
+    const val FORMAT = 3
     const val EXTENSION = "attlib"
     const val MIME = "application/x-sqlite3"
 
@@ -29,8 +32,9 @@ object LibraryExchange {
             path TEXT PRIMARY KEY, size INTEGER NOT NULL, duration_ms INTEGER,
             title TEXT, artist TEXT, album TEXT, album_artist TEXT, genre TEXT, year INTEGER, track INTEGER, disc INTEGER,
             threshold REAL, start_ms INTEGER, end_ms INTEGER, lufs REAL, peak REAL, waveform BLOB,
-            edge_seconds INTEGER, head BLOB, tail BLOB, features BLOB, sound BLOB)""",
+            edge_seconds INTEGER, head BLOB, tail BLOB, features BLOB, sound BLOB, audience BLOB)""",
         "CREATE TABLE inclusion (path TEXT PRIMARY KEY)",
+        "CREATE TABLE same (a TEXT NOT NULL, b TEXT NOT NULL, same INTEGER NOT NULL, PRIMARY KEY (a, b))",
     )
 
     /** Column order of [Track] rows, for INSERT and SELECT. */
@@ -83,6 +87,10 @@ object LibraryExchange {
         val inclusion: Int,
         /** Rows with a sound profile taken. */
         val sounds: Int = 0,
+        /** Rows with the audience at the ends taken. */
+        val audience: Int = 0,
+        /** Comparisons of copies of one song taken. */
+        val same: Int = 0,
     )
 
     /** The path of [absolute] relative to [root] ('/' separators), or null when it is not under it. */

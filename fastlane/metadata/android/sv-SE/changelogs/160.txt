@@ -1,0 +1,5 @@
+• Nya listor: energi ritad för hand, för två, det du spelar den här timmen, en variant, resor med stopp, för att somna och vakna.
+• Kedjning för hand med profiler per lista; oändliga listor tar emot Mer sådant och Mindre sådant.
+• Livespår känns igen på ljudet: alla, utan live eller bara live; samma låt från flera album en gång.
+• Övertoningar till Ogg-, Opus- eller tyst inledda spår lämnar inget glapp.
+• Samma musik på en annan telefon: importera dess bibliotek, ingen ny skanning.

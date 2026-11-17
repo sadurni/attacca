@@ -218,7 +218,7 @@ class AnalysisManager(
             val silence = SilenceTrimmer.trimFor(i, candidates, s)
             // The play order is not known yet; assume the list order.
             val next = if (i + 1 < items.size) i + 1 else C.INDEX_UNSET
-            val plan = crossfadePlan(item, candidates[i].analysis, silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to candidates[it].analysis })
+            val plan = crossfadePlan(item, candidates[i].analysis, silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to candidates[it].analysis }, leadOf(next, candidates, s))
             MediaItems.withAutoTrim(item, withCrossfade(silence, candidates[i].analysis, plan))
         }
     }
@@ -375,7 +375,7 @@ class AnalysisManager(
             if (localFile(item) == null || MediaItems.hasExplicitClip(item)) continue
             val silence = SilenceTrimmer.trimFor(i, candidates, s)
             if (i == current) {
-                if (reclip && reclipCurrent(i, item, silence, items, next)) continue
+                if (reclip && reclipCurrent(i, item, silence, items, next, leadOf(next, candidates, s))) continue
                 handleCurrent(item, silence)
                 continue
             }
@@ -384,7 +384,7 @@ class AnalysisManager(
             // so changing a setting does not re-insert a whole long list.
             val plan = if (i in upcoming) {
                 val next = player.currentTimeline.getNextWindowIndex(i, player.repeatMode, player.shuffleModeEnabled)
-                crossfadePlan(item, known(item.mediaId), silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to known(items[it].mediaId) })
+                crossfadePlan(item, known(item.mediaId), silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to known(items[it].mediaId) }, leadOf(next, candidates, s))
             } else {
                 CrossfadePlan(MediaItems.crossfadeMsOf(item), MediaItems.crossfadeShapeOf(item))
             }
@@ -401,9 +401,9 @@ class AnalysisManager(
      * Gives the playing item the clip of the current crossfade length, continuing where it was.
      * False when it needs no change or it is too late for it.
      */
-    private fun reclipCurrent(index: Int, item: MediaItem, silence: Trim, items: List<MediaItem>, next: Int): Boolean {
+    private fun reclipCurrent(index: Int, item: MediaItem, silence: Trim, items: List<MediaItem>, next: Int, nextLeadMs: Long): Boolean {
         if (known(item.mediaId) == null) return false
-        val plan = crossfadePlan(item, known(item.mediaId), silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to known(items[it].mediaId) })
+        val plan = crossfadePlan(item, known(item.mediaId), silence, next.takeIf { it != C.INDEX_UNSET }?.let { items[it] to known(items[it].mediaId) }, nextLeadMs)
         val trim = withCrossfade(silence, known(item.mediaId), plan)
         val applied = MediaItems.autoTrimOf(item)
         if (applied == trim) return false
@@ -424,11 +424,22 @@ class AnalysisManager(
     }
 
     /**
+     * How long the clip of the entry at [index] plays before its sound starts: the leading
+     * silence its trim leaves (all of it when not trimmed, else the margin kept).
+     */
+    private fun leadOf(index: Int, candidates: List<TrimCandidate>, s: com.sadurni.attacca.settings.TrimSettings): Long {
+        val analysis = candidates.getOrNull(index)?.analysis ?: return 0L
+        val start = SilenceTrimmer.trimFor(index, candidates, s).startMs ?: 0L
+        return (analysis.audioStartMs - start).coerceAtLeast(0L)
+    }
+
+    /**
      * The crossfade into [next] (item and its analysis): its length (0 when it should not
      * crossfade) and how the levels move, as the settings say. [silence] is this track's trim,
-     * whose end is where its sound ends.
+     * whose end is where its sound ends; [nextLeadMs] the silence the next one's clip starts with
+     * (see [CrossfadePlanner.withLead]).
      */
-    private fun crossfadePlan(item: MediaItem, analysis: TrackAnalysis?, silence: Trim, next: Pair<MediaItem, TrackAnalysis?>?): CrossfadePlan {
+    private fun crossfadePlan(item: MediaItem, analysis: TrackAnalysis?, silence: Trim, next: Pair<MediaItem, TrackAnalysis?>?, nextLeadMs: Long = 0L): CrossfadePlan {
         val rule = crossfade.value
         val lengthMs = crossfadeLength(item, analysis, next)
         if (lengthMs <= 0 || analysis == null || next == null) return NO_CROSSFADE
@@ -438,7 +449,7 @@ class AnalysisManager(
             CrossfadeStyle.CUSTOM -> rule.custom
             CrossfadeStyle.AUTOMATIC -> {
                 val nextAnalysis = next.second
-                return CrossfadePlanner.plan(
+                return CrossfadePlanner.withLead(CrossfadePlanner.plan(
                     lengthMs,
                     analysis.waveform,
                     analysis.durationMs,
@@ -446,10 +457,10 @@ class AnalysisManager(
                     nextAnalysis?.waveform ?: FloatArray(0),
                     nextAnalysis?.durationMs ?: 0L,
                     nextAnalysis?.audioStartMs ?: 0L,
-                )
+                ), nextLeadMs)
             }
         }
-        return CrossfadePlan(lengthMs, shape)
+        return CrossfadePlanner.withLead(CrossfadePlan(lengthMs, shape), nextLeadMs)
     }
 
     /** Crossfade length into [next] (item and its analysis), or 0 when it should not crossfade. */
@@ -561,6 +572,7 @@ class AnalysisManager(
 
     private companion object {
         const val LOOKAHEAD = 10
+
         const val APPLY_DEBOUNCE_MS = 300L
         const val END_WATCH_INTERVAL_MS = 100L
         const val MIN_PLAYED_MS = 5_000L

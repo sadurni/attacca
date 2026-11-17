@@ -1,0 +1,5 @@
+• Listas nuevas: energía dibujada a mano, para dos, lo que oyes a esta hora, variante, viajes con paradas, para dormir y despertar.
+• Encadenamiento a mano con perfiles por lista; las listas sin fin aceptan Más como esto y Menos como esto.
+• Pistas en vivo por su sonido: cualquiera, sin en vivo o solo en vivo; una canción de varios álbumes sale una vez.
+• Crossfades sin hueco a pistas Ogg, Opus o que empiezan en silencio.
+• Misma música en otro teléfono: importa su biblioteca, sin reescanear.

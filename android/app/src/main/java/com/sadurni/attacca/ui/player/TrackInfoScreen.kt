@@ -136,6 +136,22 @@ fun TrackInfoScreen(viewModel: PlayerViewModel, mediaId: String, onBack: () -> U
                 }
             }
 
+            // Live: an audience heard at its start or end, its album a concert, or its name says so.
+            val liveInfo by androidx.compose.runtime.produceState<Pair<Boolean, com.sadurni.attacca.chain.Audience?>?>(null, info.file.absolutePath) {
+                value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    runCatching {
+                        val id = info.file.absolutePath
+                        com.sadurni.attacca.library.LiveTracks.isLive(id) to com.sadurni.attacca.library.LiveTracks.audienceOf(id)
+                    }.getOrNull()
+                }
+            }
+            liveInfo?.let { (live, audience) ->
+                InfoRow(stringResource(R.string.info_live), stringResource(if (live) R.string.info_live_yes else R.string.info_live_no))
+                audience?.takeIf { it.heard }?.let {
+                    fun share(v: Float) = if (v < 0f) "–" else "%d %%".format((v * 100).toInt())
+                    InfoRow(stringResource(R.string.info_audience), "${share(it.head)} · ${share(it.tail)}")
+                }
+            }
             SectionTitle(stringResource(R.string.section_listening))
             val listeningVersion by context.app.listening.version.collectAsStateWithLifecycle()
             val heard = remember(mediaId, listeningVersion) { context.app.listening[mediaId] }

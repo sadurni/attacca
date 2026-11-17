@@ -1,0 +1,5 @@
+• Nowe listy: energia rysowana ręcznie, dla dwojga, czego słuchasz o tej porze, wariant, podróże z przystankami, do zasypiania i budzenia.
+• Ręczne łączenie z profilami list; listy bez końca mają Więcej takich i Mniej takich.
+• Utwory na żywo po brzmieniu: dowolne, bez na żywo lub tylko na żywo; ten sam utwór z kilku albumów raz.
+• Przenikanie bez przerwy do utworów Ogg, Opus lub zaczynających się ciszą.
+• Ta sama muzyka na innym telefonie: zaimportuj jego bibliotekę, bez skanowania.

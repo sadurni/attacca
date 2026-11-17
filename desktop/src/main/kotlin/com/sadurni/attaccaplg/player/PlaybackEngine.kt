@@ -378,6 +378,13 @@ class PlaybackEngine(
         val s = settings()
         if (s.crossfadeMs <= 0 || followsOnAlbum(a, b)) return null
         if (b.durationMs in 1 until s.crossfadeMs + 2000L) return null
+        // How long [b] plays before its sound starts (its leading silence, or the margin the trim
+        // keeps): where [a] plays out whole, the blend starts that much earlier (no gap).
+        val lead = ((b.soundStartMs ?: 0L) - (if (s.trimSilences) trimStart(b) else 0L)).coerceAtLeast(0L)
+        return CrossfadePlanner.withLead(planOf(a, b, s), lead)
+    }
+
+    private fun planOf(a: PlayItem, b: PlayItem, s: PlaybackSettings): CrossfadePlan {
         return when (s.crossfadeStyle) {
             CrossfadeStyle.MIX -> CrossfadePlan(s.crossfadeMs, CrossfadeShape.MIX)
             CrossfadeStyle.AUTOMATIC -> CrossfadePlanner.plan(

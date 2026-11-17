@@ -385,6 +385,14 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             { z -> land.centerAt(z) }, cast?.eye, ex?.peakSight(),
             if (look.world == World.WALL && peak > 0.05f) dragonTurn else null, cast?.dogsNear, cast?.dogsNearCount ?: 0,
             ex?.boardSight(tz),
+            // What the peak shows fixed in the sky, for the camera to look at it: the red moon over
+            // the castles (where the moon is drawn, see sunSky), the rainbow (as last drawn).
+            when {
+                peak <= 0.05f -> null
+                look.world == World.CASTLE -> kotlin.math.atan2(sunSky[0], sunSky[2])
+                peakKind == 4f -> kotlin.math.atan2(0.25f, 1f)
+                else -> null
+            },
         )
         wave = max(wave * 0.97f, pulse.coerceAtMost(1.3f) * (0.4f + 0.6f * intensity))
 

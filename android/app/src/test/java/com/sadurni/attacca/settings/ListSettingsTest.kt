@@ -22,4 +22,15 @@ class ListSettingsTest {
         assertNull(ListSettings.fromJson(old).inclusion)
         assertNull(ListSettings.fromJson(JSONObject(ListSettings().toJson().toString())).inclusion)
     }
+
+    @Test
+    fun liveChoiceMadeWithIsKept() {
+        for (live in LiveChoice.entries) {
+            val made = ListSettings(inclusion = ListInclusion(true, live = live))
+            assertEquals(live, ListSettings.fromJson(JSONObject(made.toJson().toString())).inclusion?.live)
+        }
+        // Saved before the choice was kept: none (the list goes on with the setting).
+        val old = JSONObject().put("inclusion", JSONObject().put("all", true).put("set", JSONObject.NULL).put("list", JSONObject.NULL).put("mode", "ALLOW"))
+        assertNull(ListSettings.fromJson(old).inclusion?.live)
+    }
 }

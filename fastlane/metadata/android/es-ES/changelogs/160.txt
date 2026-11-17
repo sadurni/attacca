@@ -1,0 +1,5 @@
+• Listas nuevas: energía dibujada a mano, para dos, lo que oyes a esta hora, una variante, viajes con paradas, para dormir y despertar.
+• Encadenado a mano con perfiles por lista; las listas que no se acaban aceptan Más así y Menos así.
+• Temas en directo por su sonido: cualquiera, sin directos o solo directos; un tema de varios álbumes sale una vez.
+• Fundidos sin hueco hacia temas Ogg, Opus o que empiezan en silencio.
+• Misma música en otro móvil: importa su biblioteca, sin reescanear.

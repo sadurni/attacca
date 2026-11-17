@@ -43,6 +43,7 @@ class ListsForm(private val prefs: Prefs) {
     var positivity by mutableStateOf(0f..100f)
     var voice by mutableStateOf(VoiceFilter.ANY)
     var onlyIncluded by mutableStateOf(false)
+    var live by mutableStateOf(com.sadurni.attaccaplg.generate.LiveChoice.entries.firstOrNull { it.name == prefs["live"] } ?: com.sadurni.attaccaplg.generate.LiveChoice.ANY)
 
     // Per kind.
     var name by mutableStateOf("")
@@ -77,6 +78,7 @@ class ListsForm(private val prefs: Prefs) {
         prefs["out_dir"] = outDir
         prefs["path_to"] = pathTo
         prefs["spacing"] = spacing.toString()
+        prefs["live"] = live.name
     }
 
     fun libraryChanged(library: Library?) {
@@ -131,6 +133,8 @@ class ListsForm(private val prefs: Prefs) {
             } else {
                 null
             },
+            // Live tracks as chosen (the tracks a list starts from or goes to always stay).
+            excluded = library.liveLeftOut(live, listOfNotNull(seed, second, start)),
         )
     }
 

@@ -1,0 +1,5 @@
+• Novas listas: energia desenhada à mão, para dois, o que você ouve nesta hora, uma variante, viagens com paradas, para dormir e acordar.
+• Encadeamento à mão com perfis por lista; as listas sem fim aceitam Mais assim e Menos assim.
+• Faixas ao vivo pelo som: qualquer, sem ao vivo ou só ao vivo; a mesma música de vários álbuns fica uma vez.
+• Crossfades sem buraco para faixas Ogg, Opus ou que começam com silêncio.
+• Mesma música em outro celular: importe a biblioteca dele, sem reescanear.

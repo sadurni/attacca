@@ -20,7 +20,8 @@ import java.io.File
 
 /**
  * Keeps the ends of the current and next crossfaded tracks decoded ahead of time and published
- * in [DspEngine.tails], where the crossfade stage picks them up at the transition.
+ * in [DspEngine.tails], where the crossfade stage picks them up at the transition; the one before
+ * too, so going back into it after a pause in a blend (see [FadingPlayer]) finds its end ready.
  */
 @OptIn(UnstableApi::class)
 class CrossfadeTails(
@@ -67,7 +68,8 @@ class CrossfadeTails(
         if (!timeline.isEmpty) {
             val current = player.currentMediaItemIndex
             val next = timeline.getNextWindowIndex(current, player.repeatMode, player.shuffleModeEnabled)
-            for (index in listOf(current, next)) {
+            val previous = timeline.getPreviousWindowIndex(current, player.repeatMode, player.shuffleModeEnabled)
+            for (index in listOf(current, next, previous)) {
                 if (index == C.INDEX_UNSET) continue
                 val key = keyOf(player.getMediaItemAt(index)) ?: continue
                 wanted[periodUid(timeline, index)] = key

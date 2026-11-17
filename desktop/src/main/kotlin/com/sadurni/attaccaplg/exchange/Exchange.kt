@@ -33,7 +33,7 @@ object Exchange {
             meta(c, "created", System.currentTimeMillis().toString())
             meta(c, "edge_seconds", db.edgeSeconds.toString())
             meta(c, "threshold_db", TrackAnalyzer.THRESHOLD_DB.toString())
-            c.prepareStatement("INSERT INTO tracks (${LibraryExchange.COLUMNS}) VALUES (${List(22) { "?" }.joinToString()})").use { st ->
+            c.prepareStatement("INSERT INTO tracks (${LibraryExchange.COLUMNS}, audience) VALUES (${List(23) { "?" }.joinToString()})").use { st ->
                 for (t in tracks) {
                     var i = 1
                     st.setString(i++, t.path)
@@ -60,7 +60,20 @@ object Exchange {
                     st.setBytes(i++, t.head?.toArray()?.let(LibraryExchange::bytes))
                     st.setBytes(i++, t.tail?.toArray()?.let(LibraryExchange::bytes))
                     st.setBytes(i++, t.features?.toArray()?.let(LibraryExchange::bytes))
-                    st.setBytes(i, t.sound?.toBytes())
+                    st.setBytes(i++, t.sound?.toBytes())
+                    st.setBytes(i, t.audience?.let(com.sadurni.attacca.chain.Audience::toBytes))
+                    st.addBatch()
+                }
+                st.executeBatch()
+            }
+            // The copies of one song compared by their sound (both files as they are now).
+            val sizes = tracks.associate { it.path to it.size }
+            c.prepareStatement("INSERT OR REPLACE INTO same (a, b, same) VALUES (?, ?, ?)").use { st ->
+                for (same in db.sames()) {
+                    if (sizes[same.a] != same.sizeA || sizes[same.b] != same.sizeB) continue
+                    st.setString(1, same.a)
+                    st.setString(2, same.b)
+                    st.setInt(3, if (same.same) 1 else 0)
                     st.addBatch()
                 }
                 st.executeBatch()
@@ -129,7 +142,8 @@ object Exchange {
             val fileEdges = metas["edge_seconds"]?.toIntOrNull()
             if (fileEdges != null && fileEdges in 4..20 && db.stamps().isEmpty()) db.edgeSeconds = fileEdges
             val edgeSeconds = db.edgeSeconds
-            c.createStatement().executeQuery("SELECT ${LibraryExchange.columns(format)} FROM tracks").use { rs ->
+            val columns = LibraryExchange.columns(format) + if (format >= 3) ", audience" else ""
+            c.createStatement().executeQuery("SELECT $columns FROM tracks").use { rs ->
                 while (rs.next()) {
                     total++
                     val path = if (withoutMusic) {
@@ -193,9 +207,23 @@ object Exchange {
                             error = null,
                             waveform = blob("waveform")?.takeIf { sameThreshold },
                             sound = sound,
+                            audience = if (format >= 3) rs.getBytes("audience")?.let(com.sadurni.attacca.chain.Audience::fromBytes) else null,
                         ),
                         version = if (complete) Scanner.VERSION else 0,
                     )
+                }
+            }
+            // The copies of one song compared there (both here with the same size).
+            if (format >= 3) {
+                val sizes = db.stamps().mapValues { it.value.first }
+                c.createStatement().executeQuery("SELECT a, b, same FROM same").use { rs ->
+                    while (rs.next()) {
+                        val a = (if (withoutMusic) rs.getString(1) else matcher.match(rs.getString(1))) ?: continue
+                        val b = (if (withoutMusic) rs.getString(2) else matcher.match(rs.getString(2))) ?: continue
+                        val sa = sizes[a] ?: continue
+                        val sb = sizes[b] ?: continue
+                        db.putSame(com.sadurni.attaccaplg.library.LibraryDb.Same(a, b, sa, sb, rs.getInt(3) != 0))
+                    }
                 }
             }
             val included = c.createStatement().executeQuery("SELECT path FROM inclusion").use { rs ->

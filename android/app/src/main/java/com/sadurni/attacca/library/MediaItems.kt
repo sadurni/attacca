@@ -139,6 +139,12 @@ object MediaItems {
                 MediaItem.ClippingConfiguration.Builder()
                     .setStartPositionMs(trim.startMs ?: 0L)
                     .setEndPositionMs(trim.endMs ?: C.TIME_END_OF_SOURCE)
+                    // An automatic start is inside the leading silence: what a decoder gives before
+                    // it is silence too. Otherwise a start clipped in a format whose samples depend
+                    // on the ones before (Ogg Vorbis, Opus) is a discontinuity, and the player
+                    // takes the audio renderer down and up again to reach it: the audio output is
+                    // rebuilt, a cut in the middle of the crossfade into that track.
+                    .setStartsAtKeyFrame(true)
                     .build(),
             )
             .setMediaMetadata(item.mediaMetadata.buildUpon().setExtras(extras).build())

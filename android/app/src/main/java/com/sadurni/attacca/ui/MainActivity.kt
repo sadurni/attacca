@@ -587,7 +587,7 @@ class MainActivity : AppCompatActivity() {
                                             viewModel.quickSeedList(action.file.absolutePath)
                                             navigate(Screen.PLAYER)
                                         }
-                                        is BrowserAction.Bridge -> viewModel.requestBridge(action.from, action.to)
+                                        is BrowserAction.Bridge -> viewModel.requestBridge(action.stops)
                                         is BrowserAction.Inclusion -> viewModel.requestInclusion(action.file.absolutePath)
                                         is BrowserAction.Repair -> viewModel.requestRepair(action.paths)
                                     }
@@ -686,7 +686,7 @@ class MainActivity : AppCompatActivity() {
                 val randomMood by app.randomMoodRequest.collectAsStateWithLifecycle()
                 if (randomMood) {
                     com.sadurni.attacca.ui.chain.RandomListDialog(
-                        onStart = { mood, onlyIncluded, count -> viewModel.randomList(mood, onlyIncluded, count) },
+                        onStart = { mood, onlyIncluded, count, choices -> viewModel.randomList(mood, onlyIncluded, count, choices) },
                         onDismiss = { app.randomMoodRequest.value = false },
                     )
                 }
@@ -698,16 +698,16 @@ class MainActivity : AppCompatActivity() {
                     is PlayerViewModel.OptionsRequest.Quick -> com.sadurni.attacca.ui.chain.ListOptionsDialog(
                         title = stringResource(R.string.quick_list),
                         onDismiss = { viewModel.optionsRequest.value = null },
-                        onMake = { count, onlyIncluded ->
-                            viewModel.quickSeedList(request.mediaId, count, onlyIncluded, withOptions = true)
+                        onMake = { count, onlyIncluded, choices ->
+                            viewModel.quickSeedList(request.mediaId, count, onlyIncluded, withOptions = true, choices = choices)
                             toPlayer()
                         },
                     )
                     is PlayerViewModel.OptionsRequest.Bridge -> com.sadurni.attacca.ui.chain.BridgeDialog(
-                        request.from, request.to,
+                        request.stops,
                         onDismiss = { viewModel.optionsRequest.value = null },
-                        onMake = { from, to, count, onlyIncluded ->
-                            viewModel.makeList(com.sadurni.attacca.chain.ChainLists.Kind.BRIDGE, seeds = listOf(from, to), onlyIncluded = onlyIncluded, count = count)
+                        onMake = { stops, count, onlyIncluded, choices ->
+                            viewModel.makeList(com.sadurni.attacca.chain.ChainLists.Kind.BRIDGE, seeds = stops, onlyIncluded = onlyIncluded, count = count, choices = choices)
                             toPlayer()
                         },
                     )
@@ -1010,7 +1010,7 @@ class MainActivity : AppCompatActivity() {
                 is BrowserAction.SeedList -> viewModel.requestSeedList(action.file.absolutePath)
                 is BrowserAction.SeedGroup -> viewModel.requestGroupSeedList(action.name, action.paths)
                 is BrowserAction.QuickList -> viewModel.quickSeedList(action.file.absolutePath)
-                is BrowserAction.Bridge -> viewModel.requestBridge(action.from, action.to)
+                is BrowserAction.Bridge -> viewModel.requestBridge(action.stops)
                 is BrowserAction.Inclusion -> viewModel.requestInclusion(action.file.absolutePath)
                 is BrowserAction.Repair -> viewModel.requestRepair(action.paths)
                 is BrowserAction.AddToList -> {

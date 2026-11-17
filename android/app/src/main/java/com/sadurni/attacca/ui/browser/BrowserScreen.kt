@@ -103,7 +103,7 @@ sealed interface BrowserAction {
     data class QuickList(val file: File) : BrowserAction
 
     /** A list leading from track [from] to track [to] (the bridge), made and played at once. */
-    data class Bridge(val from: String, val to: String) : BrowserAction
+    data class Bridge(val stops: List<String>) : BrowserAction
 
     /** A list of music like a group of tracks (an album, an artist) named [name]. */
     data class SeedGroup(val name: String, val paths: List<String>) : BrowserAction
@@ -287,12 +287,12 @@ fun BrowserScreen(onBack: () -> Unit, onAction: (BrowserAction) -> Unit, forList
                     com.sadurni.attacca.ui.common.ShareTracks.share(context, selected.filter(AudioFiles::isAudio).map { it.absolutePath })
                     selection = null
                 }, enabled = selected.any(AudioFiles::isAudio)) { Icon(Icons.Rounded.Share, stringResource(R.string.share)) }
-                val pair = selected.takeIf { it.size == 2 && it.all(AudioFiles::isAudio) }
+                val pair = selected.takeIf { it.size in 2..com.sadurni.attacca.ui.chain.MAX_STOPS && it.all(AudioFiles::isAudio) }
                 if (pair != null) {
                     IconButton(onClick = {
-                        onAction(BrowserAction.Bridge(pair[0].absolutePath, pair[1].absolutePath))
+                        onAction(BrowserAction.Bridge(pair.map { it.absolutePath }))
                         selection = null
-                    }) { Icon(Icons.Rounded.Route, stringResource(R.string.list_bridge_action)) }
+                    }) { Icon(Icons.Rounded.Route, stringResource(if (pair.size > 2) R.string.list_trip_action else R.string.list_bridge_action)) }
                 }
                 val single = selected.singleOrNull()?.takeIf { AudioFiles.isAudio(it) }
                 if (single != null) {

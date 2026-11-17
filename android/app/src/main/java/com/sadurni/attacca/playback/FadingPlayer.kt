@@ -15,7 +15,8 @@ import androidx.media3.exoplayer.ExoPlayer
  * instead of cutting, whoever triggers them (app, notification, headset, car); with [skipCrossfade]
  * a skip to another track blends into it instead (see [SkipCrossfade]). After a long pause
  * it also goes back a few seconds before resuming ([rewind]: after how many seconds of pause, how
- * many seconds back), to pick up the thread.
+ * many seconds back), to pick up the thread: into the track before when the current one came in
+ * blended from it and those seconds were still that one's, so the blend is heard again.
  */
 @OptIn(UnstableApi::class)
 class FadingPlayer(
@@ -30,9 +31,53 @@ class FadingPlayer(
     private val handler = Handler(Looper.getMainLooper())
     private var ramp: Runnable? = null
 
+    /** Where the fades of pause, resume and skips stand (0 … 1). */
+    private var fade = 1f
+
+    /**
+     * The volume of everything played (0 … 1) under the fades: a list to fall asleep to brings it
+     * down little by little, one to wake up to brings it up. 1 = as it is.
+     */
+    var level: Float = 1f
+        private set
+
+    private var levelRamp: Runnable? = null
+
+    private fun setFade(value: Float) {
+        fade = value
+        player.volume = fade * level
+    }
+
+    /** Takes [level] from where it is to [target] over [durationMs] (at once when 0). */
+    fun rampLevel(target: Float, durationMs: Long) {
+        levelRamp?.let(handler::removeCallbacks)
+        levelRamp = null
+        val to = target.coerceIn(0f, 1f)
+        if (durationMs <= 0) {
+            level = to
+            player.volume = fade * level
+            return
+        }
+        val from = level
+        val start = SystemClock.uptimeMillis()
+        val step = object : Runnable {
+            override fun run() {
+                val t = ((SystemClock.uptimeMillis() - start).toFloat() / durationMs).coerceIn(0f, 1f)
+                level = from + (to - from) * t
+                player.volume = fade * level
+                if (t < 1f) handler.postDelayed(this, LEVEL_STEP_MS) else levelRamp = null
+            }
+        }
+        levelRamp = step
+        handler.post(step)
+    }
+
     /** Playback wanted and not held back (by a call, another app's sound…). */
     private fun playing() = player.playWhenReady && player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE
     private var wasPlaying = playing()
+
+    /** The current track came in by itself from the one before (blended or gapless), not by a skip. */
+    private var cameInOnItsOwn = false
 
     init {
         player.addListener(object : Player.Listener {
@@ -51,6 +96,7 @@ class FadingPlayer(
             }
 
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                cameInOnItsOwn = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK && !playing()) clearPause()
             }
         })
@@ -74,7 +120,20 @@ class FadingPlayer(
         if (afterS <= 0 || backS <= 0) return
         if (System.currentTimeMillis() - since < afterS * 1000L) return
         val position = player.currentPosition
-        if (position > 0) player.seekTo((position - backS * 1000L).coerceAtLeast(0L))
+        val back = backS * 1000L
+        // Paused in (or just after) a blend: those seconds ago were the track before, which then
+        // blends again into this one. Without that, going back inside this track loses the blend.
+        if (position < back && cameInOnItsOwn) {
+            val previous = player.previousMediaItemIndex
+            val item = if (previous != androidx.media3.common.C.INDEX_UNSET) player.getMediaItemAt(previous) else null
+            val end = item?.takeIf { com.sadurni.attacca.library.MediaItems.crossfadeMsOf(it) > 0 && !com.sadurni.attacca.library.MediaItems.hasExplicitClip(it) }
+                ?.let { com.sadurni.attacca.library.MediaItems.clipEndMs(it) }
+            if (end != null) {
+                player.seekTo(previous, (end - (back - position)).coerceAtLeast(0L))
+                return
+            }
+        }
+        if (position > 0) player.seekTo((position - back).coerceAtLeast(0L))
     }
 
     override fun play() {
@@ -83,11 +142,11 @@ class FadingPlayer(
         val duration = fadeMs()
         cancelRamp()
         if (duration <= 0 || player.isPlaying) {
-            player.volume = 1f
+            setFade(1f)
             player.play()
             return
         }
-        player.volume = 0f
+        setFade(0f)
         player.play()
         rampTo(1f, duration) {}
     }
@@ -97,12 +156,12 @@ class FadingPlayer(
         if (duration <= 0 || !player.isPlaying) {
             cancelRamp()
             player.pause()
-            player.volume = 1f
+            setFade(1f)
             return
         }
         rampTo(0f, duration) {
             player.pause()
-            player.volume = 1f
+            setFade(1f)
         }
     }
 
@@ -134,7 +193,7 @@ class FadingPlayer(
         if (!player.isPlaying) return
         rampTo(0f, durationMs) {
             player.pause()
-            player.volume = 1f
+            setFade(1f)
         }
     }
 
@@ -153,7 +212,7 @@ class FadingPlayer(
         val crossfade = skipCrossfade
         if (crossfade != null && toAnotherTrack && player.isPlaying && crossfade.lengthMs() > 0) {
             cancelRamp()
-            player.volume = 1f
+            setFade(1f)
             var done = false
             lateinit var run: () -> Unit
             run = {
@@ -209,12 +268,12 @@ class FadingPlayer(
 
     private fun rampTo(target: Float, durationMs: Int, then: () -> Unit) {
         cancelRamp()
-        val from = player.volume
+        val from = fade
         val start = SystemClock.uptimeMillis()
         val step = object : Runnable {
             override fun run() {
                 val t = ((SystemClock.uptimeMillis() - start).toFloat() / durationMs).coerceIn(0f, 1f)
-                player.volume = from + (target - from) * t
+                setFade(from + (target - from) * t)
                 if (t < 1f) {
                     handler.postDelayed(this, FRAME_MS)
                 } else {
@@ -234,6 +293,9 @@ class FadingPlayer(
 
     private companion object {
         const val FRAME_MS = 16L
+
+        /** The slow level ramps move in steps too small to hear. */
+        const val LEVEL_STEP_MS = 250L
         const val SKIP_DIP_MS = 30
 
         /** Crossover from the player to the own track of a skip blend. */

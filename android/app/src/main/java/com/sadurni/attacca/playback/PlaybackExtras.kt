@@ -29,6 +29,7 @@ import com.sadurni.attacca.settings.ListSettingsStore
 import com.sadurni.attacca.settings.ShuffleMode
 import com.sadurni.attacca.settings.SleepChoice
 import com.sadurni.attacca.settings.TrimSettings
+import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -169,12 +170,15 @@ class PlaybackExtras(
                 applyShuffle(_listSettings.value.shuffle)
             }
             if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) scheduleUserListSave()
+            // Another list now: the volume of a list to sleep or wake up to is back as it was.
+            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && levelForKey != null && key != levelForKey) resetLevel()
             updateStopPoint()
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM && _sleepTimer.value?.endOf != null) {
                 cancelSleepTimer()
+                resetLevel()
             }
         }
     }
@@ -571,6 +575,72 @@ class PlaybackExtras(
         updateStopPoint()
     }
 
+    /**
+     * Endless lists: [mediaId] marked "more like this" ([more]) or "less like this", or unmarked
+     * when it already was. The tracks added from then on follow it; the ones added already and not
+     * yet played that are like a "less" track are taken out.
+     */
+    fun guideEndless(mediaId: String, more: Boolean) {
+        val now = _listSettings.value
+        val inMore = mediaId in now.more
+        val inLess = mediaId in now.less
+        updateListSettings {
+            when {
+                more && inMore -> it.copy(more = it.more - mediaId)
+                !more && inLess -> it.copy(less = it.less - mediaId)
+                more -> it.copy(more = (it.more + mediaId).takeLast(GUIDE_MAX), less = it.less - mediaId)
+                else -> it.copy(less = (it.less + mediaId).takeLast(GUIDE_MAX), more = it.more - mediaId)
+            }
+        }
+        if (!more && !inLess) dropAddedLike(mediaId)
+    }
+
+    /** Takes out the added tracks not played yet that are near [mediaId] (it was marked "less like this"). */
+    private fun dropAddedLike(mediaId: String) {
+        scope.launch {
+            val near = withContext(com.sadurni.attacca.Background.dispatcher) {
+                val known = app.chainLists.libraryId(mediaId)
+                val g = runCatching { app.chainLists.collection(extra = known) }.getOrNull()?.generator ?: return@withContext emptySet()
+                val i = g.indexOf(known).takeIf { it >= 0 } ?: return@withContext emptySet()
+                g.fromSeed(i, com.sadurni.attacca.chain.ChainFilters(), true, true, LESS_NEIGHBOURS + 1, 0).orEmpty().toSet()
+            }
+            if (near.isEmpty()) return@launch
+            for (index in player.mediaItemCount - 1 downTo player.currentMediaItemIndex + 1) {
+                val item = player.getMediaItemAt(index)
+                if (com.sadurni.attacca.library.MediaItems.isExtension(item) && item.mediaId in near) player.removeMediaItem(index)
+            }
+        }
+    }
+
+    /** The list the volume level was set for (to sleep or wake up to); null: as it is. */
+    private var levelForKey: String? = null
+
+    /**
+     * The playing list is one to fall asleep to: its volume comes down little by little over
+     * [durationMs] (to [SLEEP_LEVEL]), nothing is added at its end, and the player stops there.
+     */
+    fun fallAsleep(durationMs: Long) {
+        updateListSettings { it.copy(endless = false) }
+        cancelSleepTimer()
+        _sleepTimer.value = SleepTimer(null, endOf = SleepEnd.LIST)
+        updateStopPoint()
+        levelForKey = currentKey()
+        fading.rampLevel(SLEEP_LEVEL, durationMs)
+    }
+
+    /** The playing list is one to wake up to: it starts soft and its volume comes up over [durationMs]. */
+    fun wakeUp(durationMs: Long) {
+        levelForKey = currentKey()
+        fading.rampLevel(WAKE_LEVEL, 0)
+        fading.rampLevel(1f, durationMs)
+    }
+
+    private fun resetLevel() {
+        if (levelForKey == null) return
+        levelForKey = null
+        fading.rampLevel(1f, 0)
+    }
+
     fun cancelSleepTimer() {
         sleepJob?.cancel()
         sleepJob = null
@@ -634,8 +704,10 @@ class PlaybackExtras(
         if (timeline.isEmpty || timeline.getNextWindowIndex(player.currentMediaItemIndex, Player.REPEAT_MODE_OFF, false) != C.INDEX_UNSET) return
         val seed = player.currentMediaItem?.mediaId?.takeIf { !it.contains("://") } ?: return
         val inList = List(player.mediaItemCount) { player.getMediaItemAt(it).mediaId }.toHashSet()
+        // The list's own chaining profile, as it was made.
+        val taste = com.sadurni.attacca.chain.EdgeFeatures.listTaste.asContextElement(app.chainLists.tasteFor(_listSettings.value.inclusion))
         extendJob = scope.launch {
-            val added = withContext(com.sadurni.attacca.Background.dispatcher) {
+            val added = withContext(com.sadurni.attacca.Background.dispatcher + taste) {
                 // The same file by another path (opened from another app) is the library's own.
                 val known = app.chainLists.libraryId(seed)
                 val collection = runCatching { app.chainLists.collection(extra = known) }.getOrNull() ?: return@withContext emptyList()
@@ -643,17 +715,31 @@ class PlaybackExtras(
                 val index = g.indexOf(known).takeIf { it >= 0 } ?: return@withContext emptyList()
                 // Not what the list has (by any of its paths), nor what was heard today.
                 val excluded = inList + inList.flatMap(com.sadurni.attacca.library.Inclusion::aliases) +
-                    app.listening.playedSince(System.currentTimeMillis() - EXTEND_FRESH_MS)
+                    app.listening.playedSince(System.currentTimeMillis() - EXTEND_FRESH_MS) +
+                    // Live tracks as the list was made with them (left out, or only those).
+                    app.chainLists.liveLeftOut(g.candidates.map { it.id }, app.chainLists.liveFor(_listSettings.value.inclusion), listOf(known))
                 val filters = com.sadurni.attacca.chain.ChainFilters(
                     excluded = excluded,
                     // A list made for an occasion goes on with the inclusion it was made with.
                     inclusion = app.chainLists.inclusionFor(_listSettings.value.inclusion),
                 )
                 val spacing = app.settings.chain.value.artistSpacing
+                // Guided by the listener: towards the tracks marked "more like this", away from
+                // those marked "less like this" and their nearest look-alikes.
+                val guide = _listSettings.value
+                val more = g.indicesOf(guide.more.map { app.chainLists.libraryId(it) })
+                val lessNear = g.indicesOf(guide.less.map { app.chainLists.libraryId(it) }).flatMap { i ->
+                    g.fromSeed(i, com.sadurni.attacca.chain.ChainFilters(), true, true, LESS_NEIGHBOURS + 1, 0).orEmpty()
+                }
+                val guided = filters.copy(excluded = filters.excluded.orEmpty() + lessNear)
                 // Same mood and sound family first; wider when that leaves too few.
                 val tries = listOf(true to true, false to true, false to false)
                 tries.firstNotNullOfOrNull { (mood, family) ->
-                    g.fromSeed(index, filters, mood, family, EXTEND_COUNT + 1, spacing)?.drop(1)?.takeIf { it.size >= EXTEND_MIN }
+                    if (more.isEmpty()) {
+                        g.fromSeed(index, guided, mood, family, EXTEND_COUNT + 1, spacing)?.drop(1)?.takeIf { it.size >= EXTEND_MIN }
+                    } else {
+                        g.fromSeeds(listOf(index) + more, guided, mood, family, EXTEND_COUNT, spacing)?.filter { it != known }?.takeIf { it.size >= EXTEND_MIN }
+                    }
                 }.orEmpty()
             }
             if (added.isEmpty() || player.currentMediaItem?.mediaId != seed) return@launch
@@ -755,6 +841,18 @@ class PlaybackExtras(
     }
 
     private companion object {
+        /** Endless lists: at most this many tracks marked "more" or "less like this". */
+        const val GUIDE_MAX = 20
+
+        /** A track marked "less like this" keeps away this many of its nearest look-alikes too. */
+        const val LESS_NEIGHBOURS = 8
+
+        /** Where the volume of a list to fall asleep to ends (of the whole). */
+        const val SLEEP_LEVEL = 0.3f
+
+        /** Where the volume of a list to wake up to starts. */
+        const val WAKE_LEVEL = 0.25f
+
         const val USER_LIST_SAVE_DELAY_MS = 1_500L
         const val AB_INTERVAL_MS = 50L
         const val MIN_AB_MS = 500L

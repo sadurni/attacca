@@ -23,16 +23,24 @@ object RandomList {
         if (app.settings.chain.value.randomAskMood && canAsk(app)) {
             app.randomMoodRequest.value = true
         } else {
-            start(app, app.settings.chain.value.randomMood, avoid, app.chainLists.onlyIncludedByDefault(), app.chainLists.listCount, play)
+            start(app, app.settings.chain.value.randomMood, avoid, app.chainLists.onlyIncludedByDefault(), app.chainLists.listCount, play = play)
         }
     }
 
-    /** Starts a random list of [mood] (null: any), remembered for the next ones; [onlyIncluded] and [count] tracks as chosen. */
-    fun start(app: AttaccaApp, mood: Mood?, avoid: String?, onlyIncluded: Boolean, count: Int, play: (String, List<String>) -> Unit) {
+    /** Starts a random list of [mood] (null: any), remembered for the next ones; [onlyIncluded], [choices] and [count] tracks as chosen. */
+    fun start(
+        app: AttaccaApp,
+        mood: Mood?,
+        avoid: String?,
+        onlyIncluded: Boolean,
+        count: Int,
+        choices: com.sadurni.attacca.settings.ListChoices = app.chainLists.choicesByDefault(),
+        play: (String, List<String>) -> Unit,
+    ) {
         if (mood != app.settings.chain.value.randomMood) app.settings.updateChain { it.copy(randomMood = mood) }
         val moodName = app.getString(if (mood == null) R.string.random_list_any else com.sadurni.attacca.ui.chain.moodRes(mood))
         toast(app, app.getString(R.string.random_list_making, moodName))
-        app.chainLists.quickRandom(mood, count, avoid?.takeIf { !it.contains("://") }, onlyIncluded) { result ->
+        app.chainLists.quickRandom(mood, count, avoid?.takeIf { !it.contains("://") }, onlyIncluded, choices) { result ->
             when {
                 result == null -> toast(app, app.getString(R.string.random_list_none))
                 result.second.size < 2 -> toast(app, app.getString(R.string.seed_list_empty))

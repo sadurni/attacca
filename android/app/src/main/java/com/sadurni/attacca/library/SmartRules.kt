@@ -41,6 +41,7 @@ object SmartRules {
         PLAYED("played", Kind.PLAYED),
         SKIPPED("skipped", Kind.COUNT),
         INCLUDED("included", Kind.FLAG),
+        LIVE("live", Kind.FLAG),
     }
 
     enum class Kind { TEXT, RANGE, SET, CHOICE, DAYS, PLAYED, COUNT, FLAG }
@@ -100,6 +101,8 @@ object SmartRules {
         /** True with voice, false instrumental. */
         val voice: Boolean? = null,
         val included: Boolean = true,
+        /** Live (see [LiveTracks]). */
+        val live: Boolean = false,
     )
 
     fun rulesFileOf(list: File): File = File(list.parentFile, list.nameWithoutExtension + ".smart.txt")
@@ -208,6 +211,7 @@ object SmartRules {
         }
         Field.SKIPPED -> t.skips >= c.number
         Field.INCLUDED -> t.included
+        Field.LIVE -> t.live
     }
 
     private fun textMatch(c: Condition, value: String): Boolean {
@@ -250,6 +254,6 @@ object SmartRules {
         "# Text: artist, albumartist, album, title, genre, folder, path + is/contains/starts <text>.\n" +
         "# Ranges (a-b, a-, -b): year, length (minutes), bpm, energy, positivity (0-100).\n" +
         "# mood <names>; voice voice|instrumental; added within <days>; played never |\n" +
-        "# within <days> | not-within <days> | at-least <times>; skipped at-least <times>; included.\n" +
+        "# within <days> | not-within <days> | at-least <times>; skipped at-least <times>; included; live.\n" +
         "# order found|random|artist|album|year|added|most-played|last-played|chained; limit <n>.\n"
 }

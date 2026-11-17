@@ -269,6 +269,43 @@ object EdgeDecoder {
         return SoundProfile.measure(windows.filter { it.sampleRate == rate }.map { it.samples.copyOf(minOf(it.count, size)) }, rate, net, isCancelled)
     }
 
+    /**
+     * The audience heard in the last and first [Audience.SECONDS] of sound of [source] (see
+     * [Audience]): the end first, and the start only when the end has none
+     * ([com.sadurni.attacca.chain.LiveHearing.needsHead]; else [Audience.NOT_HEARD]). Null when it
+     * cannot be decoded or is silent. Blocking; call off the main thread.
+     */
+    fun decodeAudience(source: Source, net: SoundNet, isCancelled: () -> Boolean = { false }): Audience? {
+        val durationUs = source.durationUs
+        val edgeUs = Audience.SECONDS * 1_000_000L
+        val whole = if (durationUs <= 2 * (edgeUs + TAIL_MARGIN_US)) source.read(0, Long.MAX_VALUE, null, isCancelled) ?: return null else null
+        val tail = whole ?: source.read(durationUs - edgeUs - TAIL_MARGIN_US, Long.MAX_VALUE, null, isCancelled) ?: return null
+        val tailWave = edgeWave(tail, edgeUs, fromStart = false)
+        val t = tailWave?.let { Audience.score(net, it, isCancelled) } ?: 0f
+        if (isCancelled()) return null
+        if (tailWave != null && !com.sadurni.attacca.chain.LiveHearing.needsHead(t)) return Audience(Audience.NOT_HEARD, t)
+        val head = whole ?: source.read(0, edgeUs + LONG_MARGIN_US, edgeUs, isCancelled) ?: return null
+        val headWave = edgeWave(head, edgeUs, fromStart = true)
+        if (headWave == null && tailWave == null) return null
+        val h = headWave?.let { Audience.score(net, it, isCancelled) } ?: 0f
+        if (isCancelled()) return null
+        return Audience(h, t)
+    }
+
+    /** The first (or last) [edgeUs] of sound of [audio], at the network's rate; null when silent. */
+    private fun edgeWave(audio: Mono, edgeUs: Long, fromStart: Boolean): FloatArray? {
+        val length = (edgeUs * audio.sampleRate / 1_000_000).toInt()
+        val (from, to) = if (fromStart) {
+            val start = (0 until audio.count).firstOrNull { abs(audio.samples[it]) > SILENCE } ?: return null
+            start to minOf(audio.count, start + length)
+        } else {
+            val end = lastSound(audio) ?: return null
+            maxOf(0, end - length) to end
+        }
+        if (to - from <= 0) return null
+        return SoundNet.resample(audio.samples.copyOfRange(from, to), to - from, audio.sampleRate)
+    }
+
     /** Whether the last sound in [audio] comes after a whole edge's worth of decoded audio. */
     private fun hasFullTail(audio: Mono, edgeUs: Long): Boolean {
         val end = lastSound(audio) ?: return false

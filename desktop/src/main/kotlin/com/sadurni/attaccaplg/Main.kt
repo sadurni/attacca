@@ -123,8 +123,19 @@ private fun scan(options: Options) {
                 result.total, result.analysed, result.failed, result.unchanged, result.removed, result.millis / 1000.0, jobs,
             ),
         )
+        // The audience of the tracks measured before it was heard, and the copies not compared yet.
+        val heard = LiveAndCopiesRun.hear(db, root, jobs)
+        val compared = com.sadurni.attaccaplg.library.LiveAndCopies.compareCopies(db, root) { done, todo -> print("\rComparing copies of one song: %d/%d".format(done, todo)) }
+        if (heard > 0 || compared > 0) println()
+        if (heard > 0) println("Listened for an audience (live tracks) in $heard tracks.")
+        if (compared > 0) println("Compared $compared pairs of copies of one song.")
         println("Library: ${options.db.absolutePath}")
     }
+}
+
+private object LiveAndCopiesRun {
+    fun hear(db: LibraryDb, root: File, jobs: Int): Int =
+        com.sadurni.attaccaplg.library.LiveAndCopies.hearAudience(db, root, jobs) { done, todo -> print("\rListening for an audience (live tracks): %d/%d".format(done, todo)) }
 }
 
 private fun stats(options: Options) {

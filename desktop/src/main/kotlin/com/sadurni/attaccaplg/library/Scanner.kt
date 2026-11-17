@@ -137,6 +137,7 @@ class Scanner(private val db: LibraryDb, private val jobs: Int = defaultJobs()) 
             error = error,
             waveform = analysis?.waveform,
             sound = track?.sound,
+            audience = track?.audience,
         )
     }
 

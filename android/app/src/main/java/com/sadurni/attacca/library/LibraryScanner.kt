@@ -16,7 +16,7 @@ import java.io.File
  * and album shuffle of any list are instant. Only new or changed files are read again; files
  * already known cost a database lookup.
  */
-class LibraryScanner(context: Context, private val scope: CoroutineScope) {
+class LibraryScanner(private val context: Context, private val scope: CoroutineScope) {
 
     /** A scan in progress: tracks with tags ready out of all found, and the time likely left. */
     data class Progress(val done: Int, val total: Int, val remainingMs: Long? = null)
@@ -45,6 +45,14 @@ class LibraryScanner(context: Context, private val scope: CoroutineScope) {
         job = scope.launch(io) {
             _progress.value = Progress(0, 0)
             try {
+                // A backup made on another phone: what it kept moves to this music folder first,
+                // so the scan finds it all known.
+                if (com.sadurni.attacca.settings.PathRemap.pending(context) != null) {
+                    val found = runCatching { com.sadurni.attacca.settings.PathRemap.run(context, folder.absolutePath) }.getOrDefault(0)
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        android.widget.Toast.makeText(context, context.getString(com.sadurni.attacca.R.string.welcome_remapped, found), android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
                 // The one walk of the music folder: also kept for the jobs that follow and for searching.
                 val ids = AudioFiles.indexLibrary(folder).map { it.absolutePath }
                 // Files deleted (or never copied to this device, after a restore) are missing: out of Music and of the lists made from the tags.

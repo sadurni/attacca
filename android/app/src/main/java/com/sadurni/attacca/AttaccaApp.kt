@@ -92,6 +92,8 @@ class AttaccaApp : Application() {
         com.sadurni.attacca.festive.NewYearNotice.schedule(this)
         // Why it closed, when nobody closed it: for the user to send (Music/Attacca/attacca-exits.txt).
         Logs.init(this)
+        com.sadurni.attacca.library.SameSongs.store = java.io.File(filesDir, "same-songs.tsv")
+        com.sadurni.attacca.library.LiveTracks.audience = { ids -> chainAnalyzer.knownAudience(ids) }
         ExitLog.watchFailures(this)
         // The sound network's mood classes, read from its weights when moods are first needed.
         com.sadurni.attacca.chain.MoodHead.source = { assets.open("sound/soundnet.bin") }
@@ -147,7 +149,8 @@ class AttaccaApp : Application() {
                 val folder = settings.musicFolder
                 // Which of the new and changed tracks carry ReplayGain tags (the check-up counts them).
                 if (result != null && folder != null) com.sadurni.attacca.library.ReplayGainCheck.checkFolder(folder)
-                if (result != null && folder != null && settings.chain.value.autoAnalyze) {
+                // A pass cut short (the phone restarted) goes on, also with background analysis off.
+                if (result != null && folder != null && (settings.chain.value.autoAnalyze || chainAnalyzer.interrupted)) {
                     chainAnalyzer.analyzeLibrary(java.io.File(folder))
                 }
             }

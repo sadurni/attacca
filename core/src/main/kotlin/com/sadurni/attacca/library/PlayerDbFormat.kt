@@ -41,7 +41,8 @@ import kotlin.math.sqrt
  *  the full path on the device · 16 hash of its last two parts (FNV-1a, ASCII lower case) · 20 edge
  *  block u32 (none: 0xFFFFFFFF) · 24 artist u16 · 26 genre u16 (none: 0xFFFF) · 28 seconds u16 ·
  *  30 year u16 (0: none) · 32 BPM ×100 u16 · 34 energy · 36 positivity · 38 voice (percentiles
- *  ×10000, u16) · 40 mood u8 · 41 family u8 · 42 flags u8 (1 included, 2 start edge, 4 end edge) ·
+ *  ×10000, u16) · 40 mood u8 · 41 family u8 · 42 flags u8 (1 included, 2 start edge, 4 end edge,
+ *  8 live, 16 a copy of a recording kept on another album: lists leave it out) ·
  *  43 second mood + 1 u8 (a track between two moods; 0: none) · 44 similarity vector i16 ×1000 (58 values: the sound profile's main directions and
  *  timbre, see Moods; a library classified by traits only fills the first 10) · 160 how it starts
  *  and ends, for the player's automatic crossfade ([Ends]): start of the sound u16 · silence after
@@ -88,6 +89,10 @@ object PlayerDbFormat {
         val ends: Ends? = null,
         /** The inclusion sets it is in: bit k for set k of those written. */
         val sets: Int = 0,
+        /** Live (an audience heard, a concert album, said in its name). */
+        val live: Boolean = false,
+        /** Another copy of a recording kept on another album: lists leave it out. */
+        val copy: Boolean = false,
     )
 
     /**
@@ -122,7 +127,7 @@ object PlayerDbFormat {
         file: File,
         /** The names of the inclusion sets (all different), in the order of [Track.sets]' bits (at most 32). */
         setNames: List<String> = emptyList(),
-        /** What made it ("Attacca 1.5.0"), shown by the players with its date. */
+        /** What made it ("Attacca 1.6.0"), shown by the players with its date. */
         madeBy: String? = null,
     ): Int {
         require(tracks.size == classification.moods.size)
@@ -158,7 +163,7 @@ object PlayerDbFormat {
             records.putShort(percentile(k.voice[i]))
             records.put(k.moods[i].ordinal.toByte())
             records.put(k.families[i].toByte())
-            records.put(((if (t.included) 1 else 0) or (if (t.head != null) 2 else 0) or (if (t.tail != null) 4 else 0)).toByte())
+            records.put(((if (t.included) 1 else 0) or (if (t.head != null) 2 else 0) or (if (t.tail != null) 4 else 0) or (if (t.live) 8 else 0) or (if (t.copy) 16 else 0)).toByte())
             records.put(((k.secondMoods[i]?.ordinal ?: -1) + 1).toByte())
             val v = k.vectors[i]
             for (d in 0 until VECTOR) records.putShort((v.getOrElse(d) { 0f } * 1000).roundToInt().coerceIn(-32767, 32767).toShort())

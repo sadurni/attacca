@@ -984,6 +984,14 @@ class Cast(private val land: WorldLand, val kind: Traveller, private val firstPe
             eye[2] = car[6] * 1.55f + car[10] * -0.35f + car[14]
             eye[3] = 1f
         }
+        if (kind == Traveller.SUBMARINE && car != null && inside && boarded >= 1f && off <= 0f) {
+            // Inside the submarine: at its nose, looking out ahead with it (not down on the
+            // sea's floor under it), the hull behind the eyes.
+            eye[0] = car[4] * 0.95f + car[8] * 2.3f + car[12]
+            eye[1] = car[5] * 0.95f + car[9] * 2.3f + car[13]
+            eye[2] = car[6] * 0.95f + car[10] * 2.3f + car[14]
+            eye[3] = 1f
+        }
         // Mounted or in a vehicle, the eyes look where it points (the head, the wheel, the bow ahead).
         val ridden = vehicleBody
         if (ridden != null && eye[3] > 0f && !walking) eye[4] = kotlin.math.atan2(ridden[8], ridden[10])

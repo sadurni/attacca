@@ -3,6 +3,111 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.6.0
+
+### Attacca (Android)
+
+- Pausing in the middle of a crossfade and resuming after a long pause (when it goes back a few
+  seconds) goes back into the track before and blends again, instead of starting the next track
+  without the blend; the track before keeps its end ready for it.
+- A track that ends whole (a hard stop, or one that fades by itself) into a track starting with
+  silence that is not trimmed: the next one comes in that much earlier, so its sound follows on
+  instead of leaving a gap.
+- A blend into an Ogg Vorbis or Opus track whose leading silence is trimmed had a cut in the
+  middle: the player rebuilt its audio output to reach the trimmed start, and the end of the track
+  before could be lost too (half a second of near silence). Now it blends like any other.
+- **The same song from several albums**: a recording found again on a compilation, a remaster or
+  another edition is kept once in the lists Attacca makes (generated, from a track, quick,
+  random, the other kinds, endless) and in smart lists, and "Remove repeated tracks" takes it out
+  too: the best copy stays (lossless, else the higher bit rate, else the artist's own album). The
+  tags propose the copies (artist, title without "Remastered" and the like, the same length) and
+  their sound has the last word (half a minute from the middle compared in the background, once):
+  a live or other version, even with the same name and length, is another song.
+- **Live tracks, told by their sound**: the analysis also listens to the first and last seconds
+  of each track for an audience (applause, cheering, a crowd); an album where several tracks have
+  one is a concert, all of it (its songs run together often hide it), while a studio album keeps
+  its live extras apart; an album tagged live (its MusicBrainz release type) is live too, unless
+  none of its tracks has any audience (a radio session played in a studio); the name can say it
+  too ("(Live)", a live album). Settings → Chaining:
+  live tracks in the lists Attacca makes (any, left out, only those); smart lists have a Live rule;
+  Track information shows it, with the audience heard at its start and end. The same song live and
+  in the studio is never taken for a copy. Tracks analysed before are listened to by the next
+  analysis pass (only their ends).
+- Live tracks can also be chosen in the options of each list as it is made (next to Only
+  included: any, no live, only live), starting from the setting; the list keeps the choice, and an
+  endless list goes on adding tracks with it.
+- Listening for an audience takes far less: the end of a track first (the start only when the end
+  has none), and an album no more once it is told (two tracks with an audience make a concert;
+  four without any, or two when its MusicBrainz release type says it is not live, a studio album);
+  an album whose name says live is not listened to at all. On real albums the verdict is the same
+  with a sixth of the listening (a third without MusicBrainz tags).
+- An analysis pass cut short (the phone restarted, Android closed the app) goes on by itself the
+  next time the app is used, also with the analysis in the background off; the check-up counts the
+  tracks still to be listened to for an audience.
+- **Setting up another phone with the same music**: the library analysis file (.attlib) also
+  carries the audience heard at the tracks' ends and the copies of one song compared by their
+  sound, so an imported library needs no pass at all; on a first start, right after choosing the
+  music folder, Attacca offers to import a library exported elsewhere before scanning anything;
+  and a full backup made on another phone (its memory card has another name) asks for this
+  phone's music folder and moves to it everything it kept for each track (tags, analysis,
+  listening, lists), when the file is there with the same size.
+- **New kinds of list** (Other lists): energy drawn by hand (draw with a finger how it goes along
+  the list); a list for two (two inclusion sets, one of each in turn, the tracks both take as
+  bridges); what you play at this hour (like what you usually hear around this time, on weekdays
+  or at weekends: plays are now kept with their time); a variant of the playing list (the same way
+  through moods and energy with other tracks, none heard lately); and a trip with stops: select
+  three to five tracks for a bridge that goes through each, in the order chosen.
+- **To fall asleep and to wake up**: a list calmer and calmer for the minutes given, the volume
+  going down little by little, the player stopping at its end; and, at a time set once or every
+  day, Attacca plays a list from calm to lively, starting soft and coming up, without opening the
+  app (the phone's alarm clock; the list is made ahead, so it starts at once; set again after a
+  restart).
+- **Chaining by hand** (Settings → Chaining): four sliders for how much the beat, the sound, the
+  energy, and the key and notes count; save them as named profiles and choose one when you make a
+  list (next to Live tracks). The list keeps it, also for the tracks it adds when endless.
+  **Steps in tune** sets the key and notes to 40 %: on a real library, four steps in five then join
+  keys that go together (half of them with Attacca's weights), the beat and the sound still
+  counting.
+- **Endless lists you can steer**: More like this and Less like this in the ⋮ menu of Now
+  playing; the tracks added from then on lean towards one and keep away from the other and its
+  look-alikes (those added and not played yet go too).
+
+- Play on connect (a Bluetooth device set to start playing with the player closed) could not
+  reach the player from the background; it now connects through the app.
+- Attacca World: at the song's peak, when what it shows stands in one place (the red moon over the
+  castles, the rainbow, the desert's pyramid), the camera comes round to it and stays looking at it
+  while the peak lasts, instead of going round the traveller (it could be behind just then); through
+  the traveller's eyes too.
+- Attacca World through the traveller's eyes under the sea: the view goes from the submarine's
+  nose, not from the sea's floor under it.
+
+- Export the library for players marks the live tracks, for the Rockbox plugin's new choice.
+
+### Attacca Desktop
+
+- **Live tracks**, as on the phone: the scan also listens to the end of each track (and to its
+  start when the end has none) for an audience; tracks measured before are listened to after the
+  next scan, album by album and no more than tells each album (an album whose name says live, none
+  at all). Lists: live tracks any, none or only those (Lists, next to Only included;
+  `--live any|none|only` on the command line).
+- **The same song from several albums**: copies the tags propose are compared by their sound after
+  a scan; the lists keep the best copy only.
+- A blend into a track that starts with silence (not trimmed, or the margin kept) starts that much
+  earlier, so the next track's sound follows on instead of leaving a gap.
+- The library analysis file (.attlib) carries the audience heard and the compared copies both ways,
+  with the phone.
+- Export the library for players marks the live tracks and the copies left out.
+- Attacca World as on the phone: the camera stays on what the peak shows in one place (the red
+  moon, the rainbow, the pyramid), and through the eyes under the sea the view goes from the
+  submarine.
+
+### Attacca for Rockbox
+
+- Live songs: any, leave them out or only those (More filters); copies of a recording kept on
+  another album are left out of every list (libraries exported again from Attacca or Attacca
+  Desktop).
+- The plugin and the full Rockbox builds (Shanling Q1 zip, Android 2.3 APK) carry version 1.6.0.
+
 ## 1.5.0
 
 ### Attacca (Android)

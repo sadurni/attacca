@@ -1,0 +1,5 @@
+• Llistes noves: energia dibuixada a mà, per a dos, el que sents a aquesta hora, variant, viatges amb parades, per dormir i despertar.
+• Encadenament a mà amb perfils per llista; les llistes sense fi tenen Més com això i Menys com això.
+• Pistes en directe pel so: qualsevol, sense directes o només directes; una cançó de diversos àlbums, un cop.
+• Crossfades sense buit a pistes Ogg, Opus o que comencen amb silenci.
+• Mateixa música en altre mòbil: importa'n la biblioteca, sense reescanejar.

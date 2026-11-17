@@ -30,6 +30,8 @@ class StoredTrack(
     val waveform: FloatArray? = null,
     /** What it sounds like for families and look-alikes (Attacca's sound profile). */
     val sound: com.sadurni.attacca.chain.SoundProfile? = null,
+    /** The audience heard at its ends (live tracks); null: not heard yet. */
+    val audience: com.sadurni.attacca.chain.Audience? = null,
 )
 
 /**
@@ -62,6 +64,10 @@ class LibraryDb(val file: File) : AutoCloseable {
             if ("waveform" !in columns) s.execute("ALTER TABLE tracks ADD COLUMN waveform BLOB")
             if ("disc" !in columns) s.execute("ALTER TABLE tracks ADD COLUMN disc INTEGER")
             if ("sound" !in columns) s.execute("ALTER TABLE tracks ADD COLUMN sound BLOB")
+            // The audience at the ends: tracks measured before are heard by a pass of their own.
+            if ("audience" !in columns) s.execute("ALTER TABLE tracks ADD COLUMN audience BLOB")
+            // Two tracks the tags take for one song, compared by their sound (with their sizes then).
+            s.execute("CREATE TABLE IF NOT EXISTS same (a TEXT, b TEXT, size_a INTEGER, size_b INTEGER, same INTEGER, PRIMARY KEY (a, b))")
         }
         connection.autoCommit = false
     }
@@ -192,8 +198,8 @@ class LibraryDb(val file: File) : AutoCloseable {
     fun put(track: StoredTrack, version: Int) {
         connection.prepareStatement(
             "INSERT OR REPLACE INTO tracks (path, size, mtime, version, title, artist, album, album_artist, genre, year, track, " +
-                "duration_ms, audio_start_ms, audio_end_ms, lufs, peak, head, tail, features, error, waveform, disc, sound) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "duration_ms, audio_start_ms, audio_end_ms, lufs, peak, head, tail, features, error, waveform, disc, sound, audience) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         ).use { st ->
             var i = 1
             st.setString(i++, track.path)
@@ -218,7 +224,40 @@ class LibraryDb(val file: File) : AutoCloseable {
             st.setString(i++, track.error)
             st.setBytes(i++, track.waveform?.let(::bytes))
             st.setObject(i++, track.tags.disc)
-            st.setBytes(i, track.sound?.toBytes())
+            st.setBytes(i++, track.sound?.toBytes())
+            st.setBytes(i, track.audience?.let(com.sadurni.attacca.chain.Audience::toBytes))
+            st.executeUpdate()
+        }
+    }
+
+    /** The audience heard at the ends of a stored track, leaving the rest as it is. */
+    @Synchronized
+    fun setAudience(path: String, audience: com.sadurni.attacca.chain.Audience) {
+        connection.prepareStatement("UPDATE tracks SET audience = ? WHERE path = ?").use { st ->
+            st.setBytes(1, com.sadurni.attacca.chain.Audience.toBytes(audience))
+            st.setString(2, path)
+            st.executeUpdate()
+        }
+    }
+
+    /** A comparison of two tracks the tags take for one song: (a, b) in order, their sizes then, the verdict. */
+    class Same(val a: String, val b: String, val sizeA: Long, val sizeB: Long, val same: Boolean)
+
+    fun sames(): List<Same> = connection.createStatement().use { s ->
+        s.executeQuery("SELECT a, b, size_a, size_b, same FROM same").use { rs ->
+            buildList { while (rs.next()) add(Same(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getLong(4), rs.getInt(5) != 0)) }
+        }
+    }
+
+    @Synchronized
+    fun putSame(same: Same) {
+        val (a, b, sa, sb) = if (same.a < same.b) listOf(same.a, same.b, same.sizeA, same.sizeB) else listOf(same.b, same.a, same.sizeB, same.sizeA)
+        connection.prepareStatement("INSERT OR REPLACE INTO same (a, b, size_a, size_b, same) VALUES (?, ?, ?, ?, ?)").use { st ->
+            st.setString(1, a as String)
+            st.setString(2, b as String)
+            st.setLong(3, sa as Long)
+            st.setLong(4, sb as Long)
+            st.setInt(5, if (same.same) 1 else 0)
             st.executeUpdate()
         }
     }
@@ -269,6 +308,7 @@ class LibraryDb(val file: File) : AutoCloseable {
             error = rs.getString("error"),
             waveform = floats("waveform"),
             sound = rs.getBytes("sound")?.let(com.sadurni.attacca.chain.SoundProfile::fromBytes),
+            audience = rs.getBytes("audience")?.let(com.sadurni.attacca.chain.Audience::fromBytes),
         )
     }
 

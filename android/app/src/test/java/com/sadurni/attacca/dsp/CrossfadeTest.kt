@@ -71,6 +71,7 @@ class CrossfadeTest {
         endOfList: Boolean = false,
         gainA: Float = 1f,
         decoderPadding: Int = 0,
+        anotherDecoder: Boolean = false,
     ): Run {
         val crossfade = CrossfadeProcessor(engine)
         val pipeline = AudioProcessingPipeline(ImmutableList.of<AudioProcessor>(crossfade))
@@ -103,7 +104,11 @@ class CrossfadeTest {
         // Track A.
         engine.streamGeneration++
         engine.periodOfGeneration[engine.streamGeneration] = periodA
-        tail?.let { engine.tails[periodA] = it }
+        tail?.let {
+            engine.tails[periodA] = it
+            // A track blends into a next one: never at the end of the list.
+            if (!endOfList) engine.blendingPeriods[periodA] = "a"
+        }
         engine.endedStreamGain = gainA
         feed(clipFrames) { trackA(it) * gainA }
         feed(decoderPadding) { 0f }
@@ -118,7 +123,19 @@ class CrossfadeTest {
             return Run(out.toFloatArray())
         }
 
-        // Track B.
+        // Track B. Played by another decoder (an MP3 into an Ogg file), the old one is drained
+        // to its end and the sink flushed again before track B is announced.
+        if (anotherDecoder) {
+            pipeline.queueEndOfStream()
+            while (!pipeline.isEnded) drain()
+            pipeline.configure(AudioProcessor.AudioFormat(rate, 2, C.ENCODING_PCM_FLOAT))
+            pipeline.flush()
+            pipeline.flush()
+            engine.streamGeneration++
+            feed(bFrames) { levelB }
+            drain()
+            return Run(out.toFloatArray())
+        }
         engine.streamGeneration++
         repeat(reconfigurations) {
             pipeline.queueEndOfStream()
@@ -149,6 +166,19 @@ class CrossfadeTest {
             // After the blend: B alone.
             assertEquals(0.2f, out[clip + fade + 10], 1e-6f)
         }
+    }
+
+    @Test
+    fun blendsIntoATrackAnotherDecoderPlays() {
+        val clip = rate
+        val fade = rate * 3 / 10
+        val run = play(DspEngine(DspSettings()), clip, tail(clip, clip + fade, lead = rate / 2), anotherDecoder = true)
+        val out = run.output
+        // The tail is blended into B, not lost: no silence, no jump.
+        assertEquals(clip + rate, out.size)
+        for (i in 1 until out.size) assertTrue("jump at $i", abs(out[i] - out[i - 1]) < 0.05f)
+        val mid = clip + fade / 2
+        assertEquals(trackA(mid) * 0.7071f + 0.2f * 0.7071f, out[mid], 0.01f)
     }
 
     @Test

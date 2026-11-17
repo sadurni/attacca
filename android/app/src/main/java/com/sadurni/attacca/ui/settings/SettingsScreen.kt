@@ -189,6 +189,7 @@ private val SettingsPage.searchTerms: List<Int>
             R.string.chain_measure_whole, R.string.chain_edge_seconds, R.string.chain_threads, R.string.chain_keep_screen_on,
             R.string.chain_reanalyze, R.string.chain_order, R.string.chain_save_made, R.string.chain_quick_not_played,
             R.string.chain_artist_spacing, R.string.random_list, R.string.random_ask_mood, R.string.random_shake,
+            R.string.chain_by_hand, R.string.taste_profiles, R.string.taste_guide_open,
         )
         SettingsPage.LANGUAGE -> emptyList()
         SettingsPage.BACKUP -> listOf(
@@ -1396,6 +1397,14 @@ private fun ChainingPage(settings: com.sadurni.attacca.settings.AppSettings) {
         settings.updateChain { it.copy(saveMadeLists = on) }
     })
     Hint(stringResource(R.string.chain_save_made_hint))
+    // Live tracks (an audience heard, a concert album, said in the name) in the lists Attacca makes.
+    Text(stringResource(R.string.chain_live_title), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+    for ((choice, label) in listOf(
+        com.sadurni.attacca.settings.LiveChoice.ANY to R.string.chain_live_any,
+        com.sadurni.attacca.settings.LiveChoice.NONE to R.string.chain_live_none,
+        com.sadurni.attacca.settings.LiveChoice.ONLY to R.string.chain_live_only,
+    )) RadioRow(stringResource(label), chain.liveChoice == choice) { settings.updateChain { it.copy(liveChoice = choice) } }
+    Hint(stringResource(R.string.chain_live_hint))
     val offLabel = stringResource(R.string.off)
     ValueSlider(
         label = stringResource(R.string.chain_quick_not_played),
@@ -1422,6 +1431,8 @@ private fun ChainingPage(settings: com.sadurni.attacca.settings.AppSettings) {
         ),
     ) { tasteGuide = true }
     if (tasteGuide) TasteGuide { tasteGuide = false }
+    // The same by hand, and kept as profiles to choose when a list is made.
+    ChainByHand(settings)
     ValueSlider(
         label = stringResource(R.string.chain_artist_spacing),
         value = chain.artistSpacing.toFloat(),

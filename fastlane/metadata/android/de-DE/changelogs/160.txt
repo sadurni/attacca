@@ -1,0 +1,5 @@
+• Neue Listen: Energie von Hand gezeichnet, für zwei, was du um diese Zeit hörst, Variante, Reisen mit Stopps, zum Einschlafen und Aufwachen.
+• Verkettung von Hand mit Profilen je Liste; endlose Listen kennen Mehr davon und Weniger davon.
+• Live-Titel am Klang erkannt: alle, ohne Live oder nur Live; ein Song aus mehreren Alben nur einmal.
+• Lückenlose Überblendungen in Ogg-, Opus- oder still beginnende Titel.
+• Dieselbe Musik auf anderem Telefon: Bibliothek importieren, kein neuer Scan.

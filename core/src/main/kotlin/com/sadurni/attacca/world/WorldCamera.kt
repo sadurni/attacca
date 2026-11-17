@@ -47,6 +47,9 @@ class WorldCamera {
     private var focusing: FloatArray? = null
     private var inTunnel = 0f
     private var pull = 1f
+    // At the peak, turned to what it shows (the red moon, the desert's pyramid) rather than going round.
+    private var showHold = 0f
+    private var showOff = 0f
 
     /** Seconds after the last touch before it goes back on its own. */
     private val idleMs = 8_000L
@@ -138,9 +141,13 @@ class WorldCamera {
         nearDogCount: Int = 0,
         /** A board ahead in sight (the next song's sign, a cover), for the eyes to read as it comes. */
         board: FloatArray? = null,
+        /** Where the peak's show stands in the sky (the red moon), as a heading, or null. */
+        peakYaw: Float? = null,
     ) {
+        // What the peak shows in one place (on the land or in the sky): the way to look at it.
+        val showYaw = peakYaw ?: peakSight?.let { kotlin.math.atan2(it[0] - tx, it[2] - tz) }
         if (firstPerson) {
-            throughEyes(dtMs, nowMs, tx, ty, tz, heading, peak, ground, sight, tunnel, ceiling, wayX, travellerEye, peakSight, skyThing, nearDogs, nearDogCount, board)
+            throughEyes(dtMs, nowMs, tx, ty, tz, heading, peak, ground, sight, tunnel, ceiling, wayX, travellerEye, peakSight, skyThing, nearDogs, nearDogCount, board, showYaw)
             return
         }
         skyTurn = 0f
@@ -205,13 +212,30 @@ class WorldCamera {
         var autoPitch = (0.26f - 0.1f * intensity + drift * 0.6f) * (1 - peak) + (0.04f + 0.08f * (1 - open)) * peak
         autoPitch += (0.12f - autoPitch) * inTunnel
         // At the peak it goes round, slowly and gently (speeding up and slowing down softly);
-        // after it, on to the nearest whole turn (behind again).
-        val spin = peak > 0.05f && inTunnel < 0.5f
+        // after it, on to the nearest whole turn (behind again). When the peak shows something in
+        // one place (the red moon, the desert's pyramid), it comes round to it instead and stays
+        // looking at it, swaying a little, as long as the peak lasts: going round, it could be
+        // behind just while it is there.
+        val showing = showYaw != null && peak > 0.05f && inTunnel < 0.5f
+        showHold += ((if (showing) 1f else 0f) - showHold) * (1 - exp(-dtMs / (if (showing) 900.0 else 2400.0))).toFloat()
+        val spin = peak > 0.05f && inTunnel < 0.5f && showYaw == null
         orbitSpeed += ((if (spin) (2 * PI / ORBIT_MS * peak).toFloat() else 0f) - orbitSpeed) * (1 - exp(-dtMs / 1800.0)).toFloat()
         orbit += orbitSpeed * dtMs
         if (!spin) orbit += ((Math.round(orbit / (2 * PI)) * 2 * PI).toFloat() - orbit) * (1 - exp(-dtMs / 2600.0)).toFloat()
         // Behind the traveller as the way turns (a little late, as a camera held by hand).
-        val autoYaw = heading + (sin(nowMs / 9000.0) * 0.18).toFloat() * (1 - inTunnel) + orbit + (sideYaw + focusYaw) * (1 - inTunnel)
+        var autoYaw = heading + (sin(nowMs / 9000.0) * 0.18).toFloat() * (1 - inTunnel) + orbit + (sideYaw + focusYaw) * (1 - inTunnel)
+        if (showYaw != null) {
+            // (Turned the short way, and never jumping from one side to the other on the way there.)
+            var d = showYaw + (sin(nowMs / 5200.0) * 0.28).toFloat() - autoYaw
+            while (d > PI) d -= (2 * PI).toFloat()
+            while (d < -PI) d += (2 * PI).toFloat()
+            var step = d - showOff
+            while (step > PI) step -= (2 * PI).toFloat()
+            while (step < -PI) step += (2 * PI).toFloat()
+            showOff += step
+        }
+        autoYaw += showOff * showHold
+        if (showHold < 0.002f) showOff = 0f
         // A while after a touch, the hand's part fades away.
         if (touchedAt >= 0 && nowMs - touchedAt > idleMs || touchedAt < -1) {
             val k = (1 - exp(-dtMs / 900.0)).toFloat()
@@ -300,7 +324,7 @@ class WorldCamera {
         dtMs: Long, nowMs: Long, tx: Float, ty: Float, tz: Float, heading: Float, peak: Float,
         ground: (Float, Float) -> Float, sight: FloatArray?, tunnel: Float, ceiling: (Float, Float) -> Float,
         wayX: ((Float) -> Float)?, travellerEye: FloatArray?, peakSight: FloatArray?,
-        skyThing: Float?, nearDogs: FloatArray?, nearDogCount: Int, board: FloatArray?,
+        skyThing: Float?, nearDogs: FloatArray?, nearDogCount: Int, board: FloatArray?, showYaw: Float?,
     ) {
         fun ease(ms: Double) = (1 - exp(-dtMs / ms)).toFloat()
         fun wrap(a: Float): Float {
@@ -394,6 +418,10 @@ class WorldCamera {
                 wantTurn = wrap(kotlin.math.atan2(ps[0] - fpEye[0], ps[2] - fpEye[2]) - fpYaw).coerceIn(-1.6f, 1.6f) * peak
                 val flat = kotlin.math.hypot(ps[0] - fpEye[0], ps[2] - fpEye[2]).coerceAtLeast(1f)
                 wantLift = kotlin.math.atan((ps[1] - fpEye[1]) / flat).coerceIn(0f, 0.5f) * peak
+            } else if (showYaw != null) {
+                // Towards what shows in the sky (the red moon), looking a little about it.
+                wantTurn = (wrap(showYaw - fpYaw) + (sin(nowMs / 6000.0) * 0.18).toFloat()).coerceIn(-1.6f, 1.6f) * peak
+                wantLift = 0.16f * peak
             } else if (skyThing != null) {
                 // Following what flies over the sky (the dragon), as far as the eyes turn.
                 wantTurn = (skyThing * 0.85f).coerceIn(-1.1f, 1.1f) * peak

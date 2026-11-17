@@ -46,6 +46,18 @@ import java.io.File
 private fun keyOf(item: MediaItem): String = item.mediaId + "@" + (MediaItems.explicitClipStartMs(item) ?: "")
 
 /**
+ * Each track once, and of a song found on several albums (a compilation, a remaster) only its
+ * best copy (see [com.sadurni.attacca.library.SameSong]). Blocking.
+ */
+private fun withoutRepeats(items: List<MediaItem>): List<MediaItem> {
+    val whole = items.filter { MediaItems.explicitClipStartMs(it) == null }.map { it.mediaId }
+    // Copies the tags propose and their sound was not compared yet: compared now (only those).
+    com.sadurni.attacca.library.SameSongs.verify(whole)
+    val copies = com.sadurni.attacca.library.SameSongs.others(whole)
+    return ListTools.dedupe(items.filter { it.mediaId !in copies || MediaItems.explicitClipStartMs(it) != null }, ::keyOf)
+}
+
+/**
  * The list tools: taking out repeated tracks or those played lately, and combining the list with
  * another one (adding its tracks, keeping only the shared ones, taking its tracks out). The result
  * changes the list itself when it is one of the user's own, or is saved as a new list.
@@ -67,7 +79,7 @@ fun ListToolsDialog(source: ListSource, items: List<MediaItem>, editable: File?,
             (UserLists.all() + context.app.listHistory.playlists()).filter { it.absolutePath != own && it.exists() }.distinctBy { it.absolutePath }
         }
     }
-    val repeated = remember(items) { items.size - ListTools.dedupe(items, ::keyOf).size }
+    val repeated by androidx.compose.runtime.produceState(0, items) { value = withContext(Dispatchers.IO) { items.size - withoutRepeats(items).size } }
 
     val done = result
     if (done != null && naming) {
@@ -126,6 +138,7 @@ fun ListToolsDialog(source: ListSource, items: List<MediaItem>, editable: File?,
         text = {
             Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState())) {
                 RadioRow(stringResource(R.string.list_tools_dedupe, repeated), tool == Tool.DEDUPE) { tool = Tool.DEDUPE }
+                if (tool == Tool.DEDUPE) com.sadurni.attacca.ui.settings.Hint(stringResource(R.string.list_tools_dedupe_hint))
                 RadioRow(stringResource(R.string.list_tools_played), tool == Tool.REMOVE_PLAYED) { tool = Tool.REMOVE_PLAYED }
                 if (tool == Tool.REMOVE_PLAYED) {
                     OutlinedTextField(
@@ -166,7 +179,7 @@ fun ListToolsDialog(source: ListSource, items: List<MediaItem>, editable: File?,
                         result = withContext(Dispatchers.IO) {
                             val second = other?.takeIf { ListTools.needsOther(chosen) }?.let { ListLoader.load(ListSource.Playlist(it.absolutePath)) }.orEmpty()
                             when (chosen) {
-                                Tool.DEDUPE -> ListTools.dedupe(items, ::keyOf)
+                                Tool.DEDUPE -> withoutRepeats(items)
                                 Tool.REMOVE_PLAYED -> {
                                     val since = System.currentTimeMillis() - (days.toLongOrNull() ?: 7L) * 86_400_000L
                                     ListTools.removePlayed(items, context.app.listening.playedSince(since)) { it.mediaId }

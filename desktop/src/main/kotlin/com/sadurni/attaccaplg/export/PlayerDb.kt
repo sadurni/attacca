@@ -36,6 +36,8 @@ object PlayerDb {
                 tail = t.tail,
                 included = inclusion?.includes(t.path) ?: true,
                 sets = kept.foldIndexed(0) { k, bits, (_, set) -> if (set.includes(t.path)) bits or (1 shl k) else bits },
+                live = t.path in library.live,
+                copy = t.path in library.copies,
                 // How it starts and ends, for the player's automatic crossfade.
                 ends = t.takeIf { it.audioEndMs > it.audioStartMs }?.let {
                     PlayerDbFormat.Ends.of(it.waveform, it.durationMs, it.audioStartMs, it.audioEndMs, PlayerDbFormat.REFERENCE_BLEND_MS)

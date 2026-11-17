@@ -53,6 +53,7 @@ object LibraryTransfer {
                     val edges = app.chainAnalyzer.db.getAll(block, chain.edgeSeconds)
                     val features = app.chainAnalyzer.db.getFeatures(block)
                     val sounds = app.chainAnalyzer.db.getSounds(block)
+                    val audience = app.chainAnalyzer.db.getAudience(block)
                     val analyses = app.analysisDb.getAll(block, threshold)
                     // Silences also of tracks only scanned at their ends (no waveform, no loudness).
                     val bounds = app.analysisDb.getBounds(block, threshold)
@@ -98,9 +99,20 @@ object LibraryTransfer {
                             }
                             feature?.let { put("features", LibraryExchange.bytes(it.toArray())) }
                             sound?.let { put("sound", it.toBytes()) }
+                            audience[file.absolutePath]?.let { put("audience", com.sadurni.attacca.chain.Audience.toBytes(it)) }
                         })
                         written++
                     }
+                }
+                // The copies of one song compared by their sound, by paths relative to the music folder.
+                for ((a, b, same) in SameSongs.all()) {
+                    val ra = LibraryExchange.relative(root.path, a) ?: continue
+                    val rb = LibraryExchange.relative(root.path, b) ?: continue
+                    db.insertWithOnConflict("same", null, ContentValues().apply {
+                        put("a", ra)
+                        put("b", rb)
+                        put("same", if (same) 1 else 0)
+                    }, SQLiteDatabase.CONFLICT_REPLACE)
                 }
                 // The inclusion list, by paths relative to the music folder.
                 chain.inclusionList?.let(::File)?.takeIf { it.isFile }?.let { list ->
@@ -144,6 +156,8 @@ object LibraryTransfer {
         var analyses = 0
         var tags = 0
         var inclusion = 0
+        var audience = 0
+        var same = 0
         val tagRows = HashMap<String, SortTags>()
         try {
             SQLiteDatabase.openDatabase(temp.path, null, SQLiteDatabase.OPEN_READONLY).use { src ->
@@ -157,7 +171,8 @@ object LibraryTransfer {
                     chainDb.beginTransaction()
                     analysisDb.writableDatabase.beginTransaction()
                     try {
-                        src.rawQuery("SELECT ${LibraryExchange.columns(format)} FROM tracks", null).use { c ->
+                        val columns = LibraryExchange.columns(format) + if (format >= 3) ", audience" else ""
+                        src.rawQuery("SELECT $columns FROM tracks", null).use { c ->
                             fun col(name: String) = c.getColumnIndexOrThrow(name)
                             fun int(name: String) = col(name).takeUnless(c::isNull)?.let(c::getInt)
                             fun long(name: String) = col(name).takeUnless(c::isNull)?.let(c::getLong)
@@ -205,6 +220,12 @@ object LibraryTransfer {
                                         sounds++
                                     }
                                 }
+                                if (format >= 3) {
+                                    c.getBlob(col("audience"))?.let(com.sadurni.attacca.chain.Audience::fromBytes)?.let {
+                                        app.chainAnalyzer.db.putAudience(file, it)
+                                        audience++
+                                    }
+                                }
                                 val waveform = blob("waveform")
                                 val start = long("start_ms")
                                 val end = long("end_ms")
@@ -227,6 +248,21 @@ object LibraryTransfer {
                     }
                 }
                 TrackSort.db?.putAll(tagRows)
+                if (audience > 0) com.sadurni.attacca.library.LiveTracks.changed()
+                // The copies of one song compared elsewhere (both files the same size here).
+                if (format >= 3) {
+                    val pairs = src.rawQuery("SELECT a, b, same FROM same", null).use { c ->
+                        buildList {
+                            while (c.moveToNext()) {
+                                val a = matcher.match(c.getString(0))?.let(local::getValue) ?: continue
+                                val b = matcher.match(c.getString(1))?.let(local::getValue) ?: continue
+                                add(Triple(a.absolutePath, b.absolutePath, c.getInt(2) != 0))
+                            }
+                        }
+                    }
+                    SameSongs.take(pairs)
+                    same = pairs.size
+                }
                 // The inclusion list, unless one is set here already.
                 if (chain.inclusionList == null) {
                     val paths = src.rawQuery("SELECT path FROM inclusion", null).use { c ->
@@ -245,7 +281,7 @@ object LibraryTransfer {
         } finally {
             temp.delete()
         }
-        return LibraryExchange.ImportResult(total, matched, differentSize, edges, features, analyses, tags, inclusion, sounds)
+        return LibraryExchange.ImportResult(total, matched, differentSize, edges, features, analyses, tags, inclusion, sounds, audience, same)
     }
 
     /**
@@ -288,6 +324,8 @@ object LibraryTransfer {
                 if (end != null && end.soundEndMs > end.soundStartMs) ends[file.absolutePath] = end
             }
         }
+        // Live tracks, for the player's choice (copies of one song are not in the collection at all).
+        val live = LiveTracks.live(inFolder.map { it.id })
         val tracks = inFolder.map { c ->
             val tags = TrackSort.tags(c.id)
             PlayerDbFormat.Track(
@@ -304,6 +342,7 @@ object LibraryTransfer {
                 included = inclusion?.includes(c.id) ?: true,
                 ends = ends[c.id],
                 sets = setFilters.foldIndexed(0) { k, bits, f -> if (f.includes(c.id)) bits or (1 shl k) else bits },
+                live = c.id in live,
             )
         }
         val temp = File(context.cacheDir, "export.${PlayerDbFormat.EXTENSION}").apply { delete() }

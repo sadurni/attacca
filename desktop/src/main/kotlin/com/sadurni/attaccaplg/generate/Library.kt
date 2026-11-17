@@ -23,6 +23,9 @@ class Playlist(val name: String, val paths: List<String>)
  * lists from: Attacca's own list generator for automatic and seeded lists, plus lists by filters,
  * by template and reordered playlists.
  */
+/** Live tracks in a list: any, left out, or only those. */
+enum class LiveChoice { ANY, NONE, ONLY }
+
 class Library(db: LibraryDb) {
 
     /** The music folder; null when imported without the music (lists then use paths within it). */
@@ -34,8 +37,29 @@ class Library(db: LibraryDb) {
     val damaged: Set<String> = runCatching { db.damaged().keys }.getOrDefault(emptySet())
     private val skipDamaged = db.meta("skip_damaged") != "false"
 
+    /** Copies of a recording kept on another album (compared by their sound): out of every list. */
+    val copies: Set<String> = runCatching { com.sadurni.attaccaplg.library.LiveAndCopies.copies(db, root, all) }.getOrDefault(emptySet())
+
     /** Tracks with features: the ones lists are made of. */
     private val measured = all.filter { it.features != null && !(skipDamaged && it.path in damaged) }
+
+    /** The live tracks (an audience heard at an end, a concert album, said in the name). */
+    val live: Set<String> by lazy { com.sadurni.attaccaplg.library.LiveAndCopies.live(root, all) }
+
+    /**
+     * The tracks a list leaves out: the [copies], and for [choice] the live ones or all but those;
+     * never [keep] (the tracks it starts from or goes to). Null when none.
+     */
+    fun liveLeftOut(choice: LiveChoice, keep: Collection<String> = emptyList()): Set<String>? {
+        val out = HashSet(copies)
+        when (choice) {
+            LiveChoice.ANY -> Unit
+            LiveChoice.NONE -> out += live
+            LiveChoice.ONLY -> all.mapTo(out) { it.path }.removeAll(live)
+        }
+        out.removeAll(keep.toSet())
+        return out.ifEmpty { null }
+    }
     private val index = measured.withIndex().associate { (i, t) -> t.path to i }
 
     val generator: ListGenerator = run {

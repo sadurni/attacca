@@ -266,9 +266,23 @@ plays them so one song flows into the next.
   editing. They are made again after each library scan and each time they are opened, and stay
   ordinary M3U8 files (their rules in a `.smart.txt` next to them, editable by hand too), so other
   apps and devices can play them.
+- **Live tracks**, told by their sound: the analysis listens to the ends of each track for an
+  audience (applause, cheering) — the end first, the start only when needed, and an album no more
+  once it is told; an album where several tracks have one is a concert, all of it, while a studio
+  album keeps its live extras apart; the MusicBrainz release type and the name ("(Live)", a live
+  album) count too. Live tracks any, none or only those, in Settings → Chaining and in the options
+  of each list as it is made (the list keeps the choice); smart lists have a Live rule; Track
+  information shows it.
+- **The same song from several albums** (a compilation, a remaster, another edition) is kept once
+  in the lists Attacca makes and in smart lists, and "Remove repeated tracks" takes it out: the
+  best copy stays (lossless, else the higher bit rate, else the artist's own album). The tags
+  propose the copies and their sound has the last word.
 - **Endless lists** (globally or per list): when a list's last track starts, ten similar tracks
   chained from it are added (same mood and sound family first, nothing the list has or that was
-  heard today, keeping to the inclusion list); they are not saved into the list.
+  heard today, keeping to the inclusion list, the live tracks choice and the chaining profile it
+  was made with); they are not saved into the list. **More like this** and **Less like this** (⋮
+  of Now playing) steer them: the tracks added from then on lean towards the ones marked more and
+  keep away from those marked less and their look-alikes.
 - **List tools**: remove repeated tracks or those played in the last days, and combine a list with
   another — add its tracks, keep only those both share, or take its tracks out. The result
   changes your own list or is saved as a new one.
@@ -347,10 +361,19 @@ plays them so one song flows into the next.
   of the most typical tracks of every sound family, and tracks like your favorites not heard for
   some days (or never); from the playing track, its opposite (the tracks least like it), whole
   albums that sound like its album (chained album by album) and a list lasting about the minutes
-  you give. A **bridge** goes from one track to another: select the two in a list, in Music or in
-  Folders (the selection stays while you search or open an album, so the second one can be looked
-  for), and tap the road button; a panel shows both ends, which can be swapped, with the tracks
-  and inclusion of that list. Tracks not analysed yet are analysed on the spot. A saved list
+  you give. Also: energy **drawn by hand** (a finger draws how it goes along the list); a list
+  **for two** (two inclusion sets, one of each in turn, the tracks both take as bridges); **what
+  you play at this hour** (like the tracks usually heard around this time of day, on weekdays or
+  at weekends: each play is kept with its time); a **variant** of the playing list (the same way
+  through moods and energy with other tracks); a list **to fall asleep** (calmer and calmer for
+  the minutes given, the volume going down little by little, the player stopping at its end); and
+  one **to wake up** (at a time set once or every day the phone's alarm clock wakes Attacca,
+  which plays a list from calm to lively, starting soft and coming up, without opening the app; the
+  list is made ahead so it starts at once). A **bridge** goes from one track
+  to another: select the two in a list, in Music or in Folders (the selection stays while you
+  search or open an album, so the second one can be looked for), and tap the road button; three to
+  five make a **trip** that stops at each, in their order. A panel shows the ends and stops, which
+  can be reversed or moved, with the tracks and inclusion of that list. Tracks not analysed yet are analysed on the spot. A saved list
   can also make a list like the whole of it. All of them are chained by how each track ends and
   the next one starts (the bridge and the energy curves weigh that next to their way forward), and
   while a list is being made a notice at the top of the screen says so; its X stops it.
@@ -388,9 +411,12 @@ plays them so one song flows into the next.
   device or a computer.
 - Backup and restore of settings, profiles, caches and lists in a single zip file, also
   **automatically** every day, week or month into a folder of your choice, keeping the last few.
-- Library exchange with Attacca Desktop, the app for the PC (`.attlib` file): tags, pre-play
-  analysis, chaining edges, sound features and the inclusion list, so the collection is measured
-  once, on the phone or on the PC.
+  A backup made on another phone whose memory card has another name asks for this phone's music
+  folder and moves to it what it kept for each track.
+- Library exchange with Attacca Desktop, the app for the PC, or another phone (`.attlib` file):
+  tags, pre-play analysis, chaining edges, sound features, the live tracks heard, the copies of one
+  song compared and the inclusion list, so the collection is measured once, on the phone or on the
+  PC.
 - **Library for players** (`.bpcr2` file): the analysed music folder with its moods, sound
   families and chaining edges worked out in integers, for the Rockbox plugin and the web list
   generator of Attacca Desktop, with the paths as the player sees its music folder (e.g.
@@ -424,6 +450,10 @@ plays them so one song flows into the next.
   **Chaining to your taste** (Settings → Chaining): the end of a song goes into two songs that
   could follow it; one matches it better in the beat, the sound, the energy or the key, the other
   in the rest. What you keep, eight times, moves how much each counts when lists are chained.
+  **Chaining by hand** sets the same with four sliders (the beat, the sound, the energy, the key and
+  notes), kept as named profiles to choose when a list is made, next to Live tracks; the list
+  keeps it, also for the tracks it adds when endless. **Steps in tune** sets the key and notes to
+  40 %: four steps in five then join keys that go together.
 - **A list per device**: each device (the phone speaker included) continues its own list, which
   can follow the last list played on it. The list is loaded when the device connects and when
   the player opens with it as the output.
@@ -533,7 +563,8 @@ plays them so one song flows into the next.
   long press on the list box opens Lists, and on the title box the track's album in Music.
 - Selected rows and the marked one (the playing track, the one gone to) stand out with an accent
   fill and an accent bar on their left edge, clear whatever the colour of the cover.
-- First start: choose the music folder (scanned once) or restore a backup (nothing to scan again),
+- First start: choose the music folder (scanned once, or not at all when a library exported
+  elsewhere is imported right then) or restore a backup (nothing to scan again),
   with the state of each permission; a permission Android no longer asks for opens the app's
   system settings instead of doing nothing.
 - Floating side menu, slide transitions (the cover and title slide sideways on track changes,
@@ -561,7 +592,10 @@ plays them so one song flows into the next.
 ## What's new
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
-new). In 1.5.0: Attacca World through the traveller's own eyes. In 1.4.0: Attacca World, the song as a land in 3D to go through (also beside O'rama, the
+new). In 1.6.0: new kinds of list (drawn by hand, for two, at this hour, a variant, trips with
+stops, to fall asleep and to wake up), chaining by hand with profiles, endless lists you can steer,
+live tracks told by their sound, one copy of a song found on several albums, and another phone set
+up without scanning again. In 1.5.0: Attacca World through the traveller's own eyes. In 1.4.0: Attacca World, the song as a land in 3D to go through (also beside O'rama, the
 screen split in two), and eight new worlds in both. In 1.3.0: the sound guide, every effect heard step by step on your own music for each
 device, guides by ear for the transitions, the volume and the chaining (to your taste), and a check-up. In 1.2.1: O'rama can take the waveform's place in Now playing, and O'rama shows the cover by
 the title. In 1.2.0: a list made from the track playing goes on with it, a new widget in four sizes

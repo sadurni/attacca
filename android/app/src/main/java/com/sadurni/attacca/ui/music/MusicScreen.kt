@@ -277,11 +277,11 @@ fun MusicScreen(
                     com.sadurni.attacca.ui.common.ShareTracks.share(context, selected)
                     selection = null
                 }, enabled = selected.isNotEmpty()) { Icon(Icons.Rounded.Share, stringResource(R.string.share)) }
-                if (selected.size == 2) {
+                if (selected.size in 2..com.sadurni.attacca.ui.chain.MAX_STOPS) {
                     IconButton(onClick = {
-                        onAction(BrowserAction.Bridge(selected[0], selected[1]))
+                        onAction(BrowserAction.Bridge(selected.toList()))
                         selection = null
-                    }) { Icon(Icons.Rounded.Route, stringResource(R.string.list_bridge_action)) }
+                    }) { Icon(Icons.Rounded.Route, stringResource(if (selected.size > 2) R.string.list_trip_action else R.string.list_bridge_action)) }
                 }
                 val single = selected.singleOrNull()
                 if (single != null) {

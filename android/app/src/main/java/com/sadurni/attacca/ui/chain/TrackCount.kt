@@ -1,6 +1,7 @@
 package com.sadurni.attacca.ui.chain
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -12,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -90,12 +92,13 @@ fun TrackCountField(value: String, onChange: (String) -> Unit, modifier: Modifie
 fun ListOptionsDialog(
     title: String,
     onDismiss: () -> Unit,
-    onMake: (count: Int, onlyIncluded: Boolean) -> Unit,
+    onMake: (count: Int, onlyIncluded: Boolean, choices: com.sadurni.attacca.settings.ListChoices) -> Unit,
     header: @Composable () -> Unit = {},
 ) {
     val lists = LocalContext.current.app.chainLists
     var count by rememberSaveable { mutableStateOf(lists.listCount.toString()) }
     var onlyIncluded by rememberSaveable { mutableStateOf(lists.onlyIncludedByDefault()) }
+    var choices by rememberSaveable { mutableStateOf(lists.choicesByDefault()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -104,12 +107,13 @@ fun ListOptionsDialog(
                 header()
                 TrackCountField(count, { count = it })
                 OnlyIncludedSwitch(onlyIncluded) { onlyIncluded = it }
+                ListChoicesPicker(choices) { choices = it }
             }
         },
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()
-                onMake(listCountOf(count, lists.listCount), onlyIncluded)
+                onMake(listCountOf(count, lists.listCount), onlyIncluded, choices)
             }) { Text(stringResource(R.string.list_options_make)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
@@ -118,17 +122,31 @@ fun ListOptionsDialog(
 
 /** The bridge's options: from which track to which (swappable), its tracks and inclusion. */
 @Composable
-fun BridgeDialog(from: String, to: String, onDismiss: () -> Unit, onMake: (from: String, to: String, count: Int, onlyIncluded: Boolean) -> Unit) {
-    var ends by rememberSaveable { mutableStateOf(listOf(from, to)) }
+fun BridgeDialog(stops: List<String>, onDismiss: () -> Unit, onMake: (stops: List<String>, count: Int, onlyIncluded: Boolean, choices: com.sadurni.attacca.settings.ListChoices) -> Unit) {
+    var ends by rememberSaveable { mutableStateOf(stops) }
     ListOptionsDialog(
-        title = stringResource(R.string.list_bridge_action),
+        title = stringResource(if (ends.size > 2) R.string.list_trip_action else R.string.list_bridge_action),
         onDismiss = onDismiss,
-        onMake = { count, onlyIncluded -> onMake(ends[0], ends[1], count, onlyIncluded) },
+        onMake = { count, onlyIncluded, choices -> onMake(ends, count, onlyIncluded, choices) },
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
             Column(Modifier.weight(1f)) {
-                BridgeEnd(stringResource(R.string.bridge_from), ends[0])
-                BridgeEnd(stringResource(R.string.bridge_to), ends[1])
+                ends.forEachIndexed { i, id ->
+                    val label = when (i) {
+                        0 -> stringResource(R.string.bridge_from)
+                        ends.lastIndex -> stringResource(R.string.bridge_to)
+                        else -> stringResource(R.string.trip_stop, i)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { BridgeEnd(label, id) }
+                        // A stop earlier on the way (more than two).
+                        if (ends.size > 2 && i > 0) {
+                            IconButton(onClick = { ends = ends.toMutableList().apply { add(i - 1, removeAt(i)) } }) {
+                                Icon(Icons.Rounded.ArrowUpward, stringResource(R.string.trip_earlier))
+                            }
+                        }
+                    }
+                }
             }
             IconButton(onClick = { ends = ends.reversed() }) {
                 Icon(Icons.Rounded.SwapVert, stringResource(R.string.bridge_swap))
@@ -136,6 +154,9 @@ fun BridgeDialog(from: String, to: String, onDismiss: () -> Unit, onMake: (from:
         }
     }
 }
+
+/** At most this many tracks chosen for a trip (its two ends and the stops between). */
+const val MAX_STOPS = 5
 
 @Composable
 private fun BridgeEnd(label: String, id: String) {

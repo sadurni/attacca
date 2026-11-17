@@ -99,6 +99,7 @@ private class FilterForm {
     var positivity by mutableStateOf(0f..1f)
     var voice by mutableStateOf(VoiceFilter.ANY)
     var onlyIncluded by mutableStateOf(false)
+    var choices by mutableStateOf(com.sadurni.attacca.settings.ListChoices())
     var inclusion: com.sadurni.attacca.library.Inclusion? = null
     var heard by mutableStateOf(HeardFilter.ANY)
     var heardDays by mutableStateOf(DEFAULT_NOT_HEARD_DAYS.toString())
@@ -155,6 +156,7 @@ private fun FilterFields(form: FilterForm) {
     form.inclusion = remember(chain.inclusionList, chain.inclusionMode) { chain.inclusion() }
     InclusionSetPicker()
     SwitchRow(stringResource(R.string.only_included), form.onlyIncluded && form.inclusion != null, { form.onlyIncluded = it }, enabled = form.inclusion != null)
+    ListChoicesPicker(form.choices) { form.choices = it }
     if (form.inclusion == null) {
         Hint(stringResource(R.string.only_included_none))
     } else {
@@ -276,7 +278,8 @@ fun SeedListDialog(viewModel: PlayerViewModel, seeds: List<String>, groupName: S
     val (loading, collection) = rememberCollection(if (group) null else seed)
     val seedIndices = remember(collection) { collection?.generator?.indicesOf(seeds).orEmpty() }
     val onlyByDefault = LocalContext.current.app.chainLists.onlyIncludedByDefault()
-    val form = remember { FilterForm().apply { onlyIncluded = onlyByDefault } }
+    val choicesByDefault = LocalContext.current.app.chainLists.choicesByDefault()
+    val form = remember { FilterForm().apply { onlyIncluded = onlyByDefault; choices = choicesByDefault } }
     var sameMood by remember { mutableStateOf(true) }
     var sameFamily by remember { mutableStateOf(true) }
     var count by remember { mutableStateOf(lists.listCount.toString()) }
@@ -382,8 +385,8 @@ fun SeedListDialog(viewModel: PlayerViewModel, seeds: List<String>, groupName: S
                             result = found
                         }
                     }
-                    if (group) lists.fromSeeds(seeds, form.toFilters(), sameMood, sameFamily, n, done)
-                    else lists.fromSeed(seed, form.toFilters(), sameMood, sameFamily, n, done)
+                    if (group) lists.fromSeeds(seeds, form.toFilters(), sameMood, sameFamily, n, form.choices, done)
+                    else lists.fromSeed(seed, form.toFilters(), sameMood, sameFamily, n, form.choices, done)
                 },
             ) { Text(stringResource(if (working) R.string.chain_building else R.string.seed_list_create)) }
         },
@@ -400,7 +403,8 @@ fun GenerateListsDialog(onDismiss: () -> Unit, onGenerated: () -> Unit) {
     val working by lists.working.collectAsStateWithLifecycle()
     val (loading, collection) = rememberCollection(null)
     val onlyByDefault = LocalContext.current.app.chainLists.onlyIncludedByDefault()
-    val form = remember { FilterForm().apply { onlyIncluded = onlyByDefault } }
+    val choicesByDefault = LocalContext.current.app.chainLists.choicesByDefault()
+    val form = remember { FilterForm().apply { onlyIncluded = onlyByDefault; choices = choicesByDefault } }
     var moods by remember { mutableStateOf(Mood.entries.toSet()) }
     var families by remember { mutableStateOf<Set<Int>?>(null) }
     var count by remember { mutableStateOf(lists.listCount.toString()) }
@@ -462,6 +466,7 @@ fun GenerateListsDialog(onDismiss: () -> Unit, onGenerated: () -> Unit) {
                     lists.generateGeneral(
                         filters = form.toFilters(moods = moods, families = families),
                         count = count.toIntOrNull()?.takeIf { it > 0 },
+                        choices = form.choices,
                         name = { list, c ->
                             context.getString(
                                 R.string.generated_list_name,

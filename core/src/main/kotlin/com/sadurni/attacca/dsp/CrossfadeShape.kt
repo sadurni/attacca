@@ -129,6 +129,20 @@ object CrossfadePlanner {
         }
     }
 
+    /** The most a blend is lengthened for the silence the next track starts with. */
+    const val MAX_LEAD_MS = 5_000L
+
+    /**
+     * [plan] for a next track whose clip plays [leadMs] of silence before its sound starts (its
+     * leading silence, when it is not trimmed, or the margin kept): where the ending track plays out
+     * whole, the blend starts that much earlier, so the next track's sound comes in where it was
+     * meant to and not after the ending track has stopped (a gap). A plain crossfade keeps its length.
+     */
+    fun withLead(plan: CrossfadePlan, leadMs: Long): CrossfadePlan {
+        if (plan.lengthMs <= 0 || leadMs <= 0 || !plan.shape.keepsEnding) return plan
+        return plan.copy(lengthMs = plan.lengthMs + leadMs.coerceAtMost(MAX_LEAD_MS).toInt())
+    }
+
     sealed interface Ending {
         /** Falls by itself over its last [fadeMs]. */
         data class Fades(val fadeMs: Long) : Ending

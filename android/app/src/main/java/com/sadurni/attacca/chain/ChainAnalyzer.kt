@@ -172,9 +172,16 @@ class ChainAnalyzer(
         }
     }
 
+    /**
+     * Whether a pass over the music folder was started and never finished (the phone restarted,
+     * Android ended the app): the next scan takes it up again, also with background analysis off.
+     */
+    val interrupted: Boolean get() = prefs.getBoolean(KEY_RUNNING, false)
+
     private suspend fun runPass(folder: File) {
         _libraryProgress.value = Progress(0, 0)
         wakeLock.acquire(WAKE_MS)
+        prefs.edit().putBoolean(KEY_RUNNING, true).apply()
         try {
             val ids = AudioFiles.collectAudio(folder, recent = true, withIgnored = true).map { it.absolutePath }
             _libraryProgress.value = Progress(0, ids.size)
@@ -190,6 +197,7 @@ class ChainAnalyzer(
                 .putInt(KEY_ANALYSED, result.analysed)
                 .putInt(KEY_TOTAL, result.total)
                 .putLong(KEY_FINISHED, result.finishedAt)
+                .putBoolean(KEY_RUNNING, false)
                 .apply()
             _last.value = result
         } finally {
@@ -198,8 +206,10 @@ class ChainAnalyzer(
         }
     }
 
+    /** Stops the pass running; one stopped this way is not taken up again by itself. */
     fun cancelLibrary() {
         libraryJob?.cancel()
+        prefs.edit().putBoolean(KEY_RUNNING, false).apply()
     }
 
     /** The edge length changed: the last pass no longer says how much is analysed. */
@@ -314,6 +324,41 @@ class ChainAnalyzer(
         Sound(sound)
     }
 
+    /** The audience heard at a file's ends (a null [audience]: it could not be heard). */
+    private class Heard(val audience: Audience?)
+
+    /**
+     * Like [soundOf], for the audience at the ends: not heard at all ([Audience.SKIPPED]) when its
+     * name says live or its album is already told by its other tracks ([LiveHearing]).
+     */
+    private fun audienceOf(file: File, cancelled: () -> Boolean, source: OpenFile): Heard? = synchronized(lockFor(file)) {
+        val known = runCatching { db.getAudience(listOf(file)) }.getOrDefault(emptyMap())
+        if (file.absolutePath in known) return Heard(known[file.absolutePath])
+        if (albumTold(file)) {
+            runCatching { db.putAudience(file, Audience.SKIPPED) }
+            return Heard(Audience.SKIPPED)
+        }
+        val audience = runCatching { source.get()?.let { EdgeDecoder.decodeAudience(it, soundNet, cancelled) } }.getOrNull()
+        if (cancelled()) return null
+        runCatching { db.putAudience(file, audience) }
+        com.sadurni.attacca.library.LiveTracks.changed()
+        Heard(audience)
+    }
+
+    /** Whether [file] needs no hearing: its name says live, or its album is told without it. */
+    private fun albumTold(file: File): Boolean = runCatching {
+        val folder = file.parent ?: return false
+        val album = com.sadurni.attacca.library.LiveTracks.albumOf(folder, listOf(file.absolutePath))
+        val heard = db.getAudience(album.map(::File)).toMutableMap()
+        heard.remove(file.absolutePath)
+        val tracks = com.sadurni.attacca.library.LiveTracks.verdictTracks(folder, album, heard)
+        val me = tracks.firstOrNull { it.id == file.absolutePath } ?: return false
+        LiveVerdict.saidLive(me) || LiveHearing.decided(tracks)
+    }.getOrDefault(false)
+
+    /** The audience heard at the ends of [mediaIds], those known (nothing is decoded). */
+    fun knownAudience(mediaIds: List<String>): Map<String, Audience?> = runCatching { db.getAudience(localFiles(mediaIds)) }.getOrDefault(emptyMap())
+
     /**
      * Runs [work] on each of [files] on several analysis threads, each one taking the next file
      * when it finishes one. [onProgress] gets [alreadyDone] plus the files finished, one call at a
@@ -391,6 +436,7 @@ class ChainAnalyzer(
         val knownEdges = runCatching { db.getAll(files, seconds) }.getOrDefault(emptyMap())
         val knownFeatures = runCatching { db.getFeatures(files) }.getOrDefault(emptyMap())
         val knownSounds = runCatching { db.getSounds(files) }.getOrDefault(emptyMap())
+        val knownAudience = runCatching { db.getAudience(files).keys }.getOrDefault(emptySet())
         val knownSilences = if (withSilences) runCatching { analysisDb().getBounds(files, threshold).keys }.getOrDefault(emptySet()) else null
         val edges = ConcurrentHashMap<String, Edges>()
         val features = ConcurrentHashMap<String, Features>()
@@ -398,10 +444,11 @@ class ChainAnalyzer(
         knownFeatures.forEach { (path, f) -> features[path] = Features(f) }
         val sounds = ConcurrentHashMap<String, Sound>()
         knownSounds.forEach { (path, s) -> sounds[path] = Sound(s) }
-        val missing = files.filter {
+        val missing = albumOrder(files.filter {
             it.absolutePath !in knownEdges || it.absolutePath !in knownFeatures || it.absolutePath !in knownSounds ||
+                it.absolutePath !in knownAudience ||
                 (knownSilences != null && it.absolutePath !in knownSilences)
-        }
+        })
         inParallel(missing, mediaIds.size - missing.size, onProgress) { file, cancelled ->
             val path = file.absolutePath
             // One opening of the file for all of them.
@@ -409,10 +456,24 @@ class ChainAnalyzer(
                 if (!edges.containsKey(path)) edgesOf(file, seconds, cancelled, source)?.let { edges[path] = it }
                 if (!features.containsKey(path)) featuresOf(file, cancelled, source)?.let { features[path] = it }
                 if (!sounds.containsKey(path)) soundOf(file, cancelled, source)?.let { sounds[path] = it }
+                if (path !in knownAudience) audienceOf(file, cancelled, source)
             }
             if (knownSilences != null && path !in knownSilences) silenceOf(file, threshold, cancelled)
         }
         return Profiles(edges.mapValues { it.value.edges }, features.mapValues { it.value.features }, sounds.mapValues { it.value.sound })
+    }
+
+    /**
+     * [files] album by album (folders in their order), each album's tracks in the order that tells
+     * it live or not soonest ([LiveHearing.order]), so the rest of it needs no hearing.
+     */
+    private fun albumOrder(files: List<File>): List<File> {
+        val byFolder = LinkedHashMap<String, MutableList<File>>()
+        for (f in files) byFolder.getOrPut(f.parent.orEmpty()) { ArrayList() }.add(f)
+        return byFolder.values.flatMap { album ->
+            val sorted = album.sortedBy { it.name }
+            LiveHearing.order(sorted.size).map { sorted[it] }
+        }
     }
 
     private fun localFiles(mediaIds: List<String>): List<File> =
@@ -422,6 +483,7 @@ class ChainAnalyzer(
         const val KEY_ANALYSED = "analysed"
         const val KEY_TOTAL = "total"
         const val KEY_FINISHED = "finished"
+        const val KEY_RUNNING = "running"
         const val FILE_LOCKS = 64
         const val SOUND_NET_ASSET = "sound/soundnet.bin"
 

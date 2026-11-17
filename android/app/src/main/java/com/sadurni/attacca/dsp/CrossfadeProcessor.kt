@@ -66,6 +66,13 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
     private var fadeRate = 0
     private var fadeShape = CrossfadeShape.CROSSFADE
 
+    /**
+     * When a track that blends ended ([System.nanoTime]), until the next one's first buffer: into
+     * a track another decoder plays the sink is flushed again meanwhile without an end of stream,
+     * which is not a seek. 0: none waiting.
+     */
+    private var changeEndedAt = 0L
+
     /** A blend after a skip by hand that has not had any of the new track yet. */
     private var skipArmed = false
 
@@ -117,7 +124,10 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
         val out = outScratch
         var o = 0
 
-        if (mixing) skipArmed = false
+        if (mixing) {
+            skipArmed = false
+            changeEndedAt = 0L
+        }
         // The curves are computed exactly every GAIN_BLOCK frames and followed linearly in
         // between (no trigonometry per frame).
         var gainOut = 0f
@@ -186,8 +196,11 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
         endOfStreamSeen = true
         // A blend in progress outlives the extra reconfigurations of a track change.
         if (state != State.IDLE) return
-        // Without a new track announced, this is the end of the list.
-        val trackChange = !awaitingFirstInput && engine.streamGeneration != streamGeneration
+        // Without a new track announced, this is the end of the list; unless this track was to
+        // blend into the next one (there is one): into a track another decoder plays (an MP3 into
+        // an Ogg file) the old decoder is drained to its end before the next track is announced.
+        val blendPlanned = engine.periodOfGeneration[streamGeneration]?.let { engine.blendingPeriods.containsKey(it) } == true
+        val trackChange = !awaitingFirstInput && (engine.streamGeneration != streamGeneration || blendPlanned)
         if (!prepareFade()) {
             // Gapless into the next track: the held zeros are decoder padding, a few milliseconds
             // of dropout in the middle of the music. At the end of the list they go out in
@@ -197,6 +210,7 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
         }
         heldZeros = 0 // Decoder padding between the track and its tail.
         state = if (trackChange) State.WAITING else State.PLAYING_OUT
+        if (trackChange) changeEndedAt = System.nanoTime()
     }
 
     /** Takes the ending track's tail, lines it up and scales it. False when there is none. */
@@ -297,6 +311,12 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
             skipArmed && state == State.MIXING -> {
                 if (fadeChannels != channels || fadeRate != sampleRate) convertFade()
             }
+            // The next track's decoder being set up (see changeEndedAt), not a seek.
+            (state == State.WAITING || state == State.MIXING) && changeEndedAt != 0L && fadePos == 0 &&
+                System.nanoTime() - changeEndedAt < CHANGE_FLUSH_NS -> {
+                if (fadeChannels != channels || fadeRate != sampleRate) convertFade()
+                state = State.MIXING
+            }
             else -> {
                 finishFade()
                 engine.takeSkipTail()?.let(::startSkipFade)
@@ -342,6 +362,7 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
     }
 
     private fun finishFade() {
+        changeEndedAt = 0L
         if (skipFade) engine.skipBlending = false
         skipFade = false
         state = State.IDLE
@@ -356,6 +377,7 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
 
     override fun onReset() {
         endOfStreamSeen = false
+        changeEndedAt = 0L
         onFlush()
         streamGeneration = -1
     }
@@ -364,6 +386,9 @@ class CrossfadeProcessor(private val engine: DspEngine) : BaseAudioProcessor() {
         const val TAG = "Crossfade"
         const val HISTORY_FRAMES = 4096
         const val ALIGN_SEARCH_SECONDS = 3
+
+        /** Longest a track change may take to bring the next track's first buffer (another decoder set up). */
+        const val CHANGE_FLUSH_NS = 3_000_000_000L
 
         /** Frames between exact computations of the blend's curves. */
         const val GAIN_BLOCK = 32

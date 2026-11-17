@@ -363,6 +363,28 @@ class AppState(val prefs: Prefs, dbFile: File = LibraryDb.DEFAULT) {
                 }
             }
         }
+        // Then the audience of the tracks measured before it was heard, and the copies of one
+        // song not compared yet (both only what is missing).
+        withContext(Dispatchers.IO) {
+            val hearing = tr("Listening for an audience (live tracks)", "Escuchando si hay público (temas en directo)")
+            com.sadurni.attaccaplg.library.LiveAndCopies.hearAudience(db, root, jobs, cancelled = { cancelScan }) { done, todo ->
+                val now = System.currentTimeMillis()
+                if (now - shown > 150 || done == todo) {
+                    shown = now
+                    scan = ScanProgress(done, todo, hearing, started)
+                }
+            }
+            if (!cancelScan) {
+                val comparing = tr("Comparing copies of one song", "Comparando copias de un mismo tema")
+                com.sadurni.attaccaplg.library.LiveAndCopies.compareCopies(db, root, cancelled = { cancelScan }) { done, todo ->
+                    val now = System.currentTimeMillis()
+                    if (now - shown > 150 || done == todo) {
+                        shown = now
+                        scan = ScanProgress(done, todo, comparing, started)
+                    }
+                }
+            }
+        }
         scan = null
         lastScan = result
         reload()

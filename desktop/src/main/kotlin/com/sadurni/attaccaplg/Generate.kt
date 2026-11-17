@@ -49,6 +49,8 @@ Filters: --mood calm,tense  --family 1,3  --artist TEXT  --genre TEXT  --year 19
          --minutes 1-20 (track length; that is the default, --minutes any takes every length)
 Lists:   --count N (tracks per list, default 150; --count all: every track that passes)
          --voice voice|instrumental  --included (only what the inclusion list allows)
+         --live any|none|only (live tracks: as they come, left out, or only those)
+         (copies of one recording on several albums are always left out, the best kept)
 Output:  --out DIR  --format m3u8|xspf|rockbox  --path-to BASE (where the music is on the
          device: /storage/emulated/0/Music, /<microSD1>/Music, D:\Music…; default: the PC's paths)
          --spacing N (tracks before an artist repeats, default 4)  --random-seed N
@@ -169,6 +171,13 @@ private fun filters(db: LibraryDb, library: Library, options: Options): ChainFil
             else -> fail("--voice: voice or instrumental")
         },
         inclusion = inclusion,
+        // Live tracks: any (default), none or only those (--live).
+        excluded = when (options.named["live"]?.lowercase()) {
+            null, "any" -> library.liveLeftOut(com.sadurni.attaccaplg.generate.LiveChoice.ANY)
+            "none", "no" -> library.liveLeftOut(com.sadurni.attaccaplg.generate.LiveChoice.NONE)
+            "only" -> library.liveLeftOut(com.sadurni.attaccaplg.generate.LiveChoice.ONLY)
+            else -> fail("--live: any, none or only")
+        },
     )
 }
 

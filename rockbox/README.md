@@ -23,9 +23,9 @@ on the player.
 - **Generate by filters**: mood, sound family, genre tag, artist, and the **more filters**: years,
   BPM, energy and positivity (percent of the library), voice or instrumental, only included (with
   a library that carries several inclusion lists: **Music**, which of them lists keep to, or
-  Everything), and
+  Everything), live songs (any, leave them out, or only those), and
   song length (minutes from / to: 1 to 20 unless changed; "off" for no limit). Songs of unknown
-  length always pass.
+  length always pass. Copies of a recording kept on another album are left out of every list.
 - **Reorder current playlist**: chains the playlist loaded in Rockbox, starting with the current
   song (or the first one).
 - **Other lists**, as Attacca's, all chained end into start: energy that rises to a peak and

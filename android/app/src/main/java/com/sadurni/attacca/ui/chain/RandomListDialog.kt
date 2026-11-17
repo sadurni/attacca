@@ -34,11 +34,12 @@ import com.sadurni.attacca.ui.theme.LocalAttaccaColors
  * selected. "Don't ask again" turns the question off (Settings → Chaining turns it back on).
  */
 @Composable
-fun RandomListDialog(onStart: (Mood?, Boolean, Int) -> Unit, onDismiss: () -> Unit) {
+fun RandomListDialog(onStart: (Mood?, Boolean, Int, com.sadurni.attacca.settings.ListChoices) -> Unit, onDismiss: () -> Unit) {
     val app = LocalContext.current.app
     val settings = app.settings
     var mood by remember { mutableStateOf(settings.chain.value.randomMood) }
     var onlyIncluded by remember { mutableStateOf(app.chainLists.onlyIncludedByDefault()) }
+    var choices by remember { mutableStateOf(app.chainLists.choicesByDefault()) }
     var count by remember { mutableStateOf(app.chainLists.listCount.toString()) }
     var dontAsk by remember { mutableStateOf(false) }
     AlertDialog(
@@ -47,6 +48,7 @@ fun RandomListDialog(onStart: (Mood?, Boolean, Int) -> Unit, onDismiss: () -> Un
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 OnlyIncludedSwitch(onlyIncluded) { onlyIncluded = it }
+                ListChoicesPicker(choices) { choices = it }
                 TrackCountField(count, { count = it })
                 Text(stringResource(R.string.random_list_question), fontSize = AttaccaType.body)
                 RadioRow(stringResource(R.string.random_list_any), mood == null) { mood = null }
@@ -64,7 +66,7 @@ fun RandomListDialog(onStart: (Mood?, Boolean, Int) -> Unit, onDismiss: () -> Un
             TextButton(onClick = {
                 if (dontAsk) settings.updateChain { it.copy(randomAskMood = false) }
                 onDismiss()
-                onStart(mood, onlyIncluded, listCountOf(count, app.chainLists.listCount))
+                onStart(mood, onlyIncluded, listCountOf(count, app.chainLists.listCount), choices)
             }) { Text(stringResource(R.string.random_list_go)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
@@ -78,4 +80,53 @@ internal fun OnlyIncludedSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
     val hasList = chain.inclusion() != null
     InclusionSetPicker()
     com.sadurni.attacca.ui.settings.SwitchRow(stringResource(R.string.only_included), checked && hasList, onChange, enabled = hasList)
+}
+
+/**
+ * Live tracks in the list about to be made (any, left out, only those), starting from Settings →
+ * Chaining; the list keeps the choice (its endless tracks too).
+ */
+@Composable
+internal fun LiveTracksChoice(choice: com.sadurni.attacca.settings.LiveChoice, onChange: (com.sadurni.attacca.settings.LiveChoice) -> Unit) {
+    Text(stringResource(R.string.list_live), fontSize = AttaccaType.secondary, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
+    com.sadurni.attacca.ui.settings.SegmentedChoice(
+        listOf(
+            com.sadurni.attacca.settings.LiveChoice.ANY to stringResource(R.string.chain_live_any),
+            com.sadurni.attacca.settings.LiveChoice.NONE to stringResource(R.string.list_live_out),
+            com.sadurni.attacca.settings.LiveChoice.ONLY to stringResource(R.string.list_live_only),
+        ),
+        choice,
+        onChange,
+    )
+}
+
+/** The choices of the list about to be made: live tracks, and the chaining profile when there are any. */
+@Composable
+internal fun ListChoicesPicker(choices: com.sadurni.attacca.settings.ListChoices, onChange: (com.sadurni.attacca.settings.ListChoices) -> Unit) {
+    LiveTracksChoice(choices.live) { onChange(choices.copy(live = it)) }
+    ChainProfileChoice(choices.profile) { onChange(choices.copy(profile = it)) }
+}
+
+/** The chaining profile of the list about to be made (none: the listener's own taste); nothing without profiles. */
+@Composable
+internal fun ChainProfileChoice(profile: String?, onChange: (String?) -> Unit) {
+    val profiles by LocalContext.current.app.settings.tasteProfiles.collectAsStateWithLifecycle()
+    if (profiles.isEmpty()) return
+    Text(stringResource(R.string.list_profile), fontSize = AttaccaType.secondary, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
+    androidx.compose.foundation.layout.FlowRow {
+        androidx.compose.material3.FilterChip(
+            selected = profiles.none { it.id == profile },
+            onClick = { onChange(null) },
+            label = { Text(stringResource(R.string.list_profile_own)) },
+            modifier = Modifier.padding(end = 6.dp),
+        )
+        for (p in profiles) {
+            androidx.compose.material3.FilterChip(
+                selected = p.id == profile,
+                onClick = { onChange(p.id) },
+                label = { Text(p.name) },
+                modifier = Modifier.padding(end = 6.dp),
+            )
+        }
+    }
 }

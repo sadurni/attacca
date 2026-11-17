@@ -82,4 +82,14 @@ class CrossfadePlannerTest {
         assertEquals(1.0, CrossfadeShape.OVERLAY.inGain(0.0), 0.0)
         assertEquals(CrossfadeShape(0.2f, 0.2f, 1f), CrossfadeShape.of(0.2f, 0.1f, 2f))
     }
+
+    @Test
+    fun aNextTrackStartingWithSilenceComesInEarlierWhenTheEndingPlaysOutWhole() {
+        // A hard end (mix, 2 s) into a track with 2.37 s of silence it keeps: the blend starts that much earlier.
+        assertEquals(CrossfadePlan(4_370, CrossfadeShape.MIX), CrossfadePlanner.withLead(CrossfadePlan(2_000, CrossfadeShape.MIX), 2_370))
+        assertEquals(CrossfadePlan(2_000 + 5_000, CrossfadeShape.OVERLAY), CrossfadePlanner.withLead(CrossfadePlan(2_000, CrossfadeShape.OVERLAY), 9_000))
+        // A plain crossfade keeps its length; no blend stays none.
+        assertEquals(CrossfadePlan(8_000, CrossfadeShape.CROSSFADE), CrossfadePlanner.withLead(CrossfadePlan(8_000, CrossfadeShape.CROSSFADE), 2_370))
+        assertEquals(CrossfadePlan(0, CrossfadeShape.MIX), CrossfadePlanner.withLead(CrossfadePlan(0, CrossfadeShape.MIX), 2_370))
+    }
 }

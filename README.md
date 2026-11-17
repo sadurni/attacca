@@ -57,8 +57,8 @@ It comes in four parts that measure the same way and share what they measured:
 | **Attacca Web** | Chained lists in the browser from a library exported by Attacca Desktop. One HTML file, nothing to install. | [`web/`](web) |
 | **Attacca for Rockbox** | Plugin for Rockbox players: chained lists on the player itself. | [`rockbox/`](rockbox) |
 
-The phone and the PC exchange their libraries (`.attlib`: tags, silences, loudness, analysis), so a
-collection is measured once. Attacca Desktop exports a compact library (`.bpcr2`) for the web page
+The phone and the PC exchange their libraries (`.attlib`: tags, silences, loudness, analysis, live
+tracks, copies of one song), so a collection is measured once. Attacca Desktop exports a compact library (`.bpcr2`) for the web page
 and the Rockbox plugin.
 
 ## Download

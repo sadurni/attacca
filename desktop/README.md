@@ -149,6 +149,9 @@ all those connected, without choosing anything.
   existing playlist reordered. Filters by mood, sound family, artist, genre, years, BPM, track
   length (1 to 20 minutes unless changed), energy, positivity, voice and the inclusion list (an
   M3U8, or Attacca's rules file, worked out again each time); 150 tracks per list unless changed.
+  Live tracks any, none or only those (told by their sound, as on the phone: the scan listens to
+  the ends of each track for an audience); a song found on several albums is kept once, the best
+  copy (the copies the tags propose are compared by their sound after a scan).
   See the lists (tracks with their length, total length, how well they chain)
   before saving them as M3U8, XSPF or Rockbox M3U, with the paths of the device that plays them.
 - **Attacca**: import the library measured on the phone, or export this one for it; export the
@@ -231,7 +234,8 @@ more songs of one artist than that allows, here, in the Rockbox plugin and in th
 files that are gone.
 
 Attacca and Attacca Desktop share the library in `.attlib` files (tags, the silence at the edges,
-loudness, waveform, chaining edges and sound features, and the inclusion list), so a collection is
+loudness, waveform, chaining edges and sound features, the live tracks heard, the copies of one song
+compared, and the inclusion list), so a collection is
 measured once, on the phone or on the PC. Tracks are matched by their path within the music folder
 and their size; what does not match is measured by the next scan. A library can also be imported
 without its music on this PC (window: Attacca → Import without the music; `import … --no-music`):

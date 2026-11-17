@@ -87,6 +87,8 @@ data class ChainSettings(
      * the tracks the inclusion list allows: the starting choice, which the dialogs can change.
      */
     val listsOnlyIncluded: Boolean = false,
+    /** Live tracks in the lists Attacca makes: any, left out, or only those (see [com.sadurni.attacca.library.LiveTracks]). */
+    val liveChoice: LiveChoice = LiveChoice.ANY,
     /** Tracks found damaged stay out of the lists Attacca makes. */
     val skipDamaged: Boolean = true,
     /** M3U8 list deciding which tracks may go into generated lists ("only included"). */
@@ -266,6 +268,28 @@ class AppSettings(context: Context) {
     /** How much chaining weighs each part of a link (the chaining guide's result); in use at once. */
     val chainTaste: StateFlow<com.sadurni.attacca.chain.ChainTaste> = _chainTaste.asStateFlow()
 
+    private val _tasteProfiles = MutableStateFlow(TasteProfile.listFromJson(prefs.getString("chain_taste_profiles", null)))
+
+    /** Chaining tastes kept by name, chosen when a list is made. */
+    val tasteProfiles: StateFlow<List<TasteProfile>> = _tasteProfiles.asStateFlow()
+
+    /** Keeps [taste] as a profile called [name] (replacing one of that name). */
+    fun saveTasteProfile(name: String, taste: com.sadurni.attacca.chain.ChainTaste) {
+        val existing = _tasteProfiles.value.firstOrNull { it.name.equals(name, ignoreCase = true) }
+        val profile = TasteProfile(existing?.id ?: java.util.UUID.randomUUID().toString(), name, taste.normalized())
+        setTasteProfiles(_tasteProfiles.value.filter { it.id != profile.id } + profile)
+    }
+
+    fun deleteTasteProfile(id: String) = setTasteProfiles(_tasteProfiles.value.filter { it.id != id })
+
+    private fun setTasteProfiles(list: List<TasteProfile>) {
+        _tasteProfiles.value = list
+        prefs.edit().putString("chain_taste_profiles", TasteProfile.listToJson(list)).apply()
+    }
+
+    /** The weights of profile [id]; null for none (or one deleted since): the listener's own taste. */
+    fun tasteOf(id: String?): com.sadurni.attacca.chain.ChainTaste? = id?.let { i -> _tasteProfiles.value.firstOrNull { it.id == i }?.taste }
+
     fun setChainTaste(taste: com.sadurni.attacca.chain.ChainTaste) {
         val t = taste.normalized()
         _chainTaste.value = t
@@ -285,6 +309,7 @@ class AppSettings(context: Context) {
             saveMadeLists = prefs.getBoolean("chain_save_made", ChainSettings().saveMadeLists),
             quickNotPlayedDays = prefs.getInt("chain_quick_not_played", 0).coerceIn(0, MAX_NOT_PLAYED_DAYS),
             listsOnlyIncluded = prefs.getBoolean("chain_only_included", false),
+            liveChoice = LiveChoice.entries.firstOrNull { it.name == prefs.getString("chain_live", null) } ?: LiveChoice.ANY,
             skipDamaged = prefs.getBoolean("chain_skip_damaged", true),
             inclusionList = prefs.getString("inclusion_list", null),
             inclusionMode = runCatching {
@@ -314,6 +339,7 @@ class AppSettings(context: Context) {
             .putBoolean("chain_save_made", updated.saveMadeLists)
             .putInt("chain_quick_not_played", updated.quickNotPlayedDays)
             .putBoolean("chain_only_included", updated.listsOnlyIncluded)
+            .putString("chain_live", updated.liveChoice.name)
             .putString("inclusion_sets", com.sadurni.attacca.library.InclusionSet.listToJson(updated.inclusionSets))
             .putString("inclusion_active", updated.activeSet)
             .putBoolean("chain_skip_damaged", updated.skipDamaged)
@@ -460,3 +486,6 @@ class AppSettings(context: Context) {
         const val KEY_LISTS_FOLDER = "lists_folder"
     }
 }
+
+/** Live tracks in the lists Attacca makes. */
+enum class LiveChoice { ANY, NONE, ONLY }

@@ -1,0 +1,5 @@
+• New lists: energy drawn by hand, for two, what you play at this hour, a variant, trips with stops, to fall asleep and to wake up.
+• Chaining by hand with profiles per list; endless lists take More like this and Less like this.
+• Live tracks told by their sound: any, none or only live; the same song from several albums stays once.
+• Blends into Ogg, Opus or silence-led tracks leave no gap.
+• Same music on another phone: import its library and nothing is scanned again.

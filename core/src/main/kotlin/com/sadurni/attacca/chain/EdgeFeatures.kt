@@ -218,7 +218,7 @@ object EdgeFeatures {
      * coefficients, the spectrum's shape, the activity, the key (as clear as it is) and the notes.
      */
     private fun similarityWithTimbre(end: EdgeDescriptor, start: EdgeDescriptor, endTimbre: FloatArray, startTimbre: FloatArray): Float =
-        taste.score(partsWithTimbre(end, start, endTimbre, startTimbre))
+        (listTaste.get() ?: taste).score(partsWithTimbre(end, start, endTimbre, startTimbre))
 
     /**
      * How much the chaining weighs each part of a link (the listener's taste, see [ChainTaste]):
@@ -226,6 +226,12 @@ object EdgeFeatures {
      */
     @Volatile
     var taste: ChainTaste = ChainTaste.DEFAULT
+
+    /**
+     * The weights of the list being made on this thread (a chaining profile chosen for it), over
+     * [taste]; null: [taste]. Set around the making of one list (with coroutines, as their context).
+     */
+    val listTaste: ThreadLocal<ChainTaste?> = ThreadLocal()
 
     /**
      * The parts of a link from [end] into [start], each 0 … 1, in the order of [ChainTaste]

@@ -36,6 +36,7 @@ class SmartLists(private val app: AttaccaApp) {
         val classified = if (needsAnalysis) runCatching { app.chainLists.collection() }.getOrNull()?.generator else null
         val indexOf = classified?.candidates?.withIndex()?.associate { (i, c) -> c.id to i }.orEmpty()
         val effective = app.inclusionStore.effective.value
+        val live = if (rules.conditions.any { it.field == Field.LIVE }) LiveTracks.live(tagged.map { it.path }) else emptySet()
         val tracks = tagged.map { t ->
             val s = stats[t.path]
             val i = indexOf[t.path]
@@ -52,9 +53,14 @@ class SmartLists(private val app: AttaccaApp) {
                 positivity = i?.let { classified!!.classification.positivity[it].toDouble() },
                 voice = i?.let { classified!!.classification.voice[it] >= ListGenerator.VOICE_PERCENTILE },
                 included = effective?.includes(t.path) ?: true,
+                live = t.path in live,
             )
         }
-        val found = SmartRules.evaluate(rules, tracks, System.currentTimeMillis()).map { it.path }
+        val matched = SmartRules.evaluate(rules, tracks, System.currentTimeMillis()).map { it.path }
+        // A song found on several albums the rules take (the same recording, by its sound): only its best copy.
+        SameSongs.verify(matched)
+        val copies = SameSongs.others(matched)
+        val found = if (copies.isEmpty()) matched else matched.filter { it !in copies }
         if (rules.order == SmartRules.Order.CHAINED && found.size > 1) chained(found) else found
     }
 

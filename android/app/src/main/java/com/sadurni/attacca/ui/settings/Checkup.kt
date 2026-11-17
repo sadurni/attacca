@@ -113,7 +113,8 @@ private fun CheckupContent(onDone: () -> Unit) {
             val f = folder?.takeIf { File(it).isDirectory } ?: return@withContext null
             val tracks = com.sadurni.attacca.library.TrackSort.db?.tracks(f).orEmpty()
             val files = tracks.map { File(it.path) }
-            val features = runCatching { ChainDb(context).use { it.getFeatures(files) } }.getOrDefault(emptyMap())
+            // Analysed: described for chaining and heard for an audience (live tracks).
+            val analysed = runCatching { ChainDb(context).use { db -> db.getFeatures(files).keys.intersect(db.getAudience(files).keys) } }.getOrDefault(emptySet())
             val measured = runCatching { app.analysisDb.getAll(files, trim.thresholdDb) }.getOrDefault(emptyMap())
                 .filter { (_, l) -> (l as? AnalysisDb.Lookup.Hit)?.analysis?.loudnessLufs != null }.keys
             val unmeasured = files.filter { it.absolutePath !in measured }
@@ -121,7 +122,7 @@ private fun CheckupContent(onDone: () -> Unit) {
             val rg = runCatching { com.sadurni.attacca.library.TrackSort.db?.replayGainKnown() }.getOrNull().orEmpty()
             val unread = unmeasured.count { f -> rg[f.absolutePath]?.let { !com.sadurni.attacca.library.FileStamp.unchanged(it[0], it[1], f) } ?: true }
             val unlevelled = unmeasured.filter { rg[it.absolutePath]?.get(2) == 0L }.map { it.absolutePath }.toSet()
-            LibraryCounts(tracks.size, files.count { it.absolutePath !in features }, unmeasured.size, unread, unlevelled)
+            LibraryCounts(tracks.size, files.count { it.absolutePath !in analysed }, unmeasured.size, unread, unlevelled)
         }
     }
     val effects = remember(check) { SystemEffects.installedApps(context) }

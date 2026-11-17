@@ -18,6 +18,8 @@ class AnalyzedTrack(
     val analysis: TrackAnalysis,
     /** What it sounds like for families and look-alikes (Attacca's sound profile). */
     val sound: com.sadurni.attacca.chain.SoundProfile? = null,
+    /** The audience heard at its ends (live tracks). */
+    val audience: com.sadurni.attacca.chain.Audience? = null,
 )
 
 /**
@@ -84,12 +86,48 @@ object TrackAnalyzer {
             mono.copyOfRange(from, minOf(from + window, count))
         }
         val sound = runCatching { com.sadurni.attacca.chain.SoundProfile.measure(windows, rate, soundNet) }.getOrNull()
+        val audience = runCatching { audience(mono, count, rate) }.getOrNull()
 
         collector.windows.flush()
         val analysis = TrackAnalysis.fromWindows(
             collector.windows.peaks, collector.windows.meanSquares, collector.windows.count, durationUs / 1000, THRESHOLD_DB,
         ).withLoudness(collector.meter?.integratedLufs(), collector.meter?.samplePeak ?: 0f)
-        return AnalyzedTrack(head, tail, features, analysis, sound)
+        return AnalyzedTrack(head, tail, features, analysis, sound, audience)
+    }
+
+    /**
+     * The audience at the ends of a decoded track ([mono], [count] frames at [rate]), as Attacca
+     * hears it: the last [com.sadurni.attacca.chain.Audience.SECONDS] of sound first, the first ones
+     * only when the end has none. Null when silent.
+     */
+    fun audience(mono: FloatArray, count: Int, rate: Int): com.sadurni.attacca.chain.Audience? {
+        val start = (0 until count).firstOrNull { abs(mono[it]) > SILENCE } ?: return null
+        val end = lastSound(mono, 0, count) ?: return null
+        val n = com.sadurni.attacca.chain.Audience.SECONDS * rate
+        fun wave(from: Int, to: Int) = mono.copyOfRange(from, to).let { com.sadurni.attacca.chain.SoundNet.resample(it, it.size, rate) }
+        val tail = com.sadurni.attacca.chain.Audience.score(soundNet, wave(maxOf(start, end - n), end)) ?: 0f
+        if (!com.sadurni.attacca.chain.LiveHearing.needsHead(tail)) return com.sadurni.attacca.chain.Audience(com.sadurni.attacca.chain.Audience.NOT_HEARD, tail)
+        val head = com.sadurni.attacca.chain.Audience.score(soundNet, wave(start, minOf(end, start + n))) ?: 0f
+        return com.sadurni.attacca.chain.Audience(head, tail)
+    }
+
+    /** Decodes [file] and hears the audience at its ends; null when it cannot be decoded or is silent. */
+    fun hearAudience(file: File): com.sadurni.attacca.chain.Audience? {
+        val collector = Collector()
+        val format = Decoder.decode(file, collector::start, collector::add) ?: return null
+        if (collector.count == 0) return null
+        return audience(collector.mono, collector.count, format.sampleRate)
+    }
+
+    /** The levels [com.sadurni.attacca.library.RecordingMatch] compares, from the middle of [file]; null when it cannot be decoded. */
+    fun recordingLevels(file: File, durationMs: Long): FloatArray? {
+        val collector = Collector()
+        val format = Decoder.decode(file, collector::start, collector::add) ?: return null
+        val rate = format.sampleRate
+        val from = (com.sadurni.attacca.library.RecordingMatch.startMs(durationMs) * rate / 1000).toInt()
+        val frames = minOf(collector.count - from, com.sadurni.attacca.library.RecordingMatch.SPAN_S * rate)
+        if (from < 0 || frames <= 0) return null
+        return com.sadurni.attacca.library.RecordingMatch.envelope(collector.mono, from, frames, 1, rate)
     }
 
     /** Attacca's sound network, read once from the program's files; shared by the analysis threads. */

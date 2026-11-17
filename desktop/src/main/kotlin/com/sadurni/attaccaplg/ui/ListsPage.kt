@@ -282,6 +282,18 @@ private fun FiltersSection(state: AppState, library: Library) {
             Spacer(Modifier.width(24.dp))
             Checkbox(form.onlyIncluded, { form.onlyIncluded = it }, enabled = state.inclusionList != null)
             Text(tr("Only included", "Solo incluidas"), color = if (state.inclusionList != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(24.dp))
+            Choice(
+                tr("Live tracks", "Temas en directo"), form.live, com.sadurni.attaccaplg.generate.LiveChoice.entries,
+                {
+                    when (it) {
+                        com.sadurni.attaccaplg.generate.LiveChoice.ANY -> tr("Any", "Cualquiera")
+                        com.sadurni.attaccaplg.generate.LiveChoice.NONE -> tr("No live", "Sin directos")
+                        com.sadurni.attaccaplg.generate.LiveChoice.ONLY -> tr("Only live", "Solo directos")
+                    }
+                },
+                { form.live = it; form.remember() },
+            )
             Spacer(Modifier.weight(1f))
             if (form.filtersInUse()) TextButton(onClick = form::clearFilters) { Text(tr("Clear filters", "Quitar filtros")) }
         }

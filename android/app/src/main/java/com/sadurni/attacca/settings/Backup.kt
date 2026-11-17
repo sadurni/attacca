@@ -94,6 +94,8 @@ object Backup {
                     target.outputStream().use { zip.copyTo(it) }
                 }
             }
+            // Made on another phone: its music folder is chosen again, and what was kept moves to it.
+            PathRemap.noteRestored(context)
         }
         pending.delete()
     }

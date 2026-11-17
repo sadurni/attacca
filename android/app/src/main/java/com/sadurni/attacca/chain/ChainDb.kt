@@ -55,7 +55,49 @@ class ChainDb(context: Context) : SQLiteOpenHelper(context, NAME, null, VERSION)
                 )
                 """.trimIndent(),
             )
+            // The audience heard at each track's ends (see com.sadurni.attacca.chain.Audience).
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS audience (
+                    path TEXT PRIMARY KEY,
+                    size INTEGER NOT NULL,
+                    mtime INTEGER NOT NULL,
+                    failed INTEGER NOT NULL,
+                    data BLOB
+                )
+                """.trimIndent(),
+            )
         }
+    }
+
+    /** The audience heard at the ends of [files] (null: could not be heard), those known. */
+    fun getAudience(files: List<File>): Map<String, Audience?> {
+        val result = HashMap<String, Audience?>()
+        for (chunk in files.chunked(CHUNK)) {
+            val byPath = chunk.associateBy { it.absolutePath }
+            readableDatabase.rawQuery(
+                "SELECT path, size, mtime, failed, data FROM audience WHERE path IN (${chunk.joinToString(",") { "?" }})",
+                byPath.keys.toTypedArray(),
+            ).use { c ->
+                while (c.moveToNext()) {
+                    val file = byPath[c.getString(0)] ?: continue
+                    if (!com.sadurni.attacca.library.FileStamp.unchanged(c.getLong(1), c.getLong(2), file)) continue
+                    result[file.absolutePath] = if (c.getInt(3) != 0) null else c.getBlob(4)?.let(Audience::fromBytes)
+                }
+            }
+        }
+        return result
+    }
+
+    fun putAudience(file: File, audience: Audience?) {
+        val values = ContentValues().apply {
+            put("path", file.absolutePath)
+            put("size", file.length())
+            put("mtime", file.lastModified())
+            put("failed", if (audience == null) 1 else 0)
+            put("data", audience?.let(Audience::toBytes))
+        }
+        writableDatabase.insertWithOnConflict("audience", null, values, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
     /**

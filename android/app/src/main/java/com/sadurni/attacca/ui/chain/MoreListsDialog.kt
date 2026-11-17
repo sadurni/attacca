@@ -33,9 +33,10 @@ import com.sadurni.attacca.ui.theme.AttaccaType
 import com.sadurni.attacca.ui.theme.LocalAttaccaColors
 
 /**
- * Other kinds of list, made and played at once: energy curves, look-alikes of the favorites not
- * heard lately, a sampler of the sound families, and, from the playing track, its opposite, a
- * list for a set time and whole albums like its album.
+ * Other kinds of list, made and played at once: energy curves (also one drawn by hand), a list for
+ * two tastes, what is heard at this hour, look-alikes of the favorites not heard lately, a sampler
+ * of the sound families; from the playing track, its opposite, a list for a set time and whole
+ * albums like its album; a variant of the playing list; lists to fall asleep and to wake up to.
  */
 @Composable
 fun MoreListsDialog(viewModel: PlayerViewModel, onDismiss: () -> Unit) {
@@ -43,22 +44,34 @@ fun MoreListsDialog(viewModel: PlayerViewModel, onDismiss: () -> Unit) {
     var days by rememberSaveable { mutableStateOf("90") }
     val app = androidx.compose.ui.platform.LocalContext.current.app
     var onlyIncluded by rememberSaveable { mutableStateOf(app.chainLists.onlyIncludedByDefault()) }
+    var choices by rememberSaveable { mutableStateOf(app.chainLists.choicesByDefault()) }
     var count by rememberSaveable { mutableStateOf(app.chainLists.listCount.toString()) }
-    fun make(kind: Kind, value: Int = 0) {
+    var sleepMinutes by rememberSaveable { mutableStateOf("45") }
+    var drawing by rememberSaveable { mutableStateOf(false) }
+    var forTwo by rememberSaveable { mutableStateOf(false) }
+    var waking by rememberSaveable { mutableStateOf(false) }
+    fun make(kind: Kind, value: Int = 0, extra: com.sadurni.attacca.chain.ChainLists.MakeExtra = com.sadurni.attacca.chain.ChainLists.MakeExtra()) {
         onDismiss()
-        viewModel.makeList(kind, value, onlyIncluded = onlyIncluded, count = listCountOf(count, app.chainLists.listCount))
+        viewModel.makeList(kind, value, onlyIncluded = onlyIncluded, count = listCountOf(count, app.chainLists.listCount), choices = choices, extra = extra)
     }
+    if (drawing) DrawCurveDialog(onDismiss = { drawing = false }) { curve -> make(Kind.DRAWN, extra = com.sadurni.attacca.chain.ChainLists.MakeExtra(curve = curve)) }
+    if (forTwo) ForTwoDialog(onDismiss = { forTwo = false }) { a, b -> make(Kind.FOR_TWO, extra = com.sadurni.attacca.chain.ChainLists.MakeExtra(first = a, second = b)) }
+    if (waking) WakeDialog(onDismiss = { waking = false })
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.more_lists_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 OnlyIncludedSwitch(onlyIncluded) { onlyIncluded = it }
+                ListChoicesPicker(choices) { choices = it }
                 TrackCountField(count, { count = it })
                 Section(stringResource(R.string.more_lists_any))
                 Choice(R.string.list_kind_rise_fall, R.string.more_lists_rise_fall_hint) { make(Kind.RISE_AND_FALL) }
                 Choice(R.string.list_kind_warm_up, R.string.more_lists_warm_up_hint) { make(Kind.WARM_UP) }
                 Choice(R.string.list_kind_wind_down, R.string.more_lists_wind_down_hint) { make(Kind.WIND_DOWN) }
+                Choice(R.string.list_kind_drawn, R.string.more_lists_drawn_hint) { drawing = true }
+                Choice(R.string.more_lists_for_two, R.string.more_lists_for_two_hint) { forTwo = true }
+                Choice(R.string.more_lists_this_hour, R.string.more_lists_this_hour_hint) { make(Kind.THIS_HOUR) }
                 Choice(R.string.list_kind_sampler, R.string.more_lists_sampler_hint) { make(Kind.SAMPLER) }
                 Choice(R.string.list_kind_rediscover, R.string.more_lists_rediscover_hint) { make(Kind.REDISCOVER, days.toIntOrNull() ?: 0) }
                 NumberField(stringResource(R.string.more_lists_days), days) { days = it }
@@ -68,6 +81,17 @@ fun MoreListsDialog(viewModel: PlayerViewModel, onDismiss: () -> Unit) {
                 Choice(R.string.more_lists_albums, R.string.more_lists_albums_hint) { make(Kind.ALBUMS_LIKE) }
                 Choice(R.string.more_lists_time, R.string.more_lists_time_hint) { make(Kind.FOR_TIME, minutes.toIntOrNull()?.coerceIn(1, 1440) ?: 60) }
                 NumberField(stringResource(R.string.more_lists_minutes), minutes) { minutes = it }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                Section(stringResource(R.string.more_lists_from_list))
+                Choice(R.string.more_lists_variant, R.string.more_lists_variant_hint) { make(Kind.VARIANT) }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                Section(stringResource(R.string.more_lists_sleep_wake))
+                Choice(R.string.more_lists_sleep, R.string.more_lists_sleep_hint) { make(Kind.SLEEP, sleepMinutes.toIntOrNull()?.coerceIn(5, 480) ?: 45) }
+                NumberField(stringResource(R.string.more_lists_minutes), sleepMinutes) { sleepMinutes = it }
+                Column(Modifier.fillMaxWidth().clickable { waking = true }.padding(vertical = 8.dp)) {
+                    Text(stringResource(R.string.more_lists_wake), fontSize = AttaccaType.body)
+                    Text(wakeSummary() ?: stringResource(R.string.more_lists_wake_hint), fontSize = AttaccaType.secondary, color = LocalAttaccaColors.current.textGrayed)
+                }
                 Text(
                     stringResource(R.string.more_lists_bridge_hint),
                     fontSize = AttaccaType.secondary,

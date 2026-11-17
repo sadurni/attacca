@@ -24,6 +24,10 @@ data class ListSettings(
     val endless: Boolean? = null,
     /** For a list Attacca made: the inclusion it was made with, which its endless tracks keep; null = not known (the one in use). */
     val inclusion: ListInclusion? = null,
+    /** Endless lists: tracks marked "more like this", which the tracks it adds lean towards. */
+    val more: List<String> = emptyList(),
+    /** Endless lists: tracks marked "less like this", which the tracks it adds keep away from. */
+    val less: List<String> = emptyList(),
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("shuffle", shuffle.name)
@@ -34,6 +38,8 @@ data class ListSettings(
         .put("groupBy", groupBy?.name ?: JSONObject.NULL)
         .put("endless", endless ?: JSONObject.NULL)
         .put("inclusion", inclusion?.toJson() ?: JSONObject.NULL)
+        .put("more", org.json.JSONArray(more))
+        .put("less", org.json.JSONArray(less))
 
     companion object {
         fun fromJson(json: JSONObject): ListSettings = ListSettings(
@@ -45,6 +51,8 @@ data class ListSettings(
             groupBy = SortField.entries.firstOrNull { it.name == json.optString("groupBy") },
             endless = if (json.isNull("endless") || !json.has("endless")) null else json.optBoolean("endless"),
             inclusion = json.optJSONObject("inclusion")?.let(ListInclusion::fromJson),
+            more = json.optJSONArray("more")?.let { a -> List(a.length()) { a.optString(it) }.filter { it.isNotEmpty() } }.orEmpty(),
+            less = json.optJSONArray("less")?.let { a -> List(a.length()) { a.optString(it) }.filter { it.isNotEmpty() } }.orEmpty(),
         )
     }
 }
@@ -59,9 +67,13 @@ data class ListInclusion(
     val set: String? = null,
     val list: String? = null,
     val mode: com.sadurni.attacca.library.InclusionMode = com.sadurni.attacca.library.InclusionMode.ALLOW,
+    /** Live tracks in it (any, left out, only those); null: as set when it was made before this was kept. */
+    val live: LiveChoice? = null,
+    /** The chaining profile it was made with ([TasteProfile.id]); null: the listener's own taste. */
+    val profile: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject().put("all", all).put("set", set ?: JSONObject.NULL)
-        .put("list", list ?: JSONObject.NULL).put("mode", mode.name)
+        .put("list", list ?: JSONObject.NULL).put("mode", mode.name).put("live", live?.name ?: JSONObject.NULL).put("profile", profile ?: JSONObject.NULL)
 
     companion object {
         fun fromJson(o: JSONObject) = ListInclusion(
@@ -70,6 +82,8 @@ data class ListInclusion(
             list = o.optString("list").takeIf { !o.isNull("list") && it.isNotEmpty() },
             mode = com.sadurni.attacca.library.InclusionMode.entries.firstOrNull { it.name == o.optString("mode") }
                 ?: com.sadurni.attacca.library.InclusionMode.ALLOW,
+            live = LiveChoice.entries.firstOrNull { !o.isNull("live") && it.name == o.optString("live") },
+            profile = o.optString("profile").takeIf { !o.isNull("profile") && it.isNotEmpty() },
         )
     }
 }
@@ -232,5 +246,30 @@ sealed interface SleepChoice {
                 else -> null
             }
         }
+    }
+}
+
+/**
+ * What a list is made with beyond its tracks, chosen in its options (starting from the settings):
+ * live tracks in it, and the chaining profile ([TasteProfile.id]; null: the listener's own taste).
+ */
+data class ListChoices(val live: LiveChoice = LiveChoice.ANY, val profile: String? = null) : java.io.Serializable
+
+/** A chaining taste kept by name, to make a list with (see [com.sadurni.attacca.chain.ChainTaste]). */
+data class TasteProfile(val id: String, val name: String, val taste: com.sadurni.attacca.chain.ChainTaste) {
+    fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name).put("taste", taste.encode())
+
+    companion object {
+        fun fromJson(o: JSONObject): TasteProfile? {
+            val id = o.optString("id").takeIf { it.isNotEmpty() } ?: return null
+            return TasteProfile(id, o.optString("name"), com.sadurni.attacca.chain.ChainTaste.decode(o.optString("taste")))
+        }
+
+        fun listToJson(list: List<TasteProfile>): String = org.json.JSONArray().apply { list.forEach { put(it.toJson()) } }.toString()
+
+        fun listFromJson(text: String?): List<TasteProfile> = runCatching {
+            val a = org.json.JSONArray(text ?: return emptyList())
+            (0 until a.length()).mapNotNull { fromJson(a.getJSONObject(it)) }
+        }.getOrDefault(emptyList())
     }
 }

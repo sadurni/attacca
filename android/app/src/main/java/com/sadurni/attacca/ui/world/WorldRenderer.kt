@@ -122,6 +122,8 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     private val texFloats = ByteBuffer.allocateDirect(6 * 5 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private var sightAt = 0L
     private var sight: FloatArray? = null
+    /** Whether the peak's show is the rainbow fixed in the sky (as last drawn). */
+    private var peakRainbow = false
     private var dragonTurn = 0f
     private var dragonTan = 0.5f
     private var tunnelDark = 0f
@@ -449,6 +451,14 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
             { z -> land.centerAt(z) }, cast?.eye, ex?.peakSight(),
             if (look.world == com.sadurni.attacca.diorama.World.WALL && peak > 0.05f) dragonTurn else null, cast?.dogsNear, cast?.dogsNearCount ?: 0,
             ex?.boardSight(tz),
+            // What the peak shows fixed in the sky, for the camera to look at it: the red moon over
+            // the castles (where the moon is drawn, see sunSky below), the rainbow.
+            when {
+                peak <= 0.05f -> null
+                look.world == com.sadurni.attacca.diorama.World.CASTLE -> MOON_YAW
+                peakRainbow -> RAINBOW_YAW
+                else -> null
+            },
         )
 
         // Chunks in sight: some behind, many ahead; at most two new ones a frame, nearest first.
@@ -593,6 +603,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         }
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uPeak"), peak)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uPeakKind"), peakKind)
+        peakRainbow = peakKind == 4f
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uTime"), (nowMs % 100_000L) / 1000f)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uDragonX"), com.sadurni.attacca.world.SkyShow.screenX(dragonTurn, camera.skyTurn, dragonTan))
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uFlash"), flash)
@@ -1007,6 +1018,10 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     companion object {
         /** How far ahead the land is drawn (blocks); the haze hides its end. */
         const val FAR = 150f
+        /** The heading of the moon (and the sun) as drawn: sunSky's x and z. */
+        private val MOON_YAW = kotlin.math.atan2(-0.2f, 1f)
+        /** The heading of the peak's rainbow (where the sky's shader stands it). */
+        private val RAINBOW_YAW = kotlin.math.atan2(0.25f, 1f)
         private val IDENTITY = Mat4.identity()
         private val WARM = floatArrayOf(1f, 0.86f, 0.62f)
         private val COOL = floatArrayOf(0.62f, 0.72f, 0.95f)

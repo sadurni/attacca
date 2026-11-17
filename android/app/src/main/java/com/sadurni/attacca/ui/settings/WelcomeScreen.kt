@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +72,10 @@ fun WelcomeScreen(onDone: () -> Unit) {
     val settings = context.app.settings
     val scope = rememberCoroutineScope()
     var restoring by remember { mutableStateOf(false) }
+    // The music folder chosen: whether to import a library exported elsewhere before scanning it.
+    // Kept over the activity being made again while the file picker is open.
+    var askImport by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val importing by WelcomeImport.running.collectAsState()
     // After the music folder: the setup guide, from the analysis on.
     var guide by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     if (guide) {
@@ -89,9 +94,60 @@ fun WelcomeScreen(onDone: () -> Unit) {
             return@rememberLauncherForActivityResult
         }
         settings.musicFolder = path
-        context.app.libraryScanner.scan(java.io.File(path))
         markWelcomeDone(context)
+        // A backup from another phone brings everything already (moved to this folder by the scan).
+        if (com.sadurni.attacca.settings.PathRemap.pending(context) != null) {
+            context.app.libraryScanner.scan(java.io.File(path))
+            guide = true
+        } else {
+            askImport = path
+        }
+    }
+    fun scanAndGo(path: String) {
+        askImport = null
+        context.app.libraryScanner.scan(java.io.File(path))
         guide = true
+    }
+    val pickLibrary = rememberLauncherForActivityResult(OpenDocumentAt()) { uri ->
+        val path = askImport ?: return@rememberLauncherForActivityResult
+        if (uri == null) {
+            scanAndGo(path)
+            return@rememberLauncherForActivityResult
+        }
+        PickerMemory.put(context, PickerMemory.BACKUP, uri)
+        WelcomeImport.start(context, uri, path)
+    }
+    // The import over (here or before the activity was made again): the scan, then the guide.
+    val importedFor by WelcomeImport.done.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(importedFor) {
+        val path = importedFor ?: return@LaunchedEffect
+        WelcomeImport.done.value = null
+        scanAndGo(path)
+    }
+    askImport?.let { path ->
+        val where = stringResource(R.string.settings_title) + " → " + stringResource(R.string.section_backup) + " → " + stringResource(R.string.exchange_section) + " → " + stringResource(R.string.exchange_export)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.welcome_import_title)) },
+            text = {
+                if (importing) {
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                        Text(stringResource(R.string.welcome_importing), modifier = Modifier.padding(start = 12.dp))
+                    }
+                } else {
+                    Text(stringResource(R.string.welcome_import_text, where))
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(enabled = !importing, onClick = {
+                    pickLibrary.launch(arrayOf("application/x-sqlite3", "application/octet-stream", "application/vnd.sqlite3", "*/*") to PickerMemory.get(context, PickerMemory.BACKUP))
+                }) { Text(stringResource(R.string.welcome_import_yes)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(enabled = !importing, onClick = { scanAndGo(path) }) { Text(stringResource(R.string.welcome_import_no)) }
+            },
+        )
     }
     val pickBackup = rememberLauncherForActivityResult(OpenDocumentAt()) { uri ->
         uri ?: return@rememberLauncherForActivityResult
@@ -224,3 +280,29 @@ private fun PermissionRow(title: String, hint: String, granted: Boolean, onAllow
 
 private const val WELCOME_PREFS = "welcome"
 private const val KEY_DONE = "done"
+
+/**
+ * The import of a library offered by the welcome, in the app's scope: the file picker may make the
+ * activity again (and the welcome with it) while it runs. [done] tells the folder once it is over.
+ */
+private object WelcomeImport {
+    val running = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val done = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+
+    fun start(context: android.content.Context, uri: android.net.Uri, folder: String) {
+        if (running.value) return
+        running.value = true
+        val app = context.app
+        app.appScope.launch {
+            val result = withContext(Dispatchers.IO) { runCatching { com.sadurni.attacca.library.LibraryTransfer.import(app, uri) }.getOrNull() }
+            Toast.makeText(
+                app,
+                if (result == null) app.getString(R.string.exchange_failed)
+                else app.getString(R.string.exchange_imported, result.matched, result.total, result.edges, result.features, result.analysis),
+                Toast.LENGTH_LONG,
+            ).show()
+            running.value = false
+            done.value = folder
+        }
+    }
+}

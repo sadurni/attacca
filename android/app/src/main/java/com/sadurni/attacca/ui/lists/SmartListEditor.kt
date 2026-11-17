@@ -86,6 +86,7 @@ fun fieldLabel(field: Field): String = stringResource(
         Field.PLAYED -> R.string.smart_field_played
         Field.SKIPPED -> R.string.smart_field_skipped
         Field.INCLUDED -> R.string.smart_field_included
+        Field.LIVE -> R.string.smart_field_live
     },
 )
 
@@ -320,7 +321,7 @@ private fun ConditionCard(c: Condition, onChange: (Condition) -> Unit, onRemove:
                     }
                 }
                 Kind.COUNT -> DaysField(c.number, R.string.smart_times) { onChange(c.copy(number = it)) }
-                Kind.FLAG -> Hint(stringResource(R.string.smart_included_hint))
+                Kind.FLAG -> Hint(stringResource(if (c.field == Field.LIVE) R.string.smart_live_hint else R.string.smart_included_hint))
             }
         }
     }

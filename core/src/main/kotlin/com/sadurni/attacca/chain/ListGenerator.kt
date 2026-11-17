@@ -343,15 +343,34 @@ class ListGenerator(
         artistSpacing: Int,
         random: kotlin.random.Random = kotlin.random.Random,
         isCancelled: () -> Boolean = { false },
-    ): List<String>? {
-        val k = classification
-        val members = candidates.indices.filter { it == start || passes(it, filters) }
-        if (members.size < 2) return members.map { candidates[it].id }
-        fun target(p: Float): Float = when (shape) {
+    ): List<String>? = energyCurve(shapeOf(shape), start, filters, count, artistSpacing, random, isCancelled)
+
+    /** The energy (0 … 1) [shape] asks for at each point of a list (0 … 1). */
+    fun shapeOf(shape: EnergyShape): (Float) -> Float = { p ->
+        when (shape) {
             EnergyShape.RISE_AND_FALL -> if (p < PEAK_AT) 0.15f + 0.8f * (p / PEAK_AT) else 0.95f - 0.8f * ((p - PEAK_AT) / (1 - PEAK_AT))
             EnergyShape.WARM_UP -> 0.1f + 0.85f * p
             EnergyShape.WIND_DOWN -> 0.9f - 0.85f * p
         }
+    }
+
+    /**
+     * [count] tracks whose energy (percentile of the collection, 0 … 1) follows [target] along the
+     * list (0 … 1: a curve drawn by hand, or a named shape), each also near the one before in
+     * likeness, no artist again within [artistSpacing]. Starts at [start] when given.
+     */
+    fun energyCurve(
+        target: (Float) -> Float,
+        start: Int?,
+        filters: ChainFilters,
+        count: Int,
+        artistSpacing: Int,
+        random: kotlin.random.Random = kotlin.random.Random,
+        isCancelled: () -> Boolean = { false },
+    ): List<String>? {
+        val k = classification
+        val members = candidates.indices.filter { it == start || passes(it, filters) }
+        if (members.size < 2) return members.map { candidates[it].id }
         // Likeness and energy weighed alike: a typical distance between two tracks counts as much
         // as an energy off by ENERGY_STEP.
         val typical = List(200) { k.distance(members.random(random), members.random(random)) }.sorted()[100].coerceAtLeast(1e-6f)
@@ -373,6 +392,150 @@ class ListGenerator(
                     if (pass == 0 && artistKeyOf(i).let { it.isNotEmpty() && it in recent }) continue
                     // Energy on the curve, likeness, and how the last one's end leads into this start.
                     val cost = abs(k.energy[i] - t) / ENERGY_STEP + k.distance(last, i) / typical + (1f - link(last, i)) * LINK_WEIGHT
+                    if (cost < bestCost) {
+                        bestCost = cost
+                        best = i
+                    }
+                }
+                if (best >= 0) break
+            }
+            if (best < 0) break
+            path.add(best)
+            used.add(best)
+        }
+        return path.map { candidates[it].id }
+    }
+
+    /**
+     * The tracks of [ids] from the start that fill about [minutes] (a list for a set time made of a
+     * longer one in its order: an energy curve to fall asleep or to wake up).
+     */
+    fun takeFor(ids: List<String>, minutes: Int): List<String> {
+        val target = minutes * 60_000L
+        val known = candidates.map { it.durationMs }.filter { it > 0 }
+        val average = if (known.isEmpty()) DEFAULT_LENGTH_MS else known.average().toLong().coerceAtLeast(30_000L)
+        val length = HashMap<String, Long>().apply { for (c in candidates) put(c.id, c.durationMs.takeIf { it > 0 } ?: average) }
+        val out = ArrayList<String>()
+        var total = 0L
+        for (id in ids) {
+            if (total >= target - TIME_SLACK_MS) break
+            out.add(id)
+            total += length[id] ?: average
+        }
+        return out
+    }
+
+    /** About how many tracks fill [minutes] (with some to spare). */
+    fun tracksFor(minutes: Int): Int {
+        val known = candidates.map { it.durationMs }.filter { it > 0 }
+        val average = if (known.isEmpty()) DEFAULT_LENGTH_MS else known.average().toLong().coerceAtLeast(30_000L)
+        return ((minutes * 60_000L / average.toFloat()) * TIME_MARGIN).toInt().coerceIn(3, MAX_TIME_TRACKS)
+    }
+
+    /**
+     * A trip through [stops] (two or more, in their order): a [bridge] from each to the next, the
+     * [count] tracks shared out between the legs.
+     */
+    fun trip(stops: List<Int>, filters: ChainFilters, count: Int, artistSpacing: Int, isCancelled: () -> Boolean = { false }): List<String>? {
+        if (stops.size < 2) return null
+        val legs = stops.size - 1
+        val inside = (count - stops.size).coerceAtLeast(0)
+        val out = ArrayList<String>()
+        val used = HashSet<String>(stops.map { candidates[it].id })
+        for (leg in 0 until legs) {
+            // The leg's own tracks, its two ends included; none used by an earlier leg.
+            val own = inside / legs + (if (leg < inside % legs) 1 else 0) + 2
+            val already = out.toSet()
+            val legFilters = filters.copy(excluded = (filters.excluded.orEmpty() + already + (used - setOf(candidates[stops[leg]].id, candidates[stops[leg + 1]].id))))
+            val part = bridge(stops[leg], stops[leg + 1], legFilters, own, artistSpacing, isCancelled) ?: return null
+            out.addAll(if (out.isEmpty()) part else part.drop(1))
+        }
+        return out
+    }
+
+    /**
+     * A list for two tastes: tracks that [first] or [second] take (two people's inclusion lists),
+     * one of each in turn, each next one near the one before and leading on from it; tracks both
+     * take come first and go to either turn, the bridges between the two.
+     */
+    fun forTwo(
+        first: (Int) -> Boolean,
+        second: (Int) -> Boolean,
+        filters: ChainFilters,
+        count: Int,
+        artistSpacing: Int,
+        random: kotlin.random.Random = kotlin.random.Random,
+        isCancelled: () -> Boolean = { false },
+    ): List<String>? {
+        val k = classification
+        val members = candidates.indices.filter { passes(it, filters) && (first(it) || second(it)) }
+        if (members.size < 2) return members.map { candidates[it].id }
+        val both = members.filter { first(it) && second(it) }
+        val typical = List(200) { k.distance(members.random(random), members.random(random)) }.sorted()[100].coerceAtLeast(1e-6f)
+        val start = (both.ifEmpty { members.filter(first) }.ifEmpty { members }).let { byTypicality(it).take(10).random(random) }
+        val path = arrayListOf(start)
+        val used = hashSetOf(start)
+        // Whose turn: the other one's after a track only one of them takes.
+        var turnFirst = !(first(start) && !second(start))
+        val n = minOf(count, members.size)
+        while (path.size < n) {
+            if (isCancelled()) return null
+            val last = path.last()
+            val recent = path.takeLast(artistSpacing.coerceAtLeast(0)).mapTo(HashSet()) { artistKeyOf(it) }
+            var best = -1
+            var bestCost = Float.MAX_VALUE
+            for (pass in 0..2) {
+                for (i in members) {
+                    if (i in used) continue
+                    val fits = if (turnFirst) first(i) else second(i)
+                    // The turn gives way only when that side has nothing left; the artist rule last.
+                    if (pass == 0 && (!fits || artistKeyOf(i).let { it.isNotEmpty() && it in recent })) continue
+                    if (pass == 1 && !fits) continue
+                    val shared = if (first(i) && second(i)) SHARED_BONUS else 0f
+                    val cost = k.distance(last, i) / typical + (1f - link(last, i)) * LINK_WEIGHT - shared
+                    if (cost < bestCost) {
+                        bestCost = cost
+                        best = i
+                    }
+                }
+                if (best >= 0) break
+            }
+            if (best < 0) break
+            path.add(best)
+            used.add(best)
+            turnFirst = if (first(best) && second(best)) !turnFirst else !first(best)
+        }
+        return path.map { candidates[it].id }
+    }
+
+    /**
+     * Another list on the way of [of] (ids, in order): for each of its tracks another one as like it
+     * in sound, mood and energy as can be, leading on from the one before; none of [of], nor of
+     * what [filters] leave out (heard lately).
+     */
+    fun variant(of: List<String>, filters: ChainFilters, artistSpacing: Int, isCancelled: () -> Boolean = { false }): List<String>? {
+        val k = classification
+        val way = of.mapNotNull { id -> indexOf(id).takeIf { it >= 0 } }
+        if (way.isEmpty()) return null
+        val original = way.toHashSet()
+        val members = candidates.indices.filter { it !in original && passes(it, filters) }
+        if (members.isEmpty()) return null
+        val typical = List(200) { k.distance(members.random(), members.random()) }.sorted()[100].coerceAtLeast(1e-6f)
+        val path = ArrayList<Int>()
+        val used = HashSet<Int>()
+        for (t in way) {
+            if (isCancelled()) return null
+            val last = path.lastOrNull()
+            val recent = path.takeLast(artistSpacing.coerceAtLeast(0)).mapTo(HashSet()) { artistKeyOf(it) }
+            var best = -1
+            var bestCost = Float.MAX_VALUE
+            for (pass in 0..1) {
+                for (i in members) {
+                    if (i in used) continue
+                    if (pass == 0 && artistKeyOf(i).let { it.isNotEmpty() && it in recent }) continue
+                    val mood = if (k.moods[i] == k.moods[t]) 0f else MOOD_STEP
+                    val chain = if (last == null) 0f else (1f - link(last, i)) * LINK_WEIGHT / 2
+                    val cost = k.distance(t, i) / typical + abs(k.energy[i] - k.energy[t]) / ENERGY_STEP + mood + chain
                     if (cost < bestCost) {
                         bestCost = cost
                         best = i
@@ -589,6 +752,12 @@ class ListGenerator(
 
         /** Energy curves: a link from perfect to none weighs like this many energy steps. */
         private const val LINK_WEIGHT = 2f
+
+        /** Lists for two: how much a track both take is preferred (in typical distances). */
+        private const val SHARED_BONUS = 0.5f
+
+        /** Variants: another mood than the original track's weighs like this many energy steps. */
+        private const val MOOD_STEP = 2f
 
         /** Bridges: how many of the next tracks along the way are tried for the best link. */
         private const val BRIDGE_WINDOW = 4

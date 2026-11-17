@@ -77,8 +77,9 @@ class DeviceConnectReceiver : BroadcastReceiver() {
                     return@launch
                 }
                 openApp(context)
-                val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-                val controller = MediaController.Builder(context, token).buildAsync().await()
+                // The app's context: a receiver's own may not bind to the player.
+                val token = SessionToken(app, ComponentName(app, PlaybackService::class.java))
+                val controller = MediaController.Builder(app, token).buildAsync().await()
                 try {
                     // The player opens on the device's list; a long list takes a while to load.
                     withTimeoutOrNull(LOAD_TIMEOUT_MS) { controller.awaitItems() }

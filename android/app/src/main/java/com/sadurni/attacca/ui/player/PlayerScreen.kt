@@ -990,6 +990,26 @@ private fun TrackMenu(
                 open = false
                 viewModel.quickSeedList(viewModel.nowPlaying.value.mediaId)
             })
+            // An endless list: the tracks it adds lean towards this one, or keep away from it.
+            val guide by viewModel.listSettings.collectAsStateWithLifecycle()
+            val playback by androidx.compose.ui.platform.LocalContext.current.app.settings.playback.collectAsStateWithLifecycle()
+            val playingId = viewModel.nowPlaying.value.mediaId?.takeIf { !it.contains("://") }
+            if ((guide.endless ?: playback.endless) && playingId != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (playingId in guide.more) R.string.endless_more_marked else R.string.endless_more)) },
+                    onClick = {
+                        open = false
+                        viewModel.extras?.guideEndless(playingId, more = true)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (playingId in guide.less) R.string.endless_less_marked else R.string.endless_less)) },
+                    onClick = {
+                        open = false
+                        viewModel.extras?.guideEndless(playingId, more = false)
+                    },
+                )
+            }
             val shareContext = androidx.compose.ui.platform.LocalContext.current
             DropdownMenuItem(text = { Text(stringResource(R.string.share)) }, onClick = {
                 open = false

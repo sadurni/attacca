@@ -43,6 +43,26 @@ data class ChainTaste(
         return group.parts.sumOf { n[it].toDouble() }.toFloat()
     }
 
+    /**
+     * This taste with [group] at [share] of the whole (0 … 1, a slider): its parts keep their
+     * proportions among themselves, and the other groups share the rest as they did.
+     */
+    fun withShare(group: TasteGroup, share: Float): ChainTaste {
+        val n = normalized().toArray()
+        val s = share.coerceIn(0f, 1f)
+        val inGroup = group.parts.sumOf { n[it].toDouble() }.toFloat()
+        val rest = 1f - inGroup
+        val others = PARTS - group.parts.size
+        val out = FloatArray(PARTS) { i ->
+            if (i in group.parts) {
+                if (inGroup > 0f) n[i] / inGroup * s else s / group.parts.size
+            } else {
+                if (rest > 0f) n[i] / rest * (1f - s) else (1f - s) / others
+            }
+        }
+        return of(out)
+    }
+
     val isDefault: Boolean
         get() = normalized().toArray().zip(DEFAULT.toArray()).all { (a, b) -> abs(a - b) < 0.005f }
 

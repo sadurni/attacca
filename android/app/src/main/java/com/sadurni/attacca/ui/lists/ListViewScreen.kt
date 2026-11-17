@@ -275,12 +275,12 @@ fun ListViewScreen(
                     com.sadurni.attacca.ui.common.ShareTracks.share(context, selected.sorted().map { list[it].mediaId })
                     selection = null
                 }, enabled = selected.isNotEmpty()) { Icon(Icons.Rounded.Share, stringResource(R.string.share)) }
-                val pair = selected.sorted().mapNotNull { list.getOrNull(it)?.mediaId }.takeIf { it.size == 2 && it.none { id -> id.contains("://") } }
+                val pair = selected.sorted().mapNotNull { list.getOrNull(it)?.mediaId }.takeIf { it.size in 2..com.sadurni.attacca.ui.chain.MAX_STOPS && it.none { id -> id.contains("://") } }
                 if (pair != null) {
                     IconButton(onClick = {
-                        viewModel.requestBridge(pair[0], pair[1])
+                        viewModel.requestBridge(pair)
                         selection = null
-                    }) { Icon(Icons.Rounded.Route, stringResource(R.string.list_bridge_action)) }
+                    }) { Icon(Icons.Rounded.Route, stringResource(if (pair.size > 2) R.string.list_trip_action else R.string.list_bridge_action)) }
                 }
                 val single = selected.singleOrNull()?.let { list.getOrNull(it)?.mediaId }?.takeIf { !it.contains("://") }
                 if (single != null) {

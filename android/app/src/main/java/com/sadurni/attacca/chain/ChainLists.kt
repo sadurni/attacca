@@ -7,6 +7,9 @@ import com.sadurni.attacca.library.M3uParser
 import com.sadurni.attacca.library.PlaylistEntry
 import com.sadurni.attacca.library.TrackSort
 import com.sadurni.attacca.library.UserLists
+import com.sadurni.attacca.settings.ListChoices
+import com.sadurni.attacca.settings.LiveChoice
+import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.math.abs
 
 /**
  * Lists generated from the analysed music folder: one per mood and sound family (saved in
@@ -61,14 +65,44 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
 
     private fun inclusionIf(onlyIncluded: Boolean) = if (onlyIncluded) app.settings.chain.value.inclusion() else null
 
-    /** The inclusion a list made now with [onlyIncluded] is made with (the set in use, or every track). */
-    private fun inclusionNow(onlyIncluded: Boolean): com.sadurni.attacca.settings.ListInclusion {
+    /** The inclusion a list made now with [onlyIncluded] and [live] is made with (the set in use, or every track). */
+    private fun inclusionNow(onlyIncluded: Boolean, choices: ListChoices): com.sadurni.attacca.settings.ListInclusion {
         val chain = app.settings.chain.value
         return if (onlyIncluded && chain.inclusion() != null) {
-            com.sadurni.attacca.settings.ListInclusion(false, chain.activeSet, chain.inclusionList, chain.inclusionMode)
+            com.sadurni.attacca.settings.ListInclusion(false, chain.activeSet, chain.inclusionList, chain.inclusionMode, choices.live, choices.profile)
         } else {
-            com.sadurni.attacca.settings.ListInclusion(true)
+            com.sadurni.attacca.settings.ListInclusion(true, live = choices.live, profile = choices.profile)
         }
+    }
+
+    /** What lists are made with unless chosen otherwise when making one: live tracks as set, the listener's own taste. */
+    fun choicesByDefault(): ListChoices = ListChoices(liveByDefault())
+
+    /** The chaining weights of a list made with [made] (its profile), for its endless tracks; null: the listener's own taste. */
+    fun tasteFor(made: com.sadurni.attacca.settings.ListInclusion?): com.sadurni.attacca.chain.ChainTaste? = app.settings.tasteOf(made?.profile)
+
+    /** Live tracks in the lists made unless chosen otherwise when making one (Settings → Chaining). */
+    fun liveByDefault(): LiveChoice = app.settings.chain.value.liveChoice
+
+    /** The live tracks choice of a list made with [made] (for its endless tracks); the default when not known. */
+    fun liveFor(made: com.sadurni.attacca.settings.ListInclusion?): LiveChoice = made?.live ?: liveByDefault()
+
+    /**
+     * The tracks among [ids] that [live] leaves out: the live ones, or all but those; never [keep]
+     * (the track a list starts from). Empty for any.
+     */
+    fun liveLeftOut(ids: List<String>, live: LiveChoice, keep: kotlin.collections.Collection<String> = emptyList()): Set<String> {
+        if (live == LiveChoice.ANY) return emptySet()
+        val liveIds = com.sadurni.attacca.library.LiveTracks.live(ids)
+        val out = if (live == LiveChoice.NONE) liveIds.toHashSet() else ids.filterTo(HashSet()) { it !in liveIds }
+        out.removeAll(keep.toSet())
+        return out
+    }
+
+    /** [filters] also leaving out the tracks of [g] that [live] leaves out (see [liveLeftOut]). */
+    private fun withLive(filters: ChainFilters, g: ListGenerator, live: LiveChoice, keep: kotlin.collections.Collection<String> = emptyList()): ChainFilters {
+        val out = liveLeftOut(g.candidates.map { it.id }, live, keep)
+        return if (out.isEmpty()) filters else filters.copy(excluded = filters.excluded.orEmpty() + out)
     }
 
     /**
@@ -138,14 +172,16 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      * job, then [onDone] with its result: null when it failed, never called when cancelled.
      * Nothing while another list is being made.
      */
-    private fun <T> making(onlyIncluded: Boolean, onDone: (T?) -> Unit, work: suspend (isCancelled: () -> Boolean) -> T?) {
+    private fun <T> making(onlyIncluded: Boolean, choices: ListChoices, onDone: (T?) -> Unit, work: suspend (isCancelled: () -> Boolean) -> T?) {
         if (job?.isActive == true) return
         val mine = ++current
-        val madeWith = inclusionNow(onlyIncluded)
+        val madeWith = inclusionNow(onlyIncluded, choices)
+        // The list's own chaining profile, while it is made (the listener's taste otherwise).
+        val taste = com.sadurni.attacca.chain.EdgeFeatures.listTaste.asContextElement(app.settings.tasteOf(choices.profile))
         job = scope.launch {
             started(onlyIncluded)
             val result = try {
-                withContext(Background.dispatcher) {
+                withContext(Background.dispatcher + taste) {
                     val context = coroutineContext
                     work { !context.isActive }
                 }
@@ -203,7 +239,7 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         val folder = app.settings.musicFolder?.let(::File)
         if (folder == null && extras.isEmpty()) return@withContext null
         if (extras.isNotEmpty()) app.chainAnalyzer.profilesFor(extras)
-        val key = "${folder?.absolutePath}|${app.chainAnalyzer.last.value?.finishedAt}|${app.settings.chain.value.edgeSeconds}|${com.sadurni.attacca.library.IgnoredPaths.version}|${com.sadurni.attacca.library.MoodCorrections.version.value}|${if (app.settings.chain.value.skipDamaged) com.sadurni.attacca.library.DamagedTracks.version else -1}"
+        val key = "${folder?.absolutePath}|${app.chainAnalyzer.last.value?.finishedAt}|${app.settings.chain.value.edgeSeconds}|${com.sadurni.attacca.library.IgnoredPaths.version}|${com.sadurni.attacca.library.MoodCorrections.version.value}|${if (app.settings.chain.value.skipDamaged) com.sadurni.attacca.library.DamagedTracks.version else -1}|${com.sadurni.attacca.library.SameSongs.version}"
         // The collection of the music folder serves any seed already in it; only a seed outside it
         // (or analysed just now) needs one of its own.
         cached?.let { (k, c) -> if (k == key && extras.all { c.generator.indexOf(it) >= 0 }) return@withContext c }
@@ -218,13 +254,18 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         val profiles = app.chainAnalyzer.knownProfiles(ids, withSounds = false)
         TrackSort.warm(ids)
         val skipDamaged = app.settings.chain.value.skipDamaged
-        val candidates = ids.mapNotNull { id ->
+        val analysed = ids.mapNotNull { id ->
             // Damaged tracks stay out (unless one is the track a list is made from).
             if (skipDamaged && id !in extras && com.sadurni.attacca.library.DamagedTracks.isDamaged(id)) return@mapNotNull null
             val features = profiles.features[id] ?: return@mapNotNull null
             val tags = TrackSort.tags(id)
             Candidate(id, tags.artist, tags.genre, tags.year, features, profiles.edges[id], tags.durationMs)
         }
+        // The same recording on several albums (a compilation, a remaster): only its best copy
+        // takes part, so no list has it twice (the track a list starts from always stays).
+        val copies = com.sadurni.attacca.library.SameSongs.others(analysed.map { it.id }, keep = extras.toSet())
+        // Live tracks are left out (or kept alone) by each list, as chosen when it is made.
+        val candidates = if (copies.isEmpty()) analysed else analysed.filter { it.id !in copies }
         // The sound profiles only make the families and likeness vectors: the collection kept
         // afterwards does not hold them (thousands of them are many megabytes).
         // The moods the user gave: a track's own spreads to the tracks that sound like it.
@@ -263,7 +304,18 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      * a track does not wait for it. Quietly does nothing without analysed tracks.
      */
     fun warm() {
-        scope.launch { runCatching { collection() } }
+        scope.launch {
+            runCatching { collection() }
+            // The copies of one song the tags propose, compared by their sound (slow, each pair
+            // once): those found the same leave the lists made from then on.
+            val folder = app.settings.musicFolder?.let(::File) ?: return@launch
+            val found = runCatching {
+                withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.sadurni.attacca.library.SameSongs.verify(AudioFiles.collectAudio(folder, recent = true).map { it.absolutePath })
+                }
+            }.getOrDefault(false)
+            if (found) runCatching { collection() }
+        }
     }
 
     /**
@@ -274,12 +326,13 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         filters: ChainFilters,
         count: Int?,
         name: (GeneratedList, Collection) -> String,
+        choices: ListChoices = choicesByDefault(),
         onDone: (Int?) -> Unit,
     ) {
-        val madeWith = inclusionNow(filters.inclusion != null)
-        making(filters.inclusion != null, onDone) { isCancelled ->
+        val madeWith = inclusionNow(filters.inclusion != null, choices)
+        making(filters.inclusion != null, choices, onDone) { isCancelled ->
             val collection = collection() ?: return@making null
-            val lists = collection.generator.general(filters, app.settings.chain.value.artistSpacing, count, isCancelled = isCancelled)
+            val lists = collection.generator.general(withLive(filters, collection.generator, choices.live), app.settings.chain.value.artistSpacing, count, isCancelled = isCancelled)
                 ?: return@making null
             val dir = generatedDirectory
             dir.mkdirs()
@@ -309,14 +362,15 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         sameMood: Boolean,
         sameFamily: Boolean,
         count: Int,
+        choices: ListChoices = choicesByDefault(),
         onDone: (List<String>?) -> Unit,
     ) {
-        making(filters.inclusion != null, onDone) { isCancelled ->
+        making(filters.inclusion != null, choices, onDone) { isCancelled ->
             val known = libraryId(seed)
             val collection = collection(extra = known) ?: return@making null
             val index = collection.generator.indexOf(known)
             if (index < 0) return@making null
-            asAsked(collection.generator.fromSeed(index, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), listOf(seed), listOf(known))
+            asAsked(collection.generator.fromSeed(index, withLive(filters, collection.generator, choices.live, listOf(known)), sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), listOf(seed), listOf(known))
         }
     }
 
@@ -325,13 +379,14 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      * (see [ListGenerator.fitToSeed]), widened (any mood, then any family) while that leaves fewer
      * than half the tracks asked for. [onDone] gets the ids, or null when the seed could not be analysed.
      */
-    fun quickFromSeed(seed: String, count: Int, onlyIncluded: Boolean = onlyIncludedByDefault(), onDone: (List<String>?) -> Unit) {
-        making(onlyIncluded, onDone) { isCancelled ->
+    fun quickFromSeed(seed: String, count: Int, onlyIncluded: Boolean = onlyIncludedByDefault(), choices: ListChoices = choicesByDefault(), onDone: (List<String>?) -> Unit) {
+        making(onlyIncluded, choices, onDone) { isCancelled ->
             val known = libraryId(seed)
             val collection = collection(extra = known) ?: return@making null
             val index = collection.generator.indexOf(known)
             if (index < 0) return@making null
-            asAsked(quickIds(collection.generator, index, count, inclusion = inclusionIf(onlyIncluded), isCancelled = isCancelled), listOf(seed), listOf(known))
+            val liveOut = liveLeftOut(collection.generator.candidates.map { it.id }, choices.live, listOf(known))
+            asAsked(quickIds(collection.generator, index, count, inclusion = inclusionIf(onlyIncluded), liveOut = liveOut, isCancelled = isCancelled), listOf(seed), listOf(known))
         }
     }
 
@@ -348,9 +403,11 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         count: Int,
         played: Set<String>? = playedLately(),
         inclusion: com.sadurni.attacca.library.Inclusion? = null,
+        liveOut: Set<String> = emptySet(),
         isCancelled: () -> Boolean = { false },
     ): List<String> {
-        val base = ChainFilters(durationMinS = QUICK_MIN_SECONDS, durationMaxS = QUICK_MAX_SECONDS, excluded = played, inclusion = inclusion)
+        val excluded = if (liveOut.isEmpty()) played else played.orEmpty() + liveOut
+        val base = ChainFilters(durationMinS = QUICK_MIN_SECONDS, durationMaxS = QUICK_MAX_SECONDS, excluded = excluded, inclusion = inclusion)
         val spacing = app.settings.chain.value.artistSpacing
         // Wider until at least half the tracks asked for; else the widest that gave most.
         val enough = maxOf(QUICK_MIN_TRACKS, count / 2)
@@ -375,20 +432,24 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         count: Int,
         avoid: String?,
         onlyIncluded: Boolean = onlyIncludedByDefault(),
+        choices: ListChoices = choicesByDefault(),
         onDone: (Pair<String, List<String>>?) -> Unit,
     ) {
-        making(onlyIncluded, onDone) { isCancelled ->
+        making(onlyIncluded, choices, onDone) { isCancelled ->
             val g = collection()?.generator ?: return@making null
             val played = playedLately()
             val inclusion = inclusionIf(onlyIncluded)
+            val liveOut = liveLeftOut(g.candidates.map { it.id }, choices.live)
             // Not a track played lately either, when set to (unless all of them were).
             val avoided = avoid?.let { libraryId(it) }
-            val all = g.candidates.indices.filter { g.candidates[it].id != avoided && (inclusion == null || inclusion.includes(g.candidates[it].id)) }
+            val all = g.candidates.indices.filter {
+                g.candidates[it].id != avoided && g.candidates[it].id !in liveOut && (inclusion == null || inclusion.includes(g.candidates[it].id))
+            }
                 .let { all -> if (played == null) all else all.filter { g.candidates[it].id !in played }.ifEmpty { all } }
             val pool = all.filter { mood == null || g.classification.hasMood(it, setOf(mood)) }.ifEmpty { all }
             // A file still there (only those tried are looked at).
             val index = pool.shuffled().firstOrNull { File(g.candidates[it].id).isFile } ?: return@making null
-            g.candidates[index].id to quickIds(g, index, count, played, inclusion, isCancelled)
+            g.candidates[index].id to quickIds(g, index, count, played, inclusion, liveOut, isCancelled)
         }
     }
 
@@ -402,19 +463,86 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         sameMood: Boolean,
         sameFamily: Boolean,
         count: Int,
+        choices: ListChoices = choicesByDefault(),
         onDone: (List<String>?) -> Unit,
     ) {
-        making(filters.inclusion != null, onDone) { isCancelled ->
+        making(filters.inclusion != null, choices, onDone) { isCancelled ->
             val collection = collection() ?: return@making null
             val known = seeds.map { libraryId(it) }
             val indices = collection.generator.indicesOf(known)
             if (indices.isEmpty()) return@making null
-            asAsked(collection.generator.fromSeeds(indices, filters, sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), seeds, known)
+            asAsked(collection.generator.fromSeeds(indices, withLive(filters, collection.generator, choices.live, known), sameMood, sameFamily, count, app.settings.chain.value.artistSpacing, isCancelled), seeds, known)
         }
     }
 
     /** The other kinds of list (see [ListGenerator]'s "more kinds of list"). */
-    enum class Kind { RISE_AND_FALL, WARM_UP, WIND_DOWN, REDISCOVER, SAMPLER, CONTRAST, FOR_TIME, ALBUMS_LIKE, BRIDGE }
+    enum class Kind {
+        RISE_AND_FALL, WARM_UP, WIND_DOWN, REDISCOVER, SAMPLER, CONTRAST, FOR_TIME, ALBUMS_LIKE, BRIDGE,
+
+        /** Energy along a curve drawn by hand ([MakeExtra.curve]). */
+        DRAWN,
+
+        /** Two people's tastes: two inclusion sets ([MakeExtra.first], [MakeExtra.second]) in turn. */
+        FOR_TWO,
+
+        /** Another list on the way of the seeds (the queue): same mood and energy, other tracks. */
+        VARIANT,
+
+        /** What is usually heard at this time of day, on days like today. */
+        THIS_HOUR,
+
+        /** Winding down for the minutes given (the volume going down, the player stopping at its end). */
+        SLEEP,
+
+        /** Rising for the minutes given (to wake up to, the volume going up). */
+        WAKE,
+    }
+
+    /** What some kinds need besides seeds and a number: the drawn curve, the two sets of a list for two. */
+    data class MakeExtra(val curve: List<Float>? = null, val first: String? = null, val second: String? = null) : java.io.Serializable
+
+    /**
+     * A list to wake up to of [minutes] (see [Kind.WAKE]), made quietly with the default choices:
+     * the alarm's list, made ahead. Null when nothing is analysed.
+     */
+    suspend fun wakeList(minutes: Int): List<String>? = withContext(Background.dispatcher) {
+        val choices = choicesByDefault()
+        val g = collection()?.generator ?: return@withContext null
+        val liveOut = liveLeftOut(g.candidates.map { it.id }, choices.live)
+        withContext(EdgeFeatures.listTaste.asContextElement(app.settings.tasteOf(choices.profile))) {
+            build(g, Kind.WAKE, emptyList(), minutes, 0, inclusionIf(onlyIncludedByDefault()), liveOut, MakeExtra()) { false }
+        }
+    }
+
+    /** The inclusion the alarm's list is made with (for the tracks it adds when endless). */
+    fun wakeInclusion(): com.sadurni.attacca.settings.ListInclusion = inclusionNow(onlyIncludedByDefault(), choicesByDefault())
+
+    /** The inclusion of the set [id] (the one in use as it stands now); null: every track. */
+    private fun inclusionOfSet(id: String?): com.sadurni.attacca.library.Inclusion? {
+        val c = app.settings.chain.value
+        if (id == null) return null
+        if (id == c.activeSet) return c.inclusion()
+        val set = c.inclusionSets.firstOrNull { it.id == id } ?: return null
+        return com.sadurni.attacca.library.Inclusion.of(set.list, set.mode)
+    }
+
+    /** Tracks heard around this time on days like today; before plays were kept with their time, those last played near it. */
+    private fun heardAroundNow(): List<String> {
+        val now = System.currentTimeMillis()
+        val kept = runCatching { app.listening.playedAroundNow(now) }.getOrDefault(emptyList())
+        if (kept.size >= THIS_HOUR_MIN_SEEDS) return kept
+        val c = java.util.Calendar.getInstance()
+        fun minute(ms: Long): Int {
+            c.timeInMillis = ms
+            return c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE)
+        }
+        val nowMinute = minute(now)
+        val near = app.listening.snapshot().entries
+            .filter { it.value.lastPlayedMs > 0 && abs(minute(it.value.lastPlayedMs) - nowMinute).let { d -> minOf(d, 24 * 60 - d) } <= THIS_HOUR_WINDOW_MINUTES }
+            .sortedByDescending { it.value.plays }
+            .map { it.key }
+        return (kept + near).distinct().take(THIS_HOUR_MAX_SEEDS)
+    }
 
     /**
      * A list of [kind]: [seeds] are the track it starts from (contrast, for a time, energy curves
@@ -422,11 +550,22 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
      * minutes (for a time) or the days not played (rediscover, 0: never played). Tracks played
      * lately are left out as for quick lists. [onDone] gets the ids, or null when it failed.
      */
-    fun make(kind: Kind, seeds: List<String>, value: Int, count: Int, onlyIncluded: Boolean = onlyIncludedByDefault(), onDone: (List<String>?) -> Unit) {
-        making(onlyIncluded, onDone) { isCancelled ->
-            val known = seeds.map { libraryId(it) }
-            val collection = collection(extras = if (kind == Kind.BRIDGE || seeds.size == 1) known else emptyList()) ?: return@making null
-            asAsked(build(collection.generator, kind, known, value, count, inclusionIf(onlyIncluded), isCancelled), seeds, known)
+    fun make(
+        kind: Kind,
+        seeds: List<String>,
+        value: Int,
+        count: Int,
+        onlyIncluded: Boolean = onlyIncludedByDefault(),
+        choices: ListChoices = choicesByDefault(),
+        extra: MakeExtra = MakeExtra(),
+        onDone: (List<String>?) -> Unit,
+    ) {
+        making(onlyIncluded, choices, onDone) { isCancelled ->
+            val asked = if (kind == Kind.THIS_HOUR) heardAroundNow() else seeds
+            val known = asked.map { libraryId(it) }
+            val collection = collection(extras = if (kind == Kind.BRIDGE || asked.size == 1) known else emptyList()) ?: return@making null
+            val liveOut = liveLeftOut(collection.generator.candidates.map { it.id }, choices.live, if (kind == Kind.VARIANT || kind == Kind.THIS_HOUR) emptyList() else known)
+            asAsked(build(collection.generator, kind, known, value, count, inclusionIf(onlyIncluded), liveOut, extra, isCancelled), asked, known)
         }
     }
 
@@ -437,10 +576,13 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         value: Int,
         count: Int,
         inclusion: com.sadurni.attacca.library.Inclusion?,
+        liveOut: Set<String>,
+        extra: MakeExtra,
         isCancelled: () -> Boolean,
     ): List<String>? {
         val spacing = app.settings.chain.value.artistSpacing
-        val base = ChainFilters(excluded = playedLately(), inclusion = inclusion)
+        val played = playedLately()
+        val base = ChainFilters(excluded = if (liveOut.isEmpty()) played else played.orEmpty() + liveOut, inclusion = inclusion)
         val first = seeds.firstOrNull()?.let(g::indexOf)?.takeIf { it >= 0 }
         return when (kind) {
             Kind.RISE_AND_FALL -> g.energyCurve(ListGenerator.EnergyShape.RISE_AND_FALL, first, base, count, spacing, isCancelled = isCancelled)
@@ -450,18 +592,59 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
             Kind.CONTRAST -> first?.let { g.contrast(it, base, count, spacing, isCancelled) }
             Kind.FOR_TIME -> first?.let { g.forTime(it, base, value.coerceAtLeast(1), spacing, isCancelled) }
             Kind.BRIDGE -> {
-                val to = seeds.getOrNull(1)?.let(g::indexOf)?.takeIf { it >= 0 }
-                if (first == null || to == null) null else g.bridge(first, to, ChainFilters(inclusion = inclusion), count, spacing, isCancelled)
+                // Two ends: a bridge; more: a trip with stops, in their order.
+                val stops = seeds.map(g::indexOf)
+                val ends = ChainFilters(inclusion = inclusion, excluded = liveOut.ifEmpty { null })
+                when {
+                    stops.size < 2 || stops.any { it < 0 } -> null
+                    stops.size == 2 -> g.bridge(stops[0], stops[1], ends, count, spacing, isCancelled)
+                    else -> g.trip(stops, ends, count, spacing, isCancelled)
+                }
+            }
+            Kind.DRAWN -> {
+                val curve = extra.curve?.takeIf { it.size >= 2 } ?: return null
+                g.energyCurve(curveOf(curve), first, base, count, spacing, isCancelled = isCancelled)
+            }
+            Kind.FOR_TWO -> {
+                // Each side its own set; the set in use (if any) does not narrow it further.
+                val a = inclusionOfSet(extra.first)
+                val b = inclusionOfSet(extra.second)
+                val ids = g.candidates.map { it.id }
+                g.forTwo(
+                    { a == null || a.includes(ids[it]) },
+                    { b == null || b.includes(ids[it]) },
+                    base.copy(inclusion = null), count, spacing, isCancelled = isCancelled,
+                )
+            }
+            Kind.VARIANT -> g.variant(seeds, base, spacing, isCancelled)
+            Kind.THIS_HOUR -> {
+                // The tracks heard at this time are the seeds; heard lately or not, the list is like them.
+                val heard = g.indicesOf(seeds)
+                if (heard.isEmpty()) null else g.fromSeeds(heard, ChainFilters(excluded = liveOut.ifEmpty { null }, inclusion = inclusion), false, false, count, spacing, isCancelled)
+            }
+            Kind.SLEEP, Kind.WAKE -> {
+                val minutes = value.coerceAtLeast(MIN_SLEEP_MINUTES)
+                // Gentler than the named curves: nothing loud to fall asleep to, nothing loud to wake up to.
+                val target: (Float) -> Float = if (kind == Kind.SLEEP) { p -> 0.6f - 0.5f * p } else { p -> 0.1f + 0.7f * p }
+                g.energyCurve(target, first, base, g.tracksFor(minutes), spacing, isCancelled = isCancelled)?.let { g.takeFor(it, minutes) }
             }
             Kind.REDISCOVER -> {
                 val favorites = com.sadurni.attacca.library.ListLoader.load(
                     com.sadurni.attacca.library.ListSource.Playlist(UserLists.favorites.absolutePath),
                 ).map { it.mediaId }
                 val heard = if (value > 0) app.listening.playedSince(System.currentTimeMillis() - value * 86_400_000L) else app.listening.everPlayed()
-                g.fromSeeds(g.indicesOf(favorites), ChainFilters(excluded = heard + favorites, inclusion = inclusion), false, false, count, spacing, isCancelled)
+                g.fromSeeds(g.indicesOf(favorites), ChainFilters(excluded = heard + favorites + liveOut, inclusion = inclusion), false, false, count, spacing, isCancelled)
             }
             Kind.ALBUMS_LIKE -> albumsLike(g, seeds, base, count, isCancelled)
         }
+    }
+
+    /** The energy a drawn [curve] (its points evenly along the list, each 0 … 1) asks for at [p] of the list. */
+    private fun curveOf(curve: List<Float>): (Float) -> Float = { p ->
+        val x = p.coerceIn(0f, 1f) * (curve.size - 1)
+        val i = x.toInt().coerceAtMost(curve.size - 2)
+        val t = x - i
+        (curve[i] * (1 - t) + curve[i + 1] * t).coerceIn(0f, 1f)
     }
 
     /** Whole albums (folders) most like the album [seedAlbum], at least [count] tracks, chained album by album. */
@@ -497,6 +680,10 @@ class ChainLists(private val app: AttaccaApp, private val scope: CoroutineScope)
         const val QUICK_MIN_SECONDS = 60
         const val QUICK_MAX_SECONDS = 20 * 60
         const val QUICK_MIN_TRACKS = 10
+        const val THIS_HOUR_MIN_SEEDS = 5
+        const val THIS_HOUR_MAX_SEEDS = 50
+        const val THIS_HOUR_WINDOW_MINUTES = 90
+        const val MIN_SLEEP_MINUTES = 5
     }
 
     private fun sanitize(name: String): String =

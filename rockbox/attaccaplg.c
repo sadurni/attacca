@@ -43,6 +43,8 @@ enum { D_ARTIST, D_GENRE, D_MOOD, D_FAMILY };
 #define F_INCLUDED 1
 #define F_HEAD 2
 #define F_TAIL 4
+#define F_LIVE 8      /* live: an audience heard, a concert album, said in its name */
+#define F_COPY 16     /* a copy of a recording kept on another album: lists leave it out */
 
 struct record {
     uint32_t title, path, album, hpath, htail, edge;
@@ -94,6 +96,7 @@ enum {
     S_BRIDGE, S_MINUTES, S_CURVE_START, S_PICK_ARTIST, S_PICK_SONG,
     S_BRIDGE_TO, S_RANDOM, S_XF, S_XF_LEN, S_XF_OLD_DB, S_XF_ON, S_XF_OFF, S_XF_JUMP,
     S_KEEP_ALBUMS, S_LIBRARY, S_SET, S_EVERYTHING, S_SKIP_FADE,
+    S_LIVE, S_LIVE_OUT, S_LIVE_ONLY,
     S_COUNT_
 };
 
@@ -127,6 +130,9 @@ static const char *const texts_en[S_COUNT_] = {
     "Keep albums whole",
     "Library", "Music", "Everything",
     "Fade on skips",
+    "Live songs",
+    "Leave them out",
+    "Only those",
 };
 
 static const char *const texts_es[S_COUNT_] = {
@@ -161,6 +167,9 @@ static const char *const texts_es[S_COUNT_] = {
     "Álbumes enteros, sin fundidos",
     "Biblioteca", "Música", "Todo",
     "Fundir al saltar",
+    "Canciones en directo",
+    "Dejarlas fuera",
+    "Solo esas",
 };
 
 /* BEGIN generated texts: the other languages of Attacca (dev tooling writes this part) */
@@ -246,6 +255,9 @@ static const char *const texts_ca[S_COUNT_] = {
     "Àlbums sencers, sense crossfade",
     "Biblioteca", "Música", "Tot",
     "Fon en saltar",
+    "Cançons en directe",
+    "Deixar-les fora",
+    "Només aquestes",
 };
 static const char *const texts_gl[S_COUNT_] = {
     "Attacca",
@@ -329,6 +341,9 @@ static const char *const texts_gl[S_COUNT_] = {
     "Álbums enteiros, sen crossfade",
     "Biblioteca", "Música", "Todo",
     "Fundir ao saltar",
+    "Cancións en directo",
+    "Deixalas fóra",
+    "Só esas",
 };
 static const char *const texts_eu[S_COUNT_] = {
     "Attacca",
@@ -412,6 +427,9 @@ static const char *const texts_eu[S_COUNT_] = {
     "Albumak osorik, crossfaderik gabe",
     "Liburutegia", "Musika", "Dena",
     "Urtu saltatzean",
+    "Zuzeneko abestiak",
+    "Kanpoan utzi",
+    "Horiek soilik",
 };
 static const char *const texts_pt[S_COUNT_] = {
     "Attacca",
@@ -495,6 +513,9 @@ static const char *const texts_pt[S_COUNT_] = {
     "Álbuns inteiros, sem crossfade",
     "Biblioteca", "Música", "Tudo",
     "Fundir ao saltar",
+    "Músicas ao vivo",
+    "Deixá-las de fora",
+    "Só essas",
 };
 static const char *const texts_pt_br[S_COUNT_] = {
     "Attacca",
@@ -578,6 +599,9 @@ static const char *const texts_pt_br[S_COUNT_] = {
     "Álbuns inteiros, sem crossfade",
     "Biblioteca", "Música", "Tudo",
     "Fundir ao pular",
+    "Músicas ao vivo",
+    "Deixar de fora",
+    "Só essas",
 };
 static const char *const texts_fr[S_COUNT_] = {
     "Attacca",
@@ -661,6 +685,9 @@ static const char *const texts_fr[S_COUNT_] = {
     "Albums entiers, sans fondu",
     "Bibliothèque", "Musique", "Tout",
     "Fondu en sautant",
+    "Chansons live",
+    "Les laisser de côté",
+    "Seulement celles-là",
 };
 static const char *const texts_it[S_COUNT_] = {
     "Attacca",
@@ -744,6 +771,9 @@ static const char *const texts_it[S_COUNT_] = {
     "Album interi, senza dissolvenza",
     "Libreria", "Musica", "Tutto",
     "Dissolvenza nei salti",
+    "Brani dal vivo",
+    "Lasciarli fuori",
+    "Solo quelli",
 };
 static const char *const texts_de[S_COUNT_] = {
     "Attacca",
@@ -827,6 +857,9 @@ static const char *const texts_de[S_COUNT_] = {
     "Alben am Stück, ohne Überblendung",
     "Bibliothek", "Musik", "Alles",
     "Beim Springen überblenden",
+    "Live-Titel",
+    "Weglassen",
+    "Nur diese",
 };
 static const char *const texts_nl[S_COUNT_] = {
     "Attacca",
@@ -910,6 +943,9 @@ static const char *const texts_nl[S_COUNT_] = {
     "Albums heel, zonder crossfade",
     "Bibliotheek", "Muziek", "Alles",
     "Overvloeien bij overslaan",
+    "Livenummers",
+    "Weglaten",
+    "Alleen die",
 };
 static const char *const texts_sv[S_COUNT_] = {
     "Attacca",
@@ -993,6 +1029,9 @@ static const char *const texts_sv[S_COUNT_] = {
     "Hela album, utan övertoning",
     "Bibliotek", "Musik", "Allt",
     "Tona över vid hopp",
+    "Livelåtar",
+    "Utelämna dem",
+    "Bara dem",
 };
 static const char *const texts_pl[S_COUNT_] = {
     "Attacca",
@@ -1076,6 +1115,9 @@ static const char *const texts_pl[S_COUNT_] = {
     "Całe albumy, bez przenikania",
     "Biblioteka", "Muzyka", "Wszystko",
     "Przenikanie przy przeskoku",
+    "Utwory na żywo",
+    "Pomijaj je",
+    "Tylko one",
 };
 static const char *const texts_ro[S_COUNT_] = {
     "Attacca",
@@ -1159,6 +1201,9 @@ static const char *const texts_ro[S_COUNT_] = {
     "Albume întregi, fără crossfade",
     "Bibliotecă", "Muzică", "Tot",
     "Estompare la salt",
+    "Piese live",
+    "Lasă-le deoparte",
+    "Doar acestea",
 };
 static const char *const texts_ru[S_COUNT_] = {
     "Attacca",
@@ -1242,6 +1287,9 @@ static const char *const texts_ru[S_COUNT_] = {
     "Альбомы целиком, без кроссфейда",
     "Библиотека", "Музыка", "Всё",
     "Кроссфейд при переходе",
+    "Концертные песни",
+    "Не включать",
+    "Только они",
 };
 static const char *const texts_uk[S_COUNT_] = {
     "Attacca",
@@ -1325,6 +1373,9 @@ static const char *const texts_uk[S_COUNT_] = {
     "Альбоми цілком, без кросфейду",
     "Бібліотека", "Музика", "Усе",
     "Кросфейд при переході",
+    "Концертні пісні",
+    "Не включати",
+    "Лише вони",
 };
 static const char *const texts_el[S_COUNT_] = {
     "Attacca",
@@ -1408,6 +1459,9 @@ static const char *const texts_el[S_COUNT_] = {
     "Ολόκληρα άλμπουμ, χωρίς crossfade",
     "Βιβλιοθήκη", "Μουσική", "Όλα",
     "Crossfade στα άλματα",
+    "Ζωντανά τραγούδια",
+    "Να μένουν έξω",
+    "Μόνο αυτά",
 };
 static const char *const texts_tr[S_COUNT_] = {
     "Attacca",
@@ -1491,6 +1545,9 @@ static const char *const texts_tr[S_COUNT_] = {
     "Albümler bütün, geçişsiz",
     "Kitaplık", "Müzik", "Hepsi",
     "Atlarken geçiş",
+    "Canlı şarkılar",
+    "Dışarıda bırak",
+    "Yalnızca onlar",
 };
 static const char *const texts_ja[S_COUNT_] = {
     "Attacca",
@@ -1574,6 +1631,9 @@ static const char *const texts_ja[S_COUNT_] = {
     "アルバムはそのまま、クロスフェードなし",
     "ライブラリ", "音楽", "すべて",
     "スキップ時にクロスフェード",
+    "ライブ曲",
+    "除外する",
+    "ライブ曲のみ",
 };
 static const char *const texts_ko[S_COUNT_] = {
     "Attacca",
@@ -1657,6 +1717,9 @@ static const char *const texts_ko[S_COUNT_] = {
     "앨범은 그대로, 크로스페이드 없이",
     "라이브러리", "음악", "전체",
     "건너뛸 때 크로스페이드",
+    "라이브 곡",
+    "빼기",
+    "라이브 곡만",
 };
 static const char *const texts_zh_cn[S_COUNT_] = {
     "Attacca",
@@ -1740,6 +1803,9 @@ static const char *const texts_zh_cn[S_COUNT_] = {
     "专辑完整播放，不交叉淡化",
     "音乐库", "音乐", "全部",
     "跳过时交叉淡化",
+    "现场歌曲",
+    "排除",
+    "仅现场",
 };
 static const char *const texts_zh_tw[S_COUNT_] = {
     "Attacca",
@@ -1823,6 +1889,9 @@ static const char *const texts_zh_tw[S_COUNT_] = {
     "專輯完整播放，不交叉淡化",
     "音樂庫", "音樂", "全部",
     "跳過時交叉淡化",
+    "現場歌曲",
+    "排除",
+    "僅現場",
 };
 static const struct { const char *lang; const char *const *texts; } more_texts[] = {
     { "catala", texts_ca },
@@ -1905,7 +1974,8 @@ static struct {
     int blend_albums;                           /* blends inside an album too (off: albums kept whole) */
     int xf_mode_set;                            /* the crossfade mode the plugin set, + 1 (0: none) */
     int skip_fade;                              /* skips by hand blend (with the user's own crossfade) */
-} cfg = { 150, -1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 100, 0, 100, 0, 1, 20, 60, 0, 0, 10, 0, { 0 }, 0, 0, 0, 0 };
+    int live;                                   /* live songs: 0 any, 1 left out, 2 only those */
+} cfg = { 150, -1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 100, 0, 100, 0, 1, 20, 60, 0, 0, 10, 0, { 0 }, 0, 0, 0, 0, 0 };
 
 /* Category filters by name, so they survive a new library; resolved to indexes on load. */
 static char cat_name[4][NAME_LEN];          /* artist, genre, mood, family (as the dictionaries) */
@@ -1945,6 +2015,7 @@ static struct configdata config[] = {
     { TYPE_INT, 0, 1, { .int_p = &cfg.blend_albums }, "blend albums", NULL },
     { TYPE_INT, 0, 6, { .int_p = &cfg.xf_mode_set }, "crossfade mode set", NULL },
     { TYPE_INT, 0, 1, { .int_p = &cfg.skip_fade }, "fade on skips", NULL },
+    { TYPE_INT, 0, 2, { .int_p = &cfg.live }, "live songs", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[0] }, "artist", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[1] }, "genre", NULL },
     { TYPE_STRING, 0, NAME_LEN, { .string = cat_name[2] }, "mood", NULL },
@@ -2246,10 +2317,20 @@ static bool has_mood(const struct record *r, int mood)
     return r->mood == mood || (r->mood2 && r->mood2 - 1 == mood);
 }
 
-/** Length, artist, genre, inclusion and mood / family (the seed's when `seed` is set and asked, else the chosen ones). */
+/** Live songs as chosen, and never a copy of a recording kept on another album (as Attacca). */
+static bool live_ok(const struct record *r)
+{
+    if (r->flags & F_COPY) return false;
+    if (cfg.live == 1 && (r->flags & F_LIVE)) return false;
+    if (cfg.live == 2 && !(r->flags & F_LIVE)) return false;
+    return true;
+}
+
+/** Length, artist, genre, inclusion, live songs and mood / family (the seed's when `seed` is set and asked, else the chosen ones). */
 static bool matches_base(const struct record *r, const struct record *seed)
 {
     if (cfg.only_inc && !(r->flags & F_INCLUDED)) return false;
+    if (!live_ok(r)) return false;
     /* A song of unknown length (0) passes, as in Attacca. */
     if (r->duration && cfg.min_minutes && r->duration < cfg.min_minutes * 60) return false;
     if (r->duration && cfg.max_minutes && r->duration > cfg.max_minutes * 60) return false;
@@ -3929,6 +4010,8 @@ static void random_list(void)
             continue;
         if (cfg.only_inc && !(r.flags & F_INCLUDED))
             continue;
+        if (!live_ok(&r))
+            continue;
         if (rb->rand() % ++seen == 0)
             seed_rec = i;
     }
@@ -4825,7 +4908,7 @@ static void bridge(int from_rec, int to_rec)
     for (uint32_t i = 0; i < H.n; i++) {
         if (!get_record(i, &r))
             break;
-        if ((int)i != from_rec && (int)i != to_rec && (!cfg.only_inc || (r.flags & F_INCLUDED))) {
+        if ((int)i != from_rec && (int)i != to_rec && (!cfg.only_inc || (r.flags & F_INCLUDED)) && live_ok(&r)) {
             uint32_t da = distance(ra.vec, r.vec), db = distance(r.vec, rz.vec);
             uint32_t detour = da + db > direct ? da + db - direct : 0;
             c[n].rec = i;
@@ -5034,8 +5117,10 @@ static const char *more_label(int i, char *buf, size_t len)
         if (set_n > 0)
             return label_value(buf, len, S_SET, cfg.only_inc && set_bit >= 0 ? incl_set_name : T(S_EVERYTHING));
         return label_value(buf, len, S_ONLY_INC, cfg.only_inc ? T(S_YES) : T(S_NO));
-    case 10: return label_value(buf, len, S_MIN_MINUTES, fmt_off(v, sizeof(v), cfg.min_minutes, ""));
-    case 11: return label_value(buf, len, S_MAX_MINUTES, fmt_off(v, sizeof(v), cfg.max_minutes, ""));
+    case 10: return label_value(buf, len, S_LIVE,
+                                cfg.live == 1 ? T(S_LIVE_OUT) : cfg.live == 2 ? T(S_LIVE_ONLY) : T(S_ANY));
+    case 11: return label_value(buf, len, S_MIN_MINUTES, fmt_off(v, sizeof(v), cfg.min_minutes, ""));
+    case 12: return label_value(buf, len, S_MAX_MINUTES, fmt_off(v, sizeof(v), cfg.max_minutes, ""));
     default: return T(S_RESET);
     }
 }
@@ -5066,7 +5151,7 @@ static void choose_set(void)
 static void more_menu(void)
 {
     int sel = 0;
-    while (run_menu(T(S_MORE), 13, &sel, more_label) >= 0) {
+    while (run_menu(T(S_MORE), 14, &sel, more_label) >= 0) {
         switch (sel) {
         case 0: rb->set_int(T(S_YEAR_FROM), "", UNIT_INT, &cfg.year_from, NULL, 1, 0, 2100, fmt_off); break;
         case 1: rb->set_int(T(S_YEAR_TO), "", UNIT_INT, &cfg.year_to, NULL, 1, 0, 2100, fmt_off); break;
@@ -5083,10 +5168,11 @@ static void more_menu(void)
             else
                 cfg.only_inc = !cfg.only_inc;
             break;
-        case 10: rb->set_int(T(S_MIN_MINUTES), "", UNIT_INT, &cfg.min_minutes, NULL, 1, 0, 600, fmt_off); break;
-        case 11: rb->set_int(T(S_MAX_MINUTES), "", UNIT_INT, &cfg.max_minutes, NULL, 1, 0, 600, fmt_off); break;
+        case 10: cfg.live = (cfg.live + 1) % 3; break;
+        case 11: rb->set_int(T(S_MIN_MINUTES), "", UNIT_INT, &cfg.min_minutes, NULL, 1, 0, 600, fmt_off); break;
+        case 12: rb->set_int(T(S_MAX_MINUTES), "", UNIT_INT, &cfg.max_minutes, NULL, 1, 0, 600, fmt_off); break;
         default:
-            cfg.year_from = cfg.year_to = cfg.bpm_min = cfg.bpm_max = cfg.voice = 0;
+            cfg.year_from = cfg.year_to = cfg.bpm_min = cfg.bpm_max = cfg.voice = cfg.live = 0;
             cfg.e_min = cfg.p_min = 0;
             cfg.e_max = cfg.p_max = 100;
             cfg.min_minutes = 1;
@@ -8451,7 +8537,7 @@ static void choose_library(size_t mark)
 }
 
 /* The plugin's own version: the same as Attacca's (desktop/build.gradle.kts), set with it. */
-#define PLUGIN_VERSION "1.5.0"
+#define PLUGIN_VERSION "1.6.0"
 
 /* Version: the plugin's, and the library's (when and with which Attacca it was made, its songs). */
 static void info(void)
