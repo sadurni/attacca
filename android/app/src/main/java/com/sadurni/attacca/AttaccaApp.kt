@@ -115,6 +115,8 @@ class AttaccaApp : Application() {
         com.sadurni.attacca.settings.AutoBackup.load(this)
         bookmarks = Bookmarks(this)
         com.sadurni.attacca.library.TrackSort.db = com.sadurni.attacca.library.TagDb(this)
+        com.sadurni.attacca.library.AudioFiles.walkFile = java.io.File(filesDir, "music-files.txt")
+        com.sadurni.attacca.library.LiveTracks.store = java.io.File(filesDir, "release-types.tsv")
         appScope.launch(Background.dispatcher) {
             runCatching { com.sadurni.attacca.library.DamagedTracks.load() }
             // Marks left by stricter rules are checked again.

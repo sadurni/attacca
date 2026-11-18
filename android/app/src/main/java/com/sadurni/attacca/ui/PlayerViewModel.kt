@@ -429,7 +429,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         choices: com.sadurni.attacca.settings.ListChoices = app.chainLists.choicesByDefault(),
         extra: com.sadurni.attacca.chain.ChainLists.MakeExtra = com.sadurni.attacca.chain.ChainLists.MakeExtra(),
     ) {
-        if (listBusy.value) return
+        if (listBusy.value) {
+            com.sadurni.attacca.ExitLog.note(getApplication(), "List ($kind) asked while another is being made")
+            return
+        }
+        com.sadurni.attacca.ExitLog.note(getApplication(), "List ($kind) asked")
         val context = getApplication<android.app.Application>()
         val playing = nowPlaying.value.mediaId?.takeIf { !it.contains("://") }
         fun title(id: String) = com.sadurni.attacca.library.TrackSort.cachedTags(id)?.title?.ifBlank { null } ?: java.io.File(id).nameWithoutExtension

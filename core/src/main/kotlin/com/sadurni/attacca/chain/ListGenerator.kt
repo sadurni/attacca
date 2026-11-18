@@ -61,7 +61,12 @@ class ListGenerator(
         require(classification.moods.size == candidates.size)
     }
 
-    fun indexOf(id: String): Int = candidates.indexOfFirst { it.id == id }
+    /** Each id's index (the first, should one come twice), for [indexOf]: a look-up, not a search through thousands. */
+    private val byId: Map<String, Int> by lazy {
+        HashMap<String, Int>(candidates.size * 2).apply { candidates.forEachIndexed { i, c -> putIfAbsent(c.id, i) } }
+    }
+
+    fun indexOf(id: String): Int = byId[id] ?: -1
 
     /** The indices of those of [ids] that are candidates. */
     fun indicesOf(ids: Collection<String>): List<Int> {

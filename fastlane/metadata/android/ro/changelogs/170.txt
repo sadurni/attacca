@@ -1,0 +1,4 @@
+• Listele se fac din nou repede cu o bibliotecă mare (cu mii de piese, prima putea dura minute), și „Ce asculți la ora asta”.
+• Attacca World e mult mai ușor de desenat: fluid la 60 de cadre pe secundă.
+• Attacca World la calitate înaltă (Setări → Aspect): margini netede, o umbră discretă sub figuri, o strălucire în jurul luminilor, tonuri de film.
+• Terenul umbrit în adâncituri; curcubeul opus soarelui; vaci cu coarne.

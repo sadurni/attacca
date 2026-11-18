@@ -1,0 +1,4 @@
+• Las listas vuelven a hacerse rápido con una biblioteca grande (con miles de temas, la primera podía tardar minutos), también «Lo que oyes a esta hora».
+• Attacca World es mucho más ligero de dibujar: fluido a 60 fotogramas por segundo.
+• Attacca World en alta calidad (Ajustes → Apariencia): bordes lisos, una sombra tenue bajo las figuras, un halo alrededor de las luces, tonos de película.
+• El terreno sombreado en sus hondonadas; el arcoíris opuesto al sol; vacas con cuernos.

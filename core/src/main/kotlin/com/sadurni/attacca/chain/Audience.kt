@@ -102,16 +102,21 @@ object LiveVerdict {
 
     /** What a title adds to the song's name: its brackets and what follows " - ". */
     private fun addition(title: String): String {
-        val brackets = Regex("""[(\[{]([^)\]}]*)[)\]}]""").findAll(title).joinToString(" ") { it.groupValues[1] }
+        val brackets = BRACKETED.findAll(title).joinToString(" ") { it.groupValues[1] }
         val after = listOf(" - ", " – ").mapNotNull { d -> title.indexOf(d).takeIf { it >= 0 }?.let { title.substring(it + d.length) } }.joinToString(" ")
         return "$brackets $after"
     }
 
     /** Whether [name] says it is live. */
     fun said(name: String): Boolean {
-        val plain = java.text.Normalizer.normalize(name.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
-        return WORDS.any { Regex("\\b${Regex.escape(it)}\\b").containsMatchIn(plain) }
+        val plain = java.text.Normalizer.normalize(name.lowercase(), java.text.Normalizer.Form.NFD).replace(MARKS, "")
+        return WORD_PATTERNS.any { it.containsMatchIn(plain) }
     }
+
+    // Made once: asked for every track of a library.
+    private val BRACKETED = Regex("""[(\[{]([^)\]}]*)[)\]}]""")
+    private val MARKS = Regex("\\p{M}+")
+    private val WORD_PATTERNS by lazy { WORDS.map { Regex("\\b${Regex.escape(it)}\\b") } }
 }
 
 /**

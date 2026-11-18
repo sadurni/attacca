@@ -390,7 +390,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             when {
                 peak <= 0.05f -> null
                 look.world == World.CASTLE -> kotlin.math.atan2(sunSky[0], sunSky[2])
-                peakKind == 4f -> kotlin.math.atan2(0.25f, 1f)
+                peakKind == 4f -> kotlin.math.atan2(0.2f, -1f)
                 else -> null
             },
         )
@@ -660,7 +660,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
     // ---- The land ----
 
     private fun chunk(land: WorldLand, k: Int, step: Float): Chunk {
-        val mesh = LandMesher.chunk(land, k, step, if (step > 1f) 1.3f else 0f)
+        val mesh = LandMesher.chunk(land, k, step, if (step > 1f) 1.3f else 0f, if (step > 1f) com.sadurni.attacca.world.Props.FAR_DETAIL else 1f)
         val n = mesh.vertices
         val d = mesh.data
         // Each point once: the same place with the same colour and slope is the same point.
@@ -1018,13 +1018,13 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
         fun add(cr: Float, cg: Float, cb: Float, a: Float) { r += cr * a; g += cg * a; b += cb * a }
         when {
             kind > 3.5f && kind < 4.5f -> {
-                // A rainbow standing over the land ahead, fixed in the sky.
+                // A rainbow standing over the land, fixed in the sky opposite the sun.
                 val dx = fwd[0] + (right[0] * nx * aspect + up[0] * ny) * tanY
                 val dy = fwd[1] + (right[1] * nx * aspect + up[1] * ny) * tanY
                 val dz = fwd[2] + (right[2] * nx * aspect + up[2] * ny) * tanY
                 val l = sqrt(dx * dx + dy * dy + dz * dz)
-                val cl = sqrt(0.25f * 0.25f + 0.2f * 0.2f + 1f)
-                val a = kotlin.math.acos(((dx * 0.25f - dy * 0.2f + dz) / (l * cl)).coerceIn(-1f, 1f))
+                val cl = sqrt(0.2f * 0.2f + 0.2f * 0.2f + 1f)
+                val a = kotlin.math.acos(((dx * 0.2f - dy * 0.2f - dz) / (l * cl)).coerceIn(-1f, 1f))
                 val band = (a - 0.6f) / 0.075f
                 val up2 = dy / l
                 if (band > 0f && band < 1f && up2 > -0.03f) {

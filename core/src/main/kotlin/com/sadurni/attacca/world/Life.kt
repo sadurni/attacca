@@ -132,10 +132,10 @@ class Life(private val land: WorldLand, private val seed: Int) {
     /** The animals of [w] (a herd is one kind of them). */
     private fun beastsOf(w: World): List<Beast> = beasts.getOrPut(w) {
         val sheep by lazy { quadBeast(0.9f, 1.15f, 0.62f, 0xFFF2EEE4.toInt(), 0xFF2A2626.toInt(), fluffy = true) }
-        val cow by lazy { quadBeast(1.3f, 1.65f, 0.7f, 0xFFF4F2EC.toInt(), 0xFF2A2626.toInt(), patches = true) }
+        val cow by lazy { quadBeast(1.3f, 1.65f, 0.7f, 0xFFF4F2EC.toInt(), 0xFF2A2626.toInt(), patches = true, horns = true) }
         val horse by lazy { Beast(Quad.horse().first, 1.45f * 0.52f, Gait.QUAD, 2..4) }
         val deer by lazy { quadBeast(1.25f, 1.25f, 0.42f, 0xFFA87048.toInt(), 0xFFE8D8C0.toInt(), antlers = true) }
-        val bison by lazy { quadBeast(1.5f, 1.8f, 0.9f, 0xFF4A3426.toInt(), 0xFF2A1E18.toInt(), hump = true) }
+        val bison by lazy { quadBeast(1.5f, 1.8f, 0.9f, 0xFF4A3426.toInt(), 0xFF2A1E18.toInt(), hump = true, horns = true) }
         when (w) {
             World.MEADOW -> listOf(sheep, cow, horse)
             World.COAST -> listOf(crab())
@@ -152,7 +152,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
         }
     }
 
-    private fun quadBeast(h: Float, l: Float, t: Float, coat: Int, dark: Int, fluffy: Boolean = false, antlers: Boolean = false, hump: Boolean = false, patches: Boolean = false): Beast {
+    private fun quadBeast(h: Float, l: Float, t: Float, coat: Int, dark: Int, fluffy: Boolean = false, antlers: Boolean = false, hump: Boolean = false, patches: Boolean = false, horns: Boolean = false): Beast {
         val b = RigBuilder()
         val legH = h * 0.5f
         val half = t / 2
@@ -173,6 +173,13 @@ class Life(private val land: WorldLand, private val seed: Int) {
             val hz = l / 2
             blob(-half * 0.6f, h - 0.35f, hz - 0.1f, half * 0.6f, h + 0.05f, hz + 0.45f, if (fluffy) dark else coat)
             blob(-0.04f, h - 0.2f, hz + 0.42f, 0.04f, h - 0.12f, hz + 0.48f, 0xFF1A1414.toInt())
+            // Short horns curving out and up from the top of the head, pale with dark tips.
+            if (horns) for (s in intArrayOf(-1, 1)) {
+                val bx = s * half * 0.42f
+                tube(bx, h + 0.0f, hz + 0.06f, s * (half * 0.42f + 0.13f), h + 0.07f, hz + 0.03f, 0.035f, 0xFFE8DDC4.toInt())
+                tube(s * (half * 0.42f + 0.13f), h + 0.07f, hz + 0.03f, s * (half * 0.42f + 0.18f), h + 0.2f, hz + 0.08f, 0.026f, 0xFFE8DDC4.toInt())
+                tube(s * (half * 0.42f + 0.18f), h + 0.2f, hz + 0.08f, s * (half * 0.42f + 0.17f), h + 0.26f, hz + 0.1f, 0.018f, 0xFF4A4038.toInt())
+            }
             if (antlers) for (s in intArrayOf(-1, 1)) {
                 tube(s * 0.1f, h + 0.0f, hz + 0.05f, s * 0.3f, h + 0.55f, hz - 0.05f, 0.025f, 0xFF6E5A44.toInt())
                 tube(s * 0.22f, h + 0.3f, hz, s * 0.35f, h + 0.45f, hz + 0.15f, 0.02f, 0xFF6E5A44.toInt())

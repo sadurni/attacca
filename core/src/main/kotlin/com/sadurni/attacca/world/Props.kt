@@ -18,7 +18,10 @@ object Props {
     /** A colour that glows: kept apart from lit colours by adding 2. */
     fun glow(c: Int): Int = (c and 0xFFFFFF) or GLOW
 
-    private class Kind(val mesh: Mesh, val minScale: Float, val maxScale: Float, val house: Boolean, val sways: Boolean = false) {
+    private class Kind(val mesh: Mesh, val minScale: Float, val maxScale: Float, val house: Boolean, val sways: Boolean = false, private val build: (FloatList.() -> Unit)? = null) {
+        /** The same thing with coarser rounded shapes, for far off (made the first time it is asked). */
+        val coarse: Mesh by lazy { build?.let { b -> FloatList(1024).apply { detail = FAR_DETAIL }.apply(b).mesh() } ?: mesh }
+
         /** How far out it reaches about its foot, and how high, at scale 1. */
         val radius: Float
         val height: Float
@@ -41,9 +44,12 @@ object Props {
 
     private val cache = HashMap<String, Kind>()
 
+    /** How finely things far off are rounded (see [FloatList.detail]). */
+    const val FAR_DETAIL = 0.5f
+
     // Made on the land's worker thread and asked by the camera's: one at a time.
     private fun kind(name: String, minScale: Float = 0.8f, maxScale: Float = 1.3f, build: FloatList.() -> Unit) =
-        synchronized(cache) { cache.getOrPut(name) { Kind(mesh(build), minScale, maxScale, name.startsWith("house"), SWAYING.any { name.startsWith(it) }) } }
+        synchronized(cache) { cache.getOrPut(name) { Kind(mesh(build), minScale, maxScale, name.startsWith("house"), SWAYING.any { name.startsWith(it) }, build) } }
 
     /** The things that sway with the music (plants), as O'rama's trees do. */
     private val SWAYING = listOf("broadleaf", "pine", "bush", "flowers", "palm", "giant", "fern", "cherry", "bamboo", "seaweed", "coral", "anemone", "dead", "charred")
@@ -506,6 +512,9 @@ object Props {
     private class Spot(val kind: Kind, val x: Float, val y: Float, val z: Float, val yaw: Float, val s: Float)
 
     private const val STEP = 5
+
+    /** How much higher the ground may be on one side of a house than under its lowest corner. */
+    private const val HOUSE_STEEP = 1.1f
     private const val HALF = WorldLand.HALF_WIDTH - 6
 
     /** What stands at the grid point ([gx], [gz]), if anything (the same every time it is asked). */
@@ -549,15 +558,40 @@ object Props {
         // Whatever takes some room (houses, pyramids, mesas) stands on the lowest ground under it,
         // never with a corner in the air; a house a little sunk in, as into a slope.
         val r = kind.radius * s * 0.65f
+        var high = y
         val foot = if (r > 0.9f) {
             var low = y
             for (k in 0 until 8) {
                 val a = k * 0.785f
-                low = minOf(low, land.heightAt(x + cos(a) * r, z + sin(a) * r))
+                val g = land.heightAt(x + cos(a) * r, z + sin(a) * r)
+                low = minOf(low, g)
+                high = max(high, g)
             }
             low
         } else y
+        // A house on ground too steep for it would be buried on its uphill side: none there.
+        if (kind.house && high - foot > HOUSE_STEEP) return null
         return Spot(kind, x, foot - (if (kind.house) 0.3f else 0.1f), z, yaw, s)
+    }
+
+    /**
+     * The ground each thing standing on rows [z0, z1) of [land] covers: x, z and how far out it
+     * reaches, three floats each (for the soft shade it casts on the land about it).
+     */
+    fun footprints(land: WorldLand, z0: Int, z1: Int): FloatArray {
+        val out = ArrayList<Float>()
+        var gz = kotlin.math.floor(z0.toFloat() / STEP).toInt() * STEP
+        while (gz < z1) {
+            var gx = -HALF
+            while (gx <= HALF) {
+                spotAt(land, gx, gz)?.let { sp ->
+                    if (sp.z >= z0 && sp.z < z1) { out += sp.x; out += sp.z; out += sp.kind.radius * sp.s }
+                }
+                gx += STEP
+            }
+            gz += STEP
+        }
+        return out.toFloatArray()
     }
 
     /** [minSize]: things smaller across than this are left out (far chunks drawn with less detail). */
@@ -575,7 +609,7 @@ object Props {
             var gx = -HALF
             while (gx <= HALF) {
                 spotAt(land, gx, gz)?.let { sp ->
-                    if (sp.z >= z0 && sp.z < z1 && sp.kind.radius * sp.s >= minSize) bake(sp.kind.mesh, sp.x, sp.y, sp.z + dz, sp.yaw, sp.s, out, sp.kind.sways)
+                    if (sp.z >= z0 && sp.z < z1 && sp.kind.radius * sp.s >= minSize) bake(if (out.detail < 1f) sp.kind.coarse else sp.kind.mesh, sp.x, sp.y, sp.z + dz, sp.yaw, sp.s, out, sp.kind.sways)
                 }
                 gx += STEP
             }

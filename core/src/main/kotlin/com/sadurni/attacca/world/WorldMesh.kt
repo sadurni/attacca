@@ -16,6 +16,9 @@ class FloatList(capacity: Int = 4096) {
     var data = FloatArray(capacity)
     var size = 0
 
+    /** How finely rounded shapes are made: 1 as designed, less for what is seen far off. */
+    var detail = 1f
+
     fun add(v: Float) {
         if (size == data.size) data = data.copyOf(data.size * 2)
         data[size++] = v
@@ -88,25 +91,27 @@ object LandMesher {
     private const val STEP = 1f
 
     /** Chunk [index] of [land]; [step] the distance between its points (wider for far chunks on the desktop). */
-    fun chunk(land: WorldLand, index: Int, step: Float = STEP, minProp: Float = 0f): Mesh {
+    fun chunk(land: WorldLand, index: Int, step: Float = STEP, minProp: Float = 0f, detail: Float = 1f): Mesh {
         val STEP = step
         val w = WorldLand.HALF_WIDTH
         val z0 = index * CHUNK
         val nx = ((2 * w) / STEP).toInt() + 1
         val nz = (CHUNK / STEP).toInt() + 1
-        // Heights with a border of one point for the slopes.
-        val gw = nx + 2
-        val gh = nz + 2
+        // Heights with a border of [B] points, for the slopes and the hollows about each point.
+        val B = AO_REACH
+        val gw = nx + 2 * B
+        val gh = nz + 2 * B
         val h = FloatArray(gw * gh)
         for (j in 0 until gh) for (i in 0 until gw) {
-            h[j * gw + i] = land.heightAt(-w + (i - 1) * STEP, z0 + (j - 1) * STEP)
+            h[j * gw + i] = land.heightAt(-w + (i - B) * STEP, z0 + (j - B) * STEP)
         }
-        fun at(i: Int, j: Int) = h[(j + 1) * gw + (i + 1)]
+        fun at(i: Int, j: Int) = h[(j + B) * gw + (i + B)]
         // Each point: position, colour and the slope's normal (from its neighbours).
         val px = FloatArray(nx * nz)
         val py = FloatArray(nx * nz)
         val pz = FloatArray(nx * nz)
         val col = IntArray(nx * nz)
+        val shade = FloatArray(nx * nz)
         val nrm = FloatArray(nx * nz * 3)
         for (j in 0 until nz) for (i in 0 until nx) {
             val k = j * nx + i
@@ -121,9 +126,34 @@ object LandMesher {
             px[k] = x; py[k] = y; pz[k] = z
             nrm[k * 3] = ax; nrm[k * 3 + 1] = ay; nrm[k * 3 + 2] = az
             col[k] = land.colorAt(x, z, y, ay)
+            // In a hollow or at a slope's foot the open sky's light reaches less: a little darker.
+            var around = 0f
+            for (d in AROUND) around += at(i + d[0], j + d[1])
+            around /= AROUND.size
+            shade[k] = 1f - ((around - y) * 0.16f).coerceIn(0f, 0.3f)
+        }
+        // About what stands on the land (trees, houses, rocks), a soft shade on the ground, darkest
+        // at its foot (also from things just over the chunk's edges).
+        val feet = Props.footprints(land, z0 - 6, z0 + CHUNK + 6)
+        var f = 0
+        while (f < feet.size) {
+            val fx = feet[f]; val fz = feet[f + 1]; val reach = feet[f + 2] * 1.7f + 0.8f
+            f += 3
+            val i0 = ((fx - reach + w) / STEP).toInt().coerceAtLeast(0)
+            val i1 = ((fx + reach + w) / STEP).toInt().coerceAtMost(nx - 1)
+            val j0 = ((fz - reach - z0) / STEP).toInt().coerceAtLeast(0)
+            val j1 = ((fz + reach - z0) / STEP).toInt().coerceAtMost(nz - 1)
+            for (j in j0..j1) for (i in i0..i1) {
+                val k = j * nx + i
+                val dx = px[k] - fx
+                val dz = pz[k] - fz
+                val d = sqrt(dx * dx + dz * dz) / reach
+                if (d < 1f) shade[k] *= 1f - 0.45f * (1f - d) * (1f - d)
+            }
         }
         val out = FloatList(nx * nz * 6 * Mesh.STRIDE + 64)
-        fun put(k: Int) = out.vertex(px[k], py[k], pz[k], col[k], nrm[k * 3], nrm[k * 3 + 1], nrm[k * 3 + 2])
+        out.detail = detail
+        fun put(k: Int) = out.vertex(px[k], py[k], pz[k], col[k], nrm[k * 3], nrm[k * 3 + 1], nrm[k * 3 + 2], shade[k])
         for (j in 0 until nz - 1) for (i in 0 until nx - 1) {
             val a = j * nx + i
             val b = a + 1
@@ -164,6 +194,54 @@ object LandMesher {
     }
 
     private fun abs(v: Float) = if (v < 0) -v else v
+
+    /** How many points out the hollows about a point are looked at (see [chunk]). */
+    private const val AO_REACH = 3
+
+    /** The points about one, AO_REACH out, whose heights tell a hollow. */
+    private val AROUND = arrayOf(intArrayOf(3, 0), intArrayOf(-3, 0), intArrayOf(0, 3), intArrayOf(0, -3), intArrayOf(2, 2), intArrayOf(-2, 2), intArrayOf(2, -2), intArrayOf(-2, -2))
+
+    /** Across how many columns a chunk is cut, so the screen leaves out those out of sight. */
+    const val COLUMNS = 4
+
+    /** Chunks starting further ahead than this are made coarser (see [far]). */
+    const val NEAR_AHEAD = 56f
+
+    /** Chunk [index] as made for far off: half the surface's points, no small things, coarser rounded shapes. */
+    fun far(land: WorldLand, index: Int): Mesh = chunk(land, index, 2f, 1.3f, Props.FAR_DETAIL)
+
+    /**
+     * [mesh] cut in [COLUMNS] across (each triangle by where its middle is) with each piece's
+     * bounds (min x, y, z, max x, y, z), so pieces out of sight need not be drawn.
+     */
+    fun pieces(mesh: Mesh): List<Piece> {
+        val w = WorldLand.HALF_WIDTH.toFloat()
+        val lists = List(COLUMNS) { FloatList(mesh.data.size / COLUMNS + 64) }
+        val bounds = List(COLUMNS) { floatArrayOf(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE) }
+        val d = mesh.data
+        val stride = Mesh.STRIDE
+        var t = 0
+        while (t + 2 < mesh.vertices) {
+            val o = t * stride
+            val cx = (d[o] + d[o + stride] + d[o + 2 * stride]) / 3
+            val col = (((cx + w) / (2 * w)) * COLUMNS).toInt().coerceIn(0, COLUMNS - 1)
+            val list = lists[col]
+            val b = bounds[col]
+            for (v in 0 until 3) {
+                val p = o + v * stride
+                for (f in 0 until stride) list.add(d[p + f])
+                for (a in 0 until 3) {
+                    if (d[p + a] < b[a]) b[a] = d[p + a]
+                    if (d[p + a] > b[a + 3]) b[a + 3] = d[p + a]
+                }
+            }
+            t += 3
+        }
+        return lists.indices.filter { lists[it].size > 0 }.map { Piece(lists[it].mesh(), bounds[it]) }
+    }
+
+    /** A part of a chunk and its bounds (min x, y, z, max x, y, z). */
+    class Piece(val mesh: Mesh, val bounds: FloatArray)
 }
 
 /** A figure in parts that swing as it goes: legs, tail. */
@@ -176,7 +254,10 @@ class Figure(val parts: List<Part>) {
  * A rounded shape filling the box from (x0, y0, z0) to (x1, y1, z1): an ellipsoid a little larger
  * than the box fits, so parts that touch run into each other; smooth normals.
  */
-fun FloatList.blob(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, c: Int, slices: Int = 12, stacks: Int = 8) {
+fun FloatList.blob(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, c: Int, slices0: Int = 12, stacks0: Int = 8) {
+    // Far off, coarser (see [FloatList.detail]).
+    val slices = if (detail >= 1f) slices0 else maxOf(5, kotlin.math.round(slices0 * detail).toInt())
+    val stacks = if (detail >= 1f) stacks0 else maxOf(3, kotlin.math.round(stacks0 * detail).toInt())
     val cx = (x0 + x1) / 2
     val cy = (y0 + y1) / 2
     val cz = (z0 + z1) / 2

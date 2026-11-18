@@ -38,7 +38,8 @@ plays them so one song flows into the next.
   obstacles, houses, O'rama's bridges, tunnels, stations and villages, birds and grazing animals,
   weather and each world's show at the peak; one finger turns the camera, two
   bring it closer, a tap on the traveller makes a move, the eye button shows it through the
-  traveller's own eyes, and the split button shows O'rama beside it.
+  traveller's own eyes, and the split button shows O'rama beside it. In high quality (Settings →
+  Appearance) with smooth edges, soft shade, a glow about the lights and a film's tones.
 - 🌄 **O'rama: watch the song.** A moving landscape drawn from the song's waveform, mood and
   beat: someone runs, rides or flies through castles, cities, seas and space, jumping on the
   strong beats, through tunnels with a torch, towards a gate into the next track's world. And a few little
@@ -592,7 +593,7 @@ plays them so one song flows into the next.
 ## What's new
 
 The changes of each version are in [CHANGELOG.md](../CHANGELOG.md) and in the app (About → What's
-new). In 1.6.0: new kinds of list (drawn by hand, for two, at this hour, a variant, trips with
+new). In 1.7.0: lists made quickly again with a big library, and Attacca World lighter to draw (smooth at 60 frames a second) with a high quality (smooth edges, soft shade, glow and a film's tones). In 1.6.0: new kinds of list (drawn by hand, for two, at this hour, a variant, trips with
 stops, to fall asleep and to wake up), chaining by hand with profiles, endless lists you can steer,
 live tracks told by their sound, one copy of a song found on several albums, and another phone set
 up without scanning again. In 1.5.0: Attacca World through the traveller's own eyes. In 1.4.0: Attacca World, the song as a land in 3D to go through (also beside O'rama, the

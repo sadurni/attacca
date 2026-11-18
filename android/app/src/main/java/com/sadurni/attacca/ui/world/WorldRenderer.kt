@@ -24,6 +24,9 @@ import kotlin.math.sin
 /** What the screen hands the renderer: the song, where it is, and what is heard (set from the UI, read each frame). */
 class WorldFeed {
     @Volatile var songId: String? = null
+
+    /** "World in high quality" (Settings): smooth edges, a soft shade under the figures, glow and a film's tones. */
+    @Volatile var fine: Boolean = true
     @Volatile var look: SongLook? = null
 
     /** Whether the song's quiet and loud stretches may change the world (not with a world chosen by hand). */
@@ -76,12 +79,21 @@ class WorldFeed {
 }
 
 /** Draws Attacca World: the song's land, the traveller with the four dogs, the sky, from [camera]. */
-class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSurfaceView.Renderer {
+class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, private val bench: WorldBench? = null) : GLSurfaceView.Renderer {
+
+    /** This frame also draws the land into a shadow's depth picture (the bench's measuring). */
+    private var shadowPass = false
+
+    /** The finer picture (see [WorldFeed.fine]). */
+    private val post = WorldPost()
+
+    /** Whether this frame is drawn in high quality. */
+    private var fineNow = false
 
     private var land: WorldLand? = null
     private var lastTz = 0f
     private var landFor: Triple<String?, SongLook?, SongWave?>? = null
-    private val chunks = HashMap<Int, Gpu>()
+    private val chunks = HashMap<Int, Chunk>()
 
     /** The sky's colours and night as shown, easing towards the land's (see [eased]). */
     private val skyEase = FloatArray(16)
@@ -100,7 +112,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         return skyEase[slot]
     }
     /** The last land's pieces, drawn (moved by [staleDz] rows) where the new land's are not made yet. */
-    private val stale = HashMap<Int, Gpu>()
+    private val stale = HashMap<Int, Chunk>()
     private var staleDz = 0f
     // Who goes through the land (traveller, vehicle, dogs, people at relays) and their meshes on the GPU.
     private var cast: com.sadurni.attacca.world.Cast? = null
@@ -141,7 +153,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     )
     private class Built(
         val plan: Plan, val land: WorldLand, val cast: com.sadurni.attacca.world.Cast, val extras: com.sadurni.attacca.world.Extras,
-        val meshes: Map<Int, Mesh>,
+        val meshes: Map<Int, ChunkMade>,
     )
     // (Read by the builder too: a plan overtaken by a newer one is dropped at once.)
     @Volatile private var planCount = 0
@@ -171,10 +183,10 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
             extras.sight(z)
         }
         val here = floor(z / LandMesher.CHUNK).toInt()
-        val meshes = HashMap<Int, Mesh>()
+        val meshes = HashMap<Int, ChunkMade>()
         for (k in here - 1..here + 2) {
             if (plan.n != planCount) return null
-            meshes[k] = LandMesher.chunk(land, k)
+            meshes[k] = made(land, k, far = false)
         }
         return Built(plan, land, cast, extras, meshes)
     }
@@ -201,7 +213,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         holdOld = false
         // The land in sight is kept until the new one's pieces are made (no gap, no flicker):
         // the old pieces are drawn where they were, moved to the new song's rows.
-        for (g in stale.values) delete(g)
+        for (c in stale.values) delete(c)
         stale.clear()
         val keepTo = if (plan.onlyNext && old != null) minOf(old.endZ, b.land.endZ) - WorldLand.ARRIVE - 8f else Float.NEGATIVE_INFINITY
         for ((k, g) in chunks) {
@@ -215,11 +227,11 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
             else -> Float.NaN
         }
         if (staleDz.isNaN()) {
-            for (g in stale.values) delete(g)
+            for (c in stale.values) delete(c)
             stale.clear()
         }
         pending.clear()
-        for ((k, m) in b.meshes) if (k !in chunks) chunks[k] = gpu(m)
+        for ((k, m) in b.meshes) if (k !in chunks) chunks[k] = upload(m)
         for (list in rigGpu.values) list.forEach(::delete)
         rigGpu.clear()
         b.cast.carryDogsFrom(plan.prevCast)
@@ -235,7 +247,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     // Chunks are made on a thread of their own and handed over here to go to the GPU.
     private val worker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "Attacca World land").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }
     private val pending = HashSet<Int>()
-    private val ready = java.util.concurrent.ConcurrentLinkedQueue<Triple<WorldLand, Int, Mesh>>()
+    private val ready = java.util.concurrent.ConcurrentLinkedQueue<Triple<WorldLand, Int, ChunkMade>>()
 
     // Weather: rain or snow falling about the camera, clouds drifting, lightning.
     private var weatherBuffer = 0
@@ -271,6 +283,55 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     /** A mesh on the GPU. */
     private class Gpu(val buffer: Int, val vertices: Int)
 
+    /** A chunk made (on another thread): its pieces, and whether it is the coarse one for far off. */
+    private class ChunkMade(val pieces: List<LandMesher.Piece>, val far: Boolean)
+
+    /** A chunk on the GPU: its pieces and their bounds, coarse or not. */
+    private class Chunk(val pieces: List<Gpu>, val bounds: List<FloatArray>, val far: Boolean)
+
+    private fun made(land: WorldLand, k: Int, far: Boolean) =
+        ChunkMade(LandMesher.pieces(if (far) LandMesher.far(land, k) else LandMesher.chunk(land, k)), far)
+
+    private fun upload(c: ChunkMade) = Chunk(c.pieces.map { gpu(it.mesh) }, c.pieces.map { it.bounds }, c.far)
+
+    private fun delete(c: Chunk) = c.pieces.forEach(::delete)
+
+    /** Whether chunk [k] is drawn coarse (far ahead of the traveller at [tz]). */
+    private fun farChunk(k: Int, tz: Float) = k * LandMesher.CHUNK > tz + LandMesher.NEAR_AHEAD
+
+    /** This frame's view and projection, for leaving out what is out of sight. */
+    private var sightMatrix = FloatArray(16)
+
+    /** Draws the pieces of [c] in sight ([dz]: moved along the way, as the last land's are). */
+    private fun draw(c: Chunk, dz: Float = 0f) {
+        for (i in c.pieces.indices) if (inSight(c.bounds[i], dz)) draw(c.pieces[i])
+    }
+
+    /**
+     * Whether the box [b] (moved [dz] along) may be in sight: false only when all its corners are
+     * beyond one side of the view. (A little larger, for the waves that lift the land.)
+     */
+    private fun inSight(b: FloatArray, dz: Float): Boolean {
+        val m = sightMatrix
+        var left = 0; var right = 0; var down = 0; var up = 0; var near = 0; var far = 0
+        for (corner in 0 until 8) {
+            val x = if (corner and 1 == 0) b[0] - 1f else b[3] + 1f
+            val y = if (corner and 2 == 0) b[1] - 3f else b[4] + 3f
+            val z = (if (corner and 4 == 0) b[2] - 1f else b[5] + 1f) + dz
+            val cx = m[0] * x + m[4] * y + m[8] * z + m[12]
+            val cy = m[1] * x + m[5] * y + m[9] * z + m[13]
+            val cz = m[2] * x + m[6] * y + m[10] * z + m[14]
+            val cw = m[3] * x + m[7] * y + m[11] * z + m[15]
+            if (cx < -cw) left++
+            if (cx > cw) right++
+            if (cy < -cw) down++
+            if (cy > cw) up++
+            if (cz < -cw) near++
+            if (cz > cw) far++
+        }
+        return left < 8 && right < 8 && down < 8 && up < 8 && near < 8 && far < 8
+    }
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         land3d = program(LAND_VS, LAND_FS)
         sky = program(SKY_VS, SKY_FS)
@@ -293,6 +354,10 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         rigGpu.clear()
         GLES30.glEnable(GLES30.GL_DEPTH_TEST)
         GLES30.glDisable(GLES30.GL_CULL_FACE)
+        bench?.surfaceLost()
+        post.surfaceLost()
+        shadeGpu = null
+        rigReach.clear()
     }
 
     override fun onSurfaceChanged(gl: GL10?, w: Int, h: Int) {
@@ -302,6 +367,81 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        fineNow = feed.fine
+        val b = bench?.takeIf { it.on }
+        // Measuring (with the logs kept): the frame timed, drawn in the bench's way of the moment.
+        b?.begin(width, height)
+        val offscreen = !fineNow && b?.offscreen == true
+        if (fineNow) post.begin(width, height) else if (offscreen) b?.bindOffscreen(width, height)
+        shadowPass = b?.phase?.shadowPass == true
+        drawFrame()
+        if (fineNow) {
+            b?.section(WorldBench.Section.COPY)
+            post.finish(skyBuffer)
+        } else if (offscreen) b?.resolve(width, height)
+        b?.end()
+    }
+
+    /** A disc of shade on the ground (unit radius, black), laid under the figures in high quality. */
+    private var shadeGpu: Gpu? = null
+
+    /** How far out each figure reaches about its foot, at scale 1. */
+    private val rigReach = HashMap<com.sadurni.attacca.world.Rig, Float>()
+
+    private fun reachOf(rig: com.sadurni.attacca.world.Rig): Float = rigReach.getOrPut(rig) {
+        var r = 0f
+        for (bone in rig.bones) {
+            val d = bone.mesh.data
+            var i = 0
+            while (i < d.size) {
+                r = max(r, kotlin.math.hypot(d[i], d[i + 2]))
+                i += Mesh.STRIDE
+            }
+        }
+        r.coerceIn(0.25f, 2.6f)
+    }
+
+    /** The soft shade under the figures standing on [land] (several discs, darker towards the middle). */
+    private fun drawShades(land: WorldLand, modelLoc: Int, alphaLoc: Int) {
+        val disc = shadeGpu ?: run {
+            val f = com.sadurni.attacca.world.FloatList(16 * 3 * Mesh.STRIDE)
+            for (k in 0 until 16) {
+                val a0 = k * 0.3927f
+                val a1 = a0 + 0.3927f
+                for ((x, z) in listOf(0f to 0f, kotlin.math.cos(a1) to kotlin.math.sin(a1), kotlin.math.cos(a0) to kotlin.math.sin(a0))) {
+                    f.add(x); f.add(0f); f.add(z); f.add(0f); f.add(0f); f.add(0f); f.add(0f); f.add(1f); f.add(0f)
+                }
+            }
+            gpu(f.mesh()).also { shadeGpu = it }
+        }
+        GLES30.glEnable(GLES30.GL_BLEND)
+        GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA)
+        GLES30.glDepthMask(false)
+        GLES30.glEnable(GLES30.GL_POLYGON_OFFSET_FILL)
+        GLES30.glPolygonOffset(-1f, -4f)
+        GLES30.glUniform1f(alphaLoc, 0.06f)
+        for (d in draws) {
+            if (d.alpha < 0.99f) continue
+            val x = d.base[12]
+            val y = d.base[13]
+            val z = d.base[14]
+            val ground = land.heightAt(x, z)
+            // Only what stands on the ground (not birds, nor what floats or flies).
+            if (y - ground > 1.0f || ground - y > 1.5f || ground < WorldLand.WATER) continue
+            val scale = kotlin.math.sqrt(d.base[0] * d.base[0] + d.base[1] * d.base[1] + d.base[2] * d.base[2])
+            val r = reachOf(d.rig) * scale
+            for (k in SHADE_RINGS) {
+                GLES30.glUniformMatrix4fv(modelLoc, 1, false, Mat4.model(x, ground + 0.05f, z, s = r * k), 0)
+                draw(disc)
+            }
+        }
+        GLES30.glDisable(GLES30.GL_POLYGON_OFFSET_FILL)
+        GLES30.glDepthMask(true)
+        GLES30.glDisable(GLES30.GL_BLEND)
+        GLES30.glUniform1f(alphaLoc, 1f)
+    }
+
+    private fun drawFrame() {
         val nowNs = System.nanoTime()
         val dtMs = if (lastFrameNs == 0L) 16L else ((nowNs - lastFrameNs) / 1_000_000L).coerceIn(1L, 100L)
         lastFrameNs = nowNs
@@ -464,24 +604,32 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         // Chunks in sight: some behind, many ahead; at most two new ones a frame, nearest first.
         val first = floor((tz - 40) / LandMesher.CHUNK).toInt()
         val last = floor((tz + FAR) / LandMesher.CHUNK).toInt()
-        chunks.keys.filter { it < first - 1 || it > last + 1 }.forEach { k -> chunks.remove(k)?.let(::delete) }
-        // Hand over what the worker made (for this land only), at most three a frame.
+        chunks.keys.filter { it < first - 1 || it > last + 1 }.forEach { k -> chunks.remove(k)?.let { delete(it) } }
+        // Hand over what the worker made (for this land only), at most three a frame. (A coarse
+        // one never takes the place of a fine one; a fine one replaces the coarse.)
         var taken = 0
         while (taken < 3) {
             val (forLand, k, mesh) = ready.poll() ?: break
             if (forLand !== land) continue
             pending.remove(k)
-            if (k in first - 1..last + 1 && k !in chunks) chunks[k] = gpu(mesh)
+            val had = chunks[k]
+            if (k in first - 1..last + 1 && (had == null || had.far && !mesh.far)) {
+                had?.let { delete(it) }
+                chunks[k] = upload(mesh)
+            }
             taken++
         }
         val here = floor(tz / LandMesher.CHUNK).toInt()
-        for (k in here - 1..here + 1) if (k !in chunks) { chunks[k] = gpu(LandMesher.chunk(land, k)); pending.remove(k) }
-        // Ask for the missing ones, nearest first.
+        for (k in here - 1..here + 1) if (chunks[k]?.far != false) { chunks.remove(k)?.let { delete(it) }; chunks[k] = upload(made(land, k, far = false)); pending.remove(k) }
+        // Ask for the missing ones, nearest first: coarse far ahead; fine as they come near (the
+        // coarse one is drawn until the fine one is ready).
         for (k in (first..last).sortedBy { abs(it * LandMesher.CHUNK + 8 - tz) }) {
-            if (k !in chunks && k !in pending && pending.size < 4) {
+            val far = farChunk(k, tz)
+            val had = chunks[k]
+            if ((had == null || had.far && !far) && k !in pending && pending.size < 4) {
                 pending += k
                 val l = land
-                worker.execute { ready += Triple(l, k, LandMesher.chunk(l, k)) }
+                worker.execute { ready += Triple(l, k, made(l, k, far)) }
             }
         }
 
@@ -523,6 +671,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         val fovY = minOf(Math.toRadians(if (width > height) 55.0 else 68.0), 2 * kotlin.math.atan(kotlin.math.tan(Math.toRadians(50.0)) / aspect))
         val projection = Mat4.perspective(fovY.toFloat(), aspect, 0.3f, FAR + 60f)
         val viewProjection = Mat4.mul(projection, view)
+        sightMatrix = viewProjection
         // Where the traveller is on the screen, for a tap on it; a tap asked for a move.
         transform(viewProjection, tx, ty + 1.2f, tz).let { c ->
             if (c[3] > 0) {
@@ -550,7 +699,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         val sy = camera.eyeY + sunSky[1] * 500
         val sz = camera.eyeZ + sunSky[2] * 500
         val clip = transform(viewProjection, sx, sy, sz)
-        GLES30.glDisable(GLES30.GL_DEPTH_TEST)
+        // (Set up here, drawn after the land: only where no land is in front, see below.)
         GLES30.glUseProgram(sky)
         GLES30.glUniform3f(GLES30.glGetUniformLocation(sky, "uTop"), top[0], top[1], top[2])
         GLES30.glUniform3f(GLES30.glGetUniformLocation(sky, "uBottom"), haze[0], haze[1], haze[2])
@@ -612,13 +761,9 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         GLES30.glUniform1f(GLES30.glGetUniformLocation(sky, "uPump"), pulse.coerceAtMost(1f))
         android.opengl.Matrix.invertM(inverse, 0, viewProjection, 0)
         GLES30.glUniformMatrix4fv(GLES30.glGetUniformLocation(sky, "uInverse"), 1, false, inverse, 0)
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, skyBuffer)
-        GLES30.glEnableVertexAttribArray(0)
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, 8, 0)
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
-        GLES30.glEnable(GLES30.GL_DEPTH_TEST)
 
         // The land.
+        bench?.section(WorldBench.Section.LAND)
         GLES30.glUseProgram(land3d)
         GLES30.glUniformMatrix4fv(GLES30.glGetUniformLocation(land3d, "uViewProjection"), 1, false, viewProjection, 0)
         GLES30.glUniform3f(GLES30.glGetUniformLocation(land3d, "uEye"), camera.eyeX, camera.eyeY, camera.eyeZ)
@@ -674,7 +819,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         val alphaLoc = GLES30.glGetUniformLocation(land3d, "uAlpha")
         GLES30.glUniform1f(alphaLoc, 1f)
         GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
-        for (g in chunks.values) draw(g)
+        for (c in chunks.values) draw(c)
         if (stale.isNotEmpty()) {
             // Where the new land has no piece yet, the old one's (none once all are made).
             val shown = HashSet<Int>()
@@ -687,16 +832,35 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
                 for (j in a..b) if (j in stale) shown += j
             }
             if (!missing) {
-                for (g in stale.values) delete(g)
+                for (c in stale.values) delete(c)
                 stale.clear()
             } else if (shown.isNotEmpty()) {
                 GLES30.glUniformMatrix4fv(modelLoc, 1, false, Mat4.model(0f, 0f, staleDz), 0)
-                for (j in shown) draw(stale[j]!!)
+                for (j in shown) draw(stale[j]!!, staleDz)
                 GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
             }
         }
 
+        // The sky, after the land: worked out only where no land is in front (the costliest part
+        // of a frame when drawn over the whole screen first), the same to see.
+        bench?.section(WorldBench.Section.SKY)
+        GLES30.glUseProgram(sky)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, labelTex)
+        GLES30.glDepthFunc(GLES30.GL_LEQUAL)
+        GLES30.glDepthMask(false)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, skyBuffer)
+        GLES30.glDisableVertexAttribArray(1)
+        GLES30.glDisableVertexAttribArray(2)
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, 8, 0)
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES30.glDepthMask(true)
+        GLES30.glDepthFunc(GLES30.GL_LESS)
+        GLES30.glUseProgram(land3d)
+
         // The traveller, the vehicle, the dogs and the people at relays (no beat in their shape).
+        bench?.section(WorldBench.Section.FIGURES)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 0f)
         draws.clear()
         val dark = ex?.darkAt(tz, night) == true
@@ -706,6 +870,8 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
         oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
         // On the beat's wave, not sunk in it: the figures (and the traveller's eyes) rise with the land.
         com.sadurni.attacca.world.Swell.liftFigures(land, draws, 0, rings, pulse, tz, cast?.eye)
+        // In high quality, a soft shade on the ground under each figure.
+        if (fineNow) drawShades(land, modelLoc, alphaLoc)
         ex?.let { it.festivity = feed.festive; it.kings = feed.kings; it.vikram = feed.vikram }
         ex?.frame(tz, ty, nowMs, feed.playing, peak, if (feed.forcePeak) tz else if (feed.peakMs >= 0) land.zAt(feed.peakMs) else null, look.palette.accent, feed.nextTitle != null, draws)
         // Clouds: soft heaps drifting high over the land, as many as the song's sky has.
@@ -746,7 +912,26 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
             }
         }
 
+        // Measuring: the land and the figures once more into a depth picture, as the sun's
+        // shadows would need (at most: the same programme, colour off).
+        if (shadowPass && bench != null) {
+            bench.bindShadow()
+            GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
+            for (c in chunks.values) c.pieces.forEach { draw(it) }
+            for (d in draws) {
+                val gpus = rigGpu[d.rig] ?: continue
+                val m = boneMatrices.toTypedArray()
+                d.rig.matrices(d.base, d.pose, m)
+                for (j in d.rig.bones.indices) {
+                    GLES30.glUniformMatrix4fv(modelLoc, 1, false, m[j], 0)
+                    draw(gpus[j])
+                }
+            }
+            bench.unbindShadow(bench.target(), width, height)
+        }
+
         // The boards' pictures: the cover by the way, the next song's sign.
+        bench?.section(WorldBench.Section.REST)
         ex?.let { drawBoards(it, viewProjection, haze, underSea, brightness) }
         GLES30.glUseProgram(land3d)
 
@@ -957,6 +1142,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
 
     private fun draw(g: Gpu) {
         if (g.vertices == 0) return
+        bench?.let { it.draws++; it.vertices += g.vertices }
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, g.buffer)
         GLES30.glEnableVertexAttribArray(0)
         GLES30.glEnableVertexAttribArray(1)
@@ -1018,10 +1204,13 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera) : GLSu
     companion object {
         /** How far ahead the land is drawn (blocks); the haze hides its end. */
         const val FAR = 150f
+
+        /** The discs of a figure's shade on the ground, as parts of its reach (darker inside, where they overlap). */
+        private val SHADE_RINGS = floatArrayOf(1.15f, 0.97f, 0.8f, 0.63f, 0.46f, 0.3f)
         /** The heading of the moon (and the sun) as drawn: sunSky's x and z. */
         private val MOON_YAW = kotlin.math.atan2(-0.2f, 1f)
-        /** The heading of the peak's rainbow (where the sky's shader stands it). */
-        private val RAINBOW_YAW = kotlin.math.atan2(0.25f, 1f)
+        /** The heading of the peak's rainbow (where the sky's shader stands it: opposite the sun). */
+        private val RAINBOW_YAW = kotlin.math.atan2(0.2f, -1f)
         private val IDENTITY = Mat4.identity()
         private val WARM = floatArrayOf(1f, 0.86f, 0.62f)
         private val COOL = floatArrayOf(0.62f, 0.72f, 0.95f)
@@ -1239,7 +1428,8 @@ layout(location = 0) in vec2 aPos;
 out vec2 vAt;
 void main() {
     vAt = aPos;
-    gl_Position = vec4(aPos, 0.999, 1.0);
+    // At the far end of the depth: drawn only where nothing else is.
+    gl_Position = vec4(aPos, 1.0, 1.0);
 }
 """
         private const val SKY_FS = """#version 300 es
@@ -1288,8 +1478,9 @@ void main() {
     vec4 near4 = uInverse * vec4(vAt, -1.0, 1.0);
     vec3 dir = normalize(far4.xyz / far4.w - near4.xyz / near4.w);
     if (uPeak > 0.01 && uPeakKind > 3.5 && uPeakKind < 4.5) {
-        // A rainbow standing over the land ahead, fixed in the sky: seen as the camera comes round to it.
-        float a = acos(clamp(dot(dir, normalize(vec3(0.25, -0.2, 1.0))), -1.0, 1.0));
+        // A rainbow standing over the land, fixed in the sky opposite the sun (as a rainbow always
+        // is: about the point straight away from it), seen as the camera comes round to it.
+        float a = acos(clamp(dot(dir, normalize(vec3(0.2, -0.2, -1.0))), -1.0, 1.0));
         float band = (a - 0.6) / 0.075;
         if (band > 0.0 && band < 1.0 && dir.y > -0.03) {
             vec3 rb = 0.5 + 0.5 * cos(6.2831 * (band * 0.8 + vec3(0.0, 0.33, 0.67)));

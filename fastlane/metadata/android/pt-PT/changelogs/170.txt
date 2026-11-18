@@ -1,0 +1,4 @@
+• As listas voltam a ser feitas depressa com uma biblioteca grande (com milhares de faixas, a primeira podia demorar minutos), também «O que ouves a esta hora».
+• O Attacca World é muito mais leve de desenhar: fluido a 60 fotogramas por segundo.
+• Attacca World em alta qualidade (Definições → Aspeto): contornos suaves, uma sombra ténue sob as figuras, um brilho à volta das luzes, tons de filme.
+• O terreno sombreado nas suas depressões; o arco-íris do lado oposto ao sol; vacas com chifres.

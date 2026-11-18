@@ -988,6 +988,9 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     // How Attacca World opens: behind the traveller (the default) or through its eyes.
     SwitchRow(stringResource(R.string.world_eyes_setting), ui.worldEyes, { on -> settings.updateUi { it.copy(worldEyes = on) } })
     Hint(stringResource(R.string.world_eyes_hint))
+    // Attacca World's finer picture (on by default; off for a slower phone or to save battery).
+    SwitchRow(stringResource(R.string.world_fine_setting), ui.worldFine, { on -> settings.updateUi { it.copy(worldFine = on) } })
+    Hint(stringResource(R.string.world_fine_hint))
 }
 
 /** Base folder of the music, which makes exported lists portable between devices. */

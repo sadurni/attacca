@@ -30,7 +30,7 @@ class PeakShotsCheck {
         assumeTrue(out != null)
         out!!.mkdirs()
         val report = StringBuilder()
-        for ((name, eyes) in listOf("CASTLE" to false, "CASTLE" to true, "DESERT" to false, "DESERT" to true, "REEF" to true, "REEF" to false)) {
+        for ((name, eyes) in (System.getenv("PEAK_WORLDS")?.split(",")?.map { it to false }) ?: listOf("CASTLE" to false, "CASTLE" to true, "DESERT" to false, "DESERT" to true, "REEF" to true, "REEF" to false)) {
             val world = World.valueOf(name)
             val look = Looks.inWorld(Looks.of(SongFacts(mood = Mood.CALM, energy = 0.5f, positivity = 0.6f, voice = 0.4f, seed = name.hashCode())), world)
             val input = WorldInput()

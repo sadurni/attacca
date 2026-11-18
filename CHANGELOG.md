@@ -3,6 +3,43 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.7.0
+
+### Attacca (Android)
+
+- Lists are made quickly again with a big library (two minutes with twenty thousand tracks): the
+  copies of a song found on several albums are told in a moment, without looking at every album
+  for being live; the music folder is not walked again after each scan; the library is prepared
+  once, not twice at the same time after the app starts; the live tracks are told ahead when
+  lists leave them out; and a list stopped while it was being made no longer holds up the next
+  ones.
+- "What you play at this hour" no longer takes long when a track heard at that time is not
+  among the analysed tracks of the music folder (another copy of a song, a damaged track, one
+  opened from elsewhere): such a track is left out instead of the whole library being prepared
+  again around it.
+- Attacca World is much lighter to draw (smooth at 60 frames a second on a mid-range phone): far
+  off, the land has half its points, no small things and coarser rounded shapes; what is out of
+  sight at the sides is left out (with a big forest or the reef, from millions of points a frame
+  to a third or less); and the sky is worked out only where no land is in front of it.
+- **Attacca World in high quality** (Settings → Appearance, on at first): smooth edges, a soft
+  shade on the ground under the traveller and the animals, a glow about the sun and the lights,
+  and a film's tones. Off, World is lighter for the phone.
+- The land is a little darker in its hollows and at the foot of trees, houses and rocks, so they
+  stand on the ground.
+- The peak's rainbow stands opposite the sun, as a rainbow always does (the camera turns to it).
+- Cows and bison have horns; no more houses half buried on steep slopes.
+
+### Attacca Desktop
+
+- Telling the copies of a song found on several albums takes a moment, also with a big library.
+- Attacca World: the rainbow opposite the sun; things far off drawn with coarser shapes; the land
+  darker in its hollows and at the foot of what stands on it; cows and bison with horns; no houses
+  half buried on steep slopes.
+
+### Attacca for Rockbox
+
+- The plugin and the full Rockbox builds carry version 1.7.0.
+
 ## 1.6.0
 
 ### Attacca (Android)

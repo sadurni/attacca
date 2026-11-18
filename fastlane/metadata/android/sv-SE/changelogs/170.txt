@@ -1,0 +1,4 @@
+• Listor skapas snabbt igen med ett stort bibliotek (med tusentals spår kunde den första ta flera minuter), även ”Det du spelar den här timmen”.
+• Attacca World är mycket lättare att rita: mjukt i 60 bilder per sekund.
+• Attacca World i hög kvalitet (Inställningar → Utseende): släta kanter, en mjuk skugga under figurerna, ett sken kring ljusen, filmiska toner.
+• Landet skuggat i sina sänkor; regnbågen mitt emot solen; kor med horn.

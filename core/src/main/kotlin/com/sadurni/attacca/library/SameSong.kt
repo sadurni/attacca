@@ -41,6 +41,14 @@ object SameSong {
     /** In an album's name, these make all its tracks live ones. */
     private val LIVE_ALBUM_WORDS = listOf("live", "en vivo", "en directo", "directo", "concert", "concierto", "unplugged")
 
+    // Made once: a library of thousands of tracks asks for thousands of keys.
+    private val VERSION_PATTERNS = VERSION_WORDS.map { it to Regex("\\b${Regex.escape(it)}\\b") }
+    private val LIVE_ALBUM_PATTERNS = LIVE_ALBUM_WORDS.map { Regex("\\b${Regex.escape(it)}\\b") }
+    private val BRACKETS = Regex("[(\\[{][^)\\]}]*[)\\]}]")
+    private val GUEST = Regex("(?i)\\s(feat\\.?|ft\\.|featuring)\\s.*$")
+    private val MARKS = Regex("\\p{M}+")
+    private val NOT_LETTERS = Regex("[^\\p{L}\\p{N}]+")
+
     /** Formats that keep every bit of the sound. */
     private val LOSSLESS = setOf("flac", "wav", "aif", "aiff", "ape", "wv", "dsf", "dff", "tta")
 
@@ -126,13 +134,13 @@ object SameSong {
         val raw = plain(t.title)
         if (raw.isBlank() || artist.isBlank()) return null
         // What tells another version, from anywhere in the title or a live album.
-        val versions = VERSION_WORDS.filter { Regex("\\b${Regex.escape(it)}\\b").containsMatchIn(raw) }.toSortedSet()
-        if (t.live || LIVE_ALBUM_WORDS.any { Regex("\\b${Regex.escape(it)}\\b").containsMatchIn(plain(t.album)) }) versions += "live"
+        val versions = VERSION_PATTERNS.filter { (_, pattern) -> pattern.containsMatchIn(raw) }.mapTo(sortedSetOf()) { it.first }
+        if (t.live || plain(t.album).let { album -> LIVE_ALBUM_PATTERNS.any { it.containsMatchIn(album) } }) versions += "live"
         // The song's own name: without brackets, a " - " addition or a guest.
         val base = plain(
-            t.title.replace(Regex("[(\\[{][^)\\]}]*[)\\]}]"), " ")
+            t.title.replace(BRACKETS, " ")
                 .substringBefore(" - ").substringBefore(" – ")
-                .replace(Regex("(?i)\\s(feat\\.?|ft\\.|featuring)\\s.*$"), " "),
+                .replace(GUEST, " "),
         ).replace(" ", "")
         if (base.isBlank()) return null
         return artist.replace(" ", "") + "|" + base + "|" + versions.joinToString(",")
@@ -160,9 +168,9 @@ object SameSong {
     /** Lower case, without accents and punctuation, single spaces. */
     private fun plain(s: String): String =
         Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD)
-            .replace(Regex("\\p{M}+"), "")
+            .replace(MARKS, "")
             .replace('’', '\'').replace("'", "")
             .replace("&", " and ")
-            .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
+            .replace(NOT_LETTERS, " ")
             .trim()
 }

@@ -1,0 +1,4 @@
+• Les listes se font de nouveau vite avec une grande bibliothèque (avec des milliers de pistes, la première pouvait prendre des minutes), « Ce que vous écoutez à cette heure » aussi.
+• Attacca World est bien plus léger à dessiner : fluide à 60 images par seconde.
+• Attacca World en haute qualité (Paramètres → Apparence) : bords lisses, ombre douce sous les figures, halo autour des lumières, tons de film.
+• Le terrain ombré dans ses creux ; l'arc-en-ciel à l'opposé du soleil ; vaches à cornes.

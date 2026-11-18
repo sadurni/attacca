@@ -1,0 +1,4 @@
+• Listy znów powstają szybko przy dużej bibliotece (przy tysiącach utworów pierwsza mogła trwać kilka minut), także „Czego słuchasz o tej porze”.
+• Attacca World jest dużo lżejszy do rysowania: płynny przy 60 klatkach na sekundę.
+• Attacca World w wysokiej jakości (Ustawienia → Wygląd): gładkie krawędzie, delikatny cień pod postaciami, poświata wokół świateł, filmowe barwy.
+• Teren cieniowany w zagłębieniach; tęcza naprzeciw słońca; krowy z rogami.

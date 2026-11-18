@@ -1,0 +1,4 @@
+• Les llistes es tornen a fer de pressa amb una biblioteca gran (amb milers de pistes, la primera podia trigar minuts), també «El que sents a aquesta hora».
+• Attacca World és molt més lleuger de dibuixar: fluid a 60 fotogrames per segon.
+• Attacca World en alta qualitat (Configuració → Aparença): vores llises, una ombra tènue sota les figures, un halo al voltant dels llums, tons de pel·lícula.
+• El terreny ombrejat als seus clots; l'arc de Sant Martí oposat al sol; vaques amb banyes.

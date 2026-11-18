@@ -60,8 +60,16 @@ object DamagedTracks {
     private val lock = Any()
     private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + com.sadurni.attacca.Background.dispatcher)
 
+    @Volatile private var loaded = false
+
+    /** [load], unless done already (lists need what was found before they are made). */
+    fun ensureLoaded() {
+        if (!loaded) load()
+    }
+
     /** Reads what was found before, leaving out files changed since. Off the main thread. */
     fun load() {
+        loaded = true
         val db = TrackSort.db ?: return
         val rows = runCatching { db.damaged() }.getOrDefault(emptyMap())
         val kept = HashMap<String, Damage>()

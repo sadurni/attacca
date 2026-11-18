@@ -1,0 +1,4 @@
+• Büyük bir kitaplıkta listeler yine hızlı oluşturuluyor (binlerce parçayla ilki dakikalar sürebiliyordu), "Bu saatte dinlediklerin" de.
+• Attacca World'ü çizmek çok daha hafif: saniyede 60 karede akıcı.
+• Yüksek kalitede Attacca World (Ayarlar → Görünüm): pürüzsüz kenarlar, figürlerin altında yumuşak bir gölge, ışıkların çevresinde bir parıltı, film tonları.
+• Arazi çukurlarında gölgeli; gökkuşağı güneşin karşısında; boynuzlu inekler.

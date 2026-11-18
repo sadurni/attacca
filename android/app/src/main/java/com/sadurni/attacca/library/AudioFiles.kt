@@ -222,6 +222,7 @@ object AudioFiles {
         val index = SearchIndex(root, entries, System.currentTimeMillis())
         searchIndex = index
         listing = index
+        keepWalk(root, entries.filter { isAudio(it.file) }.map { it.file.path })
         // Everything is scanned, the ignored files too (they are only left out where lists are made).
         return entries.filter { isAudio(it.file) }.map { it.file }
     }
@@ -266,20 +267,24 @@ object AudioFiles {
     /**
      * All audio files below [folder], folder by folder in natural order (album order). With
      * [recent], a background job right after a scan takes them from that scan's walk when it
-     * covers [folder] (a few minutes old at most) instead of walking the storage again.
+     * covers [folder] (a few minutes old at most, or of any age with [anyAge]) instead of walking
+     * the storage again.
      */
     /**
      * The audio files below [folder]. Ignored ones (see [IgnoredPaths]) are left out unless
      * [withIgnored]: the analysis still measures them, so a list can be made from one of them.
      */
-    fun collectAudio(folder: File, recent: Boolean = false, withIgnored: Boolean = false): List<File> {
+    fun collectAudio(folder: File, recent: Boolean = false, withIgnored: Boolean = false, anyAge: Boolean = false): List<File> {
         val known = listing
-        if (recent && known != null && known.covers(folder) && System.currentTimeMillis() - known.builtAt < INDEX_MAX_AGE_MS) {
+        if (recent && known != null && known.covers(folder) && (anyAge || System.currentTimeMillis() - known.builtAt < INDEX_MAX_AGE_MS)) {
             val prefix = folder.absolutePath.trimEnd('/') + "/"
             return known.entries.asSequence()
                 .map { it.file }
                 .filter { it.path.startsWith(prefix) && isAudio(it) && (withIgnored || !IgnoredPaths.isIgnored(it.path)) }
                 .toList()
+        }
+        if (recent && anyAge) {
+            keptAudio(folder)?.let { kept -> return kept.filter { withIgnored || !IgnoredPaths.isIgnored(it) }.map(::File) }
         }
         return walkAudio(folder, withIgnored)
     }
@@ -287,6 +292,64 @@ object AudioFiles {
     /** The next [collectAudio] walks the folder again (what is ignored changed). */
     fun forgetListing() {
         listing = null
+    }
+
+    /**
+     * Where the audio files of the last walk of the music folder are kept between runs (set at app
+     * start): the first collection after a start takes them instead of walking thousands of files.
+     */
+    @Volatile
+    var walkFile: File? = null
+
+    /** The kept walk: its root and audio files, read once. */
+    @Volatile
+    private var keptWalk: Pair<String, List<String>>? = null
+
+    private fun keepWalk(root: String, audio: List<String>) {
+        keptWalk = root to audio
+        val target = walkFile ?: return
+        runCatching {
+            val tmp = File(target.path + ".tmp")
+            tmp.bufferedWriter().use { w ->
+                w.write(root)
+                w.write("\n")
+                for (path in audio) {
+                    w.write(path)
+                    w.write("\n")
+                }
+            }
+            tmp.renameTo(target)
+        }
+    }
+
+    /** The kept walk's audio files by folder, made once per walk. */
+    @Volatile
+    private var keptByFolder: Pair<List<String>, Map<String, List<String>>>? = null
+
+    /**
+     * The audio files right in [folder] (not in its subfolders) as the last walk kept them; null
+     * when no walk kept covers it. Saves listing the storage folder by folder.
+     */
+    fun keptFolder(folder: String): List<String>? {
+        val kept = keptWalk ?: return null
+        if (folder != kept.first && !folder.startsWith(kept.first + "/")) return null
+        val byFolder = keptByFolder?.takeIf { it.first === kept.second }?.second
+            ?: kept.second.groupBy { it.substringBeforeLast('/') }.also { keptByFolder = kept.second to it }
+        return byFolder[folder].orEmpty()
+    }
+
+    /** The audio files below [folder] of the last walk kept (this run's or an earlier one's); null when none covers it. */
+    private fun keptAudio(folder: File): List<String>? {
+        val kept = keptWalk ?: walkFile?.takeIf { it.isFile }?.let { file ->
+            runCatching {
+                val lines = file.readLines()
+                lines.first() to lines.drop(1).filter { it.isNotEmpty() }
+            }.getOrNull()
+        }?.also { keptWalk = it } ?: return null
+        val path = folder.absolutePath.trimEnd('/')
+        if (path != kept.first && !path.startsWith(kept.first + "/")) return null
+        val prefix = "$path/"
+        return kept.second.filter { it.startsWith(prefix) }
     }
 
     private fun walkAudio(folder: File, withIgnored: Boolean): List<File> {

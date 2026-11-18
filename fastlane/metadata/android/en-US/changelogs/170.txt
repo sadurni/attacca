@@ -1,0 +1,4 @@
+• Lists are made quickly again with a big library (with thousands of tracks the first one could take minutes), "What you play at this hour" too.
+• Attacca World is much lighter to draw: smooth at 60 frames a second.
+• Attacca World in high quality (Settings → Appearance): smooth edges, a soft shade under the figures, a glow about the lights, a film's tones.
+• The land shaded in its hollows; the rainbow opposite the sun; cows with horns.

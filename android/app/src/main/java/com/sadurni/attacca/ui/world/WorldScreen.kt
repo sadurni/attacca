@@ -44,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -373,12 +374,16 @@ private class Sequence {
 private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, full: Boolean, onFull: (Boolean) -> Unit, onTap: (() -> Unit)? = null) {
     Box(Modifier.fillMaxSize()) {
         var surface by remember { mutableStateOf<GLSurfaceView?>(null) }
+        // "World in high quality", as set (read by the renderer each frame).
+        val ui by androidx.compose.ui.platform.LocalContext.current.app.settings.ui.collectAsState()
+        androidx.compose.runtime.SideEffect { feed.fine = ui.worldFine }
         AndroidView(
             factory = { c ->
                 GLSurfaceView(c).apply {
                     setEGLContextClientVersion(3)
                     setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-                    setRenderer(WorldRenderer(feed, camera))
+                    // (Measured, with the logs kept, only the whole World, not Now playing's strip.)
+                    setRenderer(WorldRenderer(feed, camera, if (onTap == null) WorldBench(c.applicationContext) else null))
                     renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
                     surface = this
                 }
