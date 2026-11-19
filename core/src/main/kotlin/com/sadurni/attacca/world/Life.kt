@@ -153,7 +153,7 @@ class Life(private val land: WorldLand, private val seed: Int) {
     }
 
     private fun quadBeast(h: Float, l: Float, t: Float, coat: Int, dark: Int, fluffy: Boolean = false, antlers: Boolean = false, hump: Boolean = false, patches: Boolean = false, horns: Boolean = false): Beast {
-        val b = RigBuilder()
+        val b = RigBuilder().apply { material = Material.FUR }
         val legH = h * 0.5f
         val half = t / 2
         b.bone(-1, 0f, legH, 0f) {

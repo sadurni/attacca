@@ -116,7 +116,7 @@ object Quad {
     }
 
     private fun quad(k: Shape, dog: Dog?, helmet: Boolean = false, horseShape: Boolean = dog == null, santa: Boolean = false, leds: Boolean = false): Rig {
-        val r = RigBuilder()
+        val r = RigBuilder().apply { material = Material.FUR }
         val legH = k.h * 0.52f
         val half = k.t / 2
         val horse = horseShape
@@ -265,7 +265,7 @@ object Mounts {
         val coat = 0xFFC8A06A.toInt()
         val dark = 0xFF9A7448.toInt()
         val k = Quad.Shape(1.75f, 1.9f, 0.62f, coat, dark, 0xFF3A2A20.toInt(), coat, 0.1f, dark)
-        val r = RigBuilder()
+        val r = RigBuilder().apply { material = Material.FUR }
         val legH = 1.15f
         r.bone(-1, 0f, legH, 0f) {
             blob(-0.36f, legH - 0.05f, -0.9f, 0.36f, 1.75f, 0.9f, coat)
@@ -332,10 +332,12 @@ object Vehicles {
         val metal = 0xFF2A2A30.toInt()
         val rr = 0.36f
         r.bone(-1, 0f, rr, 0f) {
+            material = Material.PAINT
             tube(0f, rr, -0.55f, 0f, 0.95f, -0.15f, 0.04f, colour)   // seat tube
             tube(0f, 0.95f, -0.15f, 0f, 1.0f, 0.42f, 0.04f, colour)  // top tube
             tube(0f, rr, -0.1f, 0f, 1.0f, 0.42f, 0.045f, colour)     // down tube
             tube(0f, rr, -0.1f, 0f, rr, -0.55f, 0.035f, colour)      // chain stay
+            material = Material.METAL
             tube(0f, 1.0f, 0.42f, 0f, rr, 0.6f, 0.035f, metal)        // fork
             // The stem up from the fork, the bars (bright, swept back a little) and black grips at their ends.
             val chrome = 0xFFC8CCD4.toInt()
@@ -343,16 +345,18 @@ object Vehicles {
             tube(-0.16f, 1.12f, 0.4f, 0.16f, 1.12f, 0.4f, 0.022f, chrome) // bars
             for (s in intArrayOf(-1, 1)) {
                 tube(s * 0.16f, 1.12f, 0.4f, s * 0.27f, 1.12f, 0.34f, 0.022f, chrome)
-                tube(s * 0.27f, 1.12f, 0.34f, s * 0.34f, 1.12f, 0.3f, 0.032f, 0xFF16161A.toInt()) // grip
+                made(Material.MATTE) { tube(s * 0.27f, 1.12f, 0.34f, s * 0.34f, 1.12f, 0.3f, 0.032f, 0xFF16161A.toInt()) } // grip
             }
-            blob(-0.08f, 0.96f, -0.28f, 0.08f, 1.04f, -0.06f, 0xFF1E1E22.toInt()) // saddle
+            made(Material.MATTE) { blob(-0.08f, 0.96f, -0.28f, 0.08f, 1.04f, -0.06f, 0xFF1E1E22.toInt()) } // saddle
         }
         val wheels = ArrayList<Int>()
         for (z in floatArrayOf(-0.55f, 0.6f)) {
             wheels += r.bone(0, 0f, rr, z) {
                 ring(0f, rr, z, rr, 0.045f, 0xFF1E1E22.toInt())
-                tube(0f, rr - rr * 0.9f, z, 0f, rr + rr * 0.9f, z, 0.015f, 0xFFB8B8C0.toInt())
-                tube(0f, rr, z - rr * 0.9f, 0f, rr, z + rr * 0.9f, 0.015f, 0xFFB8B8C0.toInt())
+                made(Material.METAL) {
+                    tube(0f, rr - rr * 0.9f, z, 0f, rr + rr * 0.9f, z, 0.015f, 0xFFB8B8C0.toInt())
+                    tube(0f, rr, z - rr * 0.9f, 0f, rr, z + rr * 0.9f, 0.015f, 0xFFB8B8C0.toInt())
+                }
             }
         }
         return Built(r.rig(), 1.0f - Human.HIP + 0.02f, -0.15f, wheels, emptyList())
@@ -362,10 +366,12 @@ object Vehicles {
         val r = RigBuilder()
         val wr = 0.32f
         r.bone(-1, 0f, 0.5f, 0f) {
-            blob(-0.8f, 0.28f, -1.3f, 0.8f, 0.86f, 1.3f, colour)
-            blob(-0.72f, 0.5f, 0.55f, 0.72f, 0.92f, 1.35f, colour)
+            made(Material.PAINT) {
+                blob(-0.8f, 0.28f, -1.3f, 0.8f, 0.86f, 1.3f, colour)
+                blob(-0.72f, 0.5f, 0.55f, 0.72f, 0.92f, 1.35f, colour)
+            }
             blob(-0.6f, 0.62f, -0.75f, 0.6f, 0.82f, 0.4f, 0xFF3A3236.toInt())  // seats, open top
-            blob(-0.66f, 0.78f, 0.3f, 0.66f, 1.08f, 0.42f, 0xFF9CC8E8.toInt())  // windscreen
+            made(Material.PAINT) { blob(-0.66f, 0.78f, 0.3f, 0.66f, 1.08f, 0.42f, 0xFF9CC8E8.toInt()) }  // windscreen
             blob(-0.5f, 0.4f, 1.28f, -0.3f, 0.56f, 1.36f, 0xFFFFF4C8.toInt())   // lights
             blob(0.3f, 0.4f, 1.28f, 0.5f, 0.56f, 1.36f, 0xFFFFF4C8.toInt())
             // The steering wheel (seen from the driver's seat too), leaning back on its column.
@@ -398,10 +404,12 @@ object Vehicles {
     fun ship(colour: Int): Built {
         val r = RigBuilder()
         r.bone(-1, 0f, 0.6f, 0f) {
-            blob(-0.95f, 0.15f, -1.7f, 0.95f, 0.9f, 1.8f, 0xFFD8DCE4.toInt())
-            blob(-0.6f, 0.65f, 1.0f, 0.6f, 0.95f, 2.2f, colour)
-            blob(-2.2f, 0.35f, -0.9f, -0.6f, 0.55f, 0.6f, colour)
-            blob(0.6f, 0.35f, -0.9f, 2.2f, 0.55f, 0.6f, colour)
+            made(Material.PAINT) {
+                blob(-0.95f, 0.15f, -1.7f, 0.95f, 0.9f, 1.8f, 0xFFD8DCE4.toInt())
+                blob(-0.6f, 0.65f, 1.0f, 0.6f, 0.95f, 2.2f, colour)
+                blob(-2.2f, 0.35f, -0.9f, -0.6f, 0.55f, 0.6f, colour)
+                blob(0.6f, 0.35f, -0.9f, 2.2f, 0.55f, 0.6f, colour)
+            }
             blob(-0.75f, 0.7f, -1.2f, 0.75f, 0.96f, 0.8f, 0xFF3A3A4A.toInt())   // open deck
             blob(-0.45f, 0.25f, -2.0f, 0.45f, 0.7f, -1.5f, 0xFF8EF0FF.toInt())  // engine glow
         }
@@ -427,8 +435,11 @@ object Vehicles {
         val r = RigBuilder()
         val hull = 0xFFF5C542.toInt()
         r.bone(-1, 0f, 0.8f, 0f) {
-            blob(-0.95f, 0.1f, -2.0f, 0.95f, 1.6f, 2.1f, hull)
-            blob(-0.6f, 1.2f, -0.9f, 0.6f, 2.0f, 0.7f, hull) // the tower, open
+            material = Material.METAL
+            made(Material.PAINT) {
+                blob(-0.95f, 0.1f, -2.0f, 0.95f, 1.6f, 2.1f, hull)
+                blob(-0.6f, 1.2f, -0.9f, 0.6f, 2.0f, 0.7f, hull) // the tower, open
+            }
             blob(-0.5f, 1.85f, -0.75f, 0.5f, 2.0f, 0.55f, 0xFF3A3A44.toInt())
             // Round windows on both sides (the dogs look out of them from inside).
             for (z in floatArrayOf(-0.9f, 0.1f, 1.1f)) for (s in floatArrayOf(-1f, 1f)) {
@@ -446,6 +457,7 @@ object Vehicles {
             }
         }
         val prop = r.bone(0, 0f, 0.85f, -2.25f) {
+            material = Material.METAL
             blob(-0.5f, 0.75f, -2.3f, 0.5f, 0.95f, -2.2f, 0xFF7A6A40.toInt())
             blob(-0.1f, 0.35f, -2.3f, 0.1f, 1.35f, -2.2f, 0xFF7A6A40.toInt())
         }

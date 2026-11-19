@@ -13,21 +13,46 @@ import android.opengl.GLES30
  */
 class WorldBench(private val context: Context) {
 
-    /** The ways of drawing gone through: as now, at 70 % of the size (scaled up), with 4x antialiasing. */
-    enum class Phase(val label: String, val msaa: Boolean, val scale: Float, val shadowPass: Boolean = false) {
-        NORMAL("as now", false, 1f),
-        LOW("70 % size", false, 0.7f),
-        MSAA("4x antialiasing", true, 1f),
+    /**
+     * The ways of drawing gone through (in high quality): everything; without the water's mirror; without the ground's grain;
+     * without the finishing (smooth edges, glow, tones); and basic (no effects at all).
+     */
+    enum class Phase(
+        val label: String, val grain: Boolean = true, val post: Boolean = true, val shades: Boolean = true, val mirror: Boolean = true,
+        val grass: Boolean = true,
+        /** The mirror's size against the frame's, and every how many frames it is drawn again. */
+        val mirrorScale: Float = WorldRenderer.MIRROR_SCALE, val mirrorEvery: Int = 1,
+    ) {
+        NORMAL("all"),
+        MIRROR_HALF("mirror at half the size", mirrorScale = 0.5f),
+        MIRROR_ALTERNATE("mirror every other frame", mirrorEvery = 2),
+        NO_MIRROR("no mirror", mirror = false),
+        NO_GRASS("no grass", grass = false),
+        NO_GRAIN("no grain", grain = false),
+        NO_POST("no finishing", post = false),
+        BASIC("basic", grain = false, post = false, shades = false, mirror = false, grass = false),
+        ;
+
+        val msaa: Boolean get() = false
+        val scale: Float get() = 1f
+        val shadowPass: Boolean get() = false
     }
 
     /** The parts of a frame timed on the GPU, in the order they are drawn. */
-    enum class Section(val label: String) { CLEAR("clear"), LAND("land"), SKY("sky"), FIGURES("figures"), REST("rest"), COPY("copy") }
+    enum class Section(val label: String) { CLEAR("clear"), MIRROR("mirror"), LAND("land"), SKY("sky"), FIGURES("figures"), REST("rest"), COPY("copy") }
 
     val on: Boolean get() = com.sadurni.attacca.Logs.on
 
     /** The way of drawing now. */
     var phase = Phase.NORMAL
         private set
+
+    /** The frames a second asked for now (0: not known); a window that changes it is cut short. */
+    var cap = 0
+        set(v) {
+            if (v != field && frames > 0) flush(System.nanoTime())
+            field = v
+        }
 
     // Counted by the renderer while a frame is drawn.
     var draws = 0
@@ -83,7 +108,7 @@ class WorldBench(private val context: Context) {
         vertices = 0
         if (PHASES && now - phaseStart >= PHASE_MS * 1_000_000L) {
             flush(now)
-            phase = Phase.entries[(phase.ordinal + 1) % Phase.entries.size]
+            phase = MEASURED[(MEASURED.indexOf(phase) + 1) % MEASURED.size]
             phaseStart = now
         }
         used[slot] = 0
@@ -152,8 +177,8 @@ class WorldBench(private val context: Context) {
                 " · gpu %.1f ms (%s)".format(java.util.Locale.ROOT, gpuSums.sum() / gpuFrames, parts)
             } else ""
             note(
-                "World frames (%s, %dx%d): %.1f fps · between %s · cpu %s · cpu+gpu %s · %d draws · %dk vertices%s".format(
-                    java.util.Locale.ROOT, phase.label, width, height, frames / seconds,
+                "World frames (%s, %dx%d, cap %d): %.1f fps · between %s · cpu %s · cpu+gpu %s · %d draws · %dk vertices%s".format(
+                    java.util.Locale.ROOT, phase.label, width, height, cap, frames / seconds,
                     stats(intervals), stats(cpu), stats(full), drawsSum / frames, verticesSum / frames / 1000, gpu,
                 ),
             )
@@ -252,6 +277,9 @@ class WorldBench(private val context: Context) {
     companion object {
         /** Whether it goes through the ways of drawing (a test build for measuring). */
         const val PHASES = false
+
+        /** The ways of drawing gone through now. */
+        val MEASURED = listOf(Phase.NORMAL, Phase.NO_GRASS)
         const val PHASE_MS = 15_000L
         const val WINDOW_MS = 10_000L
         const val FINISH_EVERY = 4

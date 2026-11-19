@@ -1,0 +1,5 @@
+• Qualité d'Attacca World (Paramètres → Apparence) : Basique, Haute ou Maximale. Maximale reflète la terre, le voyageur et les animaux dans l'eau.
+• En haute qualité, le sol a son propre grain près de l'œil : herbe, sable, roche, neige.
+• En Haute et Maximale, l'herbe pousse au bord du chemin et ondule dans le vent.
+• La peinture et le métal brillent au soleil, et le pelage des animaux accroche la lumière.
+• Les tons de film d'Attacca World s'activent ou se désactivent à part.

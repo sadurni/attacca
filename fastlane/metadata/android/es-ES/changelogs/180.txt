@@ -1,0 +1,5 @@
+• Calidad de Attacca World (Ajustes → Apariencia): Básica, Alta o Máxima. Máxima refleja en el agua la tierra, el viajero y los animales.
+• En alta calidad el suelo tiene su propio grano cerca de la vista: hierba, arena, roca, nieve.
+• En Alta y Máxima, la hierba crece junto al camino y se mece con el viento.
+• La pintura y el metal brillan al sol, y el pelaje de los animales capta la luz.
+• Los tonos de película de Attacca World se pueden activar o desactivar por separado.

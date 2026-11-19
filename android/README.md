@@ -38,8 +38,10 @@ plays them so one song flows into the next.
   obstacles, houses, O'rama's bridges, tunnels, stations and villages, birds and grazing animals,
   weather and each world's show at the peak; one finger turns the camera, two
   bring it closer, a tap on the traveller makes a move, the eye button shows it through the
-  traveller's own eyes, and the split button shows O'rama beside it. In high quality (Settings →
-  Appearance) with smooth edges, soft shade, a glow about the lights and a film's tones.
+  traveller's own eyes, and the split button shows O'rama beside it. Its quality (Settings →
+  Appearance) is basic, high (smooth edges, soft shade, a glow about the lights, grass swaying by the path, the ground's own
+  grain, shining paint and metal, a film's tones) or maximum (also the land, the traveller and the animals mirrored in the water); World measures how it
+  runs on the phone and may suggest the quality that suits it.
 - 🌄 **O'rama: watch the song.** A moving landscape drawn from the song's waveform, mood and
   beat: someone runs, rides or flies through castles, cities, seas and space, jumping on the
   strong beats, through tunnels with a torch, towards a gate into the next track's world. And a few little

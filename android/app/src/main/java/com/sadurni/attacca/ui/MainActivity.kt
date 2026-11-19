@@ -742,19 +742,39 @@ class MainActivity : AppCompatActivity() {
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    stringResource(R.string.app_name),
-                    fontSize = AttaccaType.title,
-                    fontFamily = com.sadurni.attacca.ui.theme.LocalTitleFamily.current,
-                    fontWeight = FontWeight.Bold,
-                    color = LocalAccent.current,
-                )
-                Text(
-                    BuildConfig.VERSION_NAME,
-                    fontSize = AttaccaType.secondary,
-                    color = LocalContentColor.current.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(start = 8.dp).weight(1f),
-                )
+                val title: @Composable () -> Unit = {
+                    Text(
+                        stringResource(R.string.app_name),
+                        fontSize = AttaccaType.title,
+                        fontFamily = com.sadurni.attacca.ui.theme.LocalTitleFamily.current,
+                        fontWeight = FontWeight.Bold,
+                        color = LocalAccent.current,
+                    )
+                }
+                val version: @Composable (Modifier) -> Unit = { m ->
+                    Text(
+                        BuildConfig.VERSION_NAME,
+                        fontSize = AttaccaType.secondary,
+                        color = LocalContentColor.current.copy(alpha = 0.6f),
+                        // (On one line always: cut, never stacked letter by letter.)
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Clip,
+                        modifier = m,
+                    )
+                }
+                // In landscape the menu leaves room for the camera and the system bar: the version goes
+                // under the name there, so the buttons keep their size.
+                if (androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                    Column(Modifier.weight(1f)) {
+                        title()
+                        version(Modifier)
+                    }
+                } else {
+                    title()
+                    version(Modifier.padding(start = 8.dp))
+                    androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                }
                 com.sadurni.attacca.ui.settings.LanguageButton()
                 IconButton(onClick = { onSelect(Screen.HELP) }) {
                     Icon(

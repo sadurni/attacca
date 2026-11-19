@@ -3,6 +3,29 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.8.0
+
+### Attacca (Android)
+
+- Attacca World in high quality: the ground has its own grain near the eye (grass in tufts, sand
+  in ripples, rock in layers on the steep, snow that sparkles), made on the GPU without pictures.
+- Attacca World in high and maximum quality: grass grows by the path, tufts of blades that sway
+  in the wind (and a little more on the beat) and sink into the ground far off.
+- Attacca World in high quality: paint and glass shine where the sun is mirrored (the car, the
+  ship, the submarine's hull, the bike's frame), metal mirrors the sky with a bright tinted shine
+  (chrome, brass, spokes), and the animals' coats catch the light at their edges.
+- **Film tones in Attacca World** (Settings → Appearance, under high quality): the film's tones on
+  their own, a matter of taste.
+- **Attacca World's quality** (Settings → Appearance) is now Basic, High (as before, at first) or
+  **Maximum**: all of high, and the hills, trees, rocks and houses mirrored in the water, stirred by
+  its waves, with the traveller, the vehicle and the animals by the water.
+- Attacca World measures how it runs on the phone while it shows (in each quality, at 30 or 60
+  frames a second) and, once, may suggest a lighter quality when it falls well short, or Maximum
+  when High keeps 60 frames a second with room to spare. What it measured shows under the quality
+  in Settings → Appearance.
+- In landscape, the side menu shows the version under the name (it was stacked letter by letter
+  down the middle).
+
 ## 1.7.0
 
 ### Attacca (Android)

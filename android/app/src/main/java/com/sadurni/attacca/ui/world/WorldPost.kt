@@ -30,7 +30,7 @@ class WorldPost {
     }
 
     /** The frame drawn: to the screen, smoothed, with its glow and tones. [quad]: a buffer of a screen-wide quad (x, y). */
-    fun finish(quad: Int) {
+    fun finish(quad: Int, film: Boolean = true) {
         if (msaaFbo == 0) return
         // The antialiased picture into a texture.
         GLES30.glBindFramebuffer(GLES30.GL_READ_FRAMEBUFFER, msaaFbo)
@@ -58,6 +58,7 @@ class WorldPost {
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, glowTex[0])
             GLES30.glUniform1i(GLES30.glGetUniformLocation(p, "uGlow"), 1)
             GLES30.glUniform1f(GLES30.glGetUniformLocation(p, "uAspect"), w.toFloat() / h)
+            GLES30.glUniform1f(GLES30.glGetUniformLocation(p, "uFilm"), if (film) 1f else 0f)
             GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         }
         GLES30.glEnable(GLES30.GL_DEPTH_TEST)
@@ -204,13 +205,15 @@ in vec2 vUv;
 uniform sampler2D uScene;
 uniform sampler2D uGlow;
 uniform float uAspect;
+uniform float uFilm;
 out vec4 color;
 void main() {
     vec3 c = texture(uScene, vUv).rgb + texture(uGlow, vUv).rgb * 0.45;
     c = min(c, vec3(1.0));
-    c = mix(c, c * c * (3.0 - 2.0 * c), 0.28);
+    // Film tones, when chosen: a gentle S-curve and the edges a little darker.
+    c = mix(c, c * c * (3.0 - 2.0 * c), 0.28 * uFilm);
     vec2 d = (vUv - 0.5) * vec2(uAspect, 1.0);
-    c *= 1.0 - 0.18 * smoothstep(0.35, 0.95, length(d) * 1.25);
+    c *= 1.0 - 0.18 * uFilm * smoothstep(0.35, 0.95, length(d) * 1.25);
     color = vec4(c, 1.0);
 }
 """

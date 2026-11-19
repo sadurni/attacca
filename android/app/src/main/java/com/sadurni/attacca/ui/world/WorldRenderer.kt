@@ -25,8 +25,20 @@ import kotlin.math.sin
 class WorldFeed {
     @Volatile var songId: String? = null
 
-    /** "World in high quality" (Settings): smooth edges, a soft shade under the figures, glow and a film's tones. */
+    /** "World in high quality" (Settings): smooth edges, a soft shade under the figures, glow, the ground's grain. */
     @Volatile var fine: Boolean = true
+
+    /** "Film tones" (Settings): a gentle S-curve and the edges a little darker, in high quality. */
+    @Volatile var film: Boolean = true
+
+    /** "Maximum" quality (Settings): above high quality, the land mirrored in the water. */
+    @Volatile var mirror: Boolean = false
+
+    /** The frames a second asked for (30 or 60, the button on World), for the bench's lines. */
+    @Volatile var cap: Int = 0
+
+    /** How World runs on this phone, measured while it is shown (see [WorldQualityAdvice]). */
+    val gauge = WorldGauge()
     @Volatile var look: SongLook? = null
 
     /** Whether the song's quiet and loud stretches may change the world (not with a world chosen by hand). */
@@ -79,7 +91,13 @@ class WorldFeed {
 }
 
 /** Draws Attacca World: the song's land, the traveller with the four dogs, the sky, from [camera]. */
-class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, private val bench: WorldBench? = null) : GLSurfaceView.Renderer {
+class WorldRenderer(
+    private val feed: WorldFeed,
+    val camera: WorldCamera,
+    private val bench: WorldBench? = null,
+    /** How it runs on this phone (the whole World only, not Now playing's strip). */
+    private val gauge: WorldGauge? = null,
+) : GLSurfaceView.Renderer {
 
     /** This frame also draws the land into a shadow's depth picture (the bench's measuring). */
     private var shadowPass = false
@@ -89,6 +107,23 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
 
     /** Whether this frame is drawn in high quality. */
     private var fineNow = false
+
+    /** Whether this frame lays the soft shade under the figures. */
+    private var shadesNow = false
+
+    /** Whether this frame may mirror the land in the water (maximum quality). */
+    private var mirrorFrame = false
+
+
+    // The land mirrored in the water: a picture of its own, a third of the frame's size, with its depth.
+    private var mirrorFbo = 0
+    private var mirrorTex = 0
+    private var mirrorDepth = 0
+    private var mirrorW = 0
+    private var mirrorH = 0
+
+    /** Frames since the mirror was drawn (it may be kept for a frame, see WorldBench.Phase.mirrorEvery). */
+    private var mirrorAge = 0
 
     private var land: WorldLand? = null
     private var lastTz = 0f
@@ -284,17 +319,162 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
     private class Gpu(val buffer: Int, val vertices: Int)
 
     /** A chunk made (on another thread): its pieces, and whether it is the coarse one for far off. */
-    private class ChunkMade(val pieces: List<LandMesher.Piece>, val far: Boolean)
+    private class ChunkMade(val pieces: List<LandMesher.Piece>, val far: Boolean, val grass: List<LandMesher.Piece> = emptyList()) {
+        /** Which pieces have water (its normals marked long upwards, see LAND_VS). */
+        val water: List<Boolean> = pieces.map { p ->
+            val d = p.mesh.data
+            var i = 7
+            var found = false
+            while (i < d.size) {
+                if (d[i] > 1.5f) { found = true; break }
+                i += Mesh.STRIDE
+            }
+            found
+        }
+    }
 
-    /** A chunk on the GPU: its pieces and their bounds, coarse or not. */
-    private class Chunk(val pieces: List<Gpu>, val bounds: List<FloatArray>, val far: Boolean)
+    /**
+     * A chunk on the GPU: its pieces and their bounds, coarse or not, which pieces have water, and
+     * its grass (near chunks only, drawn in high quality) in pieces with their bounds.
+     */
+    private class Chunk(
+        val pieces: List<Gpu>, val bounds: List<FloatArray>, val far: Boolean, val water: List<Boolean>,
+        val grass: List<Gpu> = emptyList(), val grassBounds: List<FloatArray> = emptyList(),
+    )
 
     private fun made(land: WorldLand, k: Int, far: Boolean) =
-        ChunkMade(LandMesher.pieces(if (far) LandMesher.far(land, k) else LandMesher.chunk(land, k)), far)
+        ChunkMade(
+            LandMesher.pieces(if (far) LandMesher.far(land, k) else LandMesher.chunk(land, k)), far,
+            if (far) emptyList() else LandMesher.pieces(LandMesher.grass(land, k)),
+        )
 
-    private fun upload(c: ChunkMade) = Chunk(c.pieces.map { gpu(it.mesh) }, c.pieces.map { it.bounds }, c.far)
+    private fun upload(c: ChunkMade) = Chunk(c.pieces.map { gpu(it.mesh) }, c.pieces.map { it.bounds }, c.far, c.water, c.grass.map { gpu(it.mesh) }, c.grass.map { it.bounds })
 
-    private fun delete(c: Chunk) = c.pieces.forEach(::delete)
+    /** Whether some water is in sight now (with [sightMatrix]). */
+    private fun waterInSight(): Boolean {
+        for (c in chunks.values) for (i in c.pieces.indices) if (c.water[i] && inSight(c.bounds[i], 0f)) return true
+        return false
+    }
+
+    /**
+     * Maximum quality: the land drawn upside down about the water's surface [waterY], seen through
+     * [viewProjection] from the eye, into a picture a third of the frame's size ([MIRROR_SCALE]) (clear where there is
+     * only sky), for the water to show (see LAND_FS). Only what is above the water is drawn: the
+     * land, and the figures near the water ([draws], solid parts only); the land shader's uniforms
+     * are left as the frame's.
+     */
+    private fun drawMirror(viewProjection: FloatArray, waterY: Float, frameW: Int, frameH: Int, tz: Float, modelLoc: Int) {
+        val scale = bench?.phase?.mirrorScale ?: MIRROR_SCALE
+        val mw = (frameW * scale).toInt().coerceAtLeast(1)
+        val mh = (frameH * scale).toInt().coerceAtLeast(1)
+        val fresh = mirrorFbo == 0 || mw != mirrorW || mh != mirrorH
+        if (fresh) makeMirror(mw, mh)
+        // Kept from the last frame when it may be (not a new picture).
+        mirrorAge++
+        if (!fresh && mirrorAge < (bench?.phase?.mirrorEvery ?: 1)) return
+        mirrorAge = 0
+        val was = IntArray(1).also { GLES30.glGetIntegerv(GLES30.GL_FRAMEBUFFER_BINDING, it, 0) }[0]
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, mirrorFbo)
+        GLES30.glViewport(0, 0, mw, mh)
+        GLES30.glClearColor(0f, 0f, 0f, 0f)
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+        // Mirrored about y = waterY: y → 2·waterY − y.
+        val flip = Mat4.identity().also { it[5] = -1f; it[13] = 2 * waterY }
+        val mirrored = Mat4.mul(viewProjection, flip)
+        val vpLoc = GLES30.glGetUniformLocation(land3d, "uViewProjection")
+        GLES30.glUniformMatrix4fv(vpLoc, 1, false, mirrored, 0)
+        GLES30.glUniform3f(GLES30.glGetUniformLocation(land3d, "uEye"), camera.eyeX, 2 * waterY - camera.eyeY, camera.eyeZ)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uClip"), 1f)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uDetail"), 0f)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uMirror"), 0f)
+        val sight = sightMatrix
+        sightMatrix = mirrored
+        // Only the nearer land: farther off, its mirror would be lost in the haze anyway.
+        for (c in chunks.values) for (i in c.pieces.indices) {
+            val b = c.bounds[i]
+            if (b[2] < tz + MIRROR_REACH && inSight(b, 0f)) draw(c.pieces[i])
+        }
+        // The figures: those standing or swimming near the water, nearer than the land's reach.
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 0f)
+        val box = FloatArray(6)
+        for (d in draws) {
+            if (d.alpha < 0.99f) continue
+            val x = d.base[12]
+            val y = d.base[13]
+            val z = d.base[14]
+            if (z > tz + MIRROR_REACH || y > waterY + MIRROR_HEIGHT) continue
+            val scale = kotlin.math.sqrt(d.base[0] * d.base[0] + d.base[1] * d.base[1] + d.base[2] * d.base[2])
+            val r = reachOf(d.rig) * scale
+            box[0] = x - r; box[1] = y - r; box[2] = z - r; box[3] = x + r; box[4] = y + 3 * r + 1f; box[5] = z + r
+            if (!inSight(box, 0f)) continue
+            val gpus = rigGpu.getOrPut(d.rig) { d.rig.bones.map { gpu(it.mesh) } }
+            val m = bonesOf(d)
+            for (j in d.rig.bones.indices) {
+                if (d.rig.bones[j].alpha < 0.99f) continue
+                GLES30.glUniformMatrix4fv(modelLoc, 1, false, m[j], 0)
+                draw(gpus[j])
+            }
+        }
+        GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 1f)
+        sightMatrix = sight
+        // Its depth is not kept (nothing to store on a GPU that draws in tiles).
+        GLES30.glInvalidateFramebuffer(GLES30.GL_FRAMEBUFFER, 1, intArrayOf(GLES30.GL_DEPTH_ATTACHMENT), 0)
+        GLES30.glUniformMatrix4fv(vpLoc, 1, false, viewProjection, 0)
+        GLES30.glUniform3f(GLES30.glGetUniformLocation(land3d, "uEye"), camera.eyeX, camera.eyeY, camera.eyeZ)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uClip"), 0f)
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, was)
+        GLES30.glViewport(0, 0, frameW, frameH)
+    }
+
+    private fun makeMirror(mw: Int, mh: Int) {
+        releaseMirror()
+        val t = IntArray(1)
+        GLES30.glGenTextures(1, t, 0)
+        mirrorTex = t[0]
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mirrorTex)
+        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA8, mw, mh, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, null)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE)
+        val r = IntArray(1)
+        GLES30.glGenRenderbuffers(1, r, 0)
+        mirrorDepth = r[0]
+        GLES30.glBindRenderbuffer(GLES30.GL_RENDERBUFFER, mirrorDepth)
+        GLES30.glRenderbufferStorage(GLES30.GL_RENDERBUFFER, GLES30.GL_DEPTH_COMPONENT24, mw, mh)
+        val f = IntArray(1)
+        GLES30.glGenFramebuffers(1, f, 0)
+        mirrorFbo = f[0]
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, mirrorFbo)
+        GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, mirrorTex, 0)
+        GLES30.glFramebufferRenderbuffer(GLES30.GL_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, GLES30.GL_RENDERBUFFER, mirrorDepth)
+        mirrorW = mw
+        mirrorH = mh
+    }
+
+    private fun releaseMirror() {
+        if (mirrorFbo != 0) {
+            GLES30.glDeleteFramebuffers(1, intArrayOf(mirrorFbo), 0)
+            GLES30.glDeleteTextures(1, intArrayOf(mirrorTex), 0)
+            GLES30.glDeleteRenderbuffers(1, intArrayOf(mirrorDepth), 0)
+        }
+        mirrorFbo = 0; mirrorTex = 0; mirrorDepth = 0; mirrorW = 0; mirrorH = 0
+    }
+
+    private fun delete(c: Chunk) {
+        c.pieces.forEach(::delete)
+        c.grass.forEach(::delete)
+    }
+
+    /** In high quality, the grass of the chunks near [tz] (it sinks into the ground before [GRASS_AHEAD], see LAND_VS). */
+    private fun drawGrass(tz: Float) {
+        for (c in chunks.values) for (i in c.grass.indices) {
+            val b = c.grassBounds[i]
+            if (b[2] > tz + GRASS_AHEAD || b[5] < tz - GRASS_BEHIND) continue
+            if (inSight(b, 0f)) draw(c.grass[i])
+        }
+    }
 
     /** Whether chunk [k] is drawn coarse (far ahead of the traveller at [tz]). */
     private fun farChunk(k: Int, tz: Float) = k * LandMesher.CHUNK > tz + LandMesher.NEAR_AHEAD
@@ -356,6 +536,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         GLES30.glDisable(GLES30.GL_CULL_FACE)
         bench?.surfaceLost()
         post.surfaceLost()
+        mirrorFbo = 0; mirrorTex = 0; mirrorDepth = 0; mirrorW = 0; mirrorH = 0
         shadeGpu = null
         rigReach.clear()
     }
@@ -367,19 +548,32 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        fineNow = feed.fine
         val b = bench?.takeIf { it.on }
         // Measuring (with the logs kept): the frame timed, drawn in the bench's way of the moment.
+        b?.cap = feed.cap
         b?.begin(width, height)
-        val offscreen = !fineNow && b?.offscreen == true
-        if (fineNow) post.begin(width, height) else if (offscreen) b?.bindOffscreen(width, height)
-        shadowPass = b?.phase?.shadowPass == true
+        val phase = b?.phase
+        fineNow = feed.fine
+        shadesNow = fineNow && phase?.shades != false
+        val postNow = fineNow && phase?.post != false
+        mirrorFrame = fineNow && feed.mirror && phase?.mirror != false
+        if (postNow) post.begin(width, height)
+        shadowPass = false
         drawFrame()
-        if (fineNow) {
+        if (postNow) {
             b?.section(WorldBench.Section.COPY)
-            post.finish(skyBuffer)
-        } else if (offscreen) b?.resolve(width, height)
+            post.finish(skyBuffer, feed.film)
+        }
         b?.end()
+        gauge?.frame(System.nanoTime(), if (!feed.fine) "basic" else if (feed.mirror) "max" else "high", feed.cap)
+    }
+
+    /** The matrices of [d]'s bones this frame (in [boneMatrices], until the next call). */
+    private fun bonesOf(d: com.sadurni.attacca.world.Draw): Array<FloatArray> {
+        while (boneMatrices.size < d.rig.bones.size) boneMatrices += FloatArray(16)
+        val m = boneMatrices.toTypedArray()
+        d.rig.matrices(d.base, d.pose, m)
+        return m
     }
 
     /** A disc of shade on the ground (unit radius, black), laid under the figures in high quality. */
@@ -687,8 +881,9 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
             if (com.sadurni.attacca.BuildConfig.DEBUG) android.util.Log.d("AttaccaWorld", "tap on the traveller: move $moved")
         }
 
-        GLES30.glClearColor(haze[0], haze[1], haze[2], 1f)
-        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+        // (The frame is cleared just before the land is drawn, after the water's mirror: on a GPU
+        // that draws in tiles, leaving the frame's picture half-drawn for another costs a whole
+        // store and load of it.)
 
         // The sky, with the sun's glow where it is.
         val sunDir = floatArrayOf(-0.45f, 0.12f + 0.45f * skySun, 1f)
@@ -772,6 +967,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         val underSea = camera.eyeY < WorldLand.WATER - 0.2f
         GLES30.glUniform2f(GLES30.glGetUniformLocation(land3d, "uFogRange"), if (underSea) 12f else 45f, if (underSea) FAR * 0.62f else FAR)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uLight"), brightness)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uDetail"), if (fineNow && bench?.phase?.grain != false) 1f else 0f)
         GLES30.glUniform3f(GLES30.glGetUniformLocation(land3d, "uSkyTop"), top[0], top[1], top[2])
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uWaterY"), WorldLand.WATER - 0.1f)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTime"), (nowMs % 100_000L) / 1000f)
@@ -816,10 +1012,41 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         GLES30.glUniform4fv(GLES30.glGetUniformLocation(land3d, "uRipple"), 4, rings, 0)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 1f)
         val modelLoc = GLES30.glGetUniformLocation(land3d, "uModel")
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uGrassFade"), GRASS_AHEAD - 12f)
         val alphaLoc = GLES30.glGetUniformLocation(land3d, "uAlpha")
         GLES30.glUniform1f(alphaLoc, 1f)
         GLES30.glUniformMatrix4fv(modelLoc, 1, false, IDENTITY, 0)
+        // Where the figures are this frame (before the mirror, which shows them too).
+        draws.clear()
+        val dark = ex?.darkAt(tz, night) == true
+        cast?.santa = christmas
+        cast?.frame(tz, posMs / beatMs, feed.playing, nowMs, draws, dark, tunnel)
+        // Who was left at the end of the song before: the vehicle stays where they got off.
+        oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
+        // On the beat's wave, not sunk in it: the figures (and the traveller's eyes) rise with the land.
+        com.sadurni.attacca.world.Swell.liftFigures(land, draws, 0, rings, pulse, tz, cast?.eye)
+        ex?.let { it.festivity = feed.festive; it.kings = feed.kings; it.vikram = feed.vikram }
+        ex?.frame(tz, ty, nowMs, feed.playing, peak, if (feed.forcePeak) tz else if (feed.peakMs >= 0) land.zAt(feed.peakMs) else null, look.palette.accent, feed.nextTitle != null, draws)
+        // In maximum quality, the land and the figures mirrored in the water, when there is water
+        // in sight and the eye is above it.
+        val mirrorNow = mirrorFrame && !underSea && waterInSight()
+        if (mirrorNow) {
+            bench?.section(WorldBench.Section.MIRROR)
+            drawMirror(viewProjection, WorldLand.WATER - 0.1f, width, height, tz, modelLoc)
+            GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uDetail"), if (fineNow && bench?.phase?.grain != false) 1f else 0f)
+            bench?.section(WorldBench.Section.LAND)
+        }
+        GLES30.glClearColor(haze[0], haze[1], haze[2], 1f)
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uMirror"), if (mirrorNow) 1f else 0f)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE3)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, if (mirrorNow) mirrorTex else 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glUniform1i(GLES30.glGetUniformLocation(land3d, "uReflect"), 3)
+        GLES30.glUniform2f(GLES30.glGetUniformLocation(land3d, "uScreen"), 1f / width, 1f / height)
         for (c in chunks.values) draw(c)
+        // In high quality, the grass near the traveller.
+        if (fineNow && bench?.phase?.grass != false) drawGrass(tz)
         if (stale.isNotEmpty()) {
             // Where the new land has no piece yet, the old one's (none once all are made).
             val shown = HashSet<Int>()
@@ -862,18 +1089,8 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         // The traveller, the vehicle, the dogs and the people at relays (no beat in their shape).
         bench?.section(WorldBench.Section.FIGURES)
         GLES30.glUniform1f(GLES30.glGetUniformLocation(land3d, "uTerrain"), 0f)
-        draws.clear()
-        val dark = ex?.darkAt(tz, night) == true
-        cast?.santa = christmas
-        cast?.frame(tz, posMs / beatMs, feed.playing, nowMs, draws, dark, tunnel)
-        // Who was left at the end of the song before: the vehicle stays where they got off.
-        oldCast?.let { if (land.before != null) it.parked(oldDz, draws) else oldCast = null }
-        // On the beat's wave, not sunk in it: the figures (and the traveller's eyes) rise with the land.
-        com.sadurni.attacca.world.Swell.liftFigures(land, draws, 0, rings, pulse, tz, cast?.eye)
         // In high quality, a soft shade on the ground under each figure.
-        if (fineNow) drawShades(land, modelLoc, alphaLoc)
-        ex?.let { it.festivity = feed.festive; it.kings = feed.kings; it.vikram = feed.vikram }
-        ex?.frame(tz, ty, nowMs, feed.playing, peak, if (feed.forcePeak) tz else if (feed.peakMs >= 0) land.zAt(feed.peakMs) else null, look.palette.accent, feed.nextTitle != null, draws)
+        if (shadesNow) drawShades(land, modelLoc, alphaLoc)
         // Clouds: soft heaps drifting high over the land, as many as the song's sky has.
         if (cloudFor !== skyOf) {
             cloudFor = skyOf
@@ -891,9 +1108,7 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         }
         for (d in draws) {
             val gpus = rigGpu.getOrPut(d.rig) { d.rig.bones.map { gpu(it.mesh) } }
-            while (boneMatrices.size < d.rig.bones.size) boneMatrices += FloatArray(16)
-            val m = boneMatrices.toTypedArray()
-            d.rig.matrices(d.base, d.pose, m)
+            val m = bonesOf(d)
             for (j in d.rig.bones.indices) {
                 val a = d.rig.bones[j].alpha * d.alpha
                 if (a < 1f) {
@@ -1205,6 +1420,22 @@ class WorldRenderer(private val feed: WorldFeed, val camera: WorldCamera, privat
         /** How far ahead the land is drawn (blocks); the haze hides its end. */
         const val FAR = 150f
 
+        /** How far ahead of the traveller the land is mirrored in the water (maximum quality). */
+        const val MIRROR_REACH = 90f
+
+        /** Figures standing higher than this over the water are not mirrored (it could not show them). */
+        const val MIRROR_HEIGHT = 14f
+
+        /** How far ahead and behind the traveller the grass is drawn (it has sunk into the ground by then). */
+        const val GRASS_AHEAD = 34f
+        const val GRASS_BEHIND = 20f
+
+        /**
+         * The mirror's size against the frame's: a third (on the G34, half the size took the frame
+         * from 60 to 30 a second; a third costs about 1 ms, and the waves blur it anyway).
+         */
+        const val MIRROR_SCALE = 0.34f
+
         /** The discs of a figure's shade on the ground, as parts of its reach (darker inside, where they overlap). */
         private val SHADE_RINGS = floatArrayOf(1.15f, 0.97f, 0.8f, 0.63f, 0.46f, 0.3f)
         /** The heading of the moon (and the sun) as drawn: sunSky's x and z. */
@@ -1230,22 +1461,41 @@ uniform vec4 uRipple[4];
 uniform float uWaveTime;
 uniform float uWave;
 uniform float uBeat;
+// From this distance on the grass sinks into the ground (gone 12 m further).
+uniform float uGrassFade;
 out vec3 vColor;
 out float vWater;
 out float vDist;
 out vec3 vWorld;
 out vec3 vNormal;
 out float vSwell;
+out float vSurface;
+out float vMaterial;
 void main() {
     vec4 world = uModel * vec4(aPos, 1.0);
     // Plants sway with the music, the higher up the more (their normals' length says how high).
     float nl = length(aNormal);
+    // The land's own surface (its normals are a little short), not what stands on it.
+    vSurface = (nl > 0.7 && nl < 0.9 && uTerrain > 0.5) ? 1.0 : 0.0;
+    // What it is made of (see Material): 1 fur, 2 paint, 3 metal, 0 the rest.
+    vMaterial = (nl > 1.06 && nl < 1.18) ? 1.0 : (nl >= 1.18 && nl < 1.30) ? 2.0 : (nl >= 1.30 && nl < 1.45) ? 3.0 : 0.0;
     if (nl > 0.15 && nl < 0.55 && uTerrain > 0.5) {
         float hgt = (0.5 - nl) / 0.3;
         float ph = world.x * 0.31 + world.z * 0.17;
         float amp = hgt * hgt * (0.07 + 0.32 * uPulse);
         world.x += sin(uBeat * 3.1416 + ph) * amp;
         world.z += cos(uBeat * 3.1416 * 0.5 + ph) * amp * 0.6;
+    }
+    // Grass (its normals' length says how high the point is): the tips sway in the wind, in
+    // gusts running over the land, more on the beat; far off, the tufts sink into the ground.
+    if (nl > 0.56 && nl < 0.7 && uTerrain > 0.5) {
+        float g = (nl - 0.58) / 0.1 * 0.8;
+        float ph = world.x * 0.33 + world.z * 0.21 - uWaveTime * 1.7;
+        float gust = 0.55 + 0.45 * sin(world.x * 0.05 + world.z * 0.04 - uWaveTime * 0.6);
+        float w = (sin(ph) * 0.7 + sin(ph * 2.3 + 1.3) * 0.3) * gust;
+        world.x += g * (w * 0.32 + sin(uBeat * 3.1416 + world.z * 0.4) * 0.12 * uPulse);
+        world.z += g * cos(ph * 1.3) * 0.12 * gust;
+        world.y -= g * smoothstep(uGrassFade, uGrassFade + 12.0, distance(world.xz, uEye.xz));
     }
     // Flames (warm glowing colours: torches, lava) lick and waver.
     if (aColor.r > 2.95 && aColor.g > 2.5 && aColor.g < 2.78 && aColor.b < 2.4) {
@@ -1303,6 +1553,9 @@ in vec3 vWorld;
 in vec3 vNormal;
 in float vSwell;
 in float vWater;
+in float vSurface;
+in float vMaterial;
+uniform float uDetail;
 uniform vec3 uFog;
 uniform vec2 uFogRange;
 uniform float uLight;
@@ -1321,8 +1574,55 @@ uniform float uPulse;
 uniform vec3 uLampPos;
 uniform vec3 uLampDir;
 uniform float uLamp;
+// Maximum quality: [uClip] while the land is drawn mirrored (only what is above the water, never
+// the water itself); [uMirror] when the water shows that picture, [uReflect], ([uScreen]: 1 / the
+// frame's size).
+uniform float uClip;
+uniform float uMirror;
+uniform sampler2D uReflect;
+uniform vec2 uScreen;
 out vec4 color;
+// A smooth value noise (0 … 1) over the plane.
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+// The ground's own grain, near the eye, made here (no pictures): grass in tufts, rock in layers on
+// the steep, sand in ripples, snow that sparkles; [c] the ground's colour, [n] its slope.
+vec3 grain(vec3 c, vec3 n) {
+    float k = 1.0 - smoothstep(22.0, 55.0, vDist);
+    if (k <= 0.0) return c;
+    vec2 p = vWorld.xz;
+    float big = noise(p * 0.45);
+    float fine = noise(p * 3.1 + big * 2.0);
+    vec3 g = c;
+    float steep = 1.0 - smoothstep(0.62, 0.8, n.y);
+    float bright = max(max(c.r, c.g), c.b);
+    if (bright > 0.78 && c.b > 0.7 && c.r > 0.7) {
+        // Snow: soft drifts, and a sparkle here and there.
+        g = c * (0.94 + 0.08 * big) + vec3(0.25) * step(0.985, hash(floor(p * 9.0))) * fine;
+    } else if (c.g > c.r * 1.05 && c.g > c.b) {
+        // Grass: darker and lighter tufts, a touch yellower in places.
+        g = c * (0.84 + 0.22 * fine + 0.08 * big);
+        g = mix(g, g * vec3(1.08, 1.02, 0.8), smoothstep(0.6, 0.9, big) * 0.6);
+    } else if (c.r > c.b * 1.25 && c.g > c.b * 1.05 && bright > 0.55) {
+        // Sand: ripples across the wind, a fine grain.
+        float rip = sin(dot(p, vec2(0.8, 0.6)) * 3.2 + big * 4.0);
+        g = c * (0.95 + 0.05 * rip + 0.06 * (fine - 0.5));
+    } else {
+        // Earth and stone: a coarser grain.
+        g = c * (0.88 + 0.2 * fine);
+    }
+    // Rock on the steep: layers along its height.
+    float layers = 0.5 + 0.5 * sin(vWorld.y * 5.0 + big * 3.0);
+    g = mix(g, c * (0.8 + 0.25 * layers) * vec3(0.98, 0.96, 0.94), steep * 0.7);
+    return mix(c, g, k);
+}
 void main() {
+    if (uClip > 0.5 && (vWater > 0.5 || vWorld.y < uWaterY)) discard;
     // Glowing colours (2 above the others) shine as they are.
     if (vColor.r > 1.5 || vColor.g > 1.5 || vColor.b > 1.5) {
         float fg = smoothstep(uFogRange.x, uFogRange.y, vDist);
@@ -1341,9 +1641,11 @@ void main() {
     }
     // Warm sunlight on what faces the sun, the sky's cool light in the shade.
     vec3 n = normalize(vNormal);
+    // In high quality, the ground's own grain.
+    vec3 albedo = (uDetail > 0.5 && vSurface > 0.5) ? grain(vColor, n) : vColor;
     float sun = max(dot(n, uSunDir), 0.0);
     float up = n.y * 0.5 + 0.5;
-    vec3 lit = vColor * (uSkyLight * (0.32 + 0.3 * up) + uSunLight * sun * 1.0);
+    vec3 lit = albedo * (uSkyLight * (0.32 + 0.3 * up) + uSunLight * sun * 1.0);
     // A touch more colour, as on a clear warm day.
     float grey = dot(lit, vec3(0.3, 0.59, 0.11));
     lit = mix(vec3(grey), lit, 1.18);
@@ -1361,14 +1663,47 @@ void main() {
         vec3 deep = vColor * (uSkyLight * 0.5 + uSunLight * 0.35);
         vec3 h = normalize(v + uSunDir);
         float glint = pow(max(dot(wn, h), 0.0), 90.0);
-        lit = mix(deep, uSkyTop * 0.9 + uSunLight * 0.1, 0.25 + 0.6 * fres) + uSunLight * glint * 1.4;
-        // The sun or the moon mirrored: a path of light on the water towards it, glittering.
+        lit = mix(deep, uSkyTop * 0.9 + uSunLight * 0.1, 0.25 + 0.6 * fres);
+        // In maximum quality, the land mirrored: the picture drawn upside down, read where this
+        // point is on the screen, stirred by the waves; clear where only the sky is mirrored.
+        float land = 0.0;
+        if (uMirror > 0.5) {
+            vec2 uv = gl_FragCoord.xy * uScreen + (wn.xz * 0.35 + n.xz * 0.08) * (1.0 - smoothstep(30.0, 120.0, vDist) * 0.6);
+            vec4 rf = texture(uReflect, clamp(uv, vec2(0.002), vec2(0.998)));
+            land = rf.a;
+            // (Its light already counted once: taken back out, as the whole is lit below.)
+            vec3 seen = rf.rgb / max(uLight, 0.05) * vec3(0.82, 0.9, 0.94);
+            lit = mix(lit, mix(seen, deep, 0.15), rf.a * (0.45 + 0.5 * fres));
+        }
+        lit += uSunLight * glint * 1.4 * (1.0 - 0.6 * land);
+        // The sun or the moon mirrored: a path of light on the water towards it, glittering
+        // (not where the land hides it).
         vec3 r = reflect(-v, normalize(vec3(wn.x * 2.2, 1.0, wn.z * 2.2)));
         float m = max(dot(r, uSunSky), 0.0);
         float path = pow(m, 260.0) * 3.0 + pow(m, 40.0) * 0.35;
-        lit += uSunColour * path * (1.0 + 1.6 * uNight);
+        lit += uSunColour * path * (1.0 + 1.6 * uNight) * (1.0 - 0.85 * land);
         // At night the water keeps a little of the sky's light, so it shows.
         lit += uSkyTop * 0.18 * uNight * (0.4 + fres);
+    }
+    // In high quality, each material its own shine: a coat's soft sheen at its edges, paint's clear
+    // highlight and a little of the sky in it, metal's bright tinted highlight and the sky mirrored.
+    if (uDetail > 0.5 && vMaterial > 0.5) {
+        vec3 v = normalize(uEye - vWorld);
+        float facing = max(dot(n, v), 0.0);
+        float day = 1.0 - 0.7 * uNight;
+        vec3 h = normalize(v + uSunDir);
+        float nh = max(dot(n, h), 0.0);
+        if (vMaterial < 1.5) {
+            float rim = pow(1.0 - facing, 3.0);
+            lit += albedo * (uSunLight + uSkyLight) * rim * 0.4 * day;
+        } else if (vMaterial < 2.5) {
+            float fres = pow(1.0 - facing, 4.0);
+            lit = mix(lit, uSkyTop, fres * 0.25) + uSunLight * pow(nh, 60.0) * 0.7 * day;
+        } else {
+            float fres = pow(1.0 - facing, 2.0);
+            vec3 sky = mix(uSkyTop, uFog, 0.5 - 0.5 * reflect(-v, n).y);
+            lit = mix(lit, sky * (0.45 + 0.55 * albedo), 0.3 + 0.3 * fres) + uSunLight * (0.4 + 0.6 * albedo) * pow(nh, 28.0) * 1.1 * day;
+        }
     }
     // The traveller's light: a beam (head torch, headlights, the submarine's lamp) or a torch's glow all round.
     if (uLamp > 0.5) {
@@ -1379,7 +1714,7 @@ void main() {
         float reach = uLamp > 1.5 ? (0.85 + 0.1 * sin(uTime * 13.0) + 0.05 * sin(uTime * 23.0)) / (1.0 + d * d * 0.09) : 1.0 / (1.0 + d * d * 0.012);
         float cone = uLamp > 1.5 ? 1.0 : smoothstep(0.78, 0.93, dot(-ln, uLampDir));
         vec3 tint = uLamp > 1.5 ? vec3(1.0, 0.68, 0.36) : vec3(1.0, 0.95, 0.82);
-        lit += vColor * tint * facing * reach * cone * 1.6;
+        lit += albedo * tint * facing * reach * cone * 1.6;
     }
     float f = smoothstep(uFogRange.x, uFogRange.y, vDist);
     f = f * f * (3.0 - 2.0 * f);

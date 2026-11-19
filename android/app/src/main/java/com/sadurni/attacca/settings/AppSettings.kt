@@ -47,6 +47,10 @@ data class UiSettings(
     val worldEyes: Boolean = false,
     /** Attacca World in high quality: smooth edges, a soft shade under the figures, glow and a film's tones (costs some battery). */
     val worldFine: Boolean = true,
+    /** In high quality, Attacca World's film tones (a gentle S-curve, the edges a little darker): a matter of taste. */
+    val worldFilm: Boolean = true,
+    /** Attacca World in maximum quality (above high, which it needs): the land mirrored in the water. */
+    val worldMax: Boolean = false,
     val keepScreenOn: KeepScreenOn = KeepScreenOn.OFF,
     /** Tips over each screen the first time it opens after installing a new version. */
     val showTips: Boolean = true,
@@ -449,6 +453,8 @@ class AppSettings(context: Context) {
             oramaOpen = prefs.getString("orama_open", d.oramaOpen) ?: d.oramaOpen,
             worldEyes = prefs.getBoolean("world_eyes", d.worldEyes),
             worldFine = prefs.getBoolean("world_fine", d.worldFine),
+            worldFilm = prefs.getBoolean("world_film", d.worldFilm),
+            worldMax = prefs.getBoolean("world_max", d.worldMax),
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
@@ -471,6 +477,8 @@ class AppSettings(context: Context) {
             .putString("orama_open", s.oramaOpen)
             .putBoolean("world_eyes", s.worldEyes)
             .putBoolean("world_fine", s.worldFine)
+            .putBoolean("world_film", s.worldFilm)
+            .putBoolean("world_max", s.worldMax)
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)

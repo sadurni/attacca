@@ -1,0 +1,5 @@
+• Attacca World kalitesi (Ayarlar → Görünüm): Temel, Yüksek ya da En yüksek. En yüksek toprağı, yolcuyu ve hayvanları suya yansıtır.
+• Yüksek kalitede zemin yakında kendi dokusuna sahip: çimen, kum, kaya, kar.
+• Yüksek ve En yüksek kalitede yolun kenarında çimen biter ve rüzgârda salınır.
+• Boya ve metal güneşte parlar, hayvanların kürkü ışığı yakalar.
+• Attacca World'deki film tonları ayrıca açılıp kapatılabilir.

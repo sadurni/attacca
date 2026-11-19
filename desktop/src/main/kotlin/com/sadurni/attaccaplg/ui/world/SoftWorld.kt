@@ -699,7 +699,7 @@ class SoftWorld(private val input: WorldInput, val camera: WorldCamera) {
             // A plant's point: marked by its normal's length (see Props.swayOf), lit as any.
             val nlen = sqrt(nxv * nxv + nyv * nyv + nzv * nzv)
             sway[p] = Props.swayOf(nlen)
-            if (sway[p] >= 0f) { nxv /= nlen; nyv /= nlen; nzv /= nlen }
+            if (sway[p] >= 0f || LandMesher.isSurface(nlen)) { nxv /= nlen; nyv /= nlen; nzv /= nlen }
             base[p * 3] = cr; base[p * 3 + 1] = cg; base[p * 3 + 2] = cb
             nrm[p * 3] = nxv; nrm[p * 3 + 1] = nyv; nrm[p * 3 + 2] = nzv
             if (cr > 1.5f || cg > 1.5f || cb > 1.5f) {

@@ -1,0 +1,5 @@
+• Qualitat d'Attacca World (Configuració → Aparença): Bàsica, Alta o Màxima. Màxima reflecteix a l'aigua la terra, el viatger i els animals.
+• En alta qualitat el terreny té el seu propi gra a prop de la vista: herba, sorra, roca, neu.
+• En Alta i Màxima, l'herba creix vora el camí i es gronxa amb el vent.
+• La pintura i el metall brillen al sol, i el pelatge dels animals capta la llum.
+• Els tons de pel·lícula d'Attacca World es poden activar o desactivar per separat.

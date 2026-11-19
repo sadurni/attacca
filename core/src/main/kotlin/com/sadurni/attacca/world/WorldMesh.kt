@@ -19,6 +19,9 @@ class FloatList(capacity: Int = 4096) {
     /** How finely rounded shapes are made: 1 as designed, less for what is seen far off. */
     var detail = 1f
 
+    /** What the next shapes are made of (see [Material]): their normals' length tells the screen. */
+    var material = Material.MATTE
+
     fun add(v: Float) {
         if (size == data.size) data = data.copyOf(data.size * 2)
         data[size++] = v
@@ -34,7 +37,29 @@ private fun FloatList.vertex(x: Float, y: Float, z: Float, c: Int, nx: Float, ny
     add(((c shr 16) and 0xFF) / 255f * light + g)
     add(((c shr 8) and 0xFF) / 255f * light + g)
     add((c and 0xFF) / 255f * light + g)
-    add(nx); add(ny); add(nz)
+    add(nx * material); add(ny * material); add(nz * material)
+}
+
+/** What a surface is made of, marked by its normals' length (the screens make them unit again to light them). */
+object Material {
+    const val MATTE = 1f
+    /** A soft sheen at the edges, as a coat's hairs catch the light. */
+    const val FUR = 1.12f
+    /** A clear shine where the sun is mirrored (a car's paint, a hull, glass). */
+    const val PAINT = 1.24f
+    /** The sky mirrored and a bright, tinted shine (chrome, brass, steel). */
+    const val METAL = 1.36f
+
+    /** Whether a normal's [length] is one of the materials (not plants', the land's or water's). */
+    fun isMaterial(length: Float) = length > 1.06f && length < 1.45f
+}
+
+/** [block]'s shapes made of [material]. */
+inline fun FloatList.made(material: Float, block: FloatList.() -> Unit) {
+    val before = this.material
+    this.material = material
+    block()
+    this.material = before
 }
 
 /** A flat quad of one colour facing (nx, ny, nz), corners a b c d in turn. */
@@ -153,7 +178,8 @@ object LandMesher {
         }
         val out = FloatList(nx * nz * 6 * Mesh.STRIDE + 64)
         out.detail = detail
-        fun put(k: Int) = out.vertex(px[k], py[k], pz[k], col[k], nrm[k * 3], nrm[k * 3 + 1], nrm[k * 3 + 2], shade[k])
+        // (The surface's normals are shortened to [SURFACE_MARK]: the screens tell the ground from what stands on it.)
+        fun put(k: Int) = out.vertex(px[k], py[k], pz[k], col[k], nrm[k * 3] * SURFACE_MARK, nrm[k * 3 + 1] * SURFACE_MARK, nrm[k * 3 + 2] * SURFACE_MARK, shade[k])
         for (j in 0 until nz - 1) for (i in 0 until nx - 1) {
             val a = j * nx + i
             val b = a + 1
@@ -194,6 +220,114 @@ object LandMesher {
     }
 
     private fun abs(v: Float) = if (v < 0) -v else v
+
+    /**
+     * The grass of chunk [index] (only where the ground is green): tufts of three or four blades,
+     * thick by the path and thinning out away from it, none on the path, in the water, on the steep
+     * or under what stands on the land. Each blade's normals are the ground's, marked by their
+     * length (see [GRASS_MARK]) with how high the point is, so the screen sways the tips in the
+     * wind and lowers the tufts into the ground as they go far off.
+     */
+    fun grass(land: WorldLand, index: Int): Mesh {
+        val z0 = index * CHUNK
+        val out = FloatList(48_000)
+        val feet = Props.footprints(land, z0 - 4, z0 + CHUNK + 4)
+        var gz = z0 + GRASS_STEP / 2
+        while (gz < z0 + CHUNK) {
+            val centre = land.centerAt(gz)
+            var gx = centre - GRASS_REACH
+            while (gx < centre + GRASS_REACH) {
+                tuft(land, gx, gz, centre, feet, out)
+                gx += GRASS_STEP
+            }
+            gz += GRASS_STEP
+        }
+        return out.mesh()
+    }
+
+    private fun tuft(land: WorldLand, cx: Float, cz: Float, centre: Float, feet: FloatArray, out: FloatList) {
+        val seed = grassHash(floor(cx * 8f).toInt(), floor(cz * 8f).toInt())
+        fun r(k: Int) = ((grassHash(seed, k) ushr 7) and 1023) / 1023f
+        val x = cx + (r(0) - 0.5f) * GRASS_STEP * 0.9f
+        val z = cz + (r(1) - 0.5f) * GRASS_STEP * 0.9f
+        // Thick by the path, thinning out away from it.
+        val away = abs(x - centre)
+        if (r(2) > 1f - smoothstep(7f, GRASS_REACH, away) * 0.9f) return
+        val across = land.acrossAt(x, z)
+        if (land.offPath(across) < 0.95f) return
+        val y = land.heightAt(x, z)
+        if (y < WorldLand.WATER + 0.25f) return
+        val dx = (land.heightAt(x + 0.5f, z) - land.heightAt(x - 0.5f, z))
+        val dz = (land.heightAt(x, z + 0.5f) - land.heightAt(x, z - 0.5f))
+        var nx = -dx; var ny = 1f; var nz = -dz
+        val l = sqrt(nx * nx + ny * ny + nz * nz)
+        nx /= l; ny /= l; nz /= l
+        if (ny < 0.8f) return
+        var f = 0
+        while (f < feet.size) {
+            val ex = x - feet[f]; val ez = z - feet[f + 1]; val rr = feet[f + 2] * 0.9f + 0.2f
+            if (ex * ex + ez * ez < rr * rr) return
+            f += 3
+        }
+        val c = land.colorAt(x, z, y, ny)
+        val cr = ((c shr 16) and 0xFF) / 255f
+        val cg = ((c shr 8) and 0xFF) / 255f
+        val cb = (c and 0xFF) / 255f
+        // Only where the ground is green.
+        if (!(cg > cr * 1.05f && cg > cb)) return
+        val tone = 0.86f + 0.24f * r(3)
+        val blades = 3 + (seed and 1)
+        val turn = r(4) * 6.283f
+        for (b in 0 until blades) {
+            val a = turn + b * 6.283f / blades + (r(5 + b) - 0.5f) * 0.6f
+            val ca = kotlin.math.cos(a); val sa = kotlin.math.sin(a)
+            val hgt = (0.18f + 0.3f * r(1 + b) + 0.12f * r(2 + b)) * (1.15f - 0.35f * smoothstep(4f, GRASS_REACH, away))
+            val wide = 0.035f + 0.02f * r(3 + b)
+            val bx = x + ca * 0.05f; val bz = z + sa * 0.05f
+            // Leaning out a little from the tuft's middle.
+            val lean = 0.08f + 0.12f * r(4 + b)
+            val tx = bx + ca * lean; val tz = bz + sa * lean
+            val px = -sa * wide; val pz = ca * wide
+            fun put(vx: Float, vy: Float, vz: Float, h: Float, k: Float) {
+                out.add(vx); out.add(vy); out.add(vz)
+                // Darker at the foot, lighter and a touch yellower at the tip.
+                out.add(cr * k * 1.02f); out.add(cg * k); out.add(cb * k * 0.9f)
+                val mark = GRASS_MARK + GRASS_SPAN * (h / GRASS_TOP).coerceIn(0f, 1f)
+                out.add(nx * mark); out.add(ny * mark); out.add(nz * mark)
+            }
+            put(bx - px, y - 0.03f, bz - pz, 0f, tone * 0.72f)
+            put(bx + px, y - 0.03f, bz + pz, 0f, tone * 0.72f)
+            put(tx, y + hgt, tz, hgt, tone * 1.12f)
+        }
+    }
+
+    private fun floor(v: Float) = kotlin.math.floor(v)
+
+    private fun smoothstep(a: Float, b: Float, v: Float): Float {
+        val t = ((v - a) / (b - a)).coerceIn(0f, 1f)
+        return t * t * (3 - 2 * t)
+    }
+
+    private fun grassHash(a: Int, b: Int): Int {
+        var h = a * 374761393 + b * 668265263
+        h = (h xor (h ushr 13)) * 1274126177
+        return h xor (h ushr 16)
+    }
+
+    /** The grass's normals: [GRASS_MARK] at a blade's foot, up to [GRASS_MARK] + [GRASS_SPAN] at [GRASS_TOP] m high. */
+    const val GRASS_MARK = 0.58f
+    const val GRASS_SPAN = 0.1f
+    const val GRASS_TOP = 0.8f
+
+    /** Between the tufts (m), and how far from the path's middle grass grows. */
+    const val GRASS_STEP = 0.7f
+    const val GRASS_REACH = 16f
+
+    /** The length of the land surface's normals (plants' are 0.2 to 0.5, water's 2, the rest 1). */
+    const val SURFACE_MARK = 0.8f
+
+    /** Whether a normal's [length] marks the land's surface (see [SURFACE_MARK]). */
+    fun isSurface(length: Float) = length > 0.7f && length < 0.9f
 
     /** How many points out the hollows about a point are looked at (see [chunk]). */
     private const val AO_REACH = 3

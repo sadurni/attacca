@@ -1,0 +1,5 @@
+• Attacca World's quality (Settings → Appearance): Basic, High or Maximum. Maximum mirrors the land, the traveller and the animals in the water.
+• In high quality the ground has its own grain near the eye: grass, sand, rock, snow.
+• In High and Maximum, grass grows by the path and sways in the wind.
+• Paint and metal shine in the sun, and the animals' coats catch the light.
+• Film tones in Attacca World can be turned on or off on their own.

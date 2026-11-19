@@ -988,9 +988,26 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     // How Attacca World opens: behind the traveller (the default) or through its eyes.
     SwitchRow(stringResource(R.string.world_eyes_setting), ui.worldEyes, { on -> settings.updateUi { it.copy(worldEyes = on) } })
     Hint(stringResource(R.string.world_eyes_hint))
-    // Attacca World's finer picture (on by default; off for a slower phone or to save battery).
-    SwitchRow(stringResource(R.string.world_fine_setting), ui.worldFine, { on -> settings.updateUi { it.copy(worldFine = on) } })
+    // Attacca World's picture: basic (for a slower phone or to save battery), high (the default) or
+    // maximum (high, and the land mirrored in the water).
+    Text(stringResource(R.string.world_quality), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+    RadioRow(stringResource(R.string.world_quality_basic), !ui.worldFine) { settings.updateUi { it.copy(worldFine = false, worldMax = false) } }
+    RadioRow(stringResource(R.string.world_quality_high), ui.worldFine && !ui.worldMax) { settings.updateUi { it.copy(worldFine = true, worldMax = false) } }
+    RadioRow(stringResource(R.string.world_quality_max), ui.worldFine && ui.worldMax) { settings.updateUi { it.copy(worldFine = true, worldMax = true) } }
     Hint(stringResource(R.string.world_fine_hint))
+    Hint(stringResource(R.string.world_max_hint))
+    // How World has run on this phone in each quality (measured while it shows).
+    val measuredContext = LocalContext.current
+    val measured = remember(ui.worldFine, ui.worldMax) { com.sadurni.attacca.ui.world.WorldQualityAdvice.measured(measuredContext) }
+    if (measured.isNotEmpty()) {
+        val names = mapOf("basic" to stringResource(R.string.world_quality_basic), "high" to stringResource(R.string.world_quality_high), "max" to stringResource(R.string.world_quality_max))
+        Hint(stringResource(R.string.world_measured, measured.joinToString(" · ") { (l, fps, cap) -> "${names[l]}: $fps/$cap" }))
+    }
+    // Its film tones, a matter of taste (only with high quality on).
+    if (ui.worldFine) {
+        SwitchRow(stringResource(R.string.world_film_setting), ui.worldFilm, { on -> settings.updateUi { it.copy(worldFilm = on) } })
+        Hint(stringResource(R.string.world_film_hint))
+    }
 }
 
 /** Base folder of the music, which makes exported lists portable between devices. */

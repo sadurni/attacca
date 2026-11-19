@@ -37,8 +37,11 @@ class Pose(n: Int) {
 class RigBuilder {
     private val bones = ArrayList<Bone>()
 
+    /** What the bones are made of, unless a part says otherwise (see [made]). */
+    var material = Material.MATTE
+
     fun bone(parent: Int, px: Float, py: Float, pz: Float, alpha: Float = 1f, build: FloatList.() -> Unit): Int {
-        bones += Bone(FloatList(4096).apply(build).mesh(), parent, px, py, pz, alpha)
+        bones += Bone(FloatList(4096).apply { material = this@RigBuilder.material }.apply(build).mesh(), parent, px, py, pz, alpha)
         return bones.size - 1
     }
 

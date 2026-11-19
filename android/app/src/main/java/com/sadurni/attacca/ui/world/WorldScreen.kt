@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,6 +77,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sadurni.attacca.R
 import com.sadurni.attacca.app
+import com.sadurni.attacca.ui.theme.LocalAccent
 import com.sadurni.attacca.diorama.Diorama
 import com.sadurni.attacca.diorama.SongWave
 import com.sadurni.attacca.ui.PlayerViewModel
@@ -217,6 +219,52 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         if (full && split) com.sadurni.attacca.ui.orama.ProgressLine(songProgress, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp))
         // Over the whole screen with nothing else on it: the song's name as it starts, fading in and out (one, in the middle, when split).
         com.sadurni.attacca.ui.orama.SongIntro(id, now.title, now.artist, full, now.album)
+        // How World runs here, measured while it shows (not split): a lighter or a richer quality
+        // suggested, once.
+        androidx.compose.runtime.SideEffect { feed.gauge.off = split }
+        var advice by remember { mutableStateOf<WorldQualityAdvice.Advice?>(null) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(1000)
+                val m = feed.gauge.result ?: continue
+                feed.gauge.result = null
+                WorldQualityAdvice.take(context, m)?.let { advice = it }
+            }
+        }
+        advice?.let { a ->
+            QualityAdviceCard(a, Modifier.align(Alignment.BottomCenter).padding(bottom = if (full) 40.dp else 120.dp, start = 16.dp, end = 16.dp), onTake = {
+                val settings = context.app.settings
+                settings.updateUi { it.copy(worldFine = a.to != "basic", worldMax = a.to == "max") }
+                advice = null
+            }, onKeep = { advice = null })
+        }
+    }
+}
+
+/** World's suggestion of a lighter (or richer) quality, from how it runs here: take it or keep it. */
+@Composable
+private fun QualityAdviceCard(a: WorldQualityAdvice.Advice, modifier: Modifier, onTake: () -> Unit, onKeep: () -> Unit) {
+    val text = when (a.to) {
+        "max" -> stringResource(R.string.world_advice_max, a.fps, a.cap)
+        "high" -> stringResource(R.string.world_advice_high, a.fps, a.cap)
+        else -> stringResource(R.string.world_advice_basic, a.fps, a.cap)
+    }
+    val take = when (a.to) {
+        "max" -> R.string.world_quality_max
+        "high" -> R.string.world_quality_high
+        else -> R.string.world_quality_basic
+    }
+    androidx.compose.foundation.layout.Column(
+        modifier.widthIn(max = 420.dp)
+            .background(Color(0xE6202020), androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 4.dp),
+    ) {
+        Text(text, color = Color.White, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
+        Text(stringResource(R.string.world_advice_where), color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, end = 8.dp))
+        androidx.compose.foundation.layout.Row(Modifier.align(Alignment.End)) {
+            androidx.compose.material3.TextButton(onKeep) { Text(stringResource(R.string.world_advice_keep), color = Color.White.copy(alpha = 0.8f)) }
+            androidx.compose.material3.TextButton(onTake) { Text(stringResource(take), color = LocalAccent.current) }
+        }
     }
 }
 
@@ -376,14 +424,14 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
         var surface by remember { mutableStateOf<GLSurfaceView?>(null) }
         // "World in high quality", as set (read by the renderer each frame).
         val ui by androidx.compose.ui.platform.LocalContext.current.app.settings.ui.collectAsState()
-        androidx.compose.runtime.SideEffect { feed.fine = ui.worldFine }
+        androidx.compose.runtime.SideEffect { feed.fine = ui.worldFine; feed.film = ui.worldFilm; feed.mirror = ui.worldMax }
         AndroidView(
             factory = { c ->
                 GLSurfaceView(c).apply {
                     setEGLContextClientVersion(3)
                     setEGLConfigChooser(8, 8, 8, 8, 16, 0)
                     // (Measured, with the logs kept, only the whole World, not Now playing's strip.)
-                    setRenderer(WorldRenderer(feed, camera, if (onTap == null) WorldBench(c.applicationContext) else null))
+                    setRenderer(WorldRenderer(feed, camera, if (onTap == null) WorldBench(c.applicationContext) else null, if (onTap == null) feed.gauge else null))
                     renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
                     surface = this
                 }
@@ -397,6 +445,7 @@ private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, ful
         // The festive sky over it (not in Now playing's strip).
         if (onTap == null) FestiveSky(feed)
         LaunchedEffect(surface, fps60) {
+            feed.cap = if (fps60) 60 else 30
             val step = if (fps60) 16_000_000L else 32_000_000L
             var last = 0L
             while (true) {
