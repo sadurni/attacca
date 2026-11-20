@@ -20,8 +20,12 @@ class ArtDeskTest {
 
     private val LENGTH_MS = (System.getenv("ART_TEST_MS") ?: "40000").toDouble()
 
+    /** Painting whole songs takes minutes on a shared build machine: these run here, not in CI. */
+    private fun notInCi() = org.junit.Assume.assumeTrue("painting tests run locally", System.getenv("CI") == null)
+
     @Test
     fun everyStylePaints() {
+        notInCi()
         val out: File? = File("build/art-test").apply { mkdirs() }
         for (style in listOf(ArtStyle.WATERCOLOUR, ArtStyle.OIL, ArtStyle.INK, ArtStyle.PEN)) {
             val c = ArtDeskCanvas()

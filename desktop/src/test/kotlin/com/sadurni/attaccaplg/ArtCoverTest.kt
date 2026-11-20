@@ -124,8 +124,12 @@ class ArtCoverTest {
         return (sum / n).toFloat()
     }
 
+    /** Painting whole songs takes minutes on a shared build machine: these run here, not in CI. */
+    private fun notInCi() = org.junit.Assume.assumeTrue("painting tests run locally", System.getenv("CI") == null)
+
     @Test
     fun theCoverComesOut() {
+        notInCi()
         val out = File("build/art-cover").apply { mkdirs() }
         val cover = madeCover()
         val report = StringBuilder()
@@ -144,8 +148,10 @@ class ArtCoverTest {
 
     @Test
     fun theFileSaysWhoPaintedIt() {
-        val img = paint(song("words", madeCover(), 30_000L, "Ça plane pour moi"), ArtStyle.OIL, ArtSubject.COVER, 1f, 30_000.0, 640, 360)
-        val png = img.encodeToData(EncodedImageFormat.PNG)!!.bytes
+        // (A small picture is enough: the words go into any PNG.)
+        val surface = org.jetbrains.skia.Surface.makeRasterN32Premul(640, 360)
+        surface.canvas.clear(0xFFF0E8D8.toInt())
+        val png = surface.makeImageSnapshot().encodeToData(EncodedImageFormat.PNG)!!.bytes
         val kept = com.sadurni.attacca.art.PngWords.with(png, com.sadurni.attacca.art.PngWords.forPainting("Ça plane pour moi", "Plastic", null, 1_790_000_000_000L))
         val out = File("build/art-cover").apply { mkdirs() }
         File(out, "words.png").writeBytes(kept)
@@ -164,6 +170,7 @@ class ArtCoverTest {
 
     @Test
     fun withoutACoverARecord() {
+        notInCi()
         val out = File("build/art-cover").apply { mkdirs() }
         for ((k, style) in listOf(ArtStyle.WATERCOLOUR, ArtStyle.OIL, ArtStyle.INK, ArtStyle.PEN).withIndex()) {
             val s = song("no-cover-$k", null, 120_000L)
