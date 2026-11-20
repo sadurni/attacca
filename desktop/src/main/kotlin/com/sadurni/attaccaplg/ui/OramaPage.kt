@@ -263,6 +263,10 @@ fun OramaPage(state: AppState, embedded: Boolean = false) {
                     IconButton(onClick = { OramaShared.split.value = true; state.page = Page.WORLD }) {
                         Icon(PlayerIcons.VerticalSplit, tr("O'rama and Attacca World together", "O'rama y Attacca World a la vez"), tint = Color.White)
                     }
+                    // Art-tacca: the song painting a picture.
+                    IconButton(onClick = { OramaShared.split.value = false; state.page = Page.ART }) {
+                        Icon(PlayerIcons.Brush, "Art-tacca", tint = Color.White)
+                    }
                     // Only on festive days: their look on or off.
                     FestiveDesk.period?.let { period ->
                         val name = FestiveDesk.name(period.festivity)

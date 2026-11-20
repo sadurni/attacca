@@ -430,7 +430,7 @@ class AnalysisManager(
     private fun leadOf(index: Int, candidates: List<TrimCandidate>, s: com.sadurni.attacca.settings.TrimSettings): Long {
         val analysis = candidates.getOrNull(index)?.analysis ?: return 0L
         val start = SilenceTrimmer.trimFor(index, candidates, s).startMs ?: 0L
-        return (analysis.audioStartMs - start).coerceAtLeast(0L)
+        return (analysis.musicStartMs - start).coerceAtLeast(0L)
     }
 
     /**
@@ -456,7 +456,7 @@ class AnalysisManager(
                     silence.endMs ?: analysis.audioEndMs,
                     nextAnalysis?.waveform ?: FloatArray(0),
                     nextAnalysis?.durationMs ?: 0L,
-                    nextAnalysis?.audioStartMs ?: 0L,
+                    nextAnalysis?.musicStartMs ?: 0L,
                 ), nextLeadMs)
             }
         }

@@ -54,6 +54,29 @@ fun main(args: Array<String>) {
         state.page = Page.ORAMA
         Thread.sleep(800)
         shot("0-orama")
+        // Art-tacca: alone and split three ways (frames apart, its painter on its own thread).
+        for ((name, partner) in listOf("0-art" to null, "0-art-both" to "BOTH", "0-art-world" to "WORLD", "0-art-orama" to "ORAMA")) {
+            com.sadurni.attaccaplg.ui.art.ArtDesk.partner.value = partner
+            state.page = Page.ART
+            Thread.sleep(400)
+            val scene = ImageComposeScene(1240, 820, Density(1f)) { AppTheme(state.theme, state.player.current?.path, state.coverAccent) { AppWindow(state) } }
+            var t = 0L
+            repeat(40) {
+                scene.render(t)
+                Thread.sleep(60)
+                t += 50_000_000L
+            }
+            val image = scene.render(t)
+            File(out, "$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+            scene.close()
+            println("$name.png")
+        }
+        com.sadurni.attaccaplg.ui.art.ArtDesk.partner.value = null
+        // SNAP_ONLY=art: only these (the rest takes long on a big library).
+        if (System.getenv("SNAP_ONLY") == "art") {
+            state.close()
+            System.exit(0)
+        }
         run {
             val scene = ImageComposeScene(420, 124, Density(1f)) { AppTheme(state.theme, state.player.current?.path, state.coverAccent) { MiniPlayer(state) } }
             scene.render(0)

@@ -1,5 +1,7 @@
 package com.sadurni.attacca.ui.world
 
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -33,6 +35,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.Visibility
@@ -93,7 +96,7 @@ import kotlin.math.sqrt
  * own, and a finger (turn) or two (closer or further, higher or lower) move it for a while.
  */
 @Composable
-fun WorldScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenOrama: () -> Unit = {}, onOpenQueue: () -> Unit) {
+fun WorldScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenOrama: () -> Unit = {}, onOpenArt: (() -> Unit)? = null, onOpenQueue: () -> Unit) {
     // Back over the whole screen brings the controls back first.
     var full by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     // While it is open the strip in Now playing rests.
@@ -119,12 +122,12 @@ fun WorldScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenOrama: 
             }
             onDispose { }
         }
-        WorldContent(viewModel, full, { full = it }, onDismiss, onOpenOrama, onOpenQueue)
+        WorldContent(viewModel, full, { full = it }, onDismiss, onOpenOrama, onOpenQueue, onOpenArt)
     }
 }
 
 @Composable
-private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boolean) -> Unit, onDismiss: () -> Unit, onOpenOrama: () -> Unit, onOpenQueue: () -> Unit) {
+private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boolean) -> Unit, onDismiss: () -> Unit, onOpenOrama: () -> Unit, onOpenQueue: () -> Unit, onOpenArt: (() -> Unit)? = null) {
     val context = LocalContext.current
     val app = context.app
     val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
@@ -211,7 +214,7 @@ private fun WorldContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         }
       }
         if (!full) {
-            WorldOverlay(viewModel, now, position, analysis, clipEnd, nextAnalysis, id, coverImage, moodLine, chosen, manual, camera, fps60, { fps60 = it; prefs.edit().putBoolean("fps60", it).apply() }, onFull, onDismiss, onOpenOrama, onOpenQueue, split)
+            WorldOverlay(viewModel, now, position, analysis, clipEnd, nextAnalysis, id, coverImage, moodLine, chosen, manual, camera, fps60, { fps60 = it; prefs.edit().putBoolean("fps60", it).apply() }, onFull, onDismiss, onOpenOrama, onOpenQueue, split, onOpenArt)
         }
         // Over the whole screen, unsplit: the same band along the bottom, filling as the song goes on;
         // split, a thin line in the accent colour along the very bottom.
@@ -419,12 +422,14 @@ private class Sequence {
 
 /** Attacca World's land: the GL view and the camera's gestures. */
 @Composable
-private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, full: Boolean, onFull: (Boolean) -> Unit, onTap: (() -> Unit)? = null) {
+private fun WorldScene(feed: WorldFeed, camera: WorldCamera, fps60: Boolean, full: Boolean, onFull: (Boolean) -> Unit, onTap: (() -> Unit)? = null, light: Boolean = false) {
     Box(Modifier.fillMaxSize()) {
         var surface by remember { mutableStateOf<GLSurfaceView?>(null) }
         // "World in high quality", as set (read by the renderer each frame).
         val ui by androidx.compose.ui.platform.LocalContext.current.app.settings.ui.collectAsState()
-        androidx.compose.runtime.SideEffect { feed.fine = ui.worldFine; feed.film = ui.worldFilm; feed.mirror = ui.worldMax }
+        // (Sharing the screen with Art-tacca it goes without the mirror: the costliest part, and two
+        // pictures drawn at once would ask too much of the phone.)
+        androidx.compose.runtime.SideEffect { feed.fine = ui.worldFine; feed.film = ui.worldFilm; feed.mirror = ui.worldMax && !light }
         AndroidView(
             factory = { c ->
                 GLSurfaceView(c).apply {
@@ -541,6 +546,7 @@ private fun WorldOverlay(
     onOpenOrama: () -> Unit,
     onOpenQueue: () -> Unit,
     split: Boolean = false,
+    onOpenArt: (() -> Unit)? = null,
 ) {
     // Through the traveller's own eyes (a first try).
     var eyes by remember { mutableStateOf(camera.firstPerson) }
@@ -599,8 +605,9 @@ private fun WorldOverlay(
                 fun used() {
                     usedAt = System.nanoTime()
                 }
-                Box(Modifier.padding(top = 4.dp).offset { IntOffset((panelWidth * tucked).toInt(), 0) }.onSizeChanged { panelWidth = it.width }) {
-                    Column(Modifier.padding(end = 8.dp).background(panel, RoundedCornerShape(22.dp)).padding(vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.runtime.SideEffect { com.sadurni.attacca.ui.orama.OramaShared.sideShownPx.intValue = (panelWidth * (1f - tucked)).toInt() }
+                Box(Modifier.padding(top = 4.dp).offset { IntOffset((panelWidth * tucked).toInt(), 0) }.onSizeChanged { panelWidth = it.width }.onGloballyPositioned { com.sadurni.attacca.ui.orama.OramaShared.sideBottomPx.intValue = it.boundsInWindow().bottom.toInt() }) {
+                    com.sadurni.attacca.ui.orama.FitColumns(Modifier.padding(end = 8.dp).background(panel, RoundedCornerShape(22.dp)).padding(vertical = 2.dp)) {
                         IconButton(modifier = button, onClick = onDismiss) { Icon(Icons.Rounded.Close, stringResource(R.string.cover_close), tint = Color.White) }
                         IconButton(modifier = button, onClick = { used(); onFull(true) }) {
                             Icon(androidx.compose.material.icons.Icons.Rounded.Fullscreen, stringResource(R.string.orama_full_screen), tint = Color.White)
@@ -622,6 +629,12 @@ private fun WorldOverlay(
                         // O'rama and Attacca World at once, the screen split in two.
                         IconButton(modifier = button, onClick = { used(); com.sadurni.attacca.ui.orama.OramaShared.split.value = !com.sadurni.attacca.ui.orama.OramaShared.split.value }) {
                             Icon(androidx.compose.material.icons.Icons.Rounded.VerticalSplit, stringResource(R.string.world_split), tint = Color.White)
+                        }
+                        // The song painting a picture.
+                        onOpenArt?.let { art ->
+                            IconButton(modifier = button, onClick = art) {
+                                Icon(androidx.compose.material.icons.Icons.Rounded.Brush, stringResource(R.string.art_name), tint = Color.White)
+                            }
                         }
                         // Through the traveller's own eyes, or the camera behind.
                         IconButton(modifier = button, onClick = { used(); eyes = !eyes; camera.firstPerson = eyes }) {
@@ -645,16 +658,18 @@ private fun WorldOverlay(
             // The small player floats: across the bottom when upright; when wide, a compact block in the corner.
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
                 val wide = (maxWidth > maxHeight || split) && !wideSplit
-                val barModifier = if (wideSplit) {
-                    Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.safeDrawing).padding(bottom = 12.dp).fillMaxWidth(0.62f)
+                // Wide beside O'rama: one low line along the bottom.
+                val line = wideSplit
+                val barModifier = if (line) {
+                    Modifier.align(Alignment.BottomEnd).then(com.sadurni.attacca.ui.orama.OramaShared.lineBar(maxHeight))
                 } else if (split) {
                     Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = if (maxWidth > maxHeight) 64.dp else 10.dp, bottom = 8.dp).width(236.dp)
                 } else if (wide) {
-                    Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = 76.dp, bottom = 14.dp).width(264.dp)
+                    Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = com.sadurni.attacca.ui.orama.OramaShared.barEnd(), bottom = 14.dp).width(264.dp)
                 } else {
                     Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 20.dp, vertical = 14.dp).fillMaxWidth()
                 }
-                com.sadurni.attacca.ui.orama.OramaBar(viewModel, now.isPlaying, position, analysis, now.clipStartMs, clipEnd, nextAnalysis, now.nextTitle, onOpenQueue, wide, barModifier)
+                com.sadurni.attacca.ui.orama.OramaBar(viewModel, now.isPlaying, position, analysis, now.clipStartMs, clipEnd, nextAnalysis, now.nextTitle, onOpenQueue, wide, barModifier, line = line)
             }
         }
     }
@@ -673,6 +688,16 @@ internal fun WorldStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: 
     Box(modifier.background(Color.Black)) {
         if (!worldOpen) WorldScene(feed, camera, false, false, {}, onTap = onOpen)
     }
+}
+
+/** Attacca World in a part of another screen (beside Art-tacca): its land and camera, without its own buttons. */
+@Composable
+internal fun WorldPane(viewModel: PlayerViewModel, full: Boolean, onFull: (Boolean) -> Unit) {
+    val context = LocalContext.current
+    val feed = rememberWorldFeed(viewModel)
+    val camera = remember { WorldCamera().also { it.firstPerson = context.app.settings.ui.value.worldEyes } }
+    val fps60 = remember(com.sadurni.attacca.ui.orama.OramaShared.fpsChanged.intValue) { context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE).getBoolean("fps60", false) }
+    WorldScene(feed, camera, fps60, full, onFull, light = true)
 }
 
 /** O'rama's festive sky (and the new year's show with its greeting) laid over Attacca World. */

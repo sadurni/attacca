@@ -30,6 +30,11 @@ plays them so one song flows into the next.
   stations and villages come by, and someone waits along the way to take over. On the phone (also
   beside O'rama, the screen split in two) and on the desktop, behind the
   traveller or through its own eyes.
+- 🖌️ **Art-tacca: the song paints a picture.** On the phone and on the desktop, a painting made as
+  the song plays (in watercolour, oil, ink or ballpoint), from its key and chords, its cover, its
+  beats and its voice; alone or beside O'rama and World (also as the phone's wallpaper). Each
+  finished painting can be kept in a drawer (Pictures/Attacca) to look through later. Or it paints
+  the album cover itself, stroke by stroke, in the chosen style (a record for a song without one).
 - 🎭 **Moods and sound families, found by ear.** A sound-recognition network runs on the phone
   itself and groups your music by how it sounds: lists by mood and family, without anyone
   else's tags.
@@ -53,7 +58,7 @@ It comes in four parts that measure the same way and share what they measured:
 | Part | What it is | Where |
 |---|---|---|
 | **Attacca** | Music player for Android: chained lists, its own sound processing, themes, Android Auto, and O'rama (the song as a moving landscape). | [`android/`](android) |
-| **Attacca Desktop** | For the PC (Windows, Linux, macOS): plays music as the phone does (crossfades, sound processing), measures a music library, makes chained lists, exports them for the phone and for players, shows O'rama. Window and command line. | [`desktop/`](desktop) |
+| **Attacca Desktop** | For the PC (Windows, Linux, macOS): plays music as the phone does (crossfades, sound processing), measures a music library, makes chained lists, exports them for the phone and for players, shows O'rama, Attacca World and Art-tacca. Window and command line. | [`desktop/`](desktop) |
 | **Attacca Web** | Chained lists in the browser from a library exported by Attacca Desktop. One HTML file, nothing to install. | [`web/`](web) |
 | **Attacca for Rockbox** | Plugin for Rockbox players: chained lists on the player itself. | [`rockbox/`](rockbox) |
 

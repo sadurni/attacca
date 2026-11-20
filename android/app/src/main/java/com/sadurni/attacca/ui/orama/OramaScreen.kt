@@ -1,5 +1,7 @@
 package com.sadurni.attacca.ui.orama
 
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.layout.boundsInWindow
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.rounded.Celebration
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -214,12 +217,12 @@ fun OramaStrip(viewModel: PlayerViewModel, modifier: Modifier, onOpen: () -> Uni
 
 /** O'rama's landscape alone (for half of Attacca World's split screen). */
 @Composable
-internal fun OramaScene(viewModel: PlayerViewModel, full: Boolean = false, onFull: (Boolean) -> Unit = {}) {
-    OramaContent(viewModel, full = full, onFull = onFull, onDismiss = {}, onOpenQueue = {}, embedded = true)
+internal fun OramaScene(viewModel: PlayerViewModel, full: Boolean = false, onFull: (Boolean) -> Unit = {}, lift: androidx.compose.ui.unit.Dp? = null) {
+    OramaContent(viewModel, full = full, onFull = onFull, onDismiss = {}, onOpenQueue = {}, embedded = true, embeddedLift = lift)
 }
 
 @Composable
-fun OramaScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenWorld: (() -> Unit)? = null, onOpenQueue: () -> Unit) {
+fun OramaScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenWorld: (() -> Unit)? = null, onOpenArt: (() -> Unit)? = null, onOpenQueue: () -> Unit) {
     // Back over the whole screen brings the controls back first.
     var full by rememberSaveable { mutableStateOf(false) }
     Dialog(onDismissRequest = { if (full) full = false else onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -241,12 +244,12 @@ fun OramaScreen(viewModel: PlayerViewModel, onDismiss: () -> Unit, onOpenWorld: 
             }
             onDispose { }
         }
-        OramaContent(viewModel, full, { full = it }, onDismiss, onOpenQueue, onOpenWorld)
+        OramaContent(viewModel, full, { full = it }, onDismiss, onOpenQueue, onOpenWorld, onOpenArt = onOpenArt)
     }
 }
 
 @Composable
-private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boolean) -> Unit, onDismiss: () -> Unit, onOpenQueue: () -> Unit, onOpenWorld: (() -> Unit)? = null, embedded: Boolean = false) {
+private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boolean) -> Unit, onDismiss: () -> Unit, onOpenQueue: () -> Unit, onOpenWorld: (() -> Unit)? = null, embedded: Boolean = false, onOpenArt: (() -> Unit)? = null, embeddedLift: androidx.compose.ui.unit.Dp? = null) {
     val context = LocalContext.current
     val app = context.app
     val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
@@ -285,7 +288,8 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         value = coverBitmap?.let { b -> withContext(Dispatchers.Default) { runCatching { Bitmap.createScaledBitmap(b, 160, 160, true).asImageBitmap() }.getOrNull() } }
     }
     val prefs = remember { context.getSharedPreferences("orama", android.content.Context.MODE_PRIVATE) }
-    var fps60 by remember { mutableStateOf(prefs.getBoolean("fps60", false)) }
+    // (Read again when Art-tacca beside it changes the frame rate.)
+    var fps60 by remember(OramaShared.fpsChanged.intValue) { mutableStateOf(prefs.getBoolean("fps60", false)) }
     var frame by remember { mutableLongStateOf(0L) }
     LaunchedEffect(fps60) {
         // Paced to 60 or 30 frames a second, whatever the screen's own rate.
@@ -330,10 +334,14 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
         val wide = maxWidth > maxHeight
         // In half of the split screen, upright, World's small player floats over this half's foot.
         val splitLift = with(androidx.compose.ui.platform.LocalDensity.current) { 104.dp.toPx() }
-        // Side by side, the stretched player floats across the bottom in the middle: the land over it.
-        val wideSplitLift = with(androidx.compose.ui.platform.LocalDensity.current) { 132.dp.toPx() }
+        // Side by side, the player lies in one low line across the bottom: the land over it.
+        val wideSplitLift = with(androidx.compose.ui.platform.LocalDensity.current) { (LINE_BAR_HEIGHT + 16.dp).toPx() }
+        val ownLift = with(androidx.compose.ui.platform.LocalDensity.current) { embeddedLift?.toPx() }
         val lift by animateFloatAsState(
             when {
+                // On the whole screen (no player over it) the land goes down to the foot again: more sky.
+                embedded && full -> 0f
+                embedded && ownLift != null -> ownLift
                 embedded && !wide -> splitLift
                 embedded -> wideSplitLift
                 !full && !wide && barTop > 0f -> (canvasHeight - barTop) * 0.85f
@@ -424,12 +432,14 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                 fun used() {
                     usedAt = System.nanoTime()
                 }
+                androidx.compose.runtime.SideEffect { OramaShared.sideShownPx.intValue = (panelWidth * (1f - tucked)).toInt() }
                 Box(
                     Modifier.padding(top = 4.dp)
                         .offset { IntOffset((panelWidth * tucked).toInt(), 0) }
-                        .onSizeChanged { panelWidth = it.width },
+                        .onSizeChanged { panelWidth = it.width }
+                        .onGloballyPositioned { com.sadurni.attacca.ui.orama.OramaShared.sideBottomPx.intValue = it.boundsInWindow().bottom.toInt() },
                 ) {
-                    Column(Modifier.padding(end = 8.dp).background(PANEL, RoundedCornerShape(22.dp)).padding(vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    FitColumns(Modifier.padding(end = 8.dp).background(PANEL, RoundedCornerShape(22.dp)).padding(vertical = 2.dp)) {
                         IconButton(onClick = onDismiss) {
                             Icon(Icons.Rounded.Close, stringResource(R.string.cover_close), tint = Color.White)
                         }
@@ -454,6 +464,12 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
                             // O'rama and Attacca World at once, the screen split in two.
                             IconButton(onClick = { OramaShared.split.value = true; open3d() }) {
                                 Icon(androidx.compose.material.icons.Icons.Rounded.VerticalSplit, stringResource(R.string.world_split), tint = Color.White)
+                            }
+                        }
+                        // The song painting a picture.
+                        onOpenArt?.let { art ->
+                            IconButton(onClick = art) {
+                                Icon(androidx.compose.material.icons.Icons.Rounded.Brush, stringResource(R.string.art_name), tint = Color.White)
                             }
                         }
                         // Only on festive days: their look on or off.
@@ -492,7 +508,7 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
             // The small player floats: across the bottom when upright; when wide, a compact block in
             // the bottom right corner, left of the side buttons (what comes next, the time and map, the buttons).
             val barModifier = if (wide) {
-                Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = 76.dp, bottom = 14.dp).width(264.dp)
+                Modifier.align(Alignment.BottomEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = com.sadurni.attacca.ui.orama.OramaShared.barEnd(), bottom = 14.dp).width(264.dp)
             } else {
                 Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 20.dp, vertical = 14.dp).fillMaxWidth()
             }
@@ -507,6 +523,32 @@ private fun OramaContent(viewModel: PlayerViewModel, full: Boolean, onFull: (Boo
 
 /** Under the texts and buttons over the landscape: dark and see-through, like the small player. */
 internal val PANEL = Color(0xFF15151A).copy(alpha = 0.55f)
+
+/**
+ * The side buttons, one under the other; when they do not fit the height there is (a phone on its
+ * side), in two columns (or more) within the same bar, filled top to bottom.
+ */
+@Composable
+internal fun FitColumns(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content, modifier) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val placeables = measurables.map { it.measure(loose) }
+        if (placeables.isEmpty()) return@Layout layout(0, 0) {}
+        val cellW = placeables.maxOf { it.width }
+        val cellH = placeables.maxOf { it.height }.coerceAtLeast(1)
+        val room = if (constraints.hasBoundedHeight) constraints.maxHeight else Int.MAX_VALUE
+        val perColumn = (room / cellH).coerceAtLeast(1)
+        val columns = (placeables.size + perColumn - 1) / perColumn
+        val rows = (placeables.size + columns - 1) / columns
+        layout(columns * cellW, rows * cellH) {
+            placeables.forEachIndexed { i, p ->
+                val col = i / rows
+                val row = i % rows
+                p.place(col * cellW + (cellW - p.width) / 2, row * cellH + (cellH - p.height) / 2)
+            }
+        }
+    }
+}
 
 /**
  * The small player: the time, what comes next (a tap opens the list), previous, play / pause,
@@ -525,6 +567,7 @@ internal fun OramaBar(
     onOpenQueue: () -> Unit,
     compact: Boolean,
     modifier: Modifier,
+    line: Boolean = false,
 ) {
     val accent = com.sadurni.attacca.ui.theme.LocalAccent.current
     val rest = Color.White.copy(alpha = 0.4f)
@@ -580,7 +623,15 @@ internal fun OramaBar(
         }
     }
     Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xFF15151A).copy(alpha = 0.7f), contentColor = Color.White) {
-        if (compact) {
+        if (line) {
+            // All in one low line: the buttons, the time, the map, what comes next.
+            Row(Modifier.fillMaxWidth().height(LINE_BAR_HEIGHT).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                buttons()
+                Box(Modifier.padding(start = 4.dp)) { time() }
+                map(Modifier.weight(1f).padding(start = 10.dp, end = 8.dp))
+                upNext(Modifier.widthIn(max = 220.dp).padding(end = 6.dp))
+            }
+        } else if (compact) {
             Column(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
                 upNext(Modifier.padding(start = 4.dp))
                 Row(Modifier.fillMaxWidth().padding(start = 10.dp, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -773,6 +824,36 @@ internal fun lookOf(context: android.content.Context, mediaId: String?, cover: B
  */
 object OramaShared {
     val diorama = Diorama()
+
+    /** Bumped when the frame rate is changed from Art-tacca, for the views beside it to read it again. */
+    val fpsChanged = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** How wide the side buttons show now (pixels): the small player keeps clear of them. */
+    val sideShownPx = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** Where the side buttons end, down the window (pixels): the small player in one line goes under them when it can. */
+    val sideBottomPx = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /**
+     * The small player in one low line along the bottom (wide split screens), in a box [height] tall
+     * filling the window: from [start] to under the side buttons when there is room below them,
+     * else to their left.
+     */
+    @Composable
+    fun lineBar(height: androidx.compose.ui.unit.Dp, start: androidx.compose.ui.unit.Dp = 16.dp): Modifier {
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val bottom = with(density) { sideBottomPx.intValue.toDp() }
+        val inset = with(density) { WindowInsets.safeDrawing.getBottom(this).toDp() }
+        val under = bottom > 0.dp && bottom + 8.dp < height - inset - LINE_BAR_HEIGHT - 6.dp
+        return Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(start = start, end = if (under) 8.dp else barEnd(), bottom = 6.dp).fillMaxWidth()
+    }
+
+    /** Where the small player ends on the right when wide: left of the side buttons as they show. */
+    @Composable
+    fun barEnd(): androidx.compose.ui.unit.Dp {
+        val shown = with(androidx.compose.ui.platform.LocalDensity.current) { sideShownPx.intValue.toDp() }
+        return maxOf(76.dp, shown + 16.dp)
+    }
 
     /** Attacca World's whole screen is open (the strip in Now playing rests meanwhile). */
     val worldOpen = androidx.compose.runtime.mutableStateOf(false)
@@ -974,3 +1055,6 @@ internal fun ProgressLine(progress: Float, modifier: Modifier) {
         drawRect(accent.copy(alpha = 0.8f), size = androidx.compose.ui.geometry.Size(size.width * progress.coerceIn(0f, 1f), size.height))
     }
 }
+
+/** The small player's height in one line (wide split screens). */
+internal val LINE_BAR_HEIGHT = 48.dp

@@ -491,12 +491,15 @@ class LimiterProcessor(private val engine: DspEngine) : FloatAudioProcessor(engi
         val time = engine.presentationUs
         engine.tap.push(buffer, frames, time)
         engine.meter.push(buffer, frames, channels, rate, if (time == androidx.media3.common.C.TIME_UNSET) com.sadurni.attacca.diorama.LevelMeter.UNKNOWN else time)
+        // The notes, only while Art-tacca listens (a quarter-rate copy; worked out when asked).
+        if (engine.notesWanted) engine.notes.push(buffer, frames, channels, rate, if (time == androidx.media3.common.C.TIME_UNSET) com.sadurni.attacca.art.NoteMeter.LevelMeterUnknown else time)
     }
 
     override fun resetState() {
         limiter?.clear()
         engine.tap.clear()
         engine.meter.clear()
+        engine.notes.clear()
     }
 
     override fun tailFrameCount(): Int = limiter?.latencyFrames ?: 0

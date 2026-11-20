@@ -61,10 +61,12 @@ object SilenceTrimmer {
         val next = queue.getOrNull(index + 1)
 
         var start: Long? = null
-        if (settings.trimStart && analysis.leadingSilenceMs >= settings.minSilenceMs &&
+        // (A faint lead-in counts as silence: the music coming in after it is where it starts.)
+        val musicStart = analysis.musicStartMs
+        if (settings.trimStart && musicStart >= settings.minSilenceMs &&
             !flowsAcross(previous, current, settings, fromPrevious = true)
         ) {
-            start = (analysis.audioStartMs - settings.marginMs).coerceAtLeast(0)
+            start = (musicStart - settings.marginMs).coerceAtLeast(0)
         }
 
         var end: Long? = null
@@ -94,7 +96,7 @@ object SilenceTrimmer {
         val follows = if (fromPrevious) current.followsPrevious else neighbour.followsPrevious
         if (follows == false || neighbour.album != current.album) return false
         val other = neighbour.analysis ?: return false
-        val neighbourSilence = if (fromPrevious) other.trailingSilenceMs else other.leadingSilenceMs
+        val neighbourSilence = if (fromPrevious) other.trailingSilenceMs else other.musicStartMs
         return neighbourSilence < settings.minSilenceMs
     }
 

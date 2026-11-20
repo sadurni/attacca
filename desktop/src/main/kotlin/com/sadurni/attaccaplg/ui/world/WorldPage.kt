@@ -90,7 +90,7 @@ import java.nio.ByteOrder
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun WorldPage(state: AppState) {
+fun WorldPage(state: AppState, embedded: Boolean = false) {
     val p = state.player
     val item = p.queue.getOrNull(p.index)
     val nextItem = when {
@@ -131,7 +131,9 @@ fun WorldPage(state: AppState) {
     }
     seq.length = (cutEnd - p.cutStartMs).toDouble().coerceAtLeast(0.0)
     val chosen by com.sadurni.attaccaplg.ui.OramaShared.chosenWorld
-    val split by com.sadurni.attaccaplg.ui.OramaShared.split
+    val splitShared by com.sadurni.attaccaplg.ui.OramaShared.split
+    // Inside Art-tacca's split: World alone, without its own buttons, player or progress.
+    val split = splitShared && !embedded
     LaunchedEffect(item?.path, look, cutEnd, item?.waveform, nextLookRaw, chosen) {
         // Until the song's own look is known the land goes on as it was (never a world in between).
         if (look == null && item != null) return@LaunchedEffect
@@ -303,12 +305,13 @@ fun WorldPage(state: AppState) {
         // Over the whole screen the song's progress: a band along the bottom filling with the accent;
         // split, a thin line in the accent colour along the very bottom.
         val songProgress = ((p.positionMs - p.cutStartMs).toFloat() / (cutEnd - p.cutStartMs).coerceAtLeast(1L)).coerceIn(0f, 1f)
-        if (full && split) {
+        if (embedded) {
+        } else if (full && split) {
             com.sadurni.attaccaplg.ui.ProgressLine(songProgress, Modifier.fillMaxWidth().height(3.dp).align(Alignment.BottomCenter))
         } else if (full) {
             com.sadurni.attaccaplg.ui.ProgressBand(songProgress, false, Modifier.fillMaxWidth().height(26.dp).align(Alignment.BottomCenter))
         }
-        if (!full) {
+        if (!full && !embedded) {
             if (item != null) {
                 val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(1f, 2f), 6f)
                 // Split side by side: the title in the middle at the top.
@@ -383,6 +386,10 @@ fun WorldPage(state: AppState) {
                     IconButton(onClick = { used(); com.sadurni.attaccaplg.ui.OramaShared.split.value = !split }) {
                         Icon(PlayerIcons.VerticalSplit, tr("O'rama and Attacca World together", "O'rama y Attacca World a la vez"), tint = Color.White)
                     }
+                    // Art-tacca: the song painting a picture.
+                    IconButton(onClick = { com.sadurni.attaccaplg.ui.OramaShared.split.value = false; state.page = Page.ART }) {
+                        Icon(PlayerIcons.Brush, "Art-tacca", tint = Color.White)
+                    }
                     // Through the traveller's own eyes, or the camera behind.
                     IconButton(onClick = { used(); eyes = !eyes; camera.firstPerson = eyes }) {
                         Icon(PlayerIcons.Visibility, tr("Through the traveller's eyes", "Con los ojos del viajero"), tint = if (eyes) Color.White else Color.White.copy(alpha = 0.6f))
@@ -417,7 +424,7 @@ fun WorldPage(state: AppState) {
             OramaBar(state, item, nextItem, cutEnd, (wide || split) && !(split && wide), barModifier)
         }
         // Over the whole screen: the song's name as it starts (one, in the middle, when split).
-        com.sadurni.attaccaplg.ui.SongIntro(item?.path, item?.title ?: "", item?.artist, full, item?.album)
+        if (!embedded) com.sadurni.attaccaplg.ui.SongIntro(item?.path, item?.title ?: "", item?.artist, full, item?.album)
     }
 }
 

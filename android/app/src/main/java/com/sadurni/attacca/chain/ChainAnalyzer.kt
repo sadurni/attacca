@@ -476,6 +476,12 @@ class ChainAnalyzer(
         }
     }
 
+    /** The edges of [mediaId] when they were measured already (nothing is decoded). */
+    fun knownEdges(mediaId: String): TrackEdges? {
+        val file = File(mediaId).takeIf { !mediaId.contains("://") && it.isFile } ?: return null
+        return runCatching { db.getAll(listOf(file), edgeSeconds())[file.absolutePath] }.getOrNull()
+    }
+
     private fun localFiles(mediaIds: List<String>): List<File> =
         mediaIds.asSequence().filter { !it.contains("://") }.distinct().map(::File).filter { it.isFile }.toList()
 

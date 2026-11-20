@@ -46,6 +46,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.ViewInAr
+import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.LastPage
 import androidx.compose.material.icons.rounded.AutoMode
 import androidx.compose.material.icons.rounded.Casino
@@ -146,7 +147,7 @@ import com.sadurni.attacca.ui.theme.LocalAttaccaColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-private enum class PlayerDialog { SLEEP, SPEED, ADD_TO_LIST, LIST_SETTINGS, MOOD, ORAMA, WORLD }
+private enum class PlayerDialog { SLEEP, SPEED, ADD_TO_LIST, LIST_SETTINGS, MOOD, ORAMA, WORLD, ART }
 
 /** Where the buttons and boxes of Now playing lead (to other screens and dialogs). */
 private class PlayerHandlers(
@@ -274,7 +275,7 @@ fun PlayerScreen(
         )
     }
 
-    Dialogs(viewModel, dialog, onOpenQueue, onOpenWorld = { dialog = PlayerDialog.WORLD }, onOpenOrama = { dialog = PlayerDialog.ORAMA }) { dialog = null }
+    Dialogs(viewModel, dialog, onOpenQueue, onOpenWorld = { dialog = PlayerDialog.WORLD }, onOpenOrama = { dialog = PlayerDialog.ORAMA }, onOpenArt = { dialog = PlayerDialog.ART }) { dialog = null }
 }
 
 /**
@@ -496,6 +497,7 @@ private fun Part(block: PlayerBlock, parts: Parts, modifier: Modifier, nested: B
             viewModel, parts.uiSettings, handlers.onToggleRemainingTime, seekBarHeight = if (compact || nested) 56.dp else 72.dp,
             onOpenOrama = { handlers.openDialog(oramaDialog(parts.uiSettings.oramaOpen)) },
             onOpenWorld = { com.sadurni.attacca.ui.orama.OramaShared.split.value = false; handlers.openDialog(PlayerDialog.WORLD) },
+            onOpenArt = { partner -> com.sadurni.attacca.ui.art.ArtShared.partner.value = partner; handlers.openDialog(PlayerDialog.ART) },
         )
         BlockType.BUTTONS -> ButtonRow(viewModel, block.actions, handlers, block.icons)
         BlockType.TEXT -> InfoLine(block, parts.values)
@@ -670,18 +672,22 @@ private fun InfoLine(block: PlayerBlock, values: (String) -> String?) {
 }
 
 @Composable
-private fun Dialogs(viewModel: PlayerViewModel, dialog: PlayerDialog?, onOpenQueue: () -> Unit, onOpenWorld: () -> Unit, onOpenOrama: () -> Unit, onDismiss: () -> Unit) {
+private fun Dialogs(viewModel: PlayerViewModel, dialog: PlayerDialog?, onOpenQueue: () -> Unit, onOpenWorld: () -> Unit, onOpenOrama: () -> Unit, onOpenArt: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val sleepTimer by viewModel.sleepTimer.collectAsStateWithLifecycle()
     val speed by viewModel.speed.collectAsStateWithLifecycle()
     val listSettings by viewModel.listSettings.collectAsStateWithLifecycle()
     val addedMessage = stringResource(R.string.added_to_list)
     when (dialog) {
-        PlayerDialog.ORAMA -> com.sadurni.attacca.ui.orama.OramaScreen(viewModel, onDismiss, onOpenWorld = onOpenWorld) {
+        PlayerDialog.ORAMA -> com.sadurni.attacca.ui.orama.OramaScreen(viewModel, onDismiss, onOpenWorld = onOpenWorld, onOpenArt = onOpenArt) {
             onDismiss()
             onOpenQueue()
         }
-        PlayerDialog.WORLD -> com.sadurni.attacca.ui.world.WorldScreen(viewModel, onDismiss, onOpenOrama = onOpenOrama) {
+        PlayerDialog.WORLD -> com.sadurni.attacca.ui.world.WorldScreen(viewModel, onDismiss, onOpenOrama = onOpenOrama, onOpenArt = onOpenArt) {
+            onDismiss()
+            onOpenQueue()
+        }
+        PlayerDialog.ART -> com.sadurni.attacca.ui.art.ArtScreen(viewModel, onDismiss, onOpenOrama = onOpenOrama, onOpenWorld = onOpenWorld) {
             onDismiss()
             onOpenQueue()
         }
@@ -1297,6 +1303,7 @@ private fun Progress(
     seekBarHeight: androidx.compose.ui.unit.Dp,
     onOpenOrama: () -> Unit = {},
     onOpenWorld: () -> Unit = {},
+    onOpenArt: (partner: String?) -> Unit = {},
 ) {
     val now by viewModel.nowPlaying.collectAsStateWithLifecycle()
     val position by viewModel.positionMs.collectAsStateWithLifecycle()
@@ -1336,6 +1343,21 @@ private fun Progress(
                         com.sadurni.attacca.ui.orama.OramaShared.split.value = true
                     })
                     com.sadurni.attacca.ui.orama.OramaStrip(viewModel, Modifier.weight(1f).fillMaxHeight(), onOpenOrama)
+                }
+                // Art-tacca, alone or beside O'rama or Attacca World (a tap opens it so).
+                "ART" -> com.sadurni.attacca.ui.art.ArtStrip(viewModel, stripShape) { onOpenArt(null) }
+                "ART_ORAMA" -> Row(stripShape) {
+                    com.sadurni.attacca.ui.art.ArtStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("ORAMA") }
+                    com.sadurni.attacca.ui.orama.OramaStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("ORAMA") }
+                }
+                "ART_WORLD" -> Row(stripShape) {
+                    com.sadurni.attacca.ui.art.ArtStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("WORLD") }
+                    com.sadurni.attacca.ui.world.WorldStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("WORLD") }
+                }
+                "ART_ALL" -> Row(stripShape) {
+                    com.sadurni.attacca.ui.art.ArtStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("BOTH") }
+                    com.sadurni.attacca.ui.world.WorldStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("BOTH") }
+                    com.sadurni.attacca.ui.orama.OramaStrip(viewModel, Modifier.weight(1f).fillMaxHeight()) { onOpenArt("BOTH") }
                 }
                 else -> com.sadurni.attacca.ui.orama.OramaStrip(viewModel, stripShape, onOpenOrama)
             }
@@ -1660,6 +1682,7 @@ private fun PlayerButton(viewModel: PlayerViewModel, action: PlayerAction, handl
         PlayerAction.QUEUE -> ToolButton(Icons.AutoMirrored.Rounded.QueueMusic, description, handlers.onOpenQueue, size = size)
         PlayerAction.ORAMA -> ToolButton(Icons.Rounded.Landscape, description, { handlers.openDialog(oramaDialog(com.sadurni.attacca.ui.orama.OramaShared.openMode)) }, size = size, modifier = Modifier.tipAnchor("player.orama"))
         PlayerAction.WORLD -> ToolButton(Icons.Rounded.ViewInAr, description, { handlers.openDialog(PlayerDialog.WORLD) }, size = size)
+        PlayerAction.ART -> ToolButton(Icons.Rounded.Brush, description, { handlers.openDialog(PlayerDialog.ART) }, size = size)
         PlayerAction.LISTS -> ToolButton(Icons.Rounded.LibraryMusic, description, handlers.onOpenLists, size = size)
         PlayerAction.LYRICS -> ToolButton(Icons.Rounded.Lyrics, description, handlers.toggleLyrics, size = size)
         PlayerAction.ADD_TO_LIST -> ToolButton(
@@ -1764,6 +1787,7 @@ fun actionName(action: PlayerAction): String = stringResource(
         PlayerAction.RANDOM_LIST -> R.string.random_list
         PlayerAction.ORAMA -> R.string.orama_name
         PlayerAction.WORLD -> R.string.world_name
+        PlayerAction.ART -> R.string.art_name
         PlayerAction.NAVIGATOR -> R.string.action_navigator
         PlayerAction.BOOKMARK -> R.string.action_bookmarks
         PlayerAction.SLEEP -> R.string.action_sleep_timer
@@ -1799,6 +1823,7 @@ fun actionIcon(action: PlayerAction): ImageVector = when (action) {
     PlayerAction.RANDOM_LIST -> Icons.Rounded.Casino
     PlayerAction.ORAMA -> Icons.Rounded.Landscape
     PlayerAction.WORLD -> Icons.Rounded.ViewInAr
+    PlayerAction.ART -> Icons.Rounded.Brush
     PlayerAction.NAVIGATOR -> Icons.Rounded.Explore
     PlayerAction.BOOKMARK -> Icons.Rounded.BookmarkBorder
     PlayerAction.SLEEP -> Icons.Rounded.Timer
@@ -1921,5 +1946,9 @@ private const val BOX_BORDER_ALPHA = 0.18f
 private fun oramaDialog(open: String): PlayerDialog = when (open) {
     "WORLD" -> { com.sadurni.attacca.ui.orama.OramaShared.split.value = false; PlayerDialog.WORLD }
     "SPLIT" -> { com.sadurni.attacca.ui.orama.OramaShared.split.value = true; PlayerDialog.WORLD }
+    "ART" -> { com.sadurni.attacca.ui.art.ArtShared.partner.value = null; PlayerDialog.ART }
+    "ART_ORAMA" -> { com.sadurni.attacca.ui.art.ArtShared.partner.value = "ORAMA"; PlayerDialog.ART }
+    "ART_WORLD" -> { com.sadurni.attacca.ui.art.ArtShared.partner.value = "WORLD"; PlayerDialog.ART }
+    "ART_ALL" -> { com.sadurni.attacca.ui.art.ArtShared.partner.value = "BOTH"; PlayerDialog.ART }
     else -> PlayerDialog.ORAMA
 }

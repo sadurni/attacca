@@ -102,6 +102,19 @@ class DspEngine(initialSettings: DspSettings) {
         return meter.at(h.rendererUsAt(System.nanoTime()), into)
     }
 
+    /** Which notes sound on the way out, for Art-tacca (kept only while [notesWanted]). */
+    val notes = com.sadurni.attacca.art.NoteMeter()
+
+    /** Art-tacca is open and listens to the notes. */
+    @Volatile
+    var notesWanted = false
+
+    /** The share of each pitch class heard now, into [into] (12); false when unknown or silent. */
+    fun heardNotes(into: FloatArray): Boolean {
+        val h = heard ?: return false
+        return notes.at(h.rendererUsAt(System.nanoTime()), into)
+    }
+
     /** The player's time of the decoded buffer being handed to the output now. */
     @Volatile
     var presentationUs: Long = androidx.media3.common.C.TIME_UNSET

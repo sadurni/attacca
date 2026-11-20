@@ -167,6 +167,7 @@ class PlaybackService : MediaLibraryService() {
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 engine.isPlaying = isPlaying
+                publishArt()
                 updateShake()
                 // Playing keeps the service in the foreground, so a scan can run without being frozen.
                 if (isPlaying) app.scheduleStartupScan()
@@ -179,6 +180,7 @@ class PlaybackService : MediaLibraryService() {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                publishArt()
                 saveQueue()
                 refreshFavorite()
             }
@@ -186,6 +188,7 @@ class PlaybackService : MediaLibraryService() {
             override fun onMediaMetadataChanged(mediaMetadata: androidx.media3.common.MediaMetadata) = updateWidget()
 
             override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+                publishArt()
                 // A seek: the widget's time counts on from the new place.
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) NowPlayingWidget.updatePlaying(this@PlaybackService, player.isPlaying, player.currentPosition)
             }
@@ -358,6 +361,17 @@ class PlaybackService : MediaLibraryService() {
                     .onFailure { android.util.Log.w(TAG, "listening log", it) }
             }
         }
+    }
+
+    /** What plays and where, for Art-tacca painting the wallpaper. */
+    private fun publishArt() {
+        val item = player.currentMediaItem
+        com.sadurni.attacca.ui.art.ArtNow.publish(
+            item?.mediaId, player.currentPosition, player.isPlaying,
+            item?.let { com.sadurni.attacca.library.MediaItems.clipStartMs(it) } ?: 0L,
+            item?.let { com.sadurni.attacca.library.MediaItems.clipEndMs(it) },
+            item?.let { MediaItems.displayTitle(it, player.mediaMetadata) },
+        )
     }
 
     /** The home-screen widget: the playing track's title, artist, album, cover, what comes next, the list and the time. */

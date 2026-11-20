@@ -40,7 +40,7 @@ object PlayerDb {
                 copy = t.path in library.copies,
                 // How it starts and ends, for the player's automatic crossfade.
                 ends = t.takeIf { it.audioEndMs > it.audioStartMs }?.let {
-                    PlayerDbFormat.Ends.of(it.waveform, it.durationMs, it.audioStartMs, it.audioEndMs, PlayerDbFormat.REFERENCE_BLEND_MS)
+                    PlayerDbFormat.Ends.of(it.waveform, it.durationMs, com.sadurni.attacca.analysis.FaintLead.endMs(it.waveform, it.durationMs, it.audioStartMs) ?: it.audioStartMs, it.audioEndMs, PlayerDbFormat.REFERENCE_BLEND_MS)
                 },
             )
         }

@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Landscape
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -975,16 +979,43 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
             settings.updateUi { it.copy(waveformMode = mode) }
         }
     }
+    // O'rama, Attacca World and Art-tacca: their own page, opened from here.
+    var visuals by remember { mutableStateOf(false) }
+    CategoryRow(Icons.Rounded.Landscape, stringResource(R.string.section_visuals), stringResource(R.string.settings_visuals_summary)) { visuals = true }
+    if (visuals) VisualsDialog(settings) { visuals = false }
+}
+
+/** O'rama, Attacca World and Art-tacca's settings, on a page of their own (from Appearance). */
+@Composable
+private fun VisualsDialog(settings: com.sadurni.attacca.settings.AppSettings, onClose: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        androidx.compose.material3.Surface(Modifier.fillMaxSize()) {
+            androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)) {
+                androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.cover_close)) }
+                    Text(stringResource(R.string.section_visuals), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                }
+                androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                    VisualsSettings(settings)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VisualsSettings(settings: com.sadurni.attacca.settings.AppSettings) {
+    val ui by settings.ui.collectAsStateWithLifecycle()
     // O'rama in the waveform's place; the waveform keeps its own look, small between the times.
     SwitchRow(stringResource(R.string.waveform_orama), ui.oramaStrip, { on -> settings.updateUi { it.copy(oramaStrip = on) } })
-    val views = listOf("ORAMA" to R.string.orama_name, "WORLD" to R.string.world_name, "SPLIT" to R.string.world_split)
+    // Which of the three show (more than one: the screen split), in the strip and on opening O'rama.
     if (ui.oramaStrip) {
         Text(stringResource(R.string.strip_view), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
-        for ((v, label) in views) RadioRow(stringResource(label), ui.stripView == v) { settings.updateUi { it.copy(stripView = v) } }
+        ViewChoice(ui.stripView) { v -> settings.updateUi { it.copy(stripView = v) } }
     }
     // What opening O'rama shows (from its button, the cover, the strip…).
     Text(stringResource(R.string.orama_open), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
-    for ((v, label) in views) RadioRow(stringResource(label), ui.oramaOpen == v) { settings.updateUi { it.copy(oramaOpen = v) } }
+    ViewChoice(ui.oramaOpen) { v -> settings.updateUi { it.copy(oramaOpen = v) } }
     // How Attacca World opens: behind the traveller (the default) or through its eyes.
     SwitchRow(stringResource(R.string.world_eyes_setting), ui.worldEyes, { on -> settings.updateUi { it.copy(worldEyes = on) } })
     Hint(stringResource(R.string.world_eyes_hint))
@@ -1007,6 +1038,88 @@ private fun AppearancePage(settings: com.sadurni.attacca.settings.AppSettings, o
     if (ui.worldFine) {
         SwitchRow(stringResource(R.string.world_film_setting), ui.worldFilm, { on -> settings.updateUi { it.copy(worldFilm = on) } })
         Hint(stringResource(R.string.world_film_hint))
+    }
+    // Art-tacca between songs: a new canvas, or the next song painted over the last painting.
+    SwitchRow(stringResource(R.string.art_paint_over), ui.artPaintOver, { on -> settings.updateUi { it.copy(artPaintOver = on) } })
+    Hint(stringResource(R.string.art_between_hint))
+    // Art-tacca's style: one for every song, or each song its own.
+    Text(stringResource(R.string.art_style), modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+    ChipChoice(com.sadurni.attacca.ui.art.ART_STYLES, ui.artStyle) { name -> settings.updateUi { it.copy(artStyle = name) } }
+    Hint(stringResource(R.string.art_style_hint))
+    // What Art-tacca paints: freely from the song, or its cover stroke by stroke, and how closely.
+    SwitchRow(stringResource(R.string.art_paint_cover), ui.artSubject == "COVER", { on -> settings.updateUi { it.copy(artSubject = if (on) "COVER" else "FREE") } })
+    Hint(stringResource(R.string.art_paint_cover_hint))
+    if (ui.artSubject == "COVER") {
+        ValueSlider(
+            label = stringResource(R.string.art_likeness),
+            value = (ui.artLikeness * 100).roundToInt().toFloat(),
+            range = 0f..100f,
+            step = 10f,
+            format = { "${it.roundToInt()} %" },
+            onChange = { v -> settings.updateUi { it.copy(artLikeness = v / 100f) } },
+        )
+        Hint(stringResource(R.string.art_likeness_hint))
+    }
+    // Art-tacca as the phone's wallpaper: the system's own screen to set it.
+    val wallContext = LocalContext.current
+    androidx.compose.material3.TextButton(
+        onClick = {
+            val component = android.content.ComponentName(wallContext, com.sadurni.attacca.ui.art.ArtWallpaperService::class.java)
+            val set = android.content.Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                .putExtra(android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component)
+            runCatching { wallContext.startActivity(set) }.onFailure {
+                runCatching { wallContext.startActivity(android.content.Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)) }
+            }
+        },
+        modifier = Modifier.padding(start = 8.dp),
+    ) { Text(stringResource(R.string.art_wallpaper)) }
+    Hint(stringResource(R.string.art_wallpaper_hint))
+}
+
+/** The three views (Art-tacca, World, O'rama) as three switches: one alone, or several sharing the screen. */
+@Composable
+private fun ViewChoice(value: String, onChange: (String) -> Unit) {
+    val art = value.startsWith("ART")
+    val world = value in setOf("WORLD", "SPLIT", "ART_WORLD", "ART_ALL")
+    val orama = value in setOf("ORAMA", "SPLIT", "ART_ORAMA", "ART_ALL")
+    fun valueOf(a: Boolean, w: Boolean, o: Boolean): String? = when {
+        a && w && o -> "ART_ALL"
+        a && w -> "ART_WORLD"
+        a && o -> "ART_ORAMA"
+        a -> "ART"
+        w && o -> "SPLIT"
+        w -> "WORLD"
+        o -> "ORAMA"
+        else -> null
+    }
+    val choices = listOf(
+        Triple(R.string.art_name, art) { valueOf(!art, world, orama) },
+        Triple(R.string.world_name, world) { valueOf(art, !world, orama) },
+        Triple(R.string.orama_name, orama) { valueOf(art, world, !orama) },
+    )
+    androidx.compose.foundation.layout.Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+        for ((label, on, toggled) in choices) {
+            androidx.compose.material3.FilterChip(
+                selected = on,
+                // (At least one stays.)
+                onClick = { toggled()?.let(onChange) },
+                label = { Text(stringResource(label)) },
+            )
+        }
+    }
+}
+
+/** One of a few choices as a row of chips (wrapping to more rows when needed). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ChipChoice(choices: List<Pair<String, Int>>, value: String, onChange: (String) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+    ) {
+        for ((name, label) in choices) {
+            androidx.compose.material3.FilterChip(selected = value == name, onClick = { onChange(name) }, label = { Text(stringResource(label)) })
+        }
     }
 }
 

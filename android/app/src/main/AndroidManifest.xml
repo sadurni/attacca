@@ -54,6 +54,8 @@
         <package android:name="com.oneplus.sound.tuner" />
     </queries>
 
+    <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
+
     <application
         android:name=".AttaccaApp"
         android:allowBackup="true"
@@ -338,6 +340,19 @@
             <meta-data
                 android:name="autoStoreLocales"
                 android:value="true" />
+        </service>
+        <!-- Art-tacca as the phone's wallpaper: the playing song paints it. -->
+        <service
+            android:name=".ui.art.ArtWallpaperService"
+            android:exported="true"
+            android:label="@string/art_name"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/art_wallpaper" />
         </service>
         <!-- Tracks shared with other apps. -->
         <provider

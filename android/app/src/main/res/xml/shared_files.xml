@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Music files shared with other apps: anywhere on the phone's storage or a memory card. -->
+<!-- Music files shared with other apps: anywhere on the phone's storage or a memory card; and Art-tacca's paintings. -->
 <paths>
     <root-path name="storage" path="/storage" />
     <external-path name="music" path="." />
+    <files-path name="art" path="art/" />
 </paths>

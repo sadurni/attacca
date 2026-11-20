@@ -25,6 +25,9 @@ class TrackAnalysis(
     val leadingSilenceMs: Long get() = audioStartMs
     val trailingSilenceMs: Long get() = (durationMs - audioEndMs).coerceAtLeast(0)
 
+    /** Where the music really starts: after a faint lead-in ([FaintLead]) if there is one, else at [audioStartMs]. */
+    val musicStartMs: Long get() = FaintLead.endMs(waveform, durationMs, audioStartMs) ?: audioStartMs
+
     companion object {
         const val WAVEFORM_BINS = 512
 
@@ -77,6 +80,41 @@ class TrackAnalysis(
             if (loudest > 0f) for (b in bins.indices) bins[b] /= loudest
             return bins
         }
+    }
+}
+
+/**
+ * A faint lead-in: the first seconds of a track barely there (hiss, a far-off sound rising, far
+ * under the track's loudest part) and then the music coming in at once at full strength, as a song
+ * entering after a few seconds that can hardly be heard. Such a start counts as silence for the
+ * trims and blends. A quiet intro that grows into the song is not one (it is heard, and it does not
+ * jump), nor is a lead-in shorter than [MIN_LEAD_MS] or longer than [MAX_LEAD_MS].
+ */
+object FaintLead {
+    /** Under this (of the loudest stretch, ~ −32 dB) a stretch is barely there. */
+    const val FAINT = 0.025f
+
+    /** The music coming in reaches this at once (~ −18 dB of the loudest). */
+    const val LOUD = 0.12f
+
+    const val MIN_LEAD_MS = 1500L
+    const val MAX_LEAD_MS = 30_000L
+
+    /**
+     * Where the music comes in after a faint lead-in starting at [soundStartMs], from the track's
+     * [waveform] (its loudness in even stretches, the loudest 1), or null when it does not start so.
+     */
+    fun endMs(waveform: FloatArray?, durationMs: Long, soundStartMs: Long): Long? {
+        if (waveform == null || waveform.size < 16 || durationMs <= 0L) return null
+        val n = waveform.size
+        val binMs = durationMs.toDouble() / n
+        var j = (soundStartMs / binMs).toInt().coerceIn(0, n - 1)
+        while (j < n && waveform[j] <= FAINT) j++
+        if (j >= n) return null
+        // At once: the first stretch over faint (or the next, the music coming in within it) is loud.
+        if (waveform[j] < LOUD && (j + 1 >= n || waveform[j + 1] < LOUD)) return null
+        val end = (j * binMs).toLong()
+        return end.takeIf { it - soundStartMs in MIN_LEAD_MS..MAX_LEAD_MS }
     }
 }
 

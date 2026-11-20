@@ -51,6 +51,14 @@ data class UiSettings(
     val worldFilm: Boolean = true,
     /** Attacca World in maximum quality (above high, which it needs): the land mirrored in the water. */
     val worldMax: Boolean = false,
+    /** Art-tacca: each song paints over the last painting (faded) instead of on a new canvas. */
+    val artPaintOver: Boolean = false,
+    /** Art-tacca's style: AUTO (by the song), WATERCOLOUR, OIL, INK or PEN (ballpoint). */
+    val artStyle: String = "WATERCOLOUR",
+    /** What Art-tacca paints: FREE (from the song) or COVER (the song's cover, stroke by stroke). */
+    val artSubject: String = "FREE",
+    /** Painting the cover: how closely (0 loose … 1 close). */
+    val artLikeness: Float = 1f,
     val keepScreenOn: KeepScreenOn = KeepScreenOn.OFF,
     /** Tips over each screen the first time it opens after installing a new version. */
     val showTips: Boolean = true,
@@ -455,6 +463,10 @@ class AppSettings(context: Context) {
             worldFine = prefs.getBoolean("world_fine", d.worldFine),
             worldFilm = prefs.getBoolean("world_film", d.worldFilm),
             worldMax = prefs.getBoolean("world_max", d.worldMax),
+            artPaintOver = prefs.getBoolean("art_paint_over", d.artPaintOver),
+            artStyle = prefs.getString("art_style", d.artStyle) ?: d.artStyle,
+            artSubject = prefs.getString("art_subject", d.artSubject) ?: d.artSubject,
+            artLikeness = prefs.getFloat("art_likeness", d.artLikeness),
             keepScreenOn = prefs.getEnum("keep_screen_on", d.keepScreenOn),
             showTips = prefs.getBoolean("show_tips", d.showTips),
             themeId = prefs.getString("theme_id", null),
@@ -479,6 +491,10 @@ class AppSettings(context: Context) {
             .putBoolean("world_fine", s.worldFine)
             .putBoolean("world_film", s.worldFilm)
             .putBoolean("world_max", s.worldMax)
+            .putBoolean("art_paint_over", s.artPaintOver)
+            .putString("art_style", s.artStyle)
+            .putString("art_subject", s.artSubject)
+            .putFloat("art_likeness", s.artLikeness)
             .putString("keep_screen_on", s.keepScreenOn.name)
             .putBoolean("show_tips", s.showTips)
             .putString("theme_id", s.themeId)

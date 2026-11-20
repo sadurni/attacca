@@ -112,6 +112,20 @@ class PlaybackEngine(
     /** Levels of the sound going out, for Attacca O'rama. */
     private val meter = com.sadurni.attacca.diorama.LevelMeter()
 
+    /** Which notes sound on the way out, for Art-tacca (kept only while [notesWanted]). */
+    private val notes = com.sadurni.attacca.art.NoteMeter()
+
+    /** Art-tacca shows and listens to the notes. */
+    @Volatile var notesWanted = false
+
+    /** The share of each pitch class heard now, into [into] (12); false when unknown or silent. */
+    fun heardNotes(into: FloatArray): Boolean {
+        val o = out ?: return false
+        if (!playing) return false
+        val heard = outFrames - o.pending
+        return notes.at(heard * 1_000_000L / AudioOut.RATE, into)
+    }
+
     /** Frames handed to the output since the engine started. */
     @Volatile private var outFrames = 0L
 
@@ -286,6 +300,7 @@ class PlaybackEngine(
             effects.headroomDb = cur?.headroomDb ?: 0f
             effects.process(a, filled, dsp())
             meter.push(a, filled, 2, AudioOut.RATE, outFrames * 1_000_000L / AudioOut.RATE)
+            if (notesWanted) notes.push(a, filled, 2, AudioOut.RATE, outFrames * 1_000_000L / AudioOut.RATE)
             outFrames += filled
             output.write(a, filled, settings().volume)
         }

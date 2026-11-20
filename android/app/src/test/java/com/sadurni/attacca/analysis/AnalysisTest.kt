@@ -101,3 +101,40 @@ class SilenceTrimmerTest {
         assertEquals(197_100L, onlyEnd.endMs)
     }
 }
+
+/** A faint lead-in (barely there, then the music at once) counts as silence; a quiet intro that grows does not. */
+class FaintLeadTest {
+    private val settings = TrimSettings(minSilenceMs = 500, marginMs = 100)
+    private val duration = 225_280L // 440 ms a stretch
+
+    private fun wave(vararg head: Float): FloatArray = FloatArray(512) { i -> if (i < head.size) head[i] else 0.6f }
+
+    @Test
+    fun faintLeadInIsSkipped() {
+        // As a song with ~10 s of a far-off sound rising before the band comes in (sound from 2 s).
+        val w = wave(0f, 0f, 0f, 0f, 0f, 0.002f, 0.003f, 0.004f, 0.008f, 0.014f, 0.017f, 0.016f, 0.012f, 0.011f, 0.008f, 0.009f,
+            0.01f, 0.012f, 0.015f, 0.016f, 0.017f, 0.012f, 0.009f, 0.4f, 0.44f)
+        val a = TrackAnalysis(duration, 2070, duration - 500, w, -60f)
+        assertEquals(23 * 440L, a.musicStartMs)
+        assertEquals(23 * 440L - 100, SilenceTrimmer.trimFor(0, listOf(TrimCandidate("x", a)), settings).startMs)
+    }
+
+    @Test
+    fun quietIntroThatGrowsIsKept() {
+        val w = wave(0f, 0.01f, 0.012f, 0.015f, 0.02f, 0.03f, 0.05f, 0.08f, 0.1f, 0.2f, 0.4f)
+        val a = TrackAnalysis(duration, 300, duration - 500, w, -60f)
+        assertEquals(300L, a.musicStartMs)
+    }
+
+    @Test
+    fun shortOrLoudStartsAreLeftAlone() {
+        // Barely a second faint: a breath before the band, kept.
+        val short = TrackAnalysis(duration, 0, duration - 500, wave(0.01f, 0.01f, 0.5f), -60f)
+        assertEquals(0L, short.musicStartMs)
+        // Loud from the start.
+        val loud = TrackAnalysis(duration, 0, duration - 500, wave(0.5f), -60f)
+        assertEquals(0L, loud.musicStartMs)
+        // No waveform (not analysed yet): the sound start as before.
+        assertNull(FaintLead.endMs(null, duration, 1000))
+    }
+}

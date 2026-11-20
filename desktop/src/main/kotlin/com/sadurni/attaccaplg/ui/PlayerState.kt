@@ -276,6 +276,14 @@ class PlayerState(private val prefs: Prefs, private val library: () -> Library?)
     /** The levels of what is heard now (level, low, high), for Attacca O'rama. */
     fun heardLevels(into: FloatArray): Boolean = engine.heardLevels(into)
 
+    /** Which notes sound now (12 shares), for Art-tacca's colours to follow the chords. */
+    fun heardNotes(into: FloatArray): Boolean = engine.heardNotes(into)
+
+    /** Art-tacca listens to the notes (only while it shows). */
+    var notesWanted: Boolean
+        get() = engine.notesWanted
+        set(v) { engine.notesWanted = v }
+
     fun toggle() = engine.toggle()
     fun next() = engine.next()
     fun previous() = engine.previous()
@@ -536,7 +544,10 @@ class PlayerState(private val prefs: Prefs, private val library: () -> Library?)
             artist = t.tags.artist,
             album = t.tags.album,
             durationMs = t.durationMs,
-            soundStartMs = t.audioStartMs.takeIf { t.audioEndMs > t.audioStartMs },
+            // (After a faint lead-in, where the music comes in.)
+            soundStartMs = t.audioStartMs.takeIf { t.audioEndMs > t.audioStartMs }?.let { s ->
+                com.sadurni.attacca.analysis.FaintLead.endMs(t.waveform, t.durationMs, s) ?: s
+            },
             soundEndMs = t.audioEndMs.takeIf { it > t.audioStartMs },
             lufs = t.lufs,
             peak = t.peak,

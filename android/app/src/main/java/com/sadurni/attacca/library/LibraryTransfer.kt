@@ -319,7 +319,7 @@ object LibraryTransfer {
             val bounds = app.analysisDb.getBounds(block, threshold)
             for (file in block) {
                 val analysis = (analyses[file.absolutePath] as? AnalysisDb.Lookup.Hit)?.analysis
-                val end = analysis?.let { PlayerDbFormat.Ends.of(it.waveform, it.durationMs, it.audioStartMs, it.audioEndMs, blendMs) }
+                val end = analysis?.let { PlayerDbFormat.Ends.of(it.waveform, it.durationMs, it.musicStartMs, it.audioEndMs, blendMs) }
                     ?: bounds[file.absolutePath]?.let { PlayerDbFormat.Ends.of(null, it.durationMs, it.audioStartMs, it.audioEndMs, blendMs) }
                 if (end != null && end.soundEndMs > end.soundStartMs) ends[file.absolutePath] = end
             }

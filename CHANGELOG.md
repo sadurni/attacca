@@ -3,6 +3,85 @@
 What changed in each version, for every part. The app shows its own part in About → What's new;
 the [releases](https://github.com/sadurni/attacca/releases) have the files.
 
+## 1.9.0
+
+### Attacca (Android)
+
+- **Art-tacca**: the song paints a picture as it plays (its button among Now playing's buttons, or
+  from O'rama and Attacca World). The key gives the colours (major warmer and lighter, minor cooler
+  and deeper), leaning towards the cover's own, and the paper takes a little of the cover's tone; the
+  colours turn round the colour wheel as the chords heard move away from the key and back. The low
+  beats burst into blots and splashes, the beat lays short strokes, the high sounds hatch fine
+  lines, a sung song flows into a pen line, quiet stretches get pale washes and the peak the
+  painting's big gesture; a seal ends it. Strokes and shapes vary freely (bent strokes, ragged or
+  stretched blots, sizes far apart). Opened in the middle of a song, what would have been painted
+  till then appears at once; the cover shows in its title.
+- **Its styles** (the palette button): watercolour; impressionist oil (thick strokes whose ridges
+  catch the light, swirls on the beats, dots of light, a swirling sun at the peak, on a canvas's
+  weave); ink (dark calligraphy, grey washes and a single colour for the strong moments); ballpoint
+  on a notebook's lined or squared page (scribbled loops, spirals and waves, hatching, a few things in
+  coloured pencil, the lines trembling as they are drawn); or each song in its own style.
+- Each song paints on **a new canvas or over the last painting**, faded under the new one.
+- When a song ends its painting hangs small at the bottom left for a while, to **keep in the
+  drawer**; the one being painted can be kept as it is too. The drawer shows the paintings kept, to
+  look through or share; they are in **Pictures/Attacca** (like Music/Attacca), where the gallery
+  sees them and where they stay if Attacca is uninstalled.
+- **Beside O'rama, Attacca World or both** (its split button): beside one, the painting about
+  square; all three, upright in three bands, or on its side the painting a third on the left, World
+  above and O'rama below. The parts
+  melt where they meet; over the whole screen, split, a thin progress line instead of the band.
+  Sharing the screen with Art-tacca, World goes without its water mirror (lighter on the phone).
+- Turned on its side, the painting turns wide too and is laid out again (the strokes keep their
+  size), and it is kept wide.
+- **Art-tacca as the wallpaper**: the playing song paints the home screen, only while it shows;
+  with nothing playing, the last painting it showed stays there.
+- Art-tacca, alone or split, can be what O'rama's button opens and what shows in Now playing's
+  strip.
+- **Settings → Appearance**: O'rama, World and Art-tacca have a page of their own: what shows (in
+  the strip and on opening O'rama) as three switches, any of them together; Art-tacca's style;
+  painting over; the wallpaper.
+- The side buttons of O'rama, World and Art-tacca go into two columns when they do not fit (on its
+  side), and the small player keeps clear of them.
+- **Art-tacca can paint the album cover**: from a blank canvas, touch by touch as the song plays,
+  the cover comes out in the chosen style, big touches first and finer ones to the end, the strokes
+  following its edges, the music still deciding when and how each is laid; round it, loose strokes
+  in its colours. A song without a cover paints a record. Painting over, each cover is painted
+  over the last. The palette button or Settings → Appearance turn it on; how close it comes is set
+  in Settings (all the way by default).
+- **Each finished painting is signed**: the song's title and, under it, Art-tacca, written small
+  beside the seal in the painting's own line. The kept picture also holds who made it, the song
+  and the date in its file.
+- **The drawer's paintings can be looked at closely**: pinch or double-tap, and move them about.
+- Art-tacca's title shows the song's mood, as O'rama and World do, and its side buttons have the
+  30/60 frames a second button (O'rama and World beside it follow).
+- Wide and split, the small player lies in one low line along the bottom, under the side buttons
+  when they leave room; in the wide triple, across O'rama's foot (alone, the corner block as before).
+- Art-tacca's side buttons tuck half away like O'rama's and World's: a tap brings them out.
+- Upright triple: O'rama's land rises over the small player.
+- **A faint lead-in counts as silence**: a song that starts with a few seconds barely there (a
+  far-off sound, the crowd's murmur) and then comes in at once is trimmed and blended from where
+  the music comes in. A quiet intro that grows is left as it is.
+- Split screen: O'rama's land goes down to the foot on the whole screen (more sky).
+- Without the song's analysis yet, Art-tacca still knows how long it is (the seal and signature
+  come at the end).
+
+### Attacca Desktop
+
+- **Art-tacca** on the desktop too (its own page, and a button in O'rama and World): the song paints
+  a picture as it plays, in the same styles as on the phone (watercolour, impressionist oil, ink,
+  ballpoint, or by the song), following the chords; a new canvas for each song or painting over the
+  last; alone or beside O'rama, World or both, melting where they meet; the finished painting hangs a
+  moment at the bottom left to keep, and the drawer (Pictures/Attacca, as on the phone) shows the
+  paintings kept.
+- **Art-tacca paints the album cover** too (in the palette button's menu, with its likeness slider).
+- Paintings signed with the song's title and Art-tacca, the file saying who made it; the drawer's
+  paintings zoom with the wheel, drag and double click; the song's mood under Art-tacca's title.
+- A faint lead-in counts as silence when playing and blending (and in the players' lists).
+
+### Attacca for Rockbox
+
+- The plugin and the full Rockbox builds (Shanling Q1 zip, Android 2.3 APK) carry version 1.9.0.
+
 ## 1.8.0
 
 ### Attacca (Android)

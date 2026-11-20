@@ -42,6 +42,13 @@ plays them so one song flows into the next.
   Appearance) is basic, high (smooth edges, soft shade, a glow about the lights, grass swaying by the path, the ground's own
   grain, shining paint and metal, a film's tones) or maximum (also the land, the traveller and the animals mirrored in the water); World measures how it
   runs on the phone and may suggest the quality that suits it.
+- 🎨 **Art-tacca: the song paints a picture.** Watercolour on paper as it plays: the key and the
+  cover give the colours, the low beats burst into blots and splashes, the beat lays strokes, the
+  high sounds hatch, a sung song flows into a pen line, the peak is the big gesture, and the colours
+  turn with the chords. In watercolour, impressionist oil, ink or ballpoint on a notebook, or each
+  song its own. Each painting hangs for a moment when its song ends, to keep in a drawer to look
+  through later. Beside O'rama or Attacca World, in Now playing's strip, wide when the phone is on
+  its side, or as the home screen's wallpaper.
 - 🌄 **O'rama: watch the song.** A moving landscape drawn from the song's waveform, mood and
   beat: someone runs, rides or flies through castles, cities, seas and space, jumping on the
   strong beats, through tunnels with a torch, towards a gate into the next track's world. And a few little

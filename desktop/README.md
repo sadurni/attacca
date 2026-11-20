@@ -54,6 +54,16 @@ all those connected, without choosing anything.
   traveller and the four dogs, as on the phone, drawn by the processor. Drag to turn the camera,
   the wheel to bring it closer, the right button to raise it; a click on the traveller makes a move;
   the eye button shows it through the traveller's own eyes (Settings → Window to open it so).
+- **Art-tacca** (in the menu on the left, or the brush button in O'rama and World): the song paints
+  a picture as it plays, as on the phone: in watercolour, impressionist oil, ink, ballpoint on a
+  notebook, or each song its own (the palette button); its colours from the key, the chords heard
+  and the cover; the beats, the high sounds, the voice and the peak each with their own marks. In
+  the same menu, Paint the album cover: the painting becomes the cover, stroke by stroke (a record
+  without one), as closely as its slider says. Each
+  song on a new canvas or over the last painting (the layers button). The split button puts it
+  beside O'rama, World or both, melting where they meet. When a song ends its painting hangs a
+  moment at the bottom left with a Keep button; the one being painted can be kept as it is. The
+  drawer shows the paintings kept, in the Pictures folder's Attacca folder (as on the phone).
 - **O'rama** (in the menu on the left): the playing song as a moving landscape, as Attacca's
   O'rama on the phone. Its land is the song's waveform; its world comes from its mood and sound
   family in the library, and the look takes some of the cover's colours:
